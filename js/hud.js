@@ -24,7 +24,7 @@ export function createHud(game) {
   root.innerHTML = `
     <div id="chief"><img id="chief-p" alt=""><div class="cinfo"><div class="cname"><b id="chief-n"></b> <span id="chief-c"></span> <i id="chief-l"></i></div>
       <div class="bar hp"><div class="fill" id="chief-hp"></div><span id="chief-hpt"></span></div><div class="bar st"><div class="fill" id="chief-st"></div></div><div id="combo"><i></i><i></i><b id="combo-t">▸</b></div></div></div>
-    <div id="party">${game.team.map((t, i) => `<div class="slot t-${t.type}" data-i="${i}"><img alt=""><em>${i + 1}</em><div class="sbar"><div class="fill"></div></div></div>`).join('')}</div>
+    <div id="party">${game.team.map((t, i) => `<div class="slot t-${t.type}" data-i="${i}"><img alt=""><em>${i + 1}</em><div class="sbar"><div class="fill"></div></div><b class="mu"></b></div>`).join('')}</div>
     <div id="skills"><div class="skill"><kbd id="k-ab"></kbd><b id="ab-n"></b><span id="buff"></span><span id="sbadge"></span><div class="cd"><div class="fill" id="ab-cd"></div></div></div><div class="berries"><kbd id="k-berry"></kbd>Baies <b id="berries"></b></div><div class="berries"><kbd id="k-ether"></kbd>Huile <b id="ethers"></b></div><div class="berries" id="linkbox"><kbd id="k-link"></kbd>Lien <div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b></div></div>
     <div id="right"><div id="essence"><span>Essence</span> <b id="ess"></b></div><div id="hints"></div></div>
     <div id="boss"><div class="bname"><b id="boss-n"></b> <span id="boss-s"></span></div><div class="bbar"><div class="fill" id="boss-hp"></div>${BOSS_THRESHOLDS.map(t => `<i class="th" style="left:${t * 100}%"></i>`).join('')}</div></div>
@@ -54,6 +54,7 @@ export function createHud(game) {
         const cb = game.comboN > 0 && game.t - game.comboAt <= 0.5; E.combo.classList.toggle('on', cb || game.comboN > 0 && game.chief().atk); E.combo.dataset.n = game.comboN; E['combo-t'].textContent = game.comboN >= 2 ? 'LOURD !' : ''; }
       { const fx = c.fx ? STATUS[c.fx.k] : null; E.sbadge.textContent = fx ? fx.name.toUpperCase() : ''; E.sbadge.style.background = fx ? fx.color : 'transparent'; }
       slots.forEach((s, k) => { const m = game.team[k]; const im = s.querySelector('img'); if (im.dataset.id !== m.id) { im.dataset.id = m.id; im.src = portrait(m.id); } s.classList.toggle('on', k === i); s.classList.toggle('down', m.exh); s.classList.toggle('cool', game.swapCd > 0 && k !== i); s.querySelector('.fill').style.width = (100 * m.hp / m.maxhp) + '%'; });
+      { const mu = game.matchups(); slots.forEach((s2, k) => { const q = mu && mu[k], el = s2.querySelector('.mu'); const t = q ? (q.mult > 1 ? '▲' : q.mult < 1 ? '▼' : '') : ''; if (el.textContent !== t) { el.textContent = t; el.className = 'mu ' + (q && q.mult > 1 ? 'up' : 'dn'); } s2.classList.toggle('react', !!(q && q.react)); }); }
       let b = game.bossActive && game.boss && !game.boss.dead ? game.boss : null, mini = false;
       if (!b) { b = game.enemies.find(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230) || null; mini = !!b; }
       E.boss.classList.toggle('show', !!b); E.boss.classList.toggle('mini', mini);
