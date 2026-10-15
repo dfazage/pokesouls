@@ -155,6 +155,7 @@ export function showCredits(onClose) {
     ${USE_YOUTUBE ? `<h4>Musique YouTube (usage local, non publiée)</h4><div class="cred">${Object.entries(musicMap()).filter(([, c]) => c.youtube).map(([id, c]) => `<div class="krow"><span><b>${esc(c.title || id)}</b> <small>(${esc(id)})</small></span><a href="https://www.youtube.com/watch?v=${c.youtube}" target="_blank" rel="noopener">YouTube</a></div>`).join('')}</div>` : ''}
     <h4>Musique libre de repli (OpenGameArt.org)</h4><div class="cred">${Object.entries(TRACKS).map(([id, t]) => `<div class="krow"><span><b>${esc(t.title)}</b> — ${esc(t.author)} <small>(${esc(t.use)})</small></span><a href="${t.url}" target="_blank" rel="noopener">${esc(t.license)}</a></div>`).join('')}</div>
     <h4>Sprites</h4><p class="sub">PMDCollab SpriteCollab (CC BY-NC 4.0), merci à tous les artistes du projet.</p>
+    <h4>Effets d'attaque</h4><p class="sub">Dämmerlicht BFX par KotatsuAkira (gratuit, crédit demandé) ; PIPO Fire par PIPOSCHPATZ (CC BY 4.0) ; Water Cannon par Anton Chi.</p>
     <h4>Mentions</h4><p class="sub">Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce fan game non commercial n'est ni affilié ni approuvé par eux. Code et effets sonores : ce dépôt.</p>
     <div class="act"><button id="m-close">Fermer</button></div></div>`);
   $('#m-close').onclick = onClose; void m;

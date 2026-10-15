@@ -7,12 +7,14 @@ import { createHud } from './hud.js';
 import { showStarters, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { STARTERS } from './data.js';
 import { Music, directMusic } from './music.js';
+import { loadFx } from './fx.js';
 
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), canvas = $('#game'), ctx = canvas.getContext('2d');
 canvas.width = W; canvas.height = H;
 function fit() { const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`; }
 addEventListener('resize', fit); fit();
+loadFx(); // feuilles d'effets d'attaque, chargées en arrière-plan
 
 let game = null, hud = null, mode = 'loading', menuKind = null, last = 0;
 // braises de l'écran titre
@@ -83,7 +85,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-addEventListener('keydown', e => { if (game && game.dev && /^F[1-7]$/.test(e.code)) { e.preventDefault(); game.devKey(e.code); } });
+addEventListener('keydown', e => { if (game && game.dev && /^F[1-9]$/.test(e.code)) { e.preventDefault(); game.devKey(e.code); } });
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { unlockAudio(); Music.unlock(); }, { passive: true }));
 
 (async function boot() {
