@@ -2,7 +2,7 @@
 // installExtras() ajoute ces méthodes à la classe Game (game.js lui fournit ses utilitaires).
 
 // Couleur des anneaux du Lien (planches PMD) selon le type du starter.
-const LINKC = { fire: 'red', water: 'blue', grass: 'green' };
+export const LINKC = { fire: 'red', water: 'blue', grass: 'green' };
 
 // Attaques signature : une par type (feu / eau / plante) et par stade d'évolution (0, 1, 2).
 // kinds : cross (deux entailles), whirl (tourbillon), blast (3 boules explosives), rush (charge perforante), storm (pluie d'impacts), fan (éventail), leaves (nova de feuilles), sun (rayon + soin)

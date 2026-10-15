@@ -330,6 +330,7 @@ export class Game {
     if (!n || i === this.chiefIdx || n.exh || this.state !== 'play' || (this.swapCd > 0 && !force) || (this.linkT > 0 && !force)) return false;
     if (this.linkT > 0) this.endLink(true);
     this.comboReset();
+    this.swapBall(o, n, force);
     n.x = o.x; n.y = o.y; n.face = o.face; n.dir = o.dir; n.atk = null; n.dodge = null; n.dash = null; n.hurtT = 0; n.kx = n.ky = 0; n.drink = 0;
     n.fx = null; n.regen = null; o.fx = null; o.regen = null; o.atk = null; o.dodge = null; o.dash = null;
     n.inv = Math.max(n.inv, force ? 1 : 0.7); setAnim(n, 'Idle'); n.anim = 'Idle';
