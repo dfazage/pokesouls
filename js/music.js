@@ -1,22 +1,24 @@
 // Système de musique : une piste par contexte, boucles sans coupure (Web Audio), fondus enchaînés, jingles à lecture unique.
+// Écran titre : INTRO_TITLE ; le fondu de 1 s vers MENU_STARTER / la carte se fait via direct().
 // Les fichiers sont dans assets/audio/music/<id en minuscules>.ogg ; une piste absente ou illisible est ignorée sans erreur.
 export const TRACKS = {
-  HUB_MAIN: { title: 'Slow Melancholic Theme C64 Style', author: 'skrjablin', license: 'CC-BY 3.0 / CC0', url: 'https://opengameart.org/node/18078', use: 'Feu de camp, écran titre, commandes' },
-  MENU_STARTER: { title: 'sadville', author: 'Bobjt', license: 'CC0', url: 'https://opengameart.org/node/87933', use: 'Choix du starter' },
-  MAP_1: { title: 'Chiptune: Exploration', author: 'ansimuz', license: 'CC0', url: 'https://opengameart.org/content/chiptune-exploration', use: 'Carte 1' },
-  MAP_2: { title: 'Nintendo Style - Dungeon Music Loop 02', author: 'PlayOnLoop', license: 'CC-BY 4.0', url: 'https://opengameart.org/node/111300', use: 'Carte 2' },
-  MAP_3: { title: 'Spooky Dungeon', author: 'Memoraphile', license: 'CC0', url: 'https://opengameart.org/node/87564', use: 'Carte 3' },
-  MAP_4: { title: 'Possible Dungeon', author: 'davididev', license: 'CC-BY 4.0', url: 'https://opengameart.org/node/95325', use: 'Carte 4' },
-  MAP_5: { title: 'Underground Storm', author: 'axtoncrolley', license: 'CC-BY-SA 3.0', url: 'https://opengameart.org/node/32900', use: 'Carte 5' },
-  MAP_6: { title: '8-bit Dungeon', author: 'Tsorthan Grove', license: 'CC-BY 4.0', url: 'https://opengameart.org/node/137421', use: 'Carte 6' },
-  MINIBOSS_A: { title: 'Zelda Style 8-bit Boss Theme', author: 'HydroGene', license: 'CC0', url: 'https://opengameart.org/node/140852', use: 'Gros mob' },
-  MINIBOSS_B: { title: '8-bit Theme - Intensity', author: 'Wolfgang_', license: 'CC-BY 3.0', url: 'https://opengameart.org/node/86839', use: 'Gros mob (alternance)' },
-  SUBBOSS_BIRDS: { title: '16-bit - Battle Theme I', author: 'HydroGene', license: 'CC0', url: 'https://opengameart.org/node/178920', use: 'Artikodin, Électhor, Sulfura' },
-  SUBBOSS_KINGS: { title: 'Phantasy Boss Battle Encounter', author: 'ansimuz', license: 'CC0', url: 'https://opengameart.org/node/137167', use: 'Rois de Kanto' },
-  SUBBOSS_KINGS_ALT: { title: 'Retro Chiptune (Action)', author: 'PeakMusic', license: 'CC0', url: 'https://opengameart.org/node/100781', use: 'Rois de Kanto (variante)' },
-  BOSS_MEWTWO_P1: { title: 'Final Boss Appearance Dark Fantasy', author: 'SOUND AIRYLUVS by ISAo (https://airyluvs.com/)', license: 'OGA-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/node/114175', use: 'Mewtwo, phase 1' },
-  BOSS_MEWTWO_P2: { title: '16bit Boss Battle Loop', author: '3xBlast', license: 'CC-BY-SA 3.0', url: 'https://opengameart.org/node/69034', use: 'Mewtwo, phase 2' },
-  BOSS_MEW: { title: 'Final Stand', author: 'Centurion_of_war', license: 'CC0', url: 'https://opengameart.org/content/final-stand-0', use: 'Mew' },
+  INTRO_TITLE: { title: 'Outlive (short version)', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/outlive-short-version', use: 'Écran titre' },
+  HUB_MAIN: { title: 'Dark Shrine Loop', author: 'qubodup', license: 'CC0', url: 'https://opengameart.org/content/dark-shrine-loop', use: 'Feu de camp, commandes' },
+  MENU_STARTER: { title: 'The Hope', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/the-hope', use: 'Choix du starter' },
+  MAP_1: { title: 'Laments of the War', author: 'Cethiel', license: 'CC0', url: 'https://opengameart.org/content/laments-of-the-war', use: 'Carte 1' },
+  MAP_2: { title: 'Mysterious', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/mysterious', use: 'Carte 2' },
+  MAP_3: { title: 'Forgoten Tomb Ambience', author: 'kindland', license: 'CC0', url: 'https://opengameart.org/content/forgoten-tomb-ambience', use: 'Carte 3' },
+  MAP_4: { title: 'Dark Theme', author: 'JaggedStone', license: 'CC0', url: 'https://opengameart.org/content/dark-theme', use: 'Carte 4' },
+  MAP_5: { title: 'Horror Atmosphere', author: 'SubspaceAudio', license: 'CC0', url: 'https://opengameart.org/content/horror-atmosphere', use: 'Carte 5' },
+  MAP_6: { title: 'Fantasy Choir (3 orchestral pieces)', author: 'cesisco', license: 'CC0', url: 'https://opengameart.org/content/fantasy-choir-3-orchestral-pieces', use: 'Carte 6' },
+  MINIBOSS_A: { title: 'Sinister Boss Appears', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/sinister-boss-appears', use: 'Gros mob' },
+  MINIBOSS_B: { title: 'Dramatic Boss Encounter', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/dramatic-boss-encounter', use: 'Gros mob (alternance)' },
+  SUBBOSS_BIRDS: { title: 'Boss Battle 2 (Symphonic Metal)', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-2-symphonic-metal', use: 'Artikodin, Électhor, Sulfura' },
+  SUBBOSS_KINGS: { title: 'Boss Battle Music', author: 'SubspaceAudio', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-music', use: 'Rois de Kanto' },
+  SUBBOSS_KINGS_ALT: { title: 'Ancient Power of Serpents', author: 'josepharaoh99', license: 'CC0', url: 'https://opengameart.org/content/ancient-power-of-serpents', use: 'Rois de Kanto (variante)' },
+  BOSS_MEWTWO_P1: { title: 'Colossal Boss Battle Theme', author: 'Matthew Pablo (http://www.matthewpablo.com)', license: 'CC-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/content/colossal-boss-battle-theme', use: 'Mewtwo, phase 1' },
+  BOSS_MEWTWO_P2: { title: 'Dark Descent (extended cut)', author: 'Matthew Pablo (http://www.matthewpablo.com)', license: 'CC-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/content/dark-descent-extended-cut', use: 'Mewtwo, phase 2' },
+  BOSS_MEW: { title: 'Epic Endgame Cinematic', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/epic-endgame-cinematic', use: 'Mew' },
   JINGLE_CAMPFIRE: { title: 'Cunning plan (provisoire)', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/cunning-plan-short-seamless-loop', use: 'Feu allumé', jingle: true },
   JINGLE_DEATH: { title: 'Better luck next time', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/node/143357', use: 'Mort', jingle: true },
   JINGLE_VICTORY: { title: 'Victory sting', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/victory-sting', use: 'Boss vaincu', jingle: true },
@@ -184,7 +186,8 @@ let miniOn = false, miniOff = 0, miniAlt = false, miniId = 'MINIBOSS_A', lastMap
 const BOSS_TRACK = { articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
-  if (ui.screen === 'title' || ui.controls || !g || !g.world) return Music.direct('HUB_MAIN');
+  if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »
+  if (ui.controls || !g || !g.world) return Music.direct('HUB_MAIN');
   if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], g.world.def.boss === 'mewtwo' ? 'BOSS_MEWTWO_P2' : null, 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
   const b = g.bossActive && g.boss && !g.boss.dead ? g.boss : null;
   if (b) {

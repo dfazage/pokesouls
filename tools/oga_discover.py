@@ -1,11 +1,26 @@
 # Liste les fichiers audio proposés par chaque page OpenGameArt (à lancer là où le réseau est ouvert).
 import re, sys, urllib.request, urllib.parse, html
 PAGES = {
- 'hub_main': 'node/18078', 'menu_starter': 'node/87933', 'map_1': 'content/chiptune-exploration', 'map_2': 'node/111300', 'map_3': 'node/87564',
- 'map_4': 'node/95325', 'map_5': 'node/168233', 'map_6': 'content/forgotten-path', 'map_6_layer': 'node/12501', 'miniboss_a': 'node/140852', 'miniboss_b': 'node/86839',
- 'subboss_birds': 'node/178920', 'subboss_kings': 'node/137167', 'subboss_kings_alt': 'node/100781', 'boss_mewtwo_p1': 'node/114175',
- 'boss_mewtwo_p2': 'content/8-bit-infinite-darkness', 'boss_mew': 'content/final-stand-0', 'jingle_campfire': 'content/cunning-plan-short-seamless-loop',
- 'jingle_death': 'node/143357', 'jingle_victory': 'content/victory-sting',
+ 'intro_title': 'content/outlive-short-version',
+ 'hub_main': 'content/dark-shrine-loop',
+ 'menu_starter': 'content/the-hope',
+ 'map_1': 'content/laments-of-the-war',
+ 'map_2': 'content/mysterious',
+ 'map_3': 'content/forgoten-tomb-ambience',
+ 'map_4': 'content/dark-theme',
+ 'map_5': 'content/horror-atmosphere',
+ 'map_6': 'content/fantasy-choir-3-orchestral-pieces',
+ 'miniboss_a': 'content/sinister-boss-appears',
+ 'miniboss_b': 'content/dramatic-boss-encounter',
+ 'subboss_birds': 'content/boss-battle-2-symphonic-metal',
+ 'subboss_kings': 'content/boss-battle-music',
+ 'subboss_kings_alt': 'content/ancient-power-of-serpents',
+ 'boss_mewtwo_p1': 'content/colossal-boss-battle-theme',
+ 'boss_mewtwo_p2': 'content/dark-descent-extended-cut',
+ 'boss_mew': 'content/epic-endgame-cinematic',
+ 'jingle_campfire': 'content/cunning-plan-short-seamless-loop',
+ 'jingle_death': 'node/143357',
+ 'jingle_victory': 'content/victory-sting',
 }
 UA = {'User-Agent': 'Mozilla/5.0 (PokeSouls fan game asset fetch)'}
 def get(u):

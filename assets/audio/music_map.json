@@ -1,112 +1,119 @@
 {
+ "INTRO_TITLE": {
+  "youtube": "s9NMV-k6Jcc",
+  "title": "Intro · Dark Souls III Main Theme (cover, Sam B Music)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "intro_title.ogg"
+ },
  "HUB_MAIN": {
-  "youtube": "vZGGazXG1bo",
-  "title": "DS · Firelink Shrine (CrimsonCobalt)",
+  "youtube": "Gjht7acg9d4",
+  "title": "DS · Firelink Shrine (Motoi Sakuraba, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "hub_main.ogg"
  },
  "MENU_STARTER": {
-  "youtube": "cSBL6cKpOeQ",
-  "title": "ER · Main Theme 8-bit (Psypher the Psynergist)",
+  "youtube": "iRxpAnq3X9c",
+  "title": "ER · Roundtable Hold (Tsukasa Saitoh, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "menu_starter.ogg"
  },
  "MAP_1": {
-  "youtube": "Z6jgJTgEkBs",
-  "title": "ER · 8-bit Chiptune (Jacksonics Audio)",
+  "youtube": "jZbBRLkRmSU",
+  "title": "ER · Limgrave (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_1.ogg"
  },
  "MAP_2": {
-  "youtube": "34cNmSL7qPc",
-  "title": "DS · Nameless Song (CrimsonCobalt)",
+  "youtube": "7VidABIU21M",
+  "title": "DS · Darkroot Garden (Sound Phenomenon, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_2.ogg"
  },
  "MAP_3": {
-  "youtube": "jder69Jra6k",
-  "title": "DS · Gravelord Nito (CrimsonCobalt)",
+  "youtube": "Fia3bHXcFag",
+  "title": "DS · Ancient Dragon / Ash Lake (K Playz, fan)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_3.ogg"
  },
  "MAP_4": {
-  "youtube": "wl3sHHNEvGg",
-  "title": "DS · Gwynevere, Princess of Sunlight (CrimsonCobalt)",
+  "youtube": "tB1Z9-4WrDg",
+  "title": "DS · Anor Londo (Solas Composer, fan)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_4.ogg"
  },
  "MAP_5": {
-  "youtube": "LOaWN3m_NSI",
-  "title": "DS · Dark Sun Gwyndolin (CrimsonCobalt)",
+  "youtube": "DAtqGCKYbYo",
+  "title": "ER · Crumbling Farum Azula (Shoi Miyazawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_5.ogg"
  },
  "MAP_6": {
-  "youtube": "k_Fpi1Zg7zY",
-  "title": "DS · Prologue (CrimsonCobalt)",
+  "youtube": "waM5_Nv-rHk",
+  "title": "ER · Miquella's Haligtree (Tai Tomisawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_6.ogg"
  },
  "MINIBOSS_A": {
-  "youtube": "OIwdfZr-g6o",
-  "title": "DS · Taurus Demon (CrimsonCobalt)",
+  "youtube": "FbKoy15fwZw",
+  "title": "DS · Taurus Demon (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_a.ogg"
  },
  "MINIBOSS_B": {
-  "youtube": "wPKS_uePyVk",
-  "title": "DS · Bell Gargoyle (CrimsonCobalt)",
+  "youtube": "qrE-HvIM1Pg",
+  "title": "ER · Margit, the Fell Omen (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_b.ogg"
  },
  "SUBBOSS_BIRDS": {
-  "youtube": "W8uPiL86FaQ",
-  "title": "DS · Great Grey Wolf Sif 8-bit (nadoP)",
+  "youtube": "Fg_AkYeZcNM",
+  "title": "DS · Sif, the Great Grey Wolf (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_birds.ogg"
  },
  "SUBBOSS_KINGS": {
-  "youtube": "qJ1oBNatXcg",
-  "title": "DS · Four Kings (CrimsonCobalt)",
+  "youtube": "_tnu_zOB8-g",
+  "title": "DS · Four Kings (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_kings.ogg"
  },
  "SUBBOSS_KINGS_ALT": {
-  "youtube": "dXizgLp9IkM",
-  "title": "DS · Gaping Dragon (CrimsonCobalt)",
+  "youtube": "hOxLVIPkHTs",
+  "title": "DS · Ornstein & Smough (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_kings_alt.ogg"
  },
  "BOSS_MEWTWO_P1": {
-  "youtube": "g8elMNuxzl8",
-  "title": "DS · Ornstein and Smough 8-bit (8-bit DS)",
+  "youtube": "Z1ts4FP1WWM",
+  "title": "ER · Starscourge Radahn (Shoi Miyazawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p1.ogg"
  },
  "BOSS_MEWTWO_P2": {
-  "youtube": "JO4PynahOGA",
-  "title": "ER · Malenia Theme 8bit Remix (Jeloki)",
+  "youtube": "R3R-hzDPi1A",
+  "title": "ER · The Final Battle (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p2.ogg"
  },
  "BOSS_MEW": {
-  "youtube": "drsBKBZ1q3o",
-  "title": "DS · Gwyn, Lord of Cinder 8-bit (explod2A03)",
+  "youtube": "3bqLGebDRIY",
+  "title": "DS · Gwyn, Lord of Cinder (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mew.ogg"
