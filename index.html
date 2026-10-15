@@ -2,7 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05060c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PokéSouls">
 <title>PokéSouls — Chapitre Génération 1</title>
 <meta name="description" content="Fan game non commercial : action-RPG souls-like, trois starters, six cartes, les oiseaux légendaires, Mewtwo et Mew.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;800&display=swap" rel="stylesheet">
@@ -24,12 +32,13 @@
       <div id="embers"></div><div class="tvig"></div>
     </div>
     <div class="tt"><small>Fan game non commercial · version de développement</small><h1>POKÉ<span>SOULS</span></h1><h3>Chapitre 1 · Génération 1 · Six cartes</h3></div>
-    <div class="tb"><button id="btn-new">Nouvelle partie</button><button id="btn-continue">Continuer</button><button id="btn-keys">Commandes</button><button id="btn-credits">Crédits</button></div>
+    <div class="tb"><button id="btn-new">Nouvelle partie</button><button id="btn-continue">Continuer</button><button id="btn-keys">Commandes</button><button id="btn-credits">Crédits</button><button id="btn-install" hidden>Installer l’app</button></div>
     <p class="hint">Clavier (WASD/ZQSD + J K L Espace), souris ou manette. Toutes les commandes sont modifiables.</p>
   </div>
   <div id="starters" class="screen"></div>
   <div id="end" class="screen"><h2>Fin du Chapitre Génération 1</h2><p>Mewtwo et Mew sont tombés.<br>Les générations suivantes arrivent.</p><button id="end-close">Continuer à explorer</button></div>
 </div>
+<div id="rotate"><div class="ri">⟳</div><p>Tournez votre téléphone<br>en mode paysage</p></div>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
