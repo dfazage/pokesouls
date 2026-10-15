@@ -138,7 +138,7 @@ export const AIR_FRAG = /* glsl */`
 uniform sampler2D uMap; uniform float uAdd;
 varying vec2 vUv;
 void main(){
-  vec4 t = texture2D(uMap, vUv);
+  vec4 t = texture2D(uMap, vec2(vUv.x, 1. - vUv.y));
   if(uAdd > .5){ gl_FragColor = vec4(t.rgb*0.9, 1.); }
   else { gl_FragColor = vec4(t.rgb, t.a); }   // texture non prémultipliée
 }`;
