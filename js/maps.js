@@ -277,6 +277,8 @@ export function lineClear(world, x0, y0, x1, y1) {
 export function bakeFloor(world) {
   const th = world.theme, c = document.createElement('canvas'); c.width = MW * TS; c.height = MH * TS;
   const g = c.getContext('2d');
+  // masque d'émission (demi-résolution) : lignes de circuit, veines de lave, anneaux d'arène… utilisé par le rendu HD-2D
+  const ec = document.createElement('canvas'); ec.width = MW * TS / 2; ec.height = MH * TS / 2; const ge = ec.getContext('2d'); ge.scale(0.5, 0.5); c.emis = ec;
   g.fillStyle = '#05060c'; g.fillRect(0, 0, c.width, c.height);
   const ac = rgb(th.accent), ac2 = rgb(th.accent2);
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
@@ -295,29 +297,31 @@ export function bakeFloor(world) {
     const fx = th.fx;
     if (fx === 'circuit') {
       if (r > 0.82) { g.fillStyle = 'rgba(0,0,0,.35)'; for (let i = 3; i < TS - 3; i += 4) g.fillRect(x + 4, y + i, TS - 8, 1); }
-      if (r < 0.14) { g.strokeStyle = inA ? 'rgba(190,120,255,.55)' : `rgba(${th.accent},.45)`; g.lineWidth = 1; g.beginPath(); const aa = 4 + (r * 100 % 12) | 0; g.moveTo(x, y + aa); g.lineTo(x + 10, y + aa); g.lineTo(x + 10, y + 16); g.lineTo(x + TS, y + 16); g.stroke(); g.fillStyle = inA ? '#d0a0ff' : ac; g.fillRect(x + 9, y + aa - 1, 3, 3); }
+      if (r < 0.14) { g.strokeStyle = inA ? 'rgba(190,120,255,.55)' : `rgba(${th.accent},.45)`; g.lineWidth = 1; g.beginPath(); const aa = 4 + (r * 100 % 12) | 0; g.moveTo(x, y + aa); g.lineTo(x + 10, y + aa); g.lineTo(x + 10, y + 16); g.lineTo(x + TS, y + 16); g.stroke(); g.fillStyle = inA ? '#d0a0ff' : ac; g.fillRect(x + 9, y + aa - 1, 3, 3);
+        ge.strokeStyle = inA ? '#d0a0ff' : ac; ge.lineWidth = 1; ge.beginPath(); ge.moveTo(x, y + aa); ge.lineTo(x + 10, y + aa); ge.lineTo(x + 10, y + 16); ge.lineTo(x + TS, y + 16); ge.stroke(); ge.fillStyle = '#fff'; ge.fillRect(x + 9, y + aa - 1, 3, 3); }
       if (r > 0.6 && r < 0.64) { g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(x + 6, y + 8, 10, 6); }
     } else if (fx === 'ice') {
       if (r < 0.22) { g.strokeStyle = 'rgba(220,245,255,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 3, y + 4 + r * 20); g.lineTo(x + 12, y + 12); g.lineTo(x + 20, y + 8 + r * 10); g.stroke(); }
-      if (r > 0.9) { g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + 6 + r * 10 % 10, y + 6, 2, 2); }
+      if (r > 0.9) { g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + 6 + r * 10 % 10, y + 6, 2, 2); ge.fillStyle = '#9fe8ff'; ge.fillRect(x + 6 + r * 10 % 10, y + 6, 2, 2); }
       if (r > 0.5 && r < 0.56) { g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 3, y + 3, TS - 6, TS - 6); }
     } else if (fx === 'lava') {
-      if (r < 0.2) { g.strokeStyle = `rgba(${th.accent},.7)`; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x + 2, y + 6 + r * 30); g.lineTo(x + 9, y + 12); g.lineTo(x + 14, y + 10 + r * 20); g.lineTo(x + 22, y + 16); g.stroke(); }
+      if (r < 0.2) { g.strokeStyle = `rgba(${th.accent},.7)`; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x + 2, y + 6 + r * 30); g.lineTo(x + 9, y + 12); g.lineTo(x + 14, y + 10 + r * 20); g.lineTo(x + 22, y + 16); g.stroke();
+        ge.strokeStyle = ac; ge.lineWidth = 1.5; ge.beginPath(); ge.moveTo(x + 2, y + 6 + r * 30); ge.lineTo(x + 9, y + 12); ge.lineTo(x + 14, y + 10 + r * 20); ge.lineTo(x + 22, y + 16); ge.stroke(); }
       if (r > 0.88) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x + 4 + r * 8 % 8, y + 8, 6, 4); }
     } else if (fx === 'stone') {
       if (r < 0.3) { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(x + 3 + r * 30 % 12, y + 5, 5, 3); g.fillRect(x + 12, y + 14 + r * 10 % 6, 4, 3); }
       if (r > 0.9) { g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x + 6, y + 10, 8, 2); }
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
-      if (r > 0.92) { g.fillStyle = ac; g.fillRect(x + 8 + r * 20 % 8, y + 8, 2, 2); }
+      if (r > 0.92) { g.fillStyle = ac; g.fillRect(x + 8 + r * 20 % 8, y + 8, 2, 2); ge.fillStyle = ac; ge.fillRect(x + 7.5 + r * 20 % 8, y + 7.5, 3, 3); }
     }
   }
   // anneaux de l'arène
-  const A = world.arena; g.save(); g.translate(A.cx * TS, A.cy * TS);
-  for (const [rad, col, lw] of [[A.r * TS - 6, th.accent2, 2], [A.r * TS * 0.62, th.accent2, 1], [A.r * TS * 0.3, th.accent, 1]]) { g.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.stroke(); }
+  const A = world.arena; g.save(); g.translate(A.cx * TS, A.cy * TS); ge.save(); ge.translate(A.cx * TS, A.cy * TS);
+  for (const [rad, col, lw] of [[A.r * TS - 6, th.accent2, 2], [A.r * TS * 0.62, th.accent2, 1], [A.r * TS * 0.3, th.accent, 1]]) { g.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.stroke(); ge.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; ge.lineWidth = lw; ge.beginPath(); ge.arc(0, 0, rad, 0, Math.PI * 2); ge.stroke(); }
   g.strokeStyle = `rgba(${th.accent2[0]},${th.accent2[1]},${th.accent2[2]},.25)`; g.lineWidth = 1;
   for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6; g.beginPath(); g.moveTo(Math.cos(an) * A.r * TS * 0.3, Math.sin(an) * A.r * TS * 0.3); g.lineTo(Math.cos(an) * (A.r * TS - 6), Math.sin(an) * (A.r * TS - 6)); g.stroke(); }
-  g.restore();
+  g.restore(); ge.restore();
   // ombres au pied des murs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (world.grid[ty * MW + tx] === T.VOID) continue;

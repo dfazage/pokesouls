@@ -65,11 +65,24 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 
 La manette n'a pas encore été testée.
 
+## Rendu HD-2D
+
+Le jeu est affiché en **HD-2D** : la même logique de jeu, les mêmes sprites pixel (PMDCollab) et les mêmes cartes, mais projetés dans un décor 3D vu de haut en perspective (caméra fixe, haut de l'écran = nord, les commandes ne changent pas).
+
+- **Décor** : sol et murs en 3D (murs hauts au nord, parapets au sud, côtés intermédiaires), portes de boss en blocs, brume de boss animée. Les textures de sol viennent du moteur 2D (`bakeFloor`), les murs ont des textures par thème (briques, panneaux, tuyaux, filons de lave, givre, mousse…) avec un masque d'émission qui pulse.
+- **Fonds** : chaque carte a son abîme sous le sol, visible au-delà des murs : aurores et cristaux (glace), fosse métallique et tours éclairées (centrale), lac de lave et colonnes de basalte (volcan), brume et stalagmites (roche), vide étoilé et monolithes flottants (laboratoire), brume bioluminescente et arbres (île mystère). Particules d'ambiance par thème (neige, braises, étincelles, poussière, lucioles).
+- **Sprites** : chaque objet (Pokémon, décors, feux, coffres…) est dessiné par les fonctions 2D existantes dans un atlas, puis posé comme billboard orienté vers la caméra ; ombres et effets au sol sont projetés sur le sol, les effets aériens, projectiles, particules et textes sur un calque écran.
+- **Lumière** : la carte de lumière du moteur 2D est projetée sur le sol, les murs et les sprites. Post-traitement : tilt-shift, bloom, étalonnage par thème, vignette, grain léger.
+- **Lisibilité** : les murs qui masquent le chef se dissolvent en tramage autour de lui ; qualité adaptative (la résolution de rendu baisse toute seule si l'image est trop lente).
+
+`?2d` force l'ancien rendu 2D ; sans WebGL2, ou en cas d'erreur, le jeu retombe automatiquement dessus. **Maj + F8** bascule entre les deux en cours de partie.
+Code : `js/render3d.js` (caméra, sprites, lumière, post-traitement), `js/hd2d_world.js` (terrain, textures, fonds, particules), `js/hd2d_shaders.js` (shaders). Le réglage de caméra (`CFG` dans `render3d.js` : inclinaison, distance, champ) est une valeur de départ à ajuster.
+
 ## Développement
 
 Site statique, sans build : `python3 -m http.server` puis ouvrir `http://localhost:8000/`.
 Avec `?dev` : F1 invincible, F2 devant la brume du boss, F3 +1000 essence, F4 tue les ennemis proches, F5 boss à 27 %, F6 débloque tout.
-`?autostart` saute l'écran titre.
+`?autostart` saute l'écran titre. `?2d` force le rendu 2D classique (voir « Rendu HD-2D »).
 
 Tous les chiffres (PV, dégâts, coûts) sont des valeurs de départ à équilibrer : voir `js/data.js`.
 Les cartes sont dans `js/maps.js` (cartes 1, 2, 3, 4 et 6 générées avec une graine fixe, carte 5 dessinée à la main).
@@ -81,6 +94,7 @@ Les sprites sont préparés par `tools/fetch_sprites.py` et `tools/bake_sprites.
 - Sprites : [PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab), licence **CC BY-NC 4.0**. Merci à tous les artistes du projet (crédits par sprite dans le dépôt PMDCollab).
 - Effets d'attaque : **Dämmerlicht BFX** de KotatsuAkira (crédit obligatoire) ; **PIPO Fire** de PIPOSCHPATZ (CC BY 4.0) ; **Water Cannon** d'Anton Chi. Planches dans `assets/fx/`, décrites par `assets/fx.json` et jouées par `js/fx.js`. En mode `?dev`, **F8 / F9** font défiler les effets devant le chef.
 - Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce projet n'est ni affilié ni approuvé par eux.
+- Rendu HD-2D : [three.js](https://threejs.org/) (licence MIT), embarqué dans `js/vendor/`.
 - Code et sons de synthèse : ce dépôt.
 
 ## Musique
