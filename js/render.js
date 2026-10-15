@@ -1,4 +1,5 @@
 // Rendu : sol, murs, entités triées en profondeur, effets, éclairage HD-2D (ambiance multiplicative + lueurs additives).
+import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
 import { W, H } from './game.js';
@@ -146,7 +147,28 @@ function drawGates(ctx, g) {
   }
 }
 
+function drawSurfs(ctx, g) {
+  for (const f of g.surf) {
+    const k = Math.min(1, (f.life - f.t) / 1.2), a = Math.max(0, k);
+    ctx.save(); ctx.globalAlpha = a;
+    if (f.kind === 'fire') { ctx.fillStyle = 'rgba(255,110,30,.35)'; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.5, 0, 0, 7); ctx.fill(); for (let i = 0; i < 5; i++) { const q = f.seed + i * 1.7, fx = f.x + Math.cos(q) * f.r * 0.7, fy = f.y + Math.sin(q) * f.r * 0.3, h = 4 + 3 * Math.sin(g.t * 9 + q); ctx.fillStyle = i % 2 ? '#ffd24a' : '#ff7a30'; ctx.fillRect(Math.round(fx) - 1, Math.round(fy - h), 2, Math.round(h)); } }
+    else if (f.kind === 'puddle') { ctx.fillStyle = f.shock > 0 ? 'rgba(255,232,74,.45)' : 'rgba(74,168,255,.35)'; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.5, 0, 0, 7); ctx.fill(); ctx.strokeStyle = f.shock > 0 ? '#fff6a0' : 'rgba(190,230,255,.7)'; ctx.lineWidth = 1; ctx.stroke(); if (f.shock > 0) for (let i = 0; i < 3; i++) { const q = g.t * 14 + i * 2; ctx.fillStyle = '#fff6a0'; ctx.fillRect(Math.round(f.x + Math.cos(q) * f.r * 0.7), Math.round(f.y + Math.sin(q) * f.r * 0.3), 2, 2); } }
+    else if (f.kind === 'steam') { for (let i = 0; i < 6; i++) { const q = f.seed + i * 1.1 + g.t * 0.8; ctx.fillStyle = 'rgba(235,245,255,.28)'; ctx.beginPath(); ctx.arc(f.x + Math.cos(q) * f.r * 0.6, f.y - 6 - (g.t * 6 + i * 3) % 12 + Math.sin(q) * 4, 6 + i % 3, 0, 7); ctx.fill(); } }
+    else if (f.kind === 'toxic') { ctx.fillStyle = 'rgba(160,70,220,.28)'; ctx.beginPath(); ctx.ellipse(f.x, f.y - 4, f.r, f.r * 0.6, 0, 0, 7); ctx.fill(); for (let i = 0; i < 4; i++) { const q = f.seed + i * 1.9 + g.t * 0.6; ctx.fillStyle = 'rgba(200,120,255,.5)'; ctx.beginPath(); ctx.arc(f.x + Math.cos(q) * f.r * 0.6, f.y - 4 + Math.sin(q * 1.3) * 6, 3, 0, 7); ctx.fill(); } }
+    ctx.restore();
+  }
+}
+function markPips(ctx, g, o, top) {
+  if (!o.el || !o.el.length) return;
+  const n = o.el.length, x0 = Math.round(o.x - (n * 9 - 1) / 2);
+  o.el.forEach((m, i) => {
+    const M_ = MARKS[m.k]; if (!M_) return; const x = x0 + i * 9, y = Math.round(top);
+    ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y - 1, 9, 8); ctx.fillStyle = M_.color; ctx.globalAlpha = m.t < 1 ? 0.5 + 0.5 * Math.sin(g.t * 20) : 1; ctx.fillRect(x, y, 7, 6); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000'; ctx.fillRect(x + 1, y + 5, Math.max(0, Math.round(5 * Math.min(1, m.t / m.max))), 1);
+  });
+}
 function groundFx(ctx, g) {
+  drawSurfs(ctx, g);
   for (const r of g.rings) {
     if (r.r <= 0) continue; ctx.strokeStyle = r.color || 'rgba(224,160,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
@@ -194,6 +216,7 @@ function drawMember(ctx, g, m) {
   if (m.exh) { anim = hasAnim(id, 'Faint') ? 'Faint' : 'Hurt'; }
   drawSprite(ctx, id, anim, m.at / TICK, m.loop && !m.exh, dir, m.x, m.y, { alpha, flash: m.flash > 0, tint: statusTint(g, m.fx) });
   if (m.fx && !m.exh) statusTag(ctx, g, m, m.fx, A.db[id].anchor.h);
+  if (!m.exh) markPips(ctx, g, m, m.y - A.db[id].anchor.h - 16);
   if (m.regen && !m.exh) { ctx.strokeStyle = 'rgba(141,255,176,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(m.x, m.y, 12 + Math.sin(g.t * 6) * 1.5, 5, 0, 0, 7); ctx.stroke(); }
   if (ch && !m.exh) { const y = m.y - A.db[id].anchor.h - 4 + Math.sin(g.t * 5); ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.moveTo(m.x - 3, y - 4); ctx.lineTo(m.x + 3, y - 4); ctx.lineTo(m.x, y); ctx.fill(); }
   if (ch && g.guarding) { ctx.strokeStyle = g.guardT < 0.22 ? 'rgba(160,240,255,.9)' : 'rgba(180,210,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(m.x + m.face.x * 8, m.y - 8 + m.face.y * 5, 11, Math.atan2(m.face.y, m.face.x) - 1.1, Math.atan2(m.face.y, m.face.x) + 1.1); ctx.stroke(); }
@@ -211,6 +234,9 @@ function drawEnemy(ctx, g, e) {
   if (e.dead) return;
   const top = e.y - z - sp.anchor.h * sc - 6;
   if (e.fx) statusTag(ctx, g, e, e.fx, sp.anchor.h * sc + z + 8);
+  markPips(ctx, g, e, top - 10);
+  if (e.shell && e.shell.hp > 0) { ctx.strokeStyle = `rgba(200,240,255,${0.5 + 0.2 * Math.sin(g.t * 6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(e.x, e.y - z - 12, 22, 28, 0, 0, 7); ctx.stroke(); ctx.fillStyle = '#000'; ctx.fillRect(e.x - 15, top + 8, 30, 4); ctx.fillStyle = '#bfeaff'; ctx.fillRect(e.x - 14, top + 9, 28 * e.shell.hp / e.shell.max, 2); }
+  if (e.blind > 0) { ctx.fillStyle = '#e8f4ff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('?', e.x + 10, top + 4); }
   if (e.tele) { ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText('!', e.x + 1, top + 1); ctx.fillStyle = '#ff4a4a'; ctx.fillText('!', e.x, top); }
   if (!e.boss && e.hp < e.maxhp) { const w = Math.max(14, e.r * 2.4); ctx.fillStyle = '#000'; ctx.fillRect(e.x - w / 2 - 1, top + 3, w + 2, 4); ctx.fillStyle = '#d63a3a'; ctx.fillRect(e.x - w / 2, top + 4, w * Math.max(0, e.hp / e.maxhp), 2); }
   if (e.boss) { const gl = def.glow; ctx.strokeStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.3 + 0.15 * Math.sin(g.t * 4)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(e.x, e.y - z - 10, 18, 24, 0, 0, 7); ctx.stroke(); }

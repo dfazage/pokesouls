@@ -208,3 +208,8 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 @keyframes ph-motif3{0%{opacity:0;transform:scale(.4) rotate(12deg)}22%{opacity:1;transform:scale(1.4) rotate(0)}80%{opacity:.95;transform:scale(1.6)}100%{opacity:0;transform:scale(1.9)}}
 @keyframes ph-sub{0%,14%{opacity:0;transform:translateY(8px)}28%,80%{opacity:1;transform:none}100%{opacity:0}}
 @keyframes ph-name{0%,10%{opacity:0;letter-spacing:.8em;filter:blur(12px)}30%{opacity:1;letter-spacing:.14em;filter:blur(0)}80%{opacity:1;letter-spacing:.18em}100%{opacity:0;letter-spacing:.22em}}
+
+/* moteur d'éléments : avantage de type et réaction possible */
+.slot .mu{position:absolute;right:3px;top:1px;font:bold 11px monospace}.slot .mu.up{color:#8dff9a}.slot .mu.dn{color:#ff8a8a}
+.slot.react{box-shadow:0 0 10px 2px rgba(255,232,74,.8);animation:reactp .5s infinite alternate}
+@keyframes reactp{to{box-shadow:0 0 16px 4px rgba(255,232,74,.35)}}
