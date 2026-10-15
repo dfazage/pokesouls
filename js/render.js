@@ -4,7 +4,7 @@ import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
-import { drawFxs, fxLights } from './fx.js';
+import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
 
 const { TS } = M;
 let lightC = null;
@@ -68,6 +68,7 @@ export function collectDrawList(g, inView) {
   for (const o of g.obs) if (!o.dead && o.solid && o.on && inView(o.x, o.y)) list.push({ x: o.x, y: o.y + o.hh, f: c => drawObsSolid(c, g, o) });
   for (const q of g.allies) list.push({ x: q.x, y: q.y, big: bigFor(q.id, 1), f: c => drawAlly(c, g, q) });
   { const m = g.chief(); list.push({ x: m.x, y: m.y, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
+  if (g.swapFx) for (const s of g.swapFx) list.push({ x: s.x, y: s.y + (s.k === 'ball' ? 1 : -1), f: c => drawSwap(c, g, s) });
   if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
   return list;
 }
@@ -217,14 +218,43 @@ function statusTag(ctx, g, o, fx, h) {
   ctx.fillStyle = '#000'; ctx.fillText(S.tag, Math.round(o.x), y);
   if (fx.k === 'confuse') { for (let i = 0; i < 3; i++) { const a = g.t * 5 + i * 2.1; ctx.fillStyle = S.color; ctx.fillRect(Math.round(o.x + Math.cos(a) * 9), Math.round(y - 10 + Math.sin(a) * 2), 2, 2); } }
 }
+// ---------- relève : Poké Ball (pixel art tracé au rect, ≈ 9 px) ----------
+const BALL = { out: '#1c1c2e', red: '#e8483c', redHi: '#ff8a7a', white: '#f4f4f4', shade: '#b8b8c8' };
+function drawBall(ctx, x, y, open, glow) {
+  const px = (dx, dy, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x) + dx, Math.round(y) + dy, w, h); };
+  const lift = open ? Math.round(open * 4) : 0;
+  if (glow) { px(-3, -6, 6, 4, glow); }
+  // moitié basse (blanche)
+  px(-4, -4, 9, 1, BALL.out); px(-4, -3, 9, 3, BALL.out); px(-3, -3, 7, 2, BALL.white); px(-3, -1, 7, 1, BALL.shade); px(-2, 0, 5, 1, BALL.out); px(-2, -1, 5, 1, BALL.shade);
+  // bande et bouton
+  px(-4, -5, 9, 1, BALL.out); px(-1, -5, 3, 1, BALL.white);
+  // moitié haute (rouge), soulevée à l'ouverture
+  const t = -lift;
+  px(-3, -9 + t, 7, 1, BALL.out); px(-4, -8 + t, 9, 3, BALL.out); px(-3, -8 + t, 7, 3, BALL.red); px(-2, -8 + t, 2, 1, BALL.redHi);
+}
+function drawSwap(ctx, g, s) {
+  if (s.k === 'out') {
+    const k = Math.min(1, s.t / 0.22); if (k >= 1) return;
+    drawSprite(ctx, s.id, s.anim, s.at / TICK, true, s.dir, s.x, s.y, { scale: 1 - 0.85 * k, alpha: 1 - 0.5 * k, tint: 'sepia(1) saturate(7) hue-rotate(-52deg) brightness(1.7)', z: 0 });
+    return;
+  }
+  const t = s.t;
+  if (t < SWAP_OPEN + 0.06) {
+    const fall = Math.min(1, t / 0.12), y = s.y - 2 - (1 - fall) * (1 - fall) * 26;
+    drawBall(ctx, s.x, y, t > SWAP_OPEN - 0.02 ? Math.min(1, (t - (SWAP_OPEN - 0.02)) / 0.06) : 0, t > SWAP_OPEN - 0.02 ? s.color : null);
+  }
+}
 function drawMember(ctx, g, m) {
   const id = m.id, ch = m === g.chief();
   shadow(ctx, m.x, m.y, 8, m.exh ? 0.2 : 0.4);
+  // sortie de Poké Ball : invisible tant que la balle tombe, puis silhouette claire qui grandit et se remplit
+  let ap = null;
+  if (m.appear > 0 && !m.exh) { const t = SWAP_T - m.appear; if (t < SWAP_OPEN) return; const k = Math.min(1, (t - SWAP_OPEN) / 0.2); ap = { scale: 0.4 + 0.65 * k - (k >= 1 ? 0.05 : 0), flash: k < 0.7 }; }
   let alpha = m.exh ? 0.55 : 1; if (ch && m.inv > 0 && !m.exh && !m.dodge) alpha = (Math.floor(g.t * 30) % 2) ? 0.5 : 1; if (m.dodge) alpha = 0.55;
   const dir = m.atk ? m.dir : m.dir = dirFromVec(m.face.x, m.face.y);
   let anim = m.anim; if (!A.db[id].anims[anim]) anim = 'Idle';
   if (m.exh) { anim = hasAnim(id, 'Faint') ? 'Faint' : 'Hurt'; }
-  drawSprite(ctx, id, anim, m.at / TICK, m.loop && !m.exh, dir, m.x, m.y, { alpha, flash: m.flash > 0, tint: statusTint(g, m.fx) });
+  drawSprite(ctx, id, anim, m.at / TICK, m.loop && !m.exh, dir, m.x, m.y, { alpha, flash: m.flash > 0 || !!(ap && ap.flash), tint: statusTint(g, m.fx), scale: ap ? ap.scale : 1 });
   if (m.fx && !m.exh) statusTag(ctx, g, m, m.fx, A.db[id].anchor.h);
   if (!m.exh) markPips(ctx, g, m, m.y - A.db[id].anchor.h - 16);
   if (m.regen && !m.exh) { ctx.strokeStyle = 'rgba(141,255,176,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(m.x, m.y, 12 + Math.sin(g.t * 6) * 1.5, 5, 0, 0, 7); ctx.stroke(); }

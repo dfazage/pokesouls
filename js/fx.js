@@ -3,7 +3,9 @@
 // Les feuilles sont décrites dans assets/fx.json (fichier, taille d'une frame, colonnes, nombre de frames) et chargées en arrière-plan :
 // tant qu'une feuille n'est pas arrivée, l'effet est simplement ignoré (le jeu garde ses éclats et anneaux d'origine).
 
+import { LINKC } from './extras.js';
 export const FXS = { man: {}, img: {}, ready: false };
+export const SWAP_T = 0.45, SWAP_OPEN = 0.17; // durée de la relève, instant où la balle s'ouvre
 // Les planches PMD ont des frames de 16 à 160 px (Dämmerlicht : 192) : on les agrandit par pas entiers pour garder une taille à l'écran comparable.
 const pxScale = m => m.sc || Math.min(4, Math.max(1, Math.round(64 / Math.max(m.fw, m.fh))));
 
@@ -74,7 +76,21 @@ export function installFx(Game, { D }) {
       loop: !!o.loop, life: o.life || 6, follow: o.follow || null, cond: o.cond || null, hue: o.hue || 0, flip: o.flip ? -1 : 1, anchor: o.anchor || null, ground: !!o.ground, glow: o.glow || null, tag: o.tag || null, ox: o.ox || 0, oy: o.oy || 0 };
     this.fxs.push(f); return f;
   };
+  // ---------------------------------------------------------------- relève : Poké Ball (≈ 0,45 s, purement visuel)
+  // La balle tombe, s'ouvre en lumière colorée (anneau + étoile PMD) et le nouveau Pokémon en sort en silhouette qui se remplit.
+  // L'ancien se replie en silhouette rouge. Aucune incidence sur le jeu : la relève reste instantanée (invulnérabilité brève).
+  P.swapBall = function (o, n, force) {
+    if (!this.swapFx) this.swapFx = [];
+    const col = LINKC[n.type] || 'yellow';
+    if (!o.exh) this.swapFx.push({ k: 'out', t: 0, id: o.id, anim: o.anim, at: o.at, dir: o.dir, x: o.x, y: o.y });
+    this.swapFx.push({ k: 'ball', t: 0, x: o.x, y: o.y, color: n.def.color });
+    n.appear = SWAP_T;
+    this.fx('linkpulse_' + col, o.x, o.y, { scale: 0.9, z: 8, delay: SWAP_OPEN, dur: 0.4 });
+    this.fx('linkpulse_' + col, o.x, o.y, { scale: 0.55, z: 8, delay: SWAP_OPEN + 0.08, dur: 0.3 });
+  };
   P.updateFxs = function (dt) {
+    if (this.swapFx && this.swapFx.length) { for (const s of this.swapFx) s.t += dt; this.swapFx = this.swapFx.filter(s => s.t < SWAP_T); }
+    for (const m of this.team) if (m.appear > 0) m.appear = Math.max(0, m.appear - dt);
     const L = this.fxs; if (!L || !L.length) return;
     for (const f of L) {
       f.t += dt;
