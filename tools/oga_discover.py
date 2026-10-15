@@ -1,7 +1,6 @@
 # Liste les fichiers audio proposés par chaque page OpenGameArt (à lancer là où le réseau est ouvert).
 import re, sys, urllib.request, urllib.parse, html
 PAGES = {
- 'intro_title': 'content/outlive-short-version',
  'hub_main': 'content/dark-shrine-loop',
  'menu_starter': 'content/the-hope',
  'map_1': 'content/laments-of-the-war',
