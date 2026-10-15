@@ -2,9 +2,9 @@
 import re, sys, urllib.request, urllib.parse, html
 PAGES = {
  'hub_main': 'node/18078', 'menu_starter': 'node/87933', 'map_1': 'content/chiptune-exploration', 'map_2': 'node/111300', 'map_3': 'node/87564',
- 'map_4': 'node/95325', 'map_5': 'node/32900', 'map_6': 'node/137421', 'miniboss_a': 'node/140852', 'miniboss_b': 'node/86839',
+ 'map_4': 'node/95325', 'map_5': 'node/168233', 'map_6': 'content/forgotten-path', 'map_6_layer': 'node/12501', 'miniboss_a': 'node/140852', 'miniboss_b': 'node/86839',
  'subboss_birds': 'node/178920', 'subboss_kings': 'node/137167', 'subboss_kings_alt': 'node/100781', 'boss_mewtwo_p1': 'node/114175',
- 'boss_mewtwo_p2': 'node/69034', 'boss_mew': 'content/final-stand-0', 'jingle_campfire': 'content/cunning-plan-short-seamless-loop',
+ 'boss_mewtwo_p2': 'content/8-bit-infinite-darkness', 'boss_mew': 'content/final-stand-0', 'jingle_campfire': 'content/cunning-plan-short-seamless-loop',
  'jingle_death': 'node/143357', 'jingle_victory': 'content/victory-sting',
 }
 UA = {'User-Agent': 'Mozilla/5.0 (PokeSouls fan game asset fetch)'}
