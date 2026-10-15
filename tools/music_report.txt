@@ -13,7 +13,7 @@ subboss_kings OK <- BossBattle Files/BossBattle.ogg (1569 Ko) -> 758 Ko, 66 s | 
 subboss_kings_alt OK <- Retro Chiptune 1 WAV.wav (33396 Ko) -> 2110 Ko, 194 s | choix possibles: ['Retro Chiptune 1 WAV.wav', 'Retro Chiptune 1 MP3.mp3']
 boss_mewtwo_p1 OK <- dova_mary_only_knows.mp3 (1767 Ko) -> 983 Ko, 75 s | choix possibles: ['dova_mary_only_knows.mp3']
 boss_mewtwo_p2 OK <- Boss Battle_0.ogg (2922 Ko) -> 882 Ko, 74 s | choix possibles: ['Boss Battle.wav', 'Boss Battle_0.ogg']
-boss_mew OK <- final_stand_phase_1.3_0.ogg (4738 Ko) -> 1167 Ko, 85 s | choix possibles: ['final_stand_0.ogg', 'final_stand_phase_1.3_0.ogg', 'final_stand_phase_2.2.heavy_drums_0.ogg', 'final_stand_phase_2.2_0.ogg', 'final_stand_phase_3.3.piano__0.ogg', 'final_stand_phase_4.1final_0.ogg', 'final_stand_phase_4.1finalmax_0.ogg']
+boss_mew OK <- final_stand_0.ogg (2372 Ko) -> 588 Ko, 43 s | choix possibles: ['final_stand_0.ogg', 'final_stand_phase_1.3_0.ogg', 'final_stand_phase_2.2.heavy_drums_0.ogg', 'final_stand_phase_2.2_0.ogg', 'final_stand_phase_3.3.piano__0.ogg', 'final_stand_phase_4.1final_0.ogg', 'final_stand_phase_4.1finalmax_0.ogg']
 jingle_campfire OK <- Cunning plan_0.ogg (150 Ko) -> 94 Ko, 11 s | choix possibles: ['Cunning plan_0.ogg']
 jingle_death OK <- betterluck_0.ogg (81 Ko) -> 31 Ko, 3 s | choix possibles: ['betterluck_0.ogg']
 jingle_victory OK <- victory sting_0.ogg (129 Ko) -> 64 Ko, 8 s | choix possibles: ['victory sting_0.ogg']
