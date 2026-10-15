@@ -4,6 +4,7 @@ import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
 import * as D from './data.js';
+import { installExtras } from './extras.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -50,7 +51,7 @@ export class Game {
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
     this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
     this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
-    this.world = null; this.floor = null;
+    this.world = null; this.floor = null; this.initExtras();
     this.hasSave = this.load();
   }
 
@@ -78,7 +79,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, starters: this.starters, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers,
+    return { v: 2, starters: this.starters, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -89,7 +90,7 @@ export class Game {
     if (!s || s.v !== 2 || !s.starters) return false;
     this.starters = s.starters;
     this.team = ['fire', 'water', 'grass'].map((t, i) => { const m = this.makeMember(t, s.starters[t], i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
-    this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0;
+    this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
     this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
     this.applyLevels(true);
@@ -107,7 +108,7 @@ export class Game {
     this.state = 'loading'; if (!silent) this.emit('fade');
     await loadSpecies(speciesForMap(idx), null, true);
     if (this.world) { this.prog[this.mapIdx].lit = [...this.lit]; }
-    this.mapIdx = idx; this.world = M.buildWorld(idx); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
+    this.mapIdx = idx; this.world = M.buildWorld(idx); this.obs = []; this.world.obs = this.obs; this.gust = null; this.later = []; this.endLink(true); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
     const pr = this.prog[idx]; this.lit = new Set(pr.lit);
     if (pr.doorOpen && this.world.door) for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
     if (pr.bossDead) this.openFog();
@@ -193,6 +194,7 @@ export class Game {
     this.updateProjs(dt);
     this.updateRings(dt);
     this.updateZones(dt);
+    this.updateExtras(dt);
     this.updateFx(dt);
     this.updateWorld(dt);
     const c = this.chief();
@@ -209,7 +211,8 @@ export class Game {
   updateChief(dt) {
     const m = this.chief();
     this.swapCd -= dt;
-    for (const a of ['light', 'heavy', 'ability', 'dodge']) if (Input.pressed(a)) this.buf = { a, t: 0.3 };
+    const linkKey = Input.pressed('link'); if (linkKey) this.tryLink();
+    for (const a of ['light', 'heavy', 'ability', 'dodge']) if (Input.pressed(a) && !(linkKey && a === 'ability')) this.buf = { a, t: 0.3 };
     if (this.buf) { this.buf.t -= dt; if (this.buf.t <= 0) this.buf = null; }
     if (Input.pressed('next')) this.cycleChief();
     for (let i = 0; i < 3; i++) if (Input.pressed('s' + (i + 1))) this.switchTo(i);
@@ -252,17 +255,18 @@ export class Game {
     const run = Input.down('run') && moving && this.stam > 0 && !guarding;
     let spd = m.def.speed; if (run) { spd *= 1.5; this.stam = Math.max(0, this.stam - 8 * dt); this.stamPause = 0.5; } if (guarding) spd *= 0.45;
     if (m.fx && m.fx.k === 'para') spd *= 0.6;
+    spd *= this.terrain.slow;
     if (moving) move(this, m, ax * spd * dt, ay * spd * dt);
     if (this.lock) { m.face = unit(this.lock.x - m.x, this.lock.y - m.y); }
     else if (moving) m.face = unit(ax, ay);
     setAnim(m, moving ? 'Walk' : 'Idle'); m.at += dt * (run ? 1.5 : 1) * (guarding ? 0.5 : 1);
     this.stamTick(dt, run || guarding);
   }
-  stamTick(dt, hold) { if (!hold && this.stamPause <= 0) { const m = this.chief(); this.stam = Math.min(this.maxStam, this.stam + 35 * (m && m.fx && m.fx.k === 'para' ? 0.5 : 1) * dt); } }
+  stamTick(dt, hold) { if (!hold && this.stamPause <= 0) { const m = this.chief(); this.stam = Math.min(this.maxStam, this.stam + 35 * (m && m.fx && m.fx.k === 'para' ? 0.5 : 1) * (this.linkMalus > 0 ? 0.4 : 1) * (this.terrain.frost ? 0.5 : 1) * dt); } }
 
   tryDodge(m, ax, ay) {
     let d = (ax || ay) ? unit(ax, ay) : { x: -m.face.x, y: -m.face.y };
-    this.stam = Math.max(0, this.stam - 20); this.stamPause = 0.8;
+    this.stam = Math.max(0, this.stam - 20 * (this.linkMalus > 0 ? 1.5 : 1)); this.stamPause = 0.8; this.comboReset();
     m.dodge = { t: 0, dur: 0.35, iframes: 0.28, dist: m.fx && m.fx.k === 'para' ? 44 : 64, dx: d.x, dy: d.y }; m.atk = null;
     if (!this.lock && (ax || ay)) m.face = d;
     SFX.dodge();
@@ -273,6 +277,7 @@ export class Game {
     if (this.stam <= 0.5) return false;
     const ab = m.def.ability;
     if (kind === 'ability' && m.cd > 0) return false;
+    if (kind === 'ability') this.comboReset(); else if (this.comboStep(m, kind)) return true;
     const cost = kind === 'light' ? 12 : kind === 'heavy' ? 28 : ab.cost;
     this.stam = Math.max(0, this.stam - cost); this.stamPause = 0.8;
     this.startAttack(m, kind, this.aimTarget(m));
@@ -316,7 +321,9 @@ export class Game {
   // relève : le nouveau Pokémon prend la place de l'ancien (brève invulnérabilité, délai avant de pouvoir recommencer)
   switchTo(i, force) {
     const n = this.team[i], o = this.chief();
-    if (!n || i === this.chiefIdx || n.exh || this.state !== 'play' || (this.swapCd > 0 && !force)) return false;
+    if (!n || i === this.chiefIdx || n.exh || this.state !== 'play' || (this.swapCd > 0 && !force) || (this.linkT > 0 && !force)) return false;
+    if (this.linkT > 0) this.endLink(true);
+    this.comboReset();
     n.x = o.x; n.y = o.y; n.face = o.face; n.dir = o.dir; n.atk = null; n.dodge = null; n.dash = null; n.hurtT = 0; n.kx = n.ky = 0; n.drink = 0;
     n.fx = null; n.regen = null; o.fx = null; o.regen = null; o.atk = null; o.dodge = null; o.dash = null;
     n.inv = Math.max(n.inv, force ? 1 : 0.7); setAnim(n, 'Idle'); n.anim = 'Idle';
@@ -430,7 +437,7 @@ export class Game {
     if (a.t < a.pre) { setAnim(m, 'Charge'); m.at += dt; return; }
     const t = a.t - a.pre; setAnim(m, a.anim, false); m.at = t * (a.speed || 1);
     if (!a.done && t >= a.hit) { a.done = true; this.doHit(m, a); }
-    if (t >= a.total) m.atk = null;
+    if (t >= a.total) { m.atk = null; if (m === this.chief()) this.comboAt = this.t; }
   }
   powerOf(m, a) {
     const d = m.def; const mult = a.kind === 'heavy' ? 1.9 : a.kind === 'ability' ? d.ability.mult : 1;
@@ -442,6 +449,8 @@ export class Game {
   }
   doHit(m, a) {
     const d = m.def, dmg = this.powerOf(m, a), aim = a.aim, heavy = a.kind === 'heavy';
+    this.curElem = this.elemOf(m, a);
+    if (a.kind === 'sig') { this.doSignature(m, a); return; }
     if (a.kind === 'ability') {
       const tm = d.ability, k = tm.kind, ang = Math.atan2(aim.y, aim.x);
       if (k === 'lunge' || k === 'smoke') this.meleeArc(m, aim, d.range + 14, -0.1, dmg, { heavy: true, stagger: 0.7, knock: 90, status: tm.status });
@@ -457,6 +466,7 @@ export class Game {
         const len = 200; this.beams.push({ x: m.x, y: m.y - 6, ang, len, t: 0, max: 0.28, color: tm.color, w: 6 }); SFX.boom(); this.shake = Math.max(this.shake, 2);
         let hit = false;
         for (const e of this.enemies) { if (e.dead) continue; const rx = e.x - m.x, ry = e.y - m.y, al = rx * aim.x + ry * aim.y, pd = Math.abs(rx * aim.y - ry * aim.x); if (al > 0 && al < len + e.r && pd < e.r + 7) { if (this.damageEnemy(e, dmg, m, { heavy: true, stagger: 0.8, knock: 80, status: tm.status })) hit = true; } }
+        for (let q = 1; q <= 8; q++) this.hitObs(m.x + aim.x * len * q / 8, m.y + aim.y * len * q / 8, 8, dmg * 0.4, this.curElem);
         if (hit && m === this.chief()) this.hitstop = 0.05;
       } else if (k === 'heal' || k === 'cleanse') {
         let tot = 0;
@@ -483,10 +493,11 @@ export class Game {
       if (d > e.r + 6 && (dx * aim.x + dy * aim.y) / d < cosMin) continue;
       if (this.damageEnemy(e, dmg, m, o)) hit = true;
     }
+    if (cosMin < -1) this.hitObs(m.x, m.y, range, dmg * 0.8, this.curElem); else this.hitObs(m.x + aim.x * range * 0.55, m.y + aim.y * range * 0.55, range * 0.5 + 4, dmg * 0.8, this.curElem);
     if (hit && m === this.chief()) this.hitstop = 0.045;
     return hit;
   }
-  fireProj(p) { this.projs.push({ ...p, vx: Math.cos(p.ang) * p.speed, vy: Math.sin(p.ang) * p.speed, age: 0 }); }
+  fireProj(p) { this.projs.push({ ...p, elem: p.elem || this.curElem, vx: Math.cos(p.ang) * p.speed, vy: Math.sin(p.ang) * p.speed, age: 0 }); }
 
   // ---------- dégâts ----------
   damageEnemy(e, dmg, src, o = {}) {
@@ -494,8 +505,10 @@ export class Game {
     let back = false;
     if (!e.boss && src.def && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < -4 && e.state !== 'dormant') { dmg *= 1.15; back = true; }
     const crit = Math.random() < 0.08; if (crit) dmg *= 1.5;
+    if (o.sig && e.boss) dmg *= 0.55;
     dmg = Math.max(1, Math.round(dmg));
     e.hp -= dmg; e.flash = 0.12; e.aggro = true;
+    if (src === this.chief() && !src.summoned) this.addLink(o.sig ? 5 : o.heavy ? 4.5 : 2.5);
     if (e.state === 'idle' || e.state === 'dormant') e.state = 'chase';
     this.floatText(e.x, e.y - 18, String(dmg), crit || back ? '#ffd24a' : '#ffffff');
     this.burst(e.x, e.y - 6, crit ? '#ffd24a' : '#ffffff', crit ? 8 : 4);
@@ -525,13 +538,13 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) return false;
+    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t; this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); } return false; }
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if (this.guardT < 0.22 && o.parry !== false) {
         SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10);
-        m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20);
+        m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.4;
         return 'parry';
       }
       const red = m.def.guard != null ? m.def.guard : 0.35; dmg = Math.max(1, Math.round(dmg * red));
@@ -540,7 +553,7 @@ export class Game {
       if (this.stam <= 0) { this.guarding = false; this.guardT = 9; m.hurtT = 0.4; m.kx = -dx / dl * 90; m.ky = -dy / dl * 90; this.emit('toast', 'Garde brisée'); }
     } else {
       dmg = Math.round(dmg); m.hurtT = 0.28 + (o.heavy ? 0.15 : 0); m.kx = -dx / dl * (o.heavy ? 150 : 80); m.ky = -dy / dl * (o.heavy ? 150 : 80); m.atk = null; m.dash = null;
-      SFX.hurt(); if (chief) { this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
+      SFX.hurt(); if (chief) { this.comboReset(); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }
     m.hp -= dmg; m.flash = 0.12; m.inv = 0.45;
@@ -557,7 +570,7 @@ export class Game {
   }
   die() {
     if (this.state === 'dead') return;
-    this.state = 'dead'; this.deadT = 0; this.guarding = false;
+    this.state = 'dead'; this.deadT = 0; this.guarding = false; this.endLink(true); this.comboReset();
     const c = this.chief();
     if (this.essence > 0) this.souvenir = { map: this.mapIdx, x: c.x, y: c.y, amount: this.essence };
     this.essence = 0; this.hubAt = null; this.save(); SFX.death(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
@@ -688,10 +701,10 @@ export class Game {
     this.emit('bossStart', b);
   }
   bossPhase(b, ph) {
-    b.phase = ph; b.state = 'phase'; b.st = 2.0; b.invuln = 2.0; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
+    b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
     this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
-    this.emit('toast', b.def.name + (ph === 2 ? ' libère sa puissance' : ' est déchaîné'));
+    this.emit('bossPhase', b, ph);
   }
   spawnSummons(b) {
     const a = this.world.arena; const type = b.def.summon;
@@ -702,7 +715,7 @@ export class Game {
     const u = unit(tg.x - b.x, tg.y - b.y); const id = b.sprite;
     switch (b.state) {
       case 'intro': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; if (b.st <= 0) { b.state = 'move'; b.invuln = 0; } break;
-      case 'phase': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; this.shake = Math.max(this.shake, 1.5); if (b.st <= 0) { b.state = 'move'; b.invuln = 0; b.cd = 0.8; } break;
+      case 'phase': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; this.shake = Math.max(this.shake, 1.5); if (b.st <= 0) { b.state = 'move'; b.invuln = 0; b.cd = 0.8; b.obsT = 0.9; } break;
       case 'move': {
         b.face = u; b.dir = dirFromVec(u.x, u.y);
         const want = (def.want || 74) - (b.phase - 1) * 7; let mx = 0, my = 0;
@@ -720,7 +733,7 @@ export class Game {
         break;
       }
       case 'dash': {
-        b.st -= dt; const v = b.lockDir; const px = b.x, py = b.y; move(this, b, v.x * 270 * dt, v.y * 270 * dt, 6, 4); setAnim(b, 'Walk'); b.at += dt * 2;
+        b.st -= dt; const v = b.lockDir; const px = b.x, py = b.y; move(this, b, v.x * 270 * dt, v.y * 270 * dt, 6, 4); this.hitObs(b.x + v.x * 14, b.y + v.y * 14, 6, 70, 'boss'); setAnim(b, 'Walk'); b.at += dt * 2;
         this.parts.push({ x: b.x, y: b.y, z: 6, vx: 0, vy: 0, vz: 5, life: 0.3, max: 0.3, c: def.color, size: 3 });
         for (const m of this.actors()) if (!m.exh && !b.rollHit.has(m) && hyp(m.x - b.x, m.y - b.y) < b.r + 9) { b.rollHit.add(m); const r = this.hurtMember(m, b.dmg * 1.8, b, { owner: b, heavy: true }); if (r === 'parry') { b.st = 0; } }
         if (b.st <= 0 || hyp(b.x - px, b.y - py) < 0.4 * 270 * dt * 0.5) { b.state = 'recover'; b.st = 0.8; b.cd = b.phase === 1 ? 1.4 : 0.9; this.shake = 3; }
@@ -734,6 +747,7 @@ export class Game {
         }
         break;
     }
+    if (b.phase >= 2 && b.state === 'move' && b.obsT !== undefined) { b.obsT -= dt; if (b.obsT <= 0) { this.spawnObstacles(b); b.obsT = b.phase === 3 ? 6.5 : 9; } }
     if (b.phase === 3 && def.summon && b.state === 'move' && !this.enemies.some(e => e.clone && !e.dead) && b.cd < 0) this.spawnSummons(b);
     for (const e of this.enemies) if (e.clone && !e.dead) { e.face = unit(tg.x - e.x, tg.y - e.y); e.dir = dirFromVec(e.face.x, e.face.y); }
   }
@@ -789,8 +803,8 @@ export class Game {
       for (let i = 0; i < n; i++) { const p = i === 0 ? { x: tg.x, y: tg.y } : { x: tg.x + rand(-85, 85), y: tg.y + rand(-65, 65) }; this.zones.push({ x: p.x, y: p.y, r: 20, t: 0, delay: 0.85 + i * 0.13, dmg: d * 1.2, color: b.def.rainColor || col, owner: b }); }
       setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.6, 1.5);
     } else if (T === 'beam') {
-      const v = b.lockDir || u, ang = Math.atan2(v.y, v.x), len = 260;
-      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.boom(); this.shake = 5;
+      const v = b.lockDir || u, ang = Math.atan2(v.y, v.x), len = this.rayObs(b.x, b.y, v, 260);
+      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.boom(); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
       for (const m of this.actors()) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
       setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
     } else if (T === 'summon') {
@@ -800,7 +814,7 @@ export class Game {
   }
   bossDefeated(b) {
     const pr = this.prog[this.mapIdx];
-    this.bossActive = false; pr.bossDead = true; this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
+    this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
     this.openFog(); this.buildItems(); SFX.victory(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
@@ -811,14 +825,15 @@ export class Game {
   updateProjs(dt) {
     for (const p of this.projs) {
       p.age += dt; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.life <= 0 || M.solidAt(this.world, p.x, p.y)) { p.dead = true; this.burst(p.x, p.y, p.color, 3); if (p.explode && p.life > 0) this.projExplode(p); continue; }
+      if (p.life <= 0 || M.solidAt(this.world, p.x, p.y)) { if (p.life > 0 && this.obs.length) this.hitObs(p.x, p.y, 4, p.dmg * (p.team === 'p' ? 0.8 : 0.6), p.team === 'p' ? (p.elem || 'normal') : 'enemy'); p.dead = true; this.burst(p.x, p.y, p.color, 3); if (p.explode && p.life > 0) this.projExplode(p); continue; }
       if (Math.random() < 0.6) this.parts.push({ x: p.x, y: p.y, z: 8, vx: 0, vy: 0, vz: 0, life: 0.25, max: 0.25, c: p.color, size: p.big ? 3 : 2 });
       if (p.team === 'p') {
+        if (this.obs.length) this.quenchAt(p.x, p.y, p.elem);
         for (const e of this.enemies) {
           if (e.dead || p.dead) continue;
           if (hyp(e.x - p.x, e.y - 4 - p.y) < e.r + p.r + 2) {
             if (p.explode) { this.projExplode(p); p.dead = true; break; }
-            if (this.damageEnemy(e, p.dmg, p.owner, { heavy: p.heavy, stagger: 0.3, knock: 20, status: p.status }) && p.leech) { const o = p.owner; if (o && !o.exh) { o.hp = Math.min(o.maxhp, o.hp + p.dmg * 0.6); this.healFx(o); } }
+            if (this.damageEnemy(e, p.dmg, p.owner, { heavy: p.heavy, stagger: 0.3, knock: 20, status: p.status, sig: p.sig }) && p.leech) { const o = p.owner; if (o && !o.exh) { o.hp = Math.min(o.maxhp, o.hp + p.dmg * 0.6); this.healFx(o); } }
             p.dead = true; if (p.owner === this.chief()) this.hitstop = 0.03; break;
           }
         }
@@ -838,7 +853,8 @@ export class Game {
   }
   projExplode(p) {
     this.ringFx(p.x, p.y, p.explode, p.color); SFX.boom(); this.burst(p.x, p.y, p.color, 14);
-    for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < p.explode + e.r) this.damageEnemy(e, p.dmg, p.owner, { heavy: true, stagger: 0.8, knock: 80, status: p.status });
+    for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < p.explode + e.r) this.damageEnemy(e, p.dmg, p.owner, { heavy: true, stagger: 0.8, knock: 80, status: p.status, sig: p.sig });
+    this.hitObs(p.x, p.y, p.explode, p.dmg * 0.8, p.elem || 'normal');
   }
   updateRings(dt) {
     for (const r of this.rings) {
@@ -852,7 +868,7 @@ export class Game {
     for (const z of this.zones) {
       z.t += dt;
       if (!z.done && z.t >= z.delay) {
-        z.done = true; this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); SFX.boom();
+        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); SFX.boom();
         for (const m of this.actors()) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true, owner: z.owner });
       }
     }
@@ -913,7 +929,7 @@ export class Game {
   }
   rest(quiet) {
     for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; m.fx = null; m.regen = null; }
-    this.berries = this.maxBerries; this.ethers = this.maxEthers; this.stam = this.maxStam; this.buffT = 0; this.spawnAll(); this.save();
+    this.berries = this.maxBerries; this.ethers = this.maxEthers; this.stam = this.maxStam; this.buffT = 0; if (this.linkT <= 0) this.link = Math.max(this.link, 50); this.spawnAll(); this.save();
     if (!quiet) SFX.bonfire();
   }
   openDoor() { this.prog[this.mapIdx].doorOpen = true; for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; SFX.door(); this.save(); this.emit('toast', 'Raccourci ouvert'); }
@@ -978,9 +994,12 @@ export class Game {
     if (k === 'F3') { this.essence += 1000; }
     if (k === 'F4') { for (const e of this.enemies) if (!e.dead && !e.boss && hyp(e.x - this.chief().x, e.y - this.chief().y) < 260) this.damageEnemy(e, 99999, this.chief(), { heavy: true }); }
     if (k === 'F5' && this.boss && !this.boss.dead) { this.boss.hp = Math.min(this.boss.hp, this.boss.maxhp * 0.27); }
+    if (k === 'F7') { this.link = 100; this.emit('toast', 'Lien plein'); }
     if (k === 'F6') { this.ethers = this.maxEthers = 5; this.bag.revive = (this.bag.revive || 0) + 2; this.unlocked = M.MAPS.length - 1; for (const t of Object.keys(D.TMS)) if (!this.tms.includes(t)) this.tms.push(t); this.bag.candy = (this.bag.candy || 0) + 20; for (const v of VIT_KEYS) this.bag[v] = (this.bag[v] || 0) + 3; this.emit('toast', 'Tout débloqué'); }
   }
 }
+
+installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération
 const bnCache = {};

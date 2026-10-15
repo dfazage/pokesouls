@@ -32,6 +32,7 @@ async function launch(g) {
     else if (type === 'menu') openBonfire(a);
     else if (type === 'jingle') Music.playJingle(a);
     else if (type === 'bossStart') hud.bossIntro(a);
+    else if (type === 'bossPhase') hud.phaseScreen(a, b);
     else if (type === 'end') setTimeout(() => $('#end').classList.add('show'), 1500);
   };
   await game.start(); ui.screen = 'game';
@@ -82,7 +83,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-addEventListener('keydown', e => { if (game && game.dev && /^F[1-6]$/.test(e.code)) { e.preventDefault(); game.devKey(e.code); } });
+addEventListener('keydown', e => { if (game && game.dev && /^F[1-7]$/.test(e.code)) { e.preventDefault(); game.devKey(e.code); } });
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { unlockAudio(); Music.unlock(); }, { passive: true }));
 
 (async function boot() {

@@ -168,3 +168,43 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 @keyframes bi-line{0%,15%{transform:scaleX(0);opacity:1}45%,80%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 #boss.show .bbar .fill{animation:bi-hp 1.6s cubic-bezier(.3,.7,.2,1) both}
 @keyframes bi-hp{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
+
+/* ---- Lien (ulti coéquipiers) & combos ---- */
+#linkbox{display:flex;align-items:center;gap:6px;transition:box-shadow .3s,border-color .3s}
+#linkbox .lbar{position:relative;flex:1;min-width:84px;height:8px;background:rgba(5,7,20,.85);border:1px solid #3a4468}
+#linkbox .lbar .fill{height:100%;background:linear-gradient(90deg,#7a8cff,#ffe27a);transition:width .15s}
+#linkbox b{min-width:34px;text-align:right;color:var(--gold);font-size:11px}
+#linkbox.ready{border-color:#ffe27a;animation:lk-ready 1s ease-in-out infinite}
+#linkbox.ready .lbar .fill{background:linear-gradient(90deg,#ffe27a,#fff)}
+#linkbox.on{border-color:#9fb3ff;box-shadow:0 0 14px rgba(140,160,255,.7)}
+#linkbox.on .lbar .fill{background:linear-gradient(90deg,#9fb3ff,#d6dcff);transition:none}
+@keyframes lk-ready{0%,100%{box-shadow:0 0 4px rgba(255,226,122,.4)}50%{box-shadow:0 0 16px rgba(255,226,122,.95)}}
+#hud.linking::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:inset 0 0 90px 12px rgba(120,150,255,.38);animation:lk-vig 1.4s ease-in-out infinite}
+@keyframes lk-vig{0%,100%{opacity:.65}50%{opacity:1}}
+#combo{display:flex;align-items:center;gap:5px;height:10px;margin-top:4px;opacity:0;transition:opacity .15s}
+#combo.on{opacity:1}
+#combo i{width:14px;height:6px;background:rgba(40,46,80,.9);border:1px solid #5a6488;transform:skewX(-20deg)}
+#combo[data-n="1"] i:nth-child(1),#combo[data-n="2"] i{background:linear-gradient(#ffe27a,#d89a20);border-color:#ffe27a;box-shadow:0 0 6px rgba(255,226,122,.8)}
+#combo b{font:700 10px ui-monospace,monospace;color:#ffe27a;letter-spacing:.12em;margin-left:4px;text-shadow:0 0 6px #ffb040}
+
+/* ---- écran de phase de boss ---- */
+#phasescreen{position:absolute;inset:0;z-index:13;pointer-events:none;display:none;--bc:#e0b0ff;--gl:224,176,255}
+#phasescreen.show{display:block}
+#phasescreen .pf{position:absolute;inset:0;background:rgb(var(--gl));animation:ph-flash 2.4s ease-out both}
+#phasescreen .bar{position:absolute;left:0;right:0;height:0;background:#000;animation:ph-bar 2.4s ease both}#phasescreen .bar.t{top:0}#phasescreen .bar.b{bottom:0}
+#phasescreen::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(var(--gl),.22),rgba(0,0,0,.78) 80%);animation:ph-veil 2.4s ease both}
+#phasescreen .pr{position:absolute;left:50%;top:44%;width:320px;height:320px;margin:-160px 0 0 -160px;border:4px solid var(--bc);border-radius:50%;opacity:0;animation:ph-ring 1.6s ease-out both;box-shadow:0 0 30px var(--bc)}
+#phasescreen .pr.b{border-color:#fff;border-width:2px;animation-delay:.18s}
+#phasescreen .pm{position:absolute;left:50%;top:44%;width:260px;height:260px;margin:-130px 0 0 -130px;color:var(--bc);filter:drop-shadow(0 0 18px var(--bc));opacity:0;animation:ph-motif 2.4s cubic-bezier(.2,.8,.2,1) both}
+#phasescreen[data-ph="3"] .pm{animation-name:ph-motif3}
+#phasescreen .txt{position:absolute;left:0;right:0;top:62%;text-align:center}
+#phasescreen .sub{font:italic 20px Georgia,serif;letter-spacing:.34em;color:var(--bc);opacity:0;animation:ph-sub 2.4s ease both}
+#phasescreen .nm{font:800 56px/1.15 'Cinzel',Georgia,serif;color:#fff;margin-top:6px;text-shadow:0 0 26px var(--bc),0 0 60px var(--bc);opacity:0;animation:ph-name 2.4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ph-flash{0%{opacity:.95}22%,100%{opacity:0}}
+@keyframes ph-bar{0%{height:0}16%,84%{height:70px}100%{height:0}}
+@keyframes ph-veil{0%{opacity:0}14%,80%{opacity:1}100%{opacity:0}}
+@keyframes ph-ring{0%{transform:scale(.1);opacity:1}100%{transform:scale(3.6);opacity:0}}
+@keyframes ph-motif{0%{opacity:0;transform:scale(.4) rotate(-12deg)}22%{opacity:1;transform:scale(1.15) rotate(0)}80%{opacity:.9;transform:scale(1.25)}100%{opacity:0;transform:scale(1.5)}}
+@keyframes ph-motif3{0%{opacity:0;transform:scale(.4) rotate(12deg)}22%{opacity:1;transform:scale(1.4) rotate(0)}80%{opacity:.95;transform:scale(1.6)}100%{opacity:0;transform:scale(1.9)}}
+@keyframes ph-sub{0%,14%{opacity:0;transform:translateY(8px)}28%,80%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes ph-name{0%,10%{opacity:0;letter-spacing:.8em;filter:blur(12px)}30%{opacity:1;letter-spacing:.14em;filter:blur(0)}80%{opacity:1;letter-spacing:.18em}100%{opacity:0;letter-spacing:.22em}}

@@ -27,6 +27,10 @@ Chaque chapitre correspond à une génération. Chaque chapitre compte six carte
 - **Animations d'attaque** : elles viennent des sprites PMDCollab de chaque Pokémon (Attack, Strike, Swing, Shoot, Rotate, Hop, Double, Kick…), choisies selon la nature de l'attaque.
 - **Téléportation** (M) : vers l'entrée de toute carte débloquée ou vers un feu allumé, sauf pendant un boss.
 
+- **Lien (ulti)** : une jauge se remplit en touchant, esquivant à la dernière seconde et parant. Pleine, la touche V (ou LB + RB) fait apparaître les deux autres Pokémon pendant 8 s : invulnérables, ils attaquent seuls (moitié de dégâts contre les boss). Ensuite ils reviennent à 85 % de leurs PV et le Pokémon actif est essoufflé 3 s (endurance et esquive pénalisées). La jauge repart de zéro ; un feu la remonte à moitié.
+- **Combos** : léger, léger, lourd en moins de 0,5 s déclenche l'attaque signature du Pokémon (une par type et par stade d'évolution : Croix Ardente, Roue de Flammes, Grand Brasier, Jet Perforant, Tourbillon Marin, Déluge, Fouet Croisé, Tempête de Feuilles, Fléau Solaire). Elle coûte plus d'endurance, sans temps de recharge. Une parade relance le combo (riposte). Dégâts réduits contre les boss, effets de contrôle conservés.
+- **Phases de boss** : écran animé à 60 % et 25 % des PV (un motif et un titre par boss), puis des obstacles et éléments de terrain apparaissent, toujours annoncés par un cercle au sol : piliers de glace et sol givré (Artikodin), pylônes qui attirent la foudre (Électhor), rochers de basalte et lave (Sulfura), chutes de rochers et rafales (Dracolosse), cristaux et zones de gravité (Mewtwo), ronces et fleurs de soin (Mew). Les obstacles bloquent aussi les tirs du boss ; le feu fait fondre la glace et brûle les ronces, l'eau éteint la lave.
+
 ## Commandes
 
 Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et souris, sont modifiables (3 cases par action), enregistrées dans le navigateur.
@@ -41,6 +45,7 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Interagir | E | B |
 | Baie de soin | R | croix haut |
 | Fiole d'endurance (Huile) | F | LT |
+| Lien (appeler les alliés) | V | LB + RB |
 | Verrouillage | T | clic stick droit |
 | Relève du Pokémon | Tab ou 1 à 3 | RT |
 | Carte / Sac | M / B | Select / croix bas |

@@ -258,6 +258,8 @@ function isSolidTile(world, tx, ty) {
 }
 // Collision d'un point (en pixels), y compris la face avant des murs
 export function solidAt(world, px, py) {
+  const ob = world.obs;
+  if (ob) for (let i = 0; i < ob.length; i++) { const o = ob[i]; if (o.on && o.solid && !o.dead && Math.abs(px - o.x) < o.hw && Math.abs(py - o.y) < o.hh) return true; }
   const tx = Math.floor(px / TS), ty = Math.floor(py / TS);
   if (isSolidTile(world, tx, ty)) return true;
   const ly = py - ty * TS;
