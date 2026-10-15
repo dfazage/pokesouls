@@ -14,7 +14,7 @@ export const TRACKS = {
   SUBBOSS_BIRDS: { title: '16-bit - Battle Theme I', author: 'HydroGene', license: 'CC0', url: 'https://opengameart.org/node/178920', use: 'Artikodin, Électhor, Sulfura' },
   SUBBOSS_KINGS: { title: 'Phantasy Boss Battle Encounter', author: 'ansimuz', license: 'CC0', url: 'https://opengameart.org/node/137167', use: 'Rois de Kanto' },
   SUBBOSS_KINGS_ALT: { title: 'Retro Chiptune (Action)', author: 'PeakMusic', license: 'CC0', url: 'https://opengameart.org/node/100781', use: 'Rois de Kanto (variante)' },
-  BOSS_MEWTWO_P1: { title: 'Final Boss Appearance Dark Fantasy', author: 'ISAo', license: 'à vérifier', url: 'https://opengameart.org/node/114175', use: 'Mewtwo, phase 1' },
+  BOSS_MEWTWO_P1: { title: 'Final Boss Appearance Dark Fantasy', author: 'SOUND AIRYLUVS by ISAo (https://airyluvs.com/)', license: 'OGA-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/node/114175', use: 'Mewtwo, phase 1' },
   BOSS_MEWTWO_P2: { title: '16bit Boss Battle Loop', author: '3xBlast', license: 'CC-BY-SA 3.0', url: 'https://opengameart.org/node/69034', use: 'Mewtwo, phase 2' },
   BOSS_MEW: { title: 'Final Stand', author: 'Centurion_of_war', license: 'CC0', url: 'https://opengameart.org/content/final-stand-0', use: 'Mew' },
   JINGLE_CAMPFIRE: { title: 'Cunning plan (provisoire)', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/cunning-plan-short-seamless-loop', use: 'Feu allumé', jingle: true },
@@ -22,7 +22,11 @@ export const TRACKS = {
   JINGLE_VICTORY: { title: 'Victory sting', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/victory-sting', use: 'Boss vaincu', jingle: true },
 };
 const STORE = 'pokesouls.options.v1';
-const PATH = id => `assets/audio/music/${id.toLowerCase()}.ogg`;
+// Couche perso (reprises, usage privé) : active en local, coupée sur le site publié ; ?perso=0 ou ?perso=1 force le choix.
+const qp = (location.search.match(/[?&]perso=([01])/) || [])[1];
+export const USE_PERSONAL_MUSIC = qp ? qp === '1' : /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
+const FREE = id => `assets/audio/music/${id.toLowerCase()}.ogg`, PERSO = id => `assets/audio/music_perso/${id.toLowerCase()}.ogg`;
+const fetchOgg = url => fetch(url).then(r => { if (!r.ok) throw new Error('absent'); return r.arrayBuffer(); });
 const bossy = id => !!id && /^(BOSS_|SUBBOSS_)/.test(id);
 
 let ac = null, master = null, volume = 0.7;
@@ -40,7 +44,7 @@ function ensure() {
 function load(id) {
   if (bufs[id]) return;
   bufs[id] = 'loading';
-  fetch(PATH(id)).then(r => { if (!r.ok) throw new Error('absent'); return r.arrayBuffer(); })
+  (USE_PERSONAL_MUSIC ? fetchOgg(PERSO(id)).catch(() => fetchOgg(FREE(id))) : fetchOgg(FREE(id)))
     .then(a => new Promise((res, rej) => ac.decodeAudioData(a, res, rej)))
     .then(b => { bufs[id] = b; }).catch(() => { bufs[id] = 'fail'; });
 }
