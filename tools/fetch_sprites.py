@@ -5,7 +5,7 @@ import sys, os, json, urllib.request
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 BASE = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/'
-WANT = {'Walk', 'Attack', 'Hurt', 'Idle', 'Swing', 'Charge', 'Shoot', 'Faint', 'Hover', 'SpAttack', 'Appeal', 'Strike'}
+WANT = {'Walk', 'Attack', 'Hurt', 'Idle', 'Swing', 'Charge', 'Shoot', 'Faint', 'Hover', 'SpAttack', 'Appeal', 'Strike', 'Hop', 'Rotate', 'Double', 'Kick', 'Shake', 'Twirl', 'Withdraw'}
 spec, raw = sys.argv[1], sys.argv[2]
 def get(url, dest):
     if os.path.exists(dest) and os.path.getsize(dest) > 0: return True

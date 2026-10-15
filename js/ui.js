@@ -55,31 +55,53 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
 }
 
 // ---------- sac et équipe ----------
+let bagSel = 0, bagTab = 'items';
 export function showBag(game, onClose) {
+  const names = D.VITAMINS;
   const render = () => {
-    const names = D.VITAMINS;
-    const memb = game.team.map((m, i) => `<div class="mc t-${m.type}"><img src="${portrait(m.id)}" alt=""><div><b>${esc(m.def.name)}</b> <span>Niv. ${m.lvl} · ${m.def.typeName}</span>
-      <small>PV ${Math.ceil(m.hp)}/${m.maxhp} · Dégâts ${m.def.dmg.toFixed(1)} · Vitesse ${Math.round(m.def.speed)}</small>
-      <small>CT : <b>${esc(m.def.ability.name)}</b> (${m.def.ability.type})</small>
-      <small class="vit">${Object.keys(names).map(k => `${names[k].name.slice(0, 4)}. ${m.vit[k]}/5`).join(' · ')}</small></div></div>`).join('');
-    const tgt = (kind, key, can) => game.team.map((m, i) => `<button class="mini-b ${can(m) ? '' : 'off'}" data-use="${kind}:${key}:${i}" ${can(m) ? '' : 'disabled'} title="${esc(m.def.name)}"><img src="${portrait(m.id)}" alt=""></button>`).join('');
-    const items = [];
-    if (game.bag.candy) items.push(`<div class="irow"><div><b>Super Bonbon</b> ×${game.bag.candy}<small>+1 niveau, sans coût d'essence.</small></div><div class="tg">${tgt('candy', 'candy', m => m.lvl < D.MAX_LEVEL)}</div></div>`);
-    for (const k of Object.keys(names)) if (game.bag[k]) items.push(`<div class="irow"><div><b>${names[k].name}</b> ×${game.bag[k]}<small>${names[k].desc}</small></div><div class="tg">${tgt('vit', k, m => m.vit[k] < 5)}</div></div>`);
-    const tms = game.tms.map(t => { const T = D.TMS[t]; return `<div class="irow"><div><b>CT : ${esc(T.name)}</b> <span style="color:${T.color}">${T.type}</span><small>${esc(T.desc)} Coût ${T.cost} · recharge ${T.cd} s</small></div><div class="tg">${game.team.map((m, i) => `<button class="mini-b ${m.tm === t ? 'cur' : ''}" data-use="tm:${t}:${i}" title="${esc(m.def.name)}"><img src="${portrait(m.id)}" alt=""></button>`).join('')}</div></div>`; }).join('');
-    const m = open(`<div class="panel wide"><h2>Sac et équipe</h2><div class="mcs">${memb}</div>
-      <h4>Objets</h4><div class="ilist">${items.join('') || '<p class="sub">Aucun objet à utiliser pour l’instant.</p>'}</div>
-      <h4>Capsules techniques (clic sur un Pokémon pour lui apprendre la CT)</h4><div class="ilist">${tms}</div>
-      <p class="sub">Baies : ${game.berries} / ${game.maxBerries}</p>
+    if (!game.team[bagSel]) bagSel = game.chiefIdx;
+    const sel = game.team[bagSel];
+    const team = game.team.map((m, i) => {
+      const fx = m.fx ? D.STATUS[m.fx.k] : null;
+      return `<button class="bt t-${m.type} ${i === bagSel ? 'sel' : ''} ${m.exh ? 'ko' : ''}" data-sel="${i}">
+        <img src="${portrait(m.id)}" alt=""><div class="bi"><div class="bn"><b>${esc(m.def.name)}</b><span>Niv. ${m.lvl}</span>${i === game.chiefIdx ? '<i class="act">EN JEU</i>' : m.exh ? '<i class="ko">K.O.</i>' : '<i>RÉSERVE</i>'}</div>
+        <div class="tchips">${D.typesOf(m.type, m.id).map(t => `<u class="ty-${t}">${D.TYPE_FR[t]}</u>`).join('')}${fx ? `<u style="background:${fx.color};color:#000">⚠ ${fx.name}</u>` : ''}</div>
+        <div class="hpb"><div style="width:${100 * m.hp / m.maxhp}%"></div><span>${Math.ceil(m.hp)} / ${m.maxhp}</span></div>
+        <small>Dégâts ${m.def.dmg.toFixed(1)} · Vitesse ${Math.round(m.def.speed)} · CT <b style="color:${m.def.ability.color}">${esc(m.def.ability.name)}</b></small></div></button>`;
+    }).join('');
+    let body = '';
+    if (bagTab === 'items') {
+      const cards = [];
+      const card = (cls, icon, name, qty, desc, btn) => `<div class="ic ${cls}"><div class="ico">${icon}</div><div class="ib"><b>${name}</b>${qty != null ? `<em>×${qty}</em>` : ''}<small>${desc}</small></div>${btn || ''}</div>`;
+      cards.push(card('c-candy', '🍬', 'Super Bonbon', game.bag.candy || 0, '+1 niveau sans dépenser d’essence.', `<button data-use="candy:candy" ${(game.bag.candy > 0 && sel.lvl < D.MAX_LEVEL) ? '' : 'disabled'}>Donner</button>`));
+      cards.push(card('c-revive', '✦', 'Rappel', game.bag.revive || 0, 'Réveille un Pokémon K.O. avec la moitié de ses PV.', `<button data-use="revive:revive" ${(game.bag.revive > 0 && sel.exh) ? '' : 'disabled'}>Rappeler</button>`));
+      for (const k of Object.keys(names)) cards.push(card('c-vit', '◆', names[k].name, game.bag[k] || 0, names[k].desc + `<span class="pips">${'●'.repeat(sel.vit[k])}${'○'.repeat(5 - sel.vit[k])}</span>`, `<button data-use="vit:${k}" ${(game.bag[k] > 0 && sel.vit[k] < 5) ? '' : 'disabled'}>Donner</button>`));
+      body = `<div class="iconsum"><div><span>Baies</span><b>${game.berries} / ${game.maxBerries}</b><small>soigne 40 % et guérit les altérations</small></div>
+        <div><span>Huile</span><b>${game.ethers} / ${game.maxEthers}</b><small>endurance pleine, CT rechargée</small></div>
+        <div><span>Essence</span><b>${game.essence}</b><small>à dépenser au feu de camp</small></div></div><div class="igrid">${cards.join('')}</div>`;
+    } else {
+      const cards = [...game.tms].sort((a, b) => (D.tmCompat(b, sel.type, sel.id, sel.stage).ok - D.tmCompat(a, sel.type, sel.id, sel.stage).ok) || (sel.tm === b) - (sel.tm === a)).map(t => {
+        const T = D.TMS[t], c = D.tmCompat(t, sel.type, sel.id, sel.stage), eq = sel.tm === t;
+        const types = T.types.includes('all') ? 'Tous les types' : T.types.map(x => D.TYPE_FR[x]).join(' · ');
+        return `<div class="tc ${c.ok ? '' : 'no'} ${eq ? 'eq' : ''}" style="--c:${T.color}"><div class="th"><b>${esc(T.name)}</b><u style="background:${T.color}">${T.type}</u></div>
+          <small>${esc(T.desc)}</small><small class="tm-m">Coût ${T.cost} · recharge ${T.cd} s${T.minStage ? ' · stade ' + (T.minStage + 1) + '+' : ''}</small><small class="tm-t">${esc(types)}</small>
+          <div class="tf">${eq ? '<span class="ok">Équipée</span>' : c.ok ? '<span class="ok">Compatible</span>' : `<span class="bad">${esc(c.why)}</span>`}<button data-use="tm:${t}" ${(c.ok && !eq) ? '' : 'disabled'}>Apprendre</button></div></div>`;
+      }).join('');
+      body = `<p class="sub">Compatibilité affichée pour <b>${esc(sel.def.name)}</b> (${D.typesOf(sel.type, sel.id).map(t => D.TYPE_FR[t]).join(' / ')}, stade ${sel.stage + 1}).</p><div class="tgrid">${cards || '<p class="sub">Aucune CT.</p>'}</div>`;
+    }
+    const m = open(`<div class="panel bag"><div class="bhead"><h2>Sac</h2><div class="tabs"><button class="${bagTab === 'items' ? 'on' : ''}" data-tab="items">Objets</button><button class="${bagTab === 'tms' ? 'on' : ''}" data-tab="tms">Capsules techniques (${game.tms.length})</button></div></div>
+      <div class="bcols"><div class="bteam"><h4>Équipe — un seul Pokémon en jeu</h4>${team}</div><div class="bbody">${body}</div></div>
       <div class="act"><button id="m-close">Fermer</button></div></div>`);
+    m.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { bagSel = +b.dataset.sel; render(); });
+    m.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { bagTab = b.dataset.tab; render(); });
     m.querySelectorAll('[data-use]').forEach(b => b.onclick = () => {
-      const [kind, key, i] = b.dataset.use.split(':');
-      if (kind === 'candy') game.useCandy(+i); else if (kind === 'vit') game.useVitamin(+i, key); else game.teach(+i, key);
+      const [kind, key] = b.dataset.use.split(':');
+      if (kind === 'candy') game.useCandy(bagSel); else if (kind === 'vit') game.useVitamin(bagSel, key); else if (kind === 'revive') game.useRevive(bagSel); else game.teach(bagSel, key);
       render();
     });
     $('#m-close').onclick = onClose;
   };
-  render();
+  bagSel = game.chiefIdx; render();
 }
 
 // ---------- voyage entre les cartes ----------

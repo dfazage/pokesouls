@@ -1,20 +1,20 @@
 // Clavier (QWERTY/AZERTY) + souris + manette, avec commandes modifiables (stockées dans le navigateur).
 export const ACTIONS = [
   ['Déplacement', [['up', 'Haut'], ['down', 'Bas'], ['left', 'Gauche'], ['right', 'Droite'], ['run', 'Courir'], ['dodge', 'Esquive']]],
-  ['Combat', [['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['ability', 'Capacité spéciale (CT)'], ['guard', 'Garde / parade'], ['lock', 'Verrouillage'], ['berry', 'Baie de soin']]],
-  ['Équipe', [['next', 'Chef suivant'], ['s1', 'Chef 1'], ['s2', 'Chef 2'], ['s3', 'Chef 3'], ['order', 'Ordre des suiveurs']]],
+  ['Combat', [['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['ability', 'Capacité spéciale (CT)'], ['guard', 'Garde / parade'], ['lock', 'Verrouillage'], ['berry', 'Baie de soin'], ['ether', 'Fiole d’endurance (Huile)']]],
+  ['Équipe (un seul Pokémon sur le terrain)', [['next', 'Relève : Pokémon suivant'], ['s1', 'Appeler le Pokémon 1'], ['s2', 'Appeler le Pokémon 2'], ['s3', 'Appeler le Pokémon 3']]],
   ['Monde', [['interact', 'Interagir'], ['map', 'Carte / téléportation'], ['bag', 'Sac']]],
   ['Système', [['pause', 'Pause']]],
 ];
 export const DEFAULTS = {
   up: ['KeyW', 'KeyZ', 'ArrowUp'], down: ['KeyS', 'ArrowDown', ''], left: ['KeyA', 'KeyQ', 'ArrowLeft'], right: ['KeyD', 'ArrowRight', ''],
   light: ['KeyJ', 'Mouse0', ''], heavy: ['KeyK', 'Mouse2', ''], ability: ['KeyL', '', ''], guard: ['KeyH', 'KeyU', ''], dodge: ['Space', '', ''], run: ['ShiftLeft', 'ShiftRight', ''],
-  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], order: ['KeyC', '', ''], pause: ['Escape', 'KeyP', ''],
+  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], pause: ['Escape', 'KeyP', ''],
   s1: ['Digit1', 'Numpad1', ''], s2: ['Digit2', 'Numpad2', ''], s3: ['Digit3', 'Numpad3', ''], map: ['KeyM', '', ''], bag: ['KeyB', '', ''],
 };
 export const PAD_LABELS = [
   ['Déplacement', 'Stick gauche'], ['Esquive / course (maintenu)', 'A'], ['Interagir', 'B'], ['Attaque légère', 'X'], ['Attaque lourde', 'Y'],
-  ['Garde', 'LB'], ['Capacité spéciale', 'RB'], ['Chef suivant', 'RT'], ['Ordre des suiveurs', 'LT'], ['Baie', 'Croix haut'], ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', 'Select'], ['Sac', 'Croix bas'], ['Pause', 'Start'],
+  ['Garde', 'LB'], ['Capacité spéciale', 'RB'], ['Relève (Pokémon suivant)', 'RT'], ['Fiole d’endurance', 'LT'], ['Baie', 'Croix haut'], ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', 'Select'], ['Sac', 'Croix bas'], ['Pause', 'Start'],
 ];
 const STORE = 'pokesouls.controls.v1';
 let binds = {}, codeToAct = {}, layout = null, capture = null;
@@ -75,7 +75,7 @@ addEventListener('mouseup', e => release('Mouse' + e.button));
 addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard)
-const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'order', 12: 'berry', 13: 'bag', 11: 'lock', 9: 'pause', 8: 'map' };
+const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'ether', 12: 'berry', 13: 'bag', 11: 'lock', 9: 'pause', 8: 'map' };
 function pollPad() {
   const gp = (navigator.getGamepads && [...navigator.getGamepads()].find(Boolean)) || null;
   padAxes = [0, 0];

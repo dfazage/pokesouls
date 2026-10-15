@@ -19,9 +19,12 @@ Chaque chapitre correspond à une génération. Chaque chapitre compte six carte
 | 5 | Laboratoire oublié | Mewtwo | Électrode Alpha |
 | 6 | Île Mystère | Mew | Noadkoko |
 
-- **Équipe de trois** : au départ, vous choisissez un starter Feu, un Eau et un Plante parmi toutes les générations. Ils évoluent aux niveaux 16 et 36.
-- **Monde** : mini mobs, mobs moyens, gros mob (mini-boss, donne un Super Bonbon).
-- **Objets** : Super Bonbons (+1 niveau), baies, vitamines (PV Plus, Protéine, Fer, Calcium, Carbone, Zinc, 5 par Pokémon) et 16 CT qui donnent la capacité spéciale (touche L). Les coffres des cartes et les boss les donnent ; le sac (B) permet de les utiliser.
+- **Équipe de trois, un seul Pokémon en jeu** : au départ, vous choisissez un starter Feu, un Eau et un Plante parmi toutes les générations. Un seul est sur le terrain ; les deux autres attendent en réserve (ils ne combattent pas, ne subissent rien et ne se régénèrent pas). Relève avec Tab ou 1 à 3 : invulnérabilité brève, délai de 1,2 s avant la relève suivante, altérations d'état effacées. Si le Pokémon actif tombe K.O., le suivant entre automatiquement ; la partie est perdue quand les trois sont K.O. Ils évoluent aux niveaux 16 et 36.
+- **Monde** : mini mobs, mobs moyens, gros mob (mini-boss, donne un Super Bonbon). Les mobs vaincus réapparaissent après 2 minutes environ, hors de l'écran (les gros mobs et les boss ne reviennent pas). Tout revient au repos à un feu.
+- **Altérations d'état** : Brûlure (dégâts continus, −20 % de dégâts infligés), Poison (dégâts continus, ne tue pas), Gel (immobilisé 1,8 s), Paralysie (−40 % de vitesse, endurance plus lente), Confusion (déplacements et visées déviés). Certains ennemis, les boss et plusieurs CT les infligent ; les baies, Synthèse, Glas de Soin et le feu de camp les guérissent. Le gel et la confusion n'affectent pas les gros mobs ni les boss.
+- **Fioles d'endurance (Huile)** : touche F, endurance pleine et CT rechargée (3 par défaut, rechargées au feu). Les coffres donnent des Huiles et des Huiles Max (+1 fiole).
+- **Objets** : Super Bonbons (+1 niveau), Rappel (réveille un Pokémon K.O.), baies, vitamines (PV Plus, Protéine, Fer, Calcium, Carbone, Zinc, 5 par Pokémon) et 19 CT. Une CT n'est apprenable que par les bons Pokémon : selon le type (le deuxième type compte après évolution) et parfois un stade d'évolution minimal ; le sac affiche la compatibilité. Soins de zone : Soin et Synthèse (toute l'équipe, réserve comprise), Glas de Soin, Anneau Hydro (régénération). Le sac (B) montre l'équipe et permet d'utiliser les objets.
+- **Animations d'attaque** : elles viennent des sprites PMDCollab de chaque Pokémon (Attack, Strike, Swing, Shoot, Rotate, Hop, Double, Kick…), choisies selon la nature de l'attaque.
 - **Téléportation** (M) : vers l'entrée de toute carte débloquée ou vers un feu allumé, sauf pendant un boss.
 
 ## Commandes
@@ -37,9 +40,9 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Garde (parade juste après l'appui) | H | LB |
 | Interagir | E | B |
 | Baie de soin | R | croix haut |
+| Fiole d'endurance (Huile) | F | LT |
 | Verrouillage | T | clic stick droit |
-| Changer de chef | Tab ou 1 à 3 | RT |
-| Ordre des suiveurs (Focus / Garde / Repli) | C | LT |
+| Relève du Pokémon | Tab ou 1 à 3 | RT |
 | Carte / Sac | M / B | Select / croix bas |
 | Pause | Échap | Start |
 
