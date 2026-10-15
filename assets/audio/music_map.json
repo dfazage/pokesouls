@@ -1,0 +1,126 @@
+{
+ "HUB_MAIN": {
+  "youtube": "vZGGazXG1bo",
+  "title": "DS · Firelink Shrine (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "hub_main.ogg"
+ },
+ "MENU_STARTER": {
+  "youtube": "cSBL6cKpOeQ",
+  "title": "ER · Main Theme 8-bit (Psypher the Psynergist)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "menu_starter.ogg"
+ },
+ "MAP_1": {
+  "youtube": "Z6jgJTgEkBs",
+  "title": "ER · 8-bit Chiptune (Jacksonics Audio)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_1.ogg"
+ },
+ "MAP_2": {
+  "youtube": "34cNmSL7qPc",
+  "title": "DS · Nameless Song (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_2.ogg"
+ },
+ "MAP_3": {
+  "youtube": "jder69Jra6k",
+  "title": "DS · Gravelord Nito (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_3.ogg"
+ },
+ "MAP_4": {
+  "youtube": "wl3sHHNEvGg",
+  "title": "DS · Gwynevere, Princess of Sunlight (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_4.ogg"
+ },
+ "MAP_5": {
+  "youtube": "LOaWN3m_NSI",
+  "title": "DS · Dark Sun Gwyndolin (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_5.ogg"
+ },
+ "MAP_6": {
+  "youtube": "k_Fpi1Zg7zY",
+  "title": "DS · Prologue (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_6.ogg"
+ },
+ "MINIBOSS_A": {
+  "youtube": "OIwdfZr-g6o",
+  "title": "DS · Taurus Demon (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "miniboss_a.ogg"
+ },
+ "MINIBOSS_B": {
+  "youtube": "wPKS_uePyVk",
+  "title": "DS · Bell Gargoyle (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "miniboss_b.ogg"
+ },
+ "SUBBOSS_BIRDS": {
+  "youtube": "W8uPiL86FaQ",
+  "title": "DS · Great Grey Wolf Sif 8-bit (nadoP)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_birds.ogg"
+ },
+ "SUBBOSS_KINGS": {
+  "youtube": "qJ1oBNatXcg",
+  "title": "DS · Four Kings (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_kings.ogg"
+ },
+ "SUBBOSS_KINGS_ALT": {
+  "youtube": "dXizgLp9IkM",
+  "title": "DS · Gaping Dragon (CrimsonCobalt)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_kings_alt.ogg"
+ },
+ "BOSS_MEWTWO_P1": {
+  "youtube": "g8elMNuxzl8",
+  "title": "DS · Ornstein and Smough 8-bit (8-bit DS)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_mewtwo_p1.ogg"
+ },
+ "BOSS_MEWTWO_P2": {
+  "youtube": "JO4PynahOGA",
+  "title": "ER · Malenia Theme 8bit Remix (Jeloki)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_mewtwo_p2.ogg"
+ },
+ "BOSS_MEW": {
+  "youtube": "drsBKBZ1q3o",
+  "title": "DS · Gwyn, Lord of Cinder 8-bit (explod2A03)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_mew.ogg"
+ },
+ "JINGLE_CAMPFIRE": {
+  "youtube": null,
+  "fallback_audio": "jingle_campfire.ogg"
+ },
+ "JINGLE_DEATH": {
+  "youtube": null,
+  "fallback_audio": "jingle_death.ogg"
+ },
+ "JINGLE_VICTORY": {
+  "youtube": null,
+  "fallback_audio": "jingle_victory.ogg"
+ }
+}

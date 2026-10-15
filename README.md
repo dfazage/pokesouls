@@ -69,3 +69,10 @@ Les sprites sont préparés par `tools/fetch_sprites.py` et `tools/bake_sprites.
 
 Système de musique en place (`js/music.js`) : une piste par contexte (écran titre / feu de camp, choix du starter, cartes 1 à 6, gros mob, oiseaux, rois, Mewtwo phases 1 et 2, Mew), fondus de 1 s (0,5 s pour les boss), jingles feu / mort / victoire à lecture unique, volume « Musique » réglable dans Pause et dans Commandes, page Crédits.
 Les fichiers OGG ne sont pas dans le dépôt : voir `assets/audio/music/README.md`. Sans fichier, le jeu reste silencieux.
+
+## Musique
+
+Une piste par contexte (menu, cartes, gros mobs, boss, jingles), fondus et boucles. Deux sources :
+1. **YouTube** (reprises 8-bit, projet perso) : via l'API IFrame, deux lecteurs A/B pour les fondus ; configuration dans `assets/audio/music_map.json` (`youtube`, `start`, `end`, `fallback_audio`). Actif seulement en local (`localhost`) ; `?yt=1` / `?yt=0` force le choix. Les lecteurs restent visibles dans un coin (bouton ⇄ pour changer de coin), comme l'exigent les conditions de l'API. Une vidéo absente, privée ou non intégrable déclenche le repli et un message dans la console.
+2. **Repli libre** (OpenGameArt, `assets/audio/music/`), seul utilisé sur le site publié. Le dossier facultatif `assets/audio/music_perso/` (ignoré par git) peut contenir des fichiers perso OGG prioritaires sur le repli.
+Les jingles sont toujours des fichiers locaux. Rien ne démarre avant le premier clic. Volume musique réglable dans la page Commandes.
