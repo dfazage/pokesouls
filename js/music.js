@@ -28,8 +28,8 @@ const STORE = 'pokesouls.options.v1';
 const qp = (location.search.match(/[?&]perso=([01])/) || [])[1];
 export const USE_PERSONAL_MUSIC = qp ? qp === '1' : /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
 const qy = (location.search.match(/[?&]yt=([01])/) || [])[1];
-// lecture YouTube (reprises, usage perso) : active en local, coupée sur le site publié ; ?yt=0 / ?yt=1 force
-export const USE_YOUTUBE = qy ? qy === '1' : /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
+// lecture YouTube (lecteur intégré officiel, aucun fichier copié) : active partout par défaut ; ?yt=0 la coupe
+export const USE_YOUTUBE = qy ? qy === '1' : true;
 let MAP = {};
 export const musicMap = () => MAP;
 const mapReady = fetch('assets/audio/music_map.json').then(r => r.json()).then(j => { MAP = j; }).catch(() => {});
