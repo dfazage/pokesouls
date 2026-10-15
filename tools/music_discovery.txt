@@ -1,0 +1,51 @@
+hub_main | Slow Melancholic Theme C64 Style | OpenGameArt.org | ['creativecommons.org/licenses/by/3.0', 'creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/slow_melancholic_theme_c64_style.ogg
+    https://opengameart.org/sites/default/files/slow_melancholic_theme_c64_style_long_version_with_refrain.ogg
+menu_starter | sadville | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/town - sadville.mp3
+map_1 | Chiptune: Exploration | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/exploration_files.zip
+map_2 | Nintendo Style - Dungeon Music Loop 02 | OpenGameArt.org | ['creativecommons.org/licenses/by/4.0']
+    https://opengameart.org/sites/default/files/POL-quick-steal-short.zip
+map_3 | Spooky Dungeon | OpenGameArt.org | ['creativecommons.org/licenses/by/4.0', 'creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/Memoraphile - Spooky Dungeon.mp3
+    https://opengameart.org/sites/default/files/Memoraphile - Spooky Dungeon.wav
+    https://opengameart.org/sites/default/files/Memoraphile - Spooky Dungeon_0.ogg
+map_4 | Possible Dungeon | OpenGameArt.org | ['creativecommons.org/licenses/by/4.0']
+    https://opengameart.org/sites/default/files/PossibleDungeon.mp3
+map_5 | Underground Storm (Chiptune/8 bit Influence) | OpenGameArt.org | ['creativecommons.org/licenses/by-sa/3.0']
+    https://opengameart.org/sites/default/files/inarticulate_1.mp3
+map_6 | 8-bit Dungeon | OpenGameArt.org | ['creativecommons.org/licenses/by/4.0']
+    https://opengameart.org/sites/default/files/8-bit_dungeon.flac
+    https://opengameart.org/sites/default/files/8-bit_dungeon_loop.flac
+miniboss_a | Zelda Style 8-bit Boss Theme | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/8bit_jrpg_boss_battle.mp3
+miniboss_b | 8-bit Theme - Intensity | OpenGameArt.org | ['creativecommons.org/licenses/by/3.0']
+    https://opengameart.org/sites/default/files/Epic.ogg
+    https://opengameart.org/sites/default/files/Epic1x.wav
+    https://opengameart.org/sites/default/files/Epic_0.mp3
+subboss_birds | 16-bit - Battle Theme I | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/battle_theme_i.zip
+subboss_kings | Phantasy Boss Battle Encounter | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/bossbattle_files.zip
+subboss_kings_alt | Retro Chiptune (Action) | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/Retro Chiptune 1 By Preston Peak ZIP.zip
+boss_mewtwo_p1 | Final Boss Appearance Dark Fantasy | OpenGameArt.org | []
+    https://opengameart.org/sites/default/files/dova_mary_only_knows.mp3
+boss_mewtwo_p2 | 16bit Boss Battle Loop | OpenGameArt.org | ['creativecommons.org/licenses/by-sa/3.0']
+    https://opengameart.org/sites/default/files/Boss Battle.wav
+    https://opengameart.org/sites/default/files/Boss Battle_0.ogg
+boss_mew | Final Stand | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/final_stand_0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_1.3_0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_2.2.heavy_drums_0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_2.2_0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_3.3.piano__0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_4.1final_0.ogg
+    https://opengameart.org/sites/default/files/final_stand_phase_4.1finalmax_0.ogg
+jingle_campfire | Cunning plan (short seamless loop) | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/Cunning plan_0.ogg
+jingle_death | Better luck next time | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/betterluck_0.ogg
+jingle_victory | Victory sting | OpenGameArt.org | ['creativecommons.org/publicdomain/zero/1.0']
+    https://opengameart.org/sites/default/files/victory sting_0.ogg
