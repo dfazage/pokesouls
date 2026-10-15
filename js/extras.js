@@ -148,14 +148,14 @@ export function installExtras(G, d) {
       case 'cross': {
         arc(aim, 0.55, m.def.range + 12, 0.0);
         const v2 = { x: Math.cos(ang + 1.0), y: Math.sin(ang + 1.0) };
-        this.later.push({ t: 0.14, fn: () => { if (m.exh) return; arc(aim, 0.6, m.def.range + 14, -0.2); this.burst(m.x + aim.x * 20, m.y - 8, col, 10); SFX.boom(); } });
+        this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.14, fn: () => { if (m.exh) return; arc(aim, 0.6, m.def.range + 14, -0.2); this.burst(m.x + aim.x * 20, m.y - 8, col, 10); SFX.boom(); } });
         for (let i = 0; i < 16; i++) { const k = i / 15 - 0.5; this.parts.push({ x: m.x + aim.x * 20 + v2.x * k * 40, y: m.y - 6 + v2.y * k * 24, z: 8, vx: v2.x * 30, vy: v2.y * 20, vz: 0, life: 0.3, max: 0.3, c: i % 2 ? '#fff' : col, size: 2 }); }
         SFX.boom(); break;
       }
       case 'whirl': {
         const R = sg.radius;
         const hit = () => { this.meleeArc(m, aim, R, -2, dmg * 0.5, { ...o, knock: sg.pull ? 0 : 110 }); if (sg.pull) for (const e of this.enemies) if (!e.dead && !e.boss && !e.def.armor && hyp(e.x - m.x, e.y - m.y) < R + e.r) { const k = unit(m.x - e.x, m.y - e.y); e.kx = k.x * 120; e.ky = k.y * 120; } };
-        hit(); this.later.push({ t: 0.18, fn: () => { if (!m.exh) { hit(); this.ringFx(m.x, m.y, R * 0.7, col); } } });
+        hit(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.18, fn: () => { if (!m.exh) { hit(); this.ringFx(m.x, m.y, R * 0.7, col); } } });
         this.ringFx(m.x, m.y, R, col); this.ringFx(m.x, m.y, R * 0.55, '#ffffff');
         for (let i = 0; i < 26; i++) { const an = i / 26 * 6.28; this.parts.push({ x: m.x, y: m.y - 6, z: 6, vx: Math.cos(an + 1.6) * 90, vy: Math.sin(an + 1.6) * 60, vz: rand(-5, 12), life: 0.4, max: 0.4, c: i % 2 ? col : '#ffffff', size: 2 }); }
         SFX.boom(); this.shake = Math.max(this.shake, 4); break;
@@ -178,7 +178,7 @@ export function installExtras(G, d) {
         for (let i = 0; i < sg.n; i++) {
           const p = i === 0 ? base : { x: base.x + rand(-58, 58), y: base.y + rand(-42, 42) };
           this.ringFx(p.x, p.y, 10, col);
-          this.later.push({ t: 0.3 + i * 0.11, fn: () => {
+          this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.3 + i * 0.11, fn: () => {
             this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); SFX.boom();
             for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 26 + e.r) this.damageEnemy(e, dmg * 0.5, m, { ...o, stagger: 0.5, knock: 50 });
             this.hitObs(p.x, p.y, 26, dmg * 0.5, 'water');
@@ -188,7 +188,7 @@ export function installExtras(G, d) {
       }
       case 'fan': {
         for (let i = -2; i <= 2; i++) proj(ang + i * 0.2, 235, 0.55, { r: 3.5 });
-        SFX.shoot(); this.later.push({ t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.5, { r: 3.5 }); SFX.shoot(); } }); break;
+        SFX.shoot(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.5, { r: 3.5 }); SFX.shoot(); } }); break;
       }
       case 'leaves': {
         const off = rand(0, 6.28);
@@ -275,7 +275,7 @@ export function installExtras(G, d) {
   };
   // frappe tout ce qui est obstacle dans le cercle (x, y, r) ; les zones se dissipent avec le bon élément
   P.hitObs = function (x, y, r, dmg, elem) {
-    let hit = false;
+    let hit = false; this.surfTouch(x, y, r, elem);
     for (const o of this.obs) {
       if (o.dead || !o.on) continue;
       const dd = hyp(o.x - x, o.y - y);
@@ -285,7 +285,7 @@ export function installExtras(G, d) {
     return hit;
   };
   P.quenchAt = function (x, y, elem) {
-    if (!elem) return;
+    if (!elem) return; this.surfTouch(x, y, 4, elem);
     for (const o of this.obs) { if (o.dead || !o.on || o.solid) continue; const q = OBS[o.kind].quench; if (q && q.includes(elem) && hyp(o.x - x, o.y - y) < o.r * 0.8) { o.dead = true; this.obsBreak(o); this.floatText(o.x, o.y - 10, o.kind === 'lava' ? 'Éteint' : 'Fondu', o.color); } }
   };
   // distance jusqu'au premier obstacle plein sur un rayon
@@ -317,7 +317,7 @@ export function installExtras(G, d) {
     }
     // actions différées (signatures)
     for (const l of this.later) l.t -= dt;
-    const due = this.later.filter(l => l.t <= 0); if (due.length) { this.later = this.later.filter(l => l.t > 0); for (const l of due) l.fn(); }
+    const due = this.later.filter(l => l.t <= 0); if (due.length) { this.later = this.later.filter(l => l.t > 0); for (const l of due) { if (l.el) { this.curElem = l.el; this.curTrig = l.tr; } l.fn(); } }
     // terrain
     this.terrain = { slow: 1, frost: false };
     const c = this.chief();

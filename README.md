@@ -31,6 +31,18 @@ Chaque chapitre correspond à une génération. Chaque chapitre compte six carte
 - **Combos** : léger, léger, lourd en moins de 0,5 s déclenche l'attaque signature du Pokémon (une par type et par stade d'évolution : Croix Ardente, Roue de Flammes, Grand Brasier, Jet Perforant, Tourbillon Marin, Déluge, Fouet Croisé, Tempête de Feuilles, Fléau Solaire). Elle coûte plus d'endurance, sans temps de recharge. Une parade relance le combo (riposte). Dégâts réduits contre les boss, effets de contrôle conservés.
 - **Phases de boss** : écran animé à 60 % et 25 % des PV (un motif et un titre par boss), puis des obstacles et éléments de terrain apparaissent, toujours annoncés par un cercle au sol : piliers de glace et sol givré (Artikodin), pylônes qui attirent la foudre (Électhor), rochers de basalte et lave (Sulfura), chutes de rochers et rafales (Dracolosse), cristaux et zones de gravité (Mewtwo), ronces et fleurs de soin (Mew). Les obstacles bloquent aussi les tirs du boss ; le feu fait fondre la glace et brûle les ronces, l'eau éteint la lave.
 
+## Moteur d'éléments (branche `feature/moteur-elements`)
+
+Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à équilibrer) :
+
+- **Table des types modérée** : ×1,25 / ×1 / ×0,8 sur les dégâts, dans les deux sens. Les ennemis et boss ont des types (`ENEMY_TYPES`, `BOSS_TYPES`). Les icônes ▲/▼ sur le portrait de l'équipe donnent l'avantage contre la cible la plus proche.
+- **Marques** : chaque coup élémentaire pose une marque (Trempé, Enflammé, Givré, Chargé, Enraciné, Toxique), 2 au maximum par cible. Un coup compatible déclenche une **réaction** : Conduction (Trempé + Électrik, ou Chargé + Eau), Gel net, Vapeur, Embrasement, Fumées, Fonte, Fragilisation, Isolation. Le portrait de l'équipe s'illumine quand un Pokémon peut en déclencher une.
+- **Surfaces de terrain** : flaques (conduisent l'électricité), feu au sol, vapeur (aveugle), nuage toxique.
+- **Boss** : Électhor entretient une aura Chargée (l'eau ou la terre la contredit), Sulfura une aura de feu (l'eau l'éteint), Artikodin une carapace de glace (le feu la brise). Un indice de lore s'affiche à l'entrée.
+- **Relais** : changer de Pokémon juste après une esquive juste ou une parade déclenche une frappe immédiate avec l'élément du nouvel arrivant.
+
+Les ennemis en retour : l'eau trempe l'équipe, l'électricité frappe plus fort un Pokémon trempé.
+
 ## Commandes
 
 Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et souris, sont modifiables (3 cases par action), enregistrées dans le navigateur.
