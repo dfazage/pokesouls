@@ -61,6 +61,7 @@ export function installExtras(G, d) {
   // ======================= LIEN : jauge, invocation des coéquipiers =======================
   P.addLink = function (n) {
     if (this.linkT > 0 || this.state !== 'play' || this.link >= 100) return;
+    if (this.bossActive) n *= 0.25; // Lien plus lent à remplir pendant un combat de boss
     this.link = Math.min(100, this.link + n);
     if (this.link >= 100) { const c = this.chief(); SFX.pick(); this.ringFx(c.x, c.y, 28, '#ffe27a'); this.emit('toast', 'Lien prêt !'); }
   };
@@ -70,7 +71,8 @@ export function installExtras(G, d) {
     if (this.link < 100) { this.emit('toast', 'Jauge de Lien : ' + Math.floor(this.link) + ' %'); return false; }
     const al = this.team.filter(q => q !== c && !q.exh);
     if (!al.length) { this.emit('toast', 'Aucun allié en état de combattre'); return false; }
-    this.link = 0; this.linkT = 8; this.allies = al; this.buf = null;
+    this.link = 0; this.linkT = 8; this.allies = al; this.buf = null; this.linkBossDmg = 0;
+    if (this.boss && this.boss.tel) this.boss.tel.links++;
     al.forEach((q, k) => {
       const side = k === 0 ? -1 : 1; let x = c.x + side * 22, y = c.y + 6;
       if (!M.boxFree(this.world, x, y, 4, 3)) { x = c.x; y = c.y; }

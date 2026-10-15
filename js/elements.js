@@ -182,7 +182,7 @@ export function installElements(G, d) {
   // dégâts de réaction : passent par damageEnemy (phases de boss, mort) sans relancer le moteur d'éléments ; plafonnés sur les boss
   P.reactDmg = function (e, amt, src, stagger = 0.4) {
     if (!e || e.dead || amt <= 0) return;
-    if (e.boss) amt = Math.min(amt, e.maxhp * 0.1);
+    if (e.boss) amt = Math.min(amt, e.maxhp * 0.05);
     this.damageEnemy(e, amt, src, { noElem: true, react: true, stagger, knock: 30 });
   };
   P.stunBoss = function (b, t) {

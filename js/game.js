@@ -15,6 +15,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
 const hyp = Math.hypot;
 const unit = (x, y) => { const l = hyp(x, y) || 1; return { x: x / l, y: y / l }; };
+// Équilibrage des boss (simulation sim_boss_balance.py, config D) : plafond des bonus par coup, Lien limité.
+export const BAL = { BOSS_MULT_CAP: 3.1, LINK_BOSS_FILL: 0.25, LINK_BOSS_CAP: 0.05, LINK_BOSS_DMG: 0.5, REACT_BOSS_CAP: 0.05 };
 const VIT_KEYS = Object.keys(D.VITAMINS);
 const hasAnim = (id, n) => !!(A.db[id] && A.db[id].anims[n]);
 const pickAnim = (id, list) => list.find(n => hasAnim(id, n)) || 'Idle';
@@ -510,12 +512,24 @@ export class Game {
   // ---------- dégâts ----------
   damageEnemy(e, dmg, src, o = {}) {
     if (e.dead || e.invuln > 0) return false;
-    let back = false;
+    const dmg0 = dmg; let back = false;
     if (!e.boss && src.def && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < -4 && e.state !== 'dormant') { dmg *= 1.15; back = true; }
     const crit = Math.random() < 0.08; if (crit) dmg *= 1.5;
     const elemOn = !o.noElem && src.def;
     dmg *= this.elemMult(e, o, src);
     if (o.sig && e.boss) dmg *= 0.55;
+    if (e.boss) {
+      // bonus empilés (critique, type, vulnérabilité, signature) plafonnés ; l'excédent est perdu
+      dmg = Math.min(dmg, dmg0 * BAL.BOSS_MULT_CAP);
+      // Lien : les alliés invoqués font la moitié des dégâts, et au plus 5 % des PV du boss par invocation
+      if (src.summoned) {
+        dmg *= BAL.LINK_BOSS_DMG;
+        dmg = Math.max(0, Math.min(dmg, e.maxhp * BAL.LINK_BOSS_CAP - (this.linkBossDmg || 0)));
+        this.linkBossDmg = (this.linkBossDmg || 0) + dmg;
+      }
+      const tl = e.tel || (e.tel = { t0: this.t, chief: 0, ally: 0, react: 0, hits: 0, links: 0 });
+      tl[o.react ? 'react' : src.summoned ? 'ally' : 'chief'] += dmg; tl.hits++;
+    }
     dmg = Math.max(1, Math.round(dmg));
     e.hp -= dmg; e.flash = 0.12; e.aggro = true;
     if (src === this.chief() && !src.summoned) this.addLink(o.sig ? 5 : o.heavy ? 4.5 : 2.5);
@@ -535,6 +549,14 @@ export class Game {
     if (e.hp <= 0) this.killEnemy(e);
     return true;
   }
+  // mesure en combat : durée et part de chaque source de dégâts (pour caler les PV des boss)
+  bossReport(e) {
+    const tl = e.tel; if (!tl) return;
+    const T = Math.max(1, this.t - tl.t0), tot = Math.max(1, tl.chief + tl.ally + tl.react), p = v => Math.round(100 * v / tot);
+    const r = { boss: e.type === 'boss' ? e.def.name : e.type, secondes: Math.round(T), pv: e.maxhp, dpsEffectif: +(tot / T).toFixed(2), pctPokemon: p(tl.chief), pctLien: p(tl.ally), pctReactions: p(tl.react), liens: tl.links };
+    (window.__bossReports = window.__bossReports || []).push(r); console.table([r]);
+    this.emit('toast', r.boss + ' : ' + r.secondes + ' s, Lien ' + r.pctLien + ' %');
+  }
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
     if (this.lock === e) this.lock = null;
@@ -545,7 +567,7 @@ export class Game {
       this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
       this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+1 Super Bonbon');
     }
-    if (e.boss) this.bossDefeated(e);
+    if (e.boss) { this.bossReport(e); this.bossDefeated(e); }
   }
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
