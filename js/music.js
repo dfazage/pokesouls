@@ -2,7 +2,7 @@
 // Écran titre : INTRO_TITLE ; le fondu de 1 s vers MENU_STARTER / la carte se fait via direct().
 // Les fichiers sont dans assets/audio/music/<id en minuscules>.ogg ; une piste absente ou illisible est ignorée sans erreur.
 export const TRACKS = {
-  INTRO_TITLE: { title: 'Outlive (short version)', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/outlive-short-version', use: 'Écran titre' },
+  INTRO_TITLE: { title: 'Intro Music', author: 'fourni par le créateur du jeu', license: 'droits réservés (usage dans ce jeu)', url: 'https://github.com/dfazage/pokesouls', use: 'Écran titre' },
   HUB_MAIN: { title: 'Dark Shrine Loop', author: 'qubodup', license: 'CC0', url: 'https://opengameart.org/content/dark-shrine-loop', use: 'Feu de camp, commandes' },
   MENU_STARTER: { title: 'The Hope', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/the-hope', use: 'Choix du starter' },
   MAP_1: { title: 'Laments of the War', author: 'Cethiel', license: 'CC0', url: 'https://opengameart.org/content/laments-of-the-war', use: 'Carte 1' },
