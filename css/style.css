@@ -91,3 +91,5 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 .keybtn{min-width:92px;padding:5px 8px;font-size:11px;letter-spacing:0;background:#141a3a;border-color:#3a4468}.keybtn.wait{border-color:var(--gold);color:var(--gold);animation:blink .8s infinite}
 @keyframes blink{50%{opacity:.5}}
 .krow kbd{margin:0}
+.vol{margin:6px 0 10px;font-size:12px;color:var(--dim)}.vol label{display:flex;align-items:center;gap:12px}.vol input{width:240px;accent-color:#c690ff}.vol b{color:var(--ink);min-width:48px}
+.cred{max-height:300px;overflow:auto}.cred a{color:var(--cy);font-size:11px;text-decoration:none;white-space:nowrap}.cred small{color:var(--dim)}

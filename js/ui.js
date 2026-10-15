@@ -4,6 +4,7 @@ import * as D from './data.js';
 import * as M from './maps.js';
 import { ACTIONS, PAD_LABELS, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
+import { Music, TRACKS } from './music.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -11,6 +12,9 @@ const TYPES = [['fire', 'Feu', '#ff7a30'], ['water', 'Eau', '#4aa8ff'], ['grass'
 const menu = () => $('#menu');
 export function hideMenu() { const m = menu(); m.classList.remove('show'); m.innerHTML = ''; }
 function open(html) { const m = menu(); m.classList.add('show'); m.innerHTML = html; return m; }
+
+const volRow = () => `<div class="vol"><label>Musique <input type="range" id="vol-music" min="0" max="100" value="${Math.round(Music.getVolume() * 100)}"><b id="vol-v">${Math.round(Music.getVolume() * 100)} %</b></label></div>`;
+function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; }; }
 
 // ---------- choix des starters ----------
 export function showStarters(onDone) {
@@ -97,9 +101,10 @@ export function showControls(onClose) {
       const on = waiting && waiting[0] === a && waiting[1] === s;
       return `<button class="keybtn ${on ? 'wait' : ''}" data-a="${a}" data-s="${s}">${on ? 'Appuyez…' : keyLabel(Controls.get(a)[s])}</button>`; }).join('')}</div>`).join('')).join('');
     const m = open(`<div class="panel wide kp"><h2>Commandes</h2><p class="sub">Cliquez sur une case puis appuyez sur la touche (ou un bouton de souris) voulue. Échap annule, Retour arrière efface la case. Une touche ne peut servir qu’à une action : elle est retirée de l’ancienne. Les réglages sont enregistrés dans ce navigateur.</p>
-      <div class="kcols"><div>${rows}</div><div><h4>Manette (disposition standard, fixe)</h4>${PAD_LABELS.map(([a, b]) => `<div class="krow"><span>${a}</span><kbd>${b}</kbd></div>`).join('')}
+      ${volRow()}<div class="kcols"><div>${rows}</div><div><h4>Manette (disposition standard, fixe)</h4>${PAD_LABELS.map(([a, b]) => `<div class="krow"><span>${a}</span><kbd>${b}</kbd></div>`).join('')}
       <h4>Pour info</h4><div class="krow"><span>Parade</span><kbd>Garde juste avant le coup</kbd></div><div class="krow"><span>Mode développeur</span><kbd>?dev dans l’adresse · F1–F6</kbd></div></div></div>
       <div class="act"><button id="k-reset" class="warn">Valeurs par défaut</button><button id="m-close">Fermer</button></div></div>`);
+    bindVol();
     m.querySelectorAll('.keybtn').forEach(b => b.onclick = () => {
       Controls.stopListen(); waiting = [b.dataset.a, +b.dataset.s]; render();
       Controls.listen(code => {
@@ -117,7 +122,17 @@ export function showControls(onClose) {
 // ---------- pause ----------
 export function showPauseMenu(game, h) {
   open(`<div class="panel"><h2>Pause</h2><p class="sub">${esc(game.world.name)} · Carte ${game.mapIdx + 1}/6</p>
-    <div class="act col"><button id="p-res">Reprendre</button><button id="p-bag">Sac et équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
-  $('#p-res').onclick = h.resume; $('#p-bag').onclick = h.bag; $('#p-map').onclick = h.travel; $('#p-keys').onclick = h.keys;
+    ${volRow()}<div class="act col"><button id="p-res">Reprendre</button><button id="p-bag">Sac et équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
+  bindVol(); $('#p-credits').onclick = h.credits; $('#p-res').onclick = h.resume; $('#p-bag').onclick = h.bag; $('#p-map').onclick = h.travel; $('#p-keys').onclick = h.keys;
   $('#p-reset').onclick = () => { if (confirm('Effacer la sauvegarde et recommencer ?')) h.reset(); };
+}
+
+// ---------- crédits ----------
+export function showCredits(onClose) {
+  const m = open(`<div class="panel wide"><h2>Crédits</h2>
+    <h4>Musique (OpenGameArt.org)</h4><div class="cred">${Object.entries(TRACKS).map(([id, t]) => `<div class="krow"><span><b>${esc(t.title)}</b> — ${esc(t.author)} <small>(${esc(t.use)})</small></span><a href="${t.url}" target="_blank" rel="noopener">${esc(t.license)}</a></div>`).join('')}</div>
+    <h4>Sprites</h4><p class="sub">PMDCollab SpriteCollab (CC BY-NC 4.0), merci à tous les artistes du projet.</p>
+    <h4>Mentions</h4><p class="sub">Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce fan game non commercial n'est ni affilié ni approuvé par eux. Code et effets sonores : ce dépôt.</p>
+    <div class="act"><button id="m-close">Fermer</button></div></div>`);
+  $('#m-close').onclick = onClose; void m;
 }

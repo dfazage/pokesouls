@@ -61,3 +61,8 @@ Les sprites sont préparés par `tools/fetch_sprites.py` et `tools/bake_sprites.
 - Sprites : [PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab), licence **CC BY-NC 4.0**. Merci à tous les artistes du projet (crédits par sprite dans le dépôt PMDCollab).
 - Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce projet n'est ni affilié ni approuvé par eux.
 - Code et sons de synthèse : ce dépôt.
+
+## Musique
+
+Système de musique en place (`js/music.js`) : une piste par contexte (écran titre / feu de camp, choix du starter, cartes 1 à 6, gros mob, oiseaux, rois, Mewtwo phases 1 et 2, Mew), fondus de 1 s (0,5 s pour les boss), jingles feu / mort / victoire à lecture unique, volume « Musique » réglable dans Pause et dans Commandes, page Crédits.
+Les fichiers OGG ne sont pas dans le dépôt : voir `assets/audio/music/README.md`. Sans fichier, le jeu reste silencieux.
