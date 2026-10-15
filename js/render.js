@@ -3,6 +3,7 @@ import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
+import { drawFxs, fxLights } from './fx.js';
 
 const { TS } = M;
 let lightC = null;
@@ -49,6 +50,7 @@ export function render(g, ctx) {
   ctx.globalAlpha = 1;
   for (const p of g.parts) { ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x - p.size / 2), Math.round(p.y - p.z - p.size / 2), p.size, p.size); }
   ctx.globalAlpha = 1;
+  drawFxs(g, ctx, false);
   ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
   for (const t of g.texts) { ctx.globalAlpha = Math.min(1, (0.9 - t.t) * 3); ctx.fillStyle = '#000'; ctx.fillText(t.s, Math.round(t.x) + 1, Math.round(t.y) + 1); ctx.fillStyle = t.c; ctx.fillText(t.s, Math.round(t.x), Math.round(t.y)); }
   ctx.globalAlpha = 1;
@@ -150,6 +152,7 @@ function groundFx(ctx, g) {
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
   }
   if (g.fxRings) for (const r of g.fxRings) { const k = r.t / 0.45; ctx.globalAlpha = 1 - k; ctx.strokeStyle = r.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(r.x, r.y, r.r * (0.3 + 0.7 * k), 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  drawFxs(g, ctx, true);
   drawObsGround(ctx, g);
   for (const z of g.zones) { const k = Math.min(1, z.t / z.delay), f = 0.5 + 0.5 * Math.sin(g.t * 24); ctx.fillStyle = `rgba(255,70,70,${0.12 + 0.18 * f})`; ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 4, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,100,.9)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = 'rgba(255,200,150,.5)'; ctx.beginPath(); ctx.arc(z.x, z.y, (z.r + 4) * k, 0, 7); ctx.fill(); }
   for (const e of g.enemies) {
@@ -257,6 +260,7 @@ function lighting(ctx, g, sx, sy) {
     else if (e.def.color) lights.push({ x: e.x, y: e.y - 8, r: 30, c: hexToRgb(e.def.color), a: 0.5 });
   }
   if (g.fxRings) for (const r of g.fxRings) lights.push({ x: r.x, y: r.y, r: r.r * 1.2, c: hexToRgb(r.c), a: 0.6 * (1 - r.t / 0.45) });
+  for (const l of fxLights(g)) lights.push({ ...l, c: hexToRgb(l.c) });
   if (g.souvenir) lights.push({ x: g.souvenir.x, y: g.souvenir.y - 8, r: 40, c: [200, 160, 255], a: 0.8 });
   for (const it of g.items) lights.push({ x: it.x, y: it.y - 10, r: 70, c: it.kind === 'portal' ? [190, 150, 255] : [255, 220, 130], a: 0.9 });
   if (pr.bossDead) { const a = g.world.arena; lights.push({ x: a.cx * TS, y: a.cy * TS, r: 160, c: [255, 220, 170], a: 0.7 }); }

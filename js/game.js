@@ -5,6 +5,7 @@ import { SFX } from './audio.js';
 import * as M from './maps.js';
 import * as D from './data.js';
 import { installExtras } from './extras.js';
+import { installFx } from './fx.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -47,7 +48,7 @@ export class Game {
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
     this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
-    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = [];
+    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
     this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
     this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
@@ -108,7 +109,7 @@ export class Game {
     this.state = 'loading'; if (!silent) this.emit('fade');
     await loadSpecies(speciesForMap(idx), null, true);
     if (this.world) { this.prog[this.mapIdx].lit = [...this.lit]; }
-    this.mapIdx = idx; this.world = M.buildWorld(idx); this.obs = []; this.world.obs = this.obs; this.gust = null; this.later = []; this.endLink(true); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
+    this.mapIdx = idx; this.world = M.buildWorld(idx); this.obs = []; this.world.obs = this.obs; this.gust = null; this.later = []; this.fxs = []; this.endLink(true); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
     const pr = this.prog[idx]; this.lit = new Set(pr.lit);
     if (pr.doorOpen && this.world.door) for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
     if (pr.bossDead) this.openFog();
@@ -313,7 +314,7 @@ export class Game {
   useEther() {
     const m = this.chief(); if (m.exh || this.ethers <= 0 || m.atk || m.dodge || m.drink > 0 || (m.fx && m.fx.k === 'freeze')) return;
     if (this.stam >= this.maxStam * 0.9 && m.cd <= 0) return;
-    this.ethers--; this.stam = this.maxStam; this.stamPause = 0; m.cd = 0; m.drink = 0.5; SFX.heal(); this.ringFx(m.x, m.y, 20, '#7fd0ff');
+    this.ethers--; this.stam = this.maxStam; this.stamPause = 0; m.cd = 0; m.drink = 0.5; SFX.heal(); this.ringFx(m.x, m.y, 20, '#7fd0ff'); this.fx('charge', m.x, m.y, { scale: 0.55, z: 12, add: true, dur: 0.5 });
     for (let i = 0; i < 8; i++) this.parts.push({ x: m.x + rand(-8, 8), y: m.y, z: 0, vx: 0, vy: 0, vz: rand(25, 50), life: 0.7, max: 0.7, c: '#7fd0ff', size: 2 });
     this.floatText(m.x, m.y - 26, 'Endurance', '#7fd0ff');
   }
@@ -344,7 +345,7 @@ export class Game {
     if (k === 'freeze' && m.frzImm > 0) return;
     m.fx = { k, t: S.dur, tick: 1 };
     if (k === 'freeze') { m.atk = null; m.dodge = null; m.dash = null; this.guarding = false; }
-    this.floatText(m.x, m.y - 32, S.name, S.color); this.burst(m.x, m.y - 8, S.color, 6);
+    this.floatText(m.x, m.y - 32, S.name, S.color); this.burst(m.x, m.y - 8, S.color, 6); this.fxStatus(m, k);
   }
   updateStatus(m, dt) {
     if (m.frzImm > 0) m.frzImm -= dt;
@@ -371,7 +372,7 @@ export class Game {
     if ((k === 'freeze' || k === 'confuse') && (e.boss || e.def.armor)) return;
     if (e.fx && e.fx.k === k) { e.fx.t = S.dur; return; }
     e.fx = { k, t: S.dur, tick: 1 };
-    this.floatText(e.x, e.y - 30, S.name, S.color); this.burst(e.x, e.y - 8, S.color, 6);
+    this.floatText(e.x, e.y - 30, S.name, S.color); this.burst(e.x, e.y - 8, S.color, 6); this.fxStatus(e, k);
     if (k === 'freeze') { e.state = 'stagger'; e.st = S.dur; e.tele = false; setAnim(e, 'Hurt', false); }
     if (k === 'confuse') { e.state = 'dizzy'; e.st = S.dur * 0.5; e.tele = false; }
   }
@@ -452,7 +453,7 @@ export class Game {
     this.curElem = this.elemOf(m, a);
     if (a.kind === 'sig') { this.doSignature(m, a); return; }
     if (a.kind === 'ability') {
-      const tm = d.ability, k = tm.kind, ang = Math.atan2(aim.y, aim.x);
+      const tm = d.ability, k = tm.kind, ang = Math.atan2(aim.y, aim.x), np = this.projs.length;
       if (k === 'lunge' || k === 'smoke') this.meleeArc(m, aim, d.range + 14, -0.1, dmg, { heavy: true, stagger: 0.7, knock: 90, status: tm.status });
       else if (k === 'flame') {
         this.meleeArc(m, aim, 54, 0.35, dmg, { heavy: true, stagger: 0.6, knock: 60, status: tm.status });
@@ -476,9 +477,10 @@ export class Game {
       } else if (k === 'regen') {
         m.regen = { t: 8, pct: tm.mult }; this.healAura(m, tm); SFX.heal(); this.emit('toast', tm.name + ' : régénération pendant 8 s');
       } else if (k === 'haste') { this.buffT = 10; this.buffMult = tm.mult; this.ringFx(m.x, m.y, 40, tm.color); SFX.pick(); this.emit('toast', tm.name + ' : dégâts ×' + tm.mult + ' pendant 10 s'); }
+      this.fxAbility(m, tm, aim, ang, np);
       return;
     }
-    if (d.mode === 'melee') this.meleeArc(m, aim, d.range + (heavy ? 8 : 4), heavy ? -0.1 : 0.25, dmg, { heavy, stagger: heavy ? 0.7 : 0.38, knock: heavy ? 70 : 30 });
+    if (d.mode === 'melee') { this.fxSwing(m, aim, d.range, heavy); this.meleeArc(m, aim, d.range + (heavy ? 8 : 4), heavy ? -0.1 : 0.25, dmg, { heavy, stagger: heavy ? 0.7 : 0.38, knock: heavy ? 70 : 30 }); }
     else {
       this.fireProj({ x: m.x, y: m.y, ang: Math.atan2(aim.y, aim.x), speed: heavy ? 150 : 210, dmg, r: heavy ? 5 : 3, life: 1.2, team: 'p', color: d.orb || '#ffe27a', owner: m, heavy });
       SFX.shoot();
@@ -511,7 +513,7 @@ export class Game {
     if (src === this.chief() && !src.summoned) this.addLink(o.sig ? 5 : o.heavy ? 4.5 : 2.5);
     if (e.state === 'idle' || e.state === 'dormant') e.state = 'chase';
     this.floatText(e.x, e.y - 18, String(dmg), crit || back ? '#ffd24a' : '#ffffff');
-    this.burst(e.x, e.y - 6, crit ? '#ffd24a' : '#ffffff', crit ? 8 : 4);
+    this.burst(e.x, e.y - 6, crit ? '#ffd24a' : '#ffffff', crit ? 8 : 4); this.fxHit(e, src, o, crit);
     (crit ? SFX.crit : SFX.hit)();
     const kd = unit(e.x - src.x, e.y - src.y);
     if (!e.boss && !e.def.armor) { e.kx = kd.x * (o.knock || 30) * 3; e.ky = kd.y * (o.knock || 30) * 3; }
@@ -529,6 +531,7 @@ export class Game {
     if (this.lock === e) this.lock = null;
     if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#c9a7ff'); }
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#c9a7ff', e.boss ? 40 : 12); SFX.hit();
+    if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
     if (e.big && !this.prog[this.mapIdx].bigDead) {
       this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
       this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+1 Super Bonbon');
@@ -543,7 +546,7 @@ export class Game {
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if (this.guardT < 0.22 && o.parry !== false) {
-        SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10);
+        SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
         m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.4;
         return 'parry';
       }
@@ -557,7 +560,7 @@ export class Game {
       sx = o.status || this.statusOf(o.owner);
     }
     m.hp -= dmg; m.flash = 0.12; m.inv = 0.45;
-    this.floatText(m.x, m.y - 22, String(dmg), '#ff6a6a'); this.burst(m.x, m.y - 6, '#ff6a6a', 4);
+    this.floatText(m.x, m.y - 22, String(dmg), '#ff6a6a'); this.burst(m.x, m.y - 6, '#ff6a6a', 4); this.fx('tackle', m.x, m.y, { scale: 0.5, z: 12, add: true, dur: 0.3 });
     if (sx && m.hp > 0 && Math.random() < sx[1]) this.inflict(m, sx[0]);
     if (m.hp <= 0) this.memberDown(m);
     return true;
@@ -658,7 +661,7 @@ export class Game {
       for (const o of n) this.fireProj({ x: e.x, y: e.y, ang: ang + o, speed: def.proj, dmg: e.dmg, r: 3.5, life: 2.6, team: 'e', color: def.color, owner: e });
       SFX.shoot(); setAnim(e, def.anim, false); e.state = 'recover'; e.st = 0.45; e.cd = 1.7 * (def.rec || 1);
     } else if (def.kind === 'slam') {
-      const s = e.slamAt || tg; this.ringFx(s.x, s.y, def.blast, def.color || '#ffb050'); SFX.boom(); this.shake = Math.max(this.shake, 3); this.burst(s.x, s.y - 4, def.color || '#ffb050', 14);
+      const s = e.slamAt || tg; this.ringFx(s.x, s.y, def.blast, def.color || '#ffb050'); this.fx('earthpower', s.x, s.y, { scale: def.blast / 42, z: 6, add: true, dur: 0.5 }); this.fx('dig', s.x, s.y, { scale: def.blast / 40, z: 0, ground: true, dur: 0.6 }); SFX.boom(); this.shake = Math.max(this.shake, 3); this.burst(s.x, s.y - 4, def.color || '#ffb050', 14);
       for (const m of this.actors()) if (!m.exh && hyp(m.x - s.x, m.y - s.y) < def.blast) this.hurtMember(m, e.dmg * 1.3, s, { owner: e, heavy: true, parry: false });
       setAnim(e, def.anim, false); e.state = 'recover'; e.st = 0.7; e.cd = 1.9; e.slamAt = null;
     } else if (def.kind === 'melee') {
@@ -686,7 +689,7 @@ export class Game {
   }
   parried(e) { if (e.boss) return; e.state = 'dizzy'; e.st = 1.4; e.tele = false; e.invuln = 0; e.cd = 1.2; }
   explode(e) {
-    const def = e.def; this.ringFx(e.x, e.y, def.blast, '#ffb050'); SFX.boom(); this.shake = 5; this.burst(e.x, e.y - 6, '#ffb050', 18);
+    const def = e.def; this.ringFx(e.x, e.y, def.blast, '#ffb050'); this.fx('selfdestruct', e.x, e.y, { scale: def.blast / 40, z: 8, add: true, dur: 0.6, glow: '#ffb050' }); SFX.boom(); this.shake = 5; this.burst(e.x, e.y - 6, '#ffb050', 18);
     for (const m of this.actors()) if (!m.exh && hyp(m.x - e.x, m.y - e.y) < def.blast) this.hurtMember(m, e.dmg, e, { owner: e, heavy: true, parry: false });
     e.dead = true; e.deadT = 2; e.hp = 0; this.queueRespawn(e); if (this.lock === e) this.lock = null;
   }
@@ -703,6 +706,7 @@ export class Game {
   bossPhase(b, ph) {
     b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
     this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
+    this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
     this.emit('bossPhase', b, ph);
   }
@@ -852,7 +856,7 @@ export class Game {
     this.projs = this.projs.filter(p => !p.dead);
   }
   projExplode(p) {
-    this.ringFx(p.x, p.y, p.explode, p.color); SFX.boom(); this.burst(p.x, p.y, p.color, 14);
+    this.fxBoom(p); this.ringFx(p.x, p.y, p.explode, p.color); SFX.boom(); this.burst(p.x, p.y, p.color, 14);
     for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < p.explode + e.r) this.damageEnemy(e, p.dmg, p.owner, { heavy: true, stagger: 0.8, knock: 80, status: p.status, sig: p.sig });
     this.hitObs(p.x, p.y, p.explode, p.dmg * 0.8, p.elem || 'normal');
   }
@@ -876,10 +880,11 @@ export class Game {
   }
   spark(x, y, c, n = 1) { for (let i = 0; i < n; i++) this.parts.push({ x, y, z: 4, vx: rand(-30, 30), vy: rand(-20, 20), vz: rand(10, 40), life: 0.35, max: 0.35, c, size: 2 }); }
   burst(x, y, c, n) { for (let i = 0; i < n; i++) { const a = rand(0, 6.28), s = rand(20, 80); this.parts.push({ x, y, z: 6, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: rand(10, 60), life: rand(0.25, 0.5), max: 0.5, c, size: 2, g: 160 }); } }
-  healFx(m) { for (let i = 0; i < 8; i++) this.parts.push({ x: m.x + rand(-8, 8), y: m.y + rand(-4, 4), z: 0, vx: 0, vy: 0, vz: rand(25, 50), life: 0.8, max: 0.8, c: '#8dffb0', size: 2 }); this.floatText(m.x, m.y - 24, '+', '#8dffb0'); }
+  healFx(m) { this.fx('recover', m.x, m.y, { scale: 0.8, z: 12, add: true, dur: 0.6 }); for (let i = 0; i < 8; i++) this.parts.push({ x: m.x + rand(-8, 8), y: m.y + rand(-4, 4), z: 0, vx: 0, vy: 0, vz: rand(25, 50), life: 0.8, max: 0.8, c: '#8dffb0', size: 2 }); this.floatText(m.x, m.y - 24, '+', '#8dffb0'); }
   ringFx(x, y, r, c) { this.fxRings.push({ x, y, r, c, t: 0 }); }
   floatText(x, y, s, c) { this.texts.push({ x: x + rand(-4, 4), y, s, c, t: 0 }); }
   updateFx(dt) {
+    this.updateFxs(dt);
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt; }
     this.parts = this.parts.filter(p => p.life > 0);
     for (const t of this.texts) { t.t += dt; t.y -= 14 * dt; }
@@ -995,10 +1000,13 @@ export class Game {
     if (k === 'F4') { for (const e of this.enemies) if (!e.dead && !e.boss && hyp(e.x - this.chief().x, e.y - this.chief().y) < 260) this.damageEnemy(e, 99999, this.chief(), { heavy: true }); }
     if (k === 'F5' && this.boss && !this.boss.dead) { this.boss.hp = Math.min(this.boss.hp, this.boss.maxhp * 0.27); }
     if (k === 'F7') { this.link = 100; this.emit('toast', 'Lien plein'); }
+    if (k === 'F8') this.fxCycle(false);
+    if (k === 'F9') this.fxCycle(true);
     if (k === 'F6') { this.ethers = this.maxEthers = 5; this.bag.revive = (this.bag.revive || 0) + 2; this.unlocked = M.MAPS.length - 1; for (const t of Object.keys(D.TMS)) if (!this.tms.includes(t)) this.tms.push(t); this.bag.candy = (this.bag.candy || 0) + 20; for (const v of VIT_KEYS) this.bag[v] = (this.bag[v] || 0) + 3; this.emit('toast', 'Tout débloqué'); }
   }
 }
 
+installFx(Game, { D });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération

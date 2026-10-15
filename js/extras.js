@@ -75,6 +75,7 @@ export function installExtras(G, d) {
       q.anim = 'Idle'; q.at = 0; q.loop = true; q.dir = dirFromVec(c.face.x, c.face.y);
       this.ringFx(q.x, q.y, 30, q.def.color); for (let i = 0; i < 14; i++) this.spark(q.x, q.y - 8, i % 2 ? '#ffffff' : q.def.color, 1);
     });
+    this.fx('storedpower', c.x, c.y, { scale: 1.2, z: 12, add: true, dur: 0.8, glow: '#ffe27a' }); for (const q of al) this.fx('calmmind', q.x, q.y, { scale: 0.7, z: 12, add: true, dur: 0.7, glow: q.def.color });
     this.ringFx(c.x, c.y, 44, '#ffe27a'); this.hitstop = 0.12; this.shake = Math.max(this.shake, 4); SFX.boom();
     this.emit('toast', 'Lien : ' + al.map(q => q.def.name).join(' et ') + ' entrent en scène');
     return true;
@@ -144,6 +145,7 @@ export function installExtras(G, d) {
     const arc = (v, mult, range, cos) => { const h = this.meleeArc(m, v, range, cos, dmg * mult, o); return h; };
     const proj = (an, sp, mult, extra) => this.fireProj({ x: m.x, y: m.y, ang: an, speed: sp, dmg: dmg * mult, r: 4, life: 1.1, team: 'p', color: col, owner: m, status: sg.st, sig: true, heavy: true, ...extra });
     this.shake = Math.max(this.shake, 3);
+    this.fxSig(m, a, sg);
     switch (sg.kind) {
       case 'cross': {
         arc(aim, 0.55, m.def.range + 12, 0.0);
@@ -179,7 +181,7 @@ export function installExtras(G, d) {
           const p = i === 0 ? base : { x: base.x + rand(-58, 58), y: base.y + rand(-42, 42) };
           this.ringFx(p.x, p.y, 10, col);
           this.later.push({ t: 0.3 + i * 0.11, fn: () => {
-            this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); SFX.boom();
+            this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); SFX.boom(); this.fx('whirlpool', p.x, p.y, { scale: 0.7, z: 0, ground: true, dur: 0.5, add: true }); this.fx('brine', p.x, p.y, { scale: 0.9, z: 10, dur: 0.45, add: true, glow: col });
             for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 26 + e.r) this.damageEnemy(e, dmg * 0.5, m, { ...o, stagger: 0.5, knock: 50 });
             this.hitObs(p.x, p.y, 26, dmg * 0.5, 'water');
           } });
