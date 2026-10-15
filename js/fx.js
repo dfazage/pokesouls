@@ -1,8 +1,11 @@
-// Effets visuels d'attaque : planches d'animation (Dämmerlicht BFX de KotatsuAkira, PIPO Fire, Anton Chi) jouées par-dessus le jeu.
+// Effets visuels d'attaque : planches d'animation jouées par-dessus le jeu. Source principale : effets pixel art de PMDCollab / Pokémon Mystery Dungeon (m.px dans fx.json),
+// repli sur Dämmerlicht BFX (KotatsuAkira), PIPO Fire et Anton Chi pour les clés non remplacées. Les planches px sont affichées au plus proche voisin, à une échelle entière (≈ 64 px par unité d échelle), sans fusion additive.
 // Les feuilles sont décrites dans assets/fx.json (fichier, taille d'une frame, colonnes, nombre de frames) et chargées en arrière-plan :
 // tant qu'une feuille n'est pas arrivée, l'effet est simplement ignoré (le jeu garde ses éclats et anneaux d'origine).
 
 export const FXS = { man: {}, img: {}, ready: false };
+// Les planches PMD ont des frames de 16 à 160 px (Dämmerlicht : 192) : on les agrandit par pas entiers pour garder une taille à l'écran comparable.
+const pxScale = m => m.sc || Math.max(1, Math.round(64 / Math.max(m.fw, m.fh)));
 
 export async function loadFx() {
   try { FXS.man = await (await fetch('assets/fx.json')).json(); } catch (e) { FXS.man = {}; return; }
@@ -25,7 +28,7 @@ const STAT = {
 // Capacités (CT) : self = sur le lanceur, front = devant lui, trail/boom = sur le projectile, beam = le long d'un rayon, team = sur chaque soigné, ring = autour.
 // [clé, échelle, options]
 const TMFX = {
-  ct_flamethrower: { front: [['pipofire', 0.65, { dist: 22, dur: 0.55, glow: '#ff8a30' }], ['pipofire', 0.7, { dist: 42, delay: 0.06, dur: 0.55 }], ['pipofire', 0.75, { dist: 62, delay: 0.12, dur: 0.55 }], ['ember', 0.8, { dist: 36, add: true }]] },
+  ct_flamethrower: { front: [['flamethrower', 0.8, { dist: 22, dur: 0.55, glow: '#ff8a30' }], ['flamethrower', 0.85, { dist: 42, delay: 0.06, dur: 0.55 }], ['flamethrower', 0.9, { dist: 62, delay: 0.12, dur: 0.55 }], ['ember', 0.8, { dist: 36, add: true }]] },
   ct_fireblast: { self: [['ember', 0.6, { add: true }]], trail: ['pipofire', 0.42, { loop: true, glow: '#ff6a30' }], boom: ['fireblast', 0.95, { add: true, dur: 0.6, glow: '#ff6a30' }] },
   ct_surf: { self: [['whirlpool', 1.25, { ground: true, dur: 0.7, glow: '#5ab8ff' }], ['brine', 1.5, { add: true, dur: 0.6 }]] },
   ct_hydro: { beamSheet: ['watercannon', 0.85] },
@@ -63,6 +66,7 @@ export function installFx(Game, { D }) {
   // life (durée max d'une boucle), follow (objet suivi), cond (arrêt quand faux), hue (degrés), flip, anchor 'l' (origine à gauche), ground (sous les entités), glow (couleur de lueur).
   P.fx = function (key, x, y, o = {}) {
     const m = FXS.man[key]; if (!m || !FXS.img[key]) return null;
+    if (m.px) o = { ...o, add: false, scale: (o.scale || 0.6) * pxScale(m) };
     if (!this.fxs) this.fxs = [];
     if (this.fxs.length > 70) return null;
     const fps = o.fps || (o.dur ? m.n / o.dur : 26);
@@ -166,7 +170,7 @@ export function installFx(Game, { D }) {
 // hook (rendu HD-2D) : { ctxFor(f) -> contexte cible, place(ctx, f) -> false pour ignorer l'effet (sinon positionne le contexte) }
 export function drawFxs(g, ctx0, ground, hook) {
   const L = g.fxs; if (!L || !L.length) return;
-  if (!hook) { ctx0.save(); ctx0.imageSmoothingEnabled = true; }
+  if (!hook) { ctx0.save(); }
   for (const f of L) {
     if (f.t < 0 || !!f.ground !== ground) continue;
     const img = FXS.img[f.k], m = FXS.man[f.k]; if (!img) continue;
@@ -174,7 +178,7 @@ export function drawFxs(g, ctx0, ground, hook) {
     const c = i % m.cols, r = (i / m.cols) | 0;
     let a = f.alpha; if (f.loop) a *= Math.min(1, f.t / 0.12);
     const ctx = hook ? hook.ctxFor(f) : ctx0;
-    ctx.save(); ctx.imageSmoothingEnabled = true;
+    ctx.save(); ctx.imageSmoothingEnabled = !m.px;
     ctx.globalAlpha = a; ctx.globalCompositeOperation = hook ? 'source-over' : f.add ? 'lighter' : 'source-over';
     ctx.filter = f.hue ? `hue-rotate(${f.hue}deg)` : 'none';
     if (hook) { if (!hook.place(ctx, f)) { ctx.restore(); continue; } } else ctx.translate(Math.round(f.x), Math.round(f.y - f.z));

@@ -92,7 +92,7 @@ Les sprites sont préparés par `tools/fetch_sprites.py` et `tools/bake_sprites.
 ## Crédits
 
 - Sprites : [PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab), licence **CC BY-NC 4.0**. Merci à tous les artistes du projet (crédits par sprite dans le dépôt PMDCollab).
-- Effets d'attaque : **Dämmerlicht BFX** de KotatsuAkira (crédit obligatoire) ; **PIPO Fire** de PIPOSCHPATZ (CC BY 4.0) ; **Water Cannon** d'Anton Chi. Planches dans `assets/fx/`, décrites par `assets/fx.json` et jouées par `js/fx.js`. En mode `?dev`, **F8 / F9** font défiler les effets devant le chef.
+- Effets d'attaque : planches pixel art de **PMDCollab / Pokémon Mystery Dungeon** (`RawAsset/Particle`, projet de fan non commercial), copiées dans `assets/fx/pmd/` par `tools/build_pmd_fx.py` ; elles sont affichées au plus proche voisin, à échelle entière, sans fusion additive. Repli sur **Dämmerlicht BFX** de KotatsuAkira (crédit obligatoire) ; **PIPO Fire** de PIPOSCHPATZ (CC BY 4.0) ; **Water Cannon** d'Anton Chi. Planches dans `assets/fx/`, décrites par `assets/fx.json` et jouées par `js/fx.js`. En mode `?dev`, **F8 / F9** font défiler les effets devant le chef.
 - Musique de repli (OpenGameArt) : **Matthew Pablo** (http://www.matthewpablo.com), CC BY 3.0, *Colossal Boss Battle Theme* et *Dark Descent* (crédit obligatoire) ; autres pistes CC0 (TAD, qubodup, Cethiel, nene, kindland, JaggedStone, SubspaceAudio, cesisco, cynicmusic, josepharaoh99, congusbongus). Liste complète dans la page Crédits.
 - Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce projet n'est ni affilié ni approuvé par eux.
 - Rendu HD-2D : [three.js](https://threejs.org/) (licence MIT), embarqué dans `js/vendor/`.
