@@ -43,6 +43,18 @@ Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à é
 
 Les ennemis en retour : l'eau trempe l'équipe, l'électricité frappe plus fort un Pokémon trempé.
 
+## Jouer sur téléphone (PWA)
+
+Le jeu s'installe comme une application et se joue au toucher, téléphone en **mode paysage**.
+
+- **Android (Chrome)** : ouvrir le site, puis « Installer l'app » sur l'écran titre (ou menu ⋮ ▸ Installer l'application).
+- **iPhone / iPad (Safari)** : bouton Partager ▸ « Sur l'écran d'accueil ».
+- **Commandes tactiles** : stick flottant dans la moitié gauche de l'écran ; à droite Coup, Lourd, Esquive (maintenue : course), CT, Garde, Lien, Relève, Baie, Huile, Agir, Cible ; en haut Pause, Sac, Carte. Toucher un portrait en haut à droite appelle ce Pokémon.
+- **Hors ligne** : le code est mis en cache ; sprites, effets et musiques le sont au fil du jeu (ce qui a déjà été joué reste disponible sans réseau).
+- La partie se met en pause si l'app passe en arrière-plan ou si l'écran est tourné en portrait. L'écran reste allumé pendant la partie.
+- `?touch=1` force l'affichage des commandes tactiles (test sur ordinateur), `?touch=0` le masque.
+- Code : `manifest.webmanifest`, `sw.js` (service worker, changer `VERSION` pour vider les caches), `js/touch.js`, icônes dans `assets/icons/`.
+
 ## Commandes
 
 Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et souris, sont modifiables (3 cases par action), enregistrées dans le navigateur.

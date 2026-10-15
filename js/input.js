@@ -52,8 +52,8 @@ export const Controls = {
   isListening: () => !!capture,
 };
 
-const down = new Set(), pressedNow = new Set(), padPrev = {}, padDown = new Set();
-let padAxes = [0, 0];
+const down = new Set(), pressedNow = new Set(), padPrev = {}, padDown = new Set(), touchDown = new Set();
+let padAxes = [0, 0], touchAxes = [0, 0], lastTouchT = -1e9;
 const press = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) { down.add(a); pressedNow.add(a); } };
 const release = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) down.delete(a); };
 
@@ -66,12 +66,22 @@ addEventListener('keydown', e => {
 }, true);
 addEventListener('keyup', e => release(e.code));
 addEventListener('blur', () => down.clear());
-const onUi = e => e.target && e.target.closest && e.target.closest('button,.menu,.screen,#hud .slot');
+const onUi = e => e.target && e.target.closest && e.target.closest('button,.menu,.screen,#hud .slot,#touch');
+// Sur écran tactile, le navigateur émule une souris après chaque toucher : on l'ignore (sinon un toucher = une attaque).
+addEventListener('pointerdown', e => { if (e.pointerType === 'touch') lastTouchT = performance.now(); }, true);
 addEventListener('mousedown', e => {
+  if (performance.now() - lastTouchT < 1000) return;
   if (capture) { if (onUi(e) && !e.target.closest('.keybtn')) return; e.preventDefault(); const cb = capture; capture = null; cb('Mouse' + e.button); return; }
   if (onUi(e)) return; press('Mouse' + e.button);
 }, true);
 addEventListener('mouseup', e => release('Mouse' + e.button));
+// Commandes tactiles (js/touch.js) : mêmes actions que le clavier et la manette.
+export const Touch = {
+  press(a) { if (!touchDown.has(a)) { touchDown.add(a); pressedNow.add(a); } },
+  release(a) { touchDown.delete(a); },
+  axis(x, y) { touchAxes = [x, y]; },
+  releaseAll() { touchDown.clear(); touchAxes = [0, 0]; },
+};
 addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard)
@@ -95,12 +105,12 @@ export const Input = {
   poll() { pollPad(); },
   endFrame() { pressedNow.clear(); },
   pressed: a => pressedNow.has(a),
-  down: a => down.has(a) || padDown.has(a),
+  down: a => down.has(a) || padDown.has(a) || touchDown.has(a),
   axis() {
-    let x = (Input.down('right') ? 1 : 0) - (Input.down('left') ? 1 : 0) + padAxes[0];
-    let y = (Input.down('down') ? 1 : 0) - (Input.down('up') ? 1 : 0) + padAxes[1];
+    let x = (Input.down('right') ? 1 : 0) - (Input.down('left') ? 1 : 0) + padAxes[0] + touchAxes[0];
+    let y = (Input.down('down') ? 1 : 0) - (Input.down('up') ? 1 : 0) + padAxes[1] + touchAxes[1];
     const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
     return [x, y];
   },
-  clear() { down.clear(); pressedNow.clear(); },
+  clear() { down.clear(); pressedNow.clear(); touchDown.clear(); },
 };

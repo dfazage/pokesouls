@@ -8,6 +8,7 @@ import { showStarters, showBonfireMenu, showBag, showTravel, showControls, showC
 import { STARTERS } from './data.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
+import { initTouch } from './touch.js';
 
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), canvas = $('#game'), ctx = canvas.getContext('2d');
@@ -17,7 +18,7 @@ function fit() {
   const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`;
   if (r3d) r3d.setScale(Math.min(2, Math.max(1, Math.round(s * (window.devicePixelRatio || 1) * 2) / 2)));
 }
-addEventListener('resize', fit); fit();
+addEventListener('resize', fit); addEventListener('orientationchange', fit); fit();
 // HD-2D par défaut ; ?2d force l'ancien rendu. En cas d'échec (WebGL2 absent, erreur), on retombe sur le rendu 2D.
 async function initHD2D() {
   if (/[?&]2d\b/.test(location.search) || r3d) return;
@@ -26,6 +27,26 @@ async function initHD2D() {
 }
 function disableHD2D() { if (!r3d) return; try { r3d.destroy(); } catch (e) { /* ignoré */ } r3d = null; window.hd2d = null; document.body.classList.remove('hd2d'); }
 loadFx(); // feuilles d'effets d'attaque, chargées en arrière-plan
+
+
+// ---- téléphone / tablette : commandes tactiles, installation PWA ----
+const qTouch = (location.search.match(/[?&]touch=([01])/) || [])[1];
+const touchUi = initTouch(stage);
+const setTouch = on => document.body.classList.toggle('touch', on);
+setTouch(qTouch ? qTouch === '1' : matchMedia('(pointer: coarse)').matches);
+if (!qTouch) addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && !document.body.classList.contains('touch')) setTouch(true); }, { capture: true, passive: true });
+const isStandalone = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; const b = $('#btn-install'); if (b) b.hidden = false; });
+addEventListener('appinstalled', () => { installEvt = null; const b = $('#btn-install'); if (b) b.hidden = true; });
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker :', e)));
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+// écran allumé pendant la partie
+let wake = null;
+const keepAwake = async () => { try { if ('wakeLock' in navigator && !wake && !document.hidden) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch (e) { wake = null; } };
+addEventListener('pointerdown', keepAwake, { passive: true });
 
 let game = null, hud = null, mode = 'loading', menuKind = null, last = 0;
 // braises de l'écran titre
@@ -96,11 +117,14 @@ function frame(now) {
     else render(game, ctx);
     hud.update(dt);
   }
+  touchUi.update(mode);
   directMusic(game, ui, dt);
   Input.endFrame();
   requestAnimationFrame(frame);
 }
 
+document.addEventListener('visibilitychange', () => { if (document.hidden) { if (mode === 'play') openPause(); } else keepAwake(); });
+matchMedia('(orientation: portrait)').addEventListener('change', e => { if (e.matches && document.body.classList.contains('touch') && mode === 'play') openPause(); });
 addEventListener('keydown', e => { if (game && game.dev && /^F[1-9]$/.test(e.code) && !(e.shiftKey && e.code === 'F8')) { e.preventDefault(); game.devKey(e.code); } });
 addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preventDefault(); if (r3d) disableHD2D(); else initHD2D(); } }); // bascule 2D / HD-2D
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { unlockAudio(); Music.unlock(); }, { passive: true }));
@@ -118,6 +142,11 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   $('#btn-keys').onclick = () => openControls(() => hideMenu());
   $('#btn-credits').onclick = () => showCredits(() => hideMenu());
   $('#end-close').onclick = () => $('#end').classList.remove('show');
+  $('#btn-install').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { /* ignoré */ } installEvt = null; $('#btn-install').hidden = true; };
+  if (document.body.classList.contains('touch')) {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    $('.hint').textContent = ios && !isStandalone() ? 'Pour jouer en plein écran : bouton Partager, puis « Sur l’écran d’accueil ». Stick à gauche, boutons à droite.' : 'Tactile : stick à gauche, boutons d’action à droite. Téléphone en mode paysage.';
+  }
   await initHD2D();
   mode = 'title';
   if (/[?&]autostart/.test(location.search)) { if (has) resume(); else newGame({ fire: 0, water: 0, grass: 0 }); }
