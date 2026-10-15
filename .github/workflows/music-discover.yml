@@ -1,8 +1,13 @@
 name: music-discover
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   d:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/oga_discover.py
+      - run: python3 tools/oga_discover.py | tee tools/music_discovery.txt
+      - run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add tools/music_discovery.txt; git commit -m "Découverte des fichiers OpenGameArt" || true; git push
