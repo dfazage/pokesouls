@@ -6,15 +6,17 @@ function loadImage(src) {
   return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image ' + src)); i.src = src; });
 }
 
-export async function loadAssets(onProgress) {
-  A.db = await (await fetch('assets/sprites.json')).json();
+export async function loadDb() { A.db = await (await fetch('assets/sprites.json')).json(); }
+// Charge les images d'une liste d'espèces (une seule fois chacune).
+export async function loadSpecies(slugs, onProgress, withPortrait = true) {
   const files = new Set();
-  for (const sp of Object.values(A.db)) {
-    for (const an of Object.values(sp.anims)) files.add(an.file);
-    if (sp.portrait) files.add(sp.portrait);
-  }
-  let n = 0;
-  await Promise.all([...files].map(async f => { A.img[f] = await loadImage('assets/' + f); onProgress && onProgress(++n / files.size); }));
+  for (const s of slugs) { const sp = A.db[s]; if (!sp) continue; for (const an of Object.values(sp.anims)) files.add(an.file); if (withPortrait && sp.portrait) files.add(sp.portrait); }
+  const todo = [...files].filter(f => !A.img[f]); let n = 0;
+  await Promise.all(todo.map(async f => { try { A.img[f] = await loadImage('assets/' + f); } catch (e) { /* image manquante */ } onProgress && onProgress(++n / todo.length); }));
+}
+export async function loadPortraits(slugs) {
+  const todo = slugs.map(s => A.db[s] && A.db[s].portrait).filter(f => f && !A.img[f]);
+  await Promise.all(todo.map(async f => { try { A.img[f] = await loadImage('assets/' + f); } catch (e) { /* rien */ } }));
 }
 
 // ticks cumulés par frame
@@ -42,9 +44,9 @@ export function dirFromVec(dx, dy) {
 export const DIR_VEC = [[0, 1], [0.7071, 0.7071], [1, 0], [0.7071, -0.7071], [0, -1], [-0.7071, -0.7071], [-1, 0], [-0.7071, 0.7071]];
 
 export function drawSprite(ctx, species, animName, t, loop, dir, x, y, opt = {}) {
-  const sp = A.db[species];
+  const sp = A.db[species]; if (!sp) return;
   const an = sp.anims[animName] || sp.anims.Idle;
-  const img = A.img[an.file];
+  const img = A.img[an.file]; if (!img) return;
   const f = frameAt(an, t, loop);
   const s = opt.scale || 1;
   const w = an.fw, h = an.fh;

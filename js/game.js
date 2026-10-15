@@ -1,17 +1,20 @@
-// Cœur du jeu : équipe de six, combat en temps réel, ennemis, boss Mewtwo, feux de camp, sauvegarde.
-import { TICK, A, hitTick, animTotal, dirFromVec } from './assets.js';
+// Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
+import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
-import * as M from './map.js';
-import { TEAM, ENEMIES, BOSS, START_LEVEL, levelCost, hpMult, dmgMult } from './data.js';
+import * as M from './maps.js';
+import * as D from './data.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
-const SAVE_KEY = 'pokesouls.mewtwo.v1';
+const SAVE_KEY = 'pokesouls.gen1.v2';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
 const hyp = Math.hypot;
 const unit = (x, y) => { const l = hyp(x, y) || 1; return { x: x / l, y: y / l }; };
+const VIT_KEYS = Object.keys(D.VITAMINS);
+const hasAnim = (id, n) => !!(A.db[id] && A.db[id].anims[n]);
+const pickAnim = (id, list) => list.find(n => hasAnim(id, n)) || 'Idle';
 
 export function timing(species, anim) {
   const sp = A.db[species]; const an = sp.anims[anim] || sp.anims.Idle;
@@ -23,84 +26,174 @@ function move(g, o, dx, dy, hw = 4, hh = 3) {
   if (dx && M.boxFree(g.world, o.x + dx, o.y, hw, hh)) o.x += dx;
   if (dy && M.boxFree(g.world, o.x, o.y + dy, hw, hh)) o.y += dy;
 }
+export function speciesForMap(idx) {
+  const d = M.MAPS[idx], set = new Set();
+  for (const t of [...d.mobs.mini, ...d.mobs.mid, d.mobs.big]) set.add(D.spriteOfEnemy(t));
+  const b = D.BOSSES[d.boss]; set.add(b.sprite); if (b.summon) set.add(D.spriteOfEnemy(b.summon));
+  return [...set];
+}
+const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, chests: [] });
+const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
   constructor() {
-    this.world = M.buildWorld();
-    this.floor = M.bakeFloor(this.world);
     this.emit = () => {};
     this.dev = /[?&]dev/.test(location.search);
     this.god = false;
-    this.t = 0; this.state = 'play'; this.hitstop = 0; this.shake = 0;
+    this.t = 0; this.state = 'loading'; this.hitstop = 0; this.shake = 0;
     this.cam = { x: 0, y: 0 };
-    this.team = TEAM.map((d, i) => ({ def: d, i, lvl: START_LEVEL, hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0 }));
-    this.chiefIdx = 0; this.berries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.order = 'focus'; this.essence = 0; this.guardT = 9; this.guarding = false; this.wasGuard = false;
+    this.team = []; this.starters = null;
+    this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
+    this.order = 'focus'; this.essence = 0; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
     this.buf = null; this.lock = null; this.trail = []; this.switchT = 0; this.swapCd = 0;
-    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = [];
+    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
-    this.lit = new Set(); this.last = null; this.doorOpen = false; this.miniDead = false; this.bossDead = false; this.plaque = false; this.souvenir = null;
-    this.load();
-    this.applyLevels(true);
-    this.spawnAll();
-    const b = this.last ? M.BONFIRES.find(b => b.id === this.last) : null;
-    this.placeTeam(b ? (b.tx + 0.5) * TS : (M.START.tx + 0.5) * TS, b ? (b.ty + 1.6) * TS : (M.START.ty + 0.5) * TS);
-    this.snapCam();
+    this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
+    this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
+    this.world = null; this.floor = null;
+    this.hasSave = this.load();
   }
 
   // ---------- état ----------
   chief() { return this.team[this.chiefIdx]; }
-  maxhpOf(m) { return Math.round(m.def.hp * hpMult(m.lvl)); }
-  applyLevels(full) { for (const m of this.team) { const mx = this.maxhpOf(m); if (full) m.hp = mx; else m.hp += mx - m.maxhp; m.maxhp = mx; } }
-  save() {
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ essence: this.essence, lvls: this.team.map(m => m.lvl), lit: [...this.lit], last: this.last, doorOpen: this.doorOpen, miniDead: this.miniDead, bossDead: this.bossDead, plaque: this.plaque, souvenir: this.souvenir }));
-    } catch (e) { /* stockage indisponible */ }
+  makeMember(type, lineIdx, i) {
+    return { type, lineIdx, line: D.STARTERS[type][lineIdx], i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: D.ARCH[type].tm, stage: 0,
+      hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0 };
   }
-  hasSave() { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } }
+  computeDef(m) {
+    const a = D.ARCH[m.type], st = stageOf(m.lvl), id = m.line[st], v = m.vit;
+    m.stage = st; m.id = id;
+    m.def = { ...a, id, name: D.NAMES_FR[id], hp: Math.round(a.hp * D.hpMult(m.lvl) * D.STAGE_HP[st] * (1 + 0.08 * v.hpup)),
+      dmg: a.dmg * D.dmgMult(m.lvl) * D.STAGE_DMG[st] * (1 + 0.06 * v.protein), speed: a.speed * (1 + 0.03 * v.carbos), ability: D.TMS[m.tm] };
+  }
+  applyLevels(full) {
+    for (const m of this.team) { this.computeDef(m); const mx = m.def.hp; if (full) m.hp = mx; else if (mx > m.maxhp) m.hp += mx - m.maxhp; m.maxhp = mx; m.hp = Math.min(m.hp, mx); }
+    this.maxStam = 100 + 6 * this.team.reduce((s, m) => s + m.vit.zinc, 0); this.stam = Math.min(this.stam, this.maxStam);
+  }
+  newGame(choice) {
+    this.starters = choice;
+    this.team = ['fire', 'water', 'grass'].map((t, i) => this.makeMember(t, choice[t], i));
+    this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 }; this.applyLevels(true);
+    this.save();
+  }
+  saveData() {
+    this.prog[this.mapIdx].lit = [...this.lit];
+    return { v: 2, starters: this.starters, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries,
+      essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
+  }
+  save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
+  static exists() { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } }
   static wipe() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* rien */ } }
   load() {
     let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { s = null; }
-    if (!s) return;
-    this.essence = s.essence || 0; (s.lvls || []).forEach((l, i) => { if (this.team[i]) this.team[i].lvl = l; });
-    this.lit = new Set(s.lit || []); this.last = s.last || null; this.doorOpen = !!s.doorOpen; this.miniDead = !!s.miniDead; this.bossDead = !!s.bossDead; this.plaque = !!s.plaque; this.souvenir = s.souvenir || null;
-    if (this.doorOpen) for (const [x, y] of this.world.doorTiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
-    if (this.bossDead) this.openFog();
+    if (!s || s.v !== 2 || !s.starters) return false;
+    this.starters = s.starters;
+    this.team = ['fire', 'water', 'grass'].map((t, i) => { const m = this.makeMember(t, s.starters[t], i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) m.tm = s.tm[i]; return m; });
+    this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.essence = s.essence || 0;
+    this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
+    if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
+    this.applyLevels(true);
+    return true;
   }
-  openFog() { for (const [x, y] of this.world.fogTiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; if (!this.plaque) this.items = [{ kind: 'plaque', x: this.world.arena.cx * TS, y: this.world.arena.cy * TS }]; }
-  closeFog() { if (this.bossDead) return; for (const [x, y] of this.world.fogTiles) this.world.grid[y * M.MW + x] = M.T.FOG; }
+  // charge les sprites de l'équipe puis entre dans la carte de reprise
+  async start() {
+    await loadSpecies(this.team.flatMap(m => m.line), null, true);
+    const l = this.last;
+    await this.enterMap(l ? l.map : 0, l ? l.id : 'start', true);
+  }
 
+  // ---------- cartes ----------
+  async enterMap(idx, dest, silent) {
+    this.state = 'loading'; if (!silent) this.emit('fade');
+    await loadSpecies(speciesForMap(idx), null, true);
+    if (this.world) { this.prog[this.mapIdx].lit = [...this.lit]; }
+    this.mapIdx = idx; this.world = M.buildWorld(idx); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
+    const pr = this.prog[idx]; this.lit = new Set(pr.lit);
+    if (pr.doorOpen && this.world.door) for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
+    if (pr.bossDead) this.openFog();
+    this.chestObjs = this.world.chests.map(c => ({ ...c, kind: 'chest', w: 1, h: 1, seed: (c.tx * 7 + c.ty) % 31 }));
+    this.items = [];
+    this.spawnAll(); this.buildItems();
+    const b = dest && dest !== 'start' ? this.world.bonfires.find(q => q.id === dest) : null;
+    const s = this.world.start;
+    this.placeTeam(b ? (b.tx + 0.5) * TS : (s.tx + 0.5) * TS, b ? (b.ty + 1.6) * TS : (s.ty + 0.5) * TS);
+    this.snapCam(); this.lastArea = null; this.lock = null;
+    this.state = 'play';
+    this.emit('area', { zone: 'Chapitre Génération 1 · Carte ' + (idx + 1), area: this.world.name });
+    this.save();
+  }
+  travelOptions() {
+    const out = [];
+    for (let i = 0; i < M.MAPS.length; i++) {
+      const open = i <= this.unlocked, d = M.MAPS[i];
+      const pr = i === this.mapIdx ? { lit: [...this.lit] } : this.prog[i];
+      const w = i === this.mapIdx ? this.world : null;
+      const spots = [];
+      if (open) {
+        spots.push({ id: 'start', name: 'Entrée de la carte' });
+        const names = w ? Object.fromEntries(w.bonfires.map(b => [b.id, b.name])) : bonfireNames(i);
+        for (const id of pr.lit) spots.push({ id, name: 'Feu : ' + (names[id] || id) });
+      }
+      out.push({ idx: i, name: d.name, sub: d.sub, open, boss: D.BOSSES[d.boss].name, done: this.prog[i].bossDead, spots });
+    }
+    return out;
+  }
+  canTravel() { return this.state === 'play' && !this.bossActive && !this.team.every(m => m.exh); }
+  travel(idx, dest) { if (!this.canTravel() || idx > this.unlocked) return false; this.enterMap(idx, dest); return true; }
+
+  openFog() { for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; }
+  closeFog() { if (this.prog[this.mapIdx].bossDead) return; for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FOG; }
+  buildItems() {
+    const pr = this.prog[this.mapIdx], a = this.world.arena; this.items = [];
+    if (pr.bossDead) {
+      if (!pr.rewardTaken) this.items.push({ kind: 'reward', x: a.cx * TS, y: a.cy * TS });
+      this.items.push({ kind: 'portal', x: (a.cx + 3) * TS, y: a.cy * TS });
+    }
+  }
   placeTeam(x, y) {
-    this.team.forEach((m, i) => { m.x = x + (i % 3 - 1) * 8; m.y = y + ((i / 3) | 0) * 6; m.atk = null; m.dodge = null; m.hurtT = 0; m.dash = null; });
+    this.team.forEach((m, i) => { m.x = x + (i - 1) * 9; m.y = y + (i % 2) * 5; m.atk = null; m.dodge = null; m.hurtT = 0; m.dash = null; m.kx = m.ky = 0; });
     this.trail = [{ x, y }];
   }
   snapCam() { const c = this.chief(); this.cam.x = clamp(c.x - W / 2, 0, M.MW * TS - W); this.cam.y = clamp(c.y - H / 2, 0, M.MH * TS - H); }
 
   spawnAll() {
-    this.enemies = [];
-    for (const [type, tx, ty] of M.SPAWNS) {
-      if (type === 'electrode' && this.miniDead) continue;
-      this.enemies.push(this.makeEnemy(type, (tx + 0.5) * TS, (ty + M.DY + 0.5) * TS));
+    this.enemies = []; const pr = this.prog[this.mapIdx];
+    for (const s of this.world.spawns) {
+      const d = D.ENEMIES[s.type]; if (!d) continue;
+      if (d.tier === 'big' && pr.bigDead) continue;
+      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
     }
-    this.projs = []; this.rings = []; this.boss = null; this.bossActive = false; this.lock = null;
+    this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null;
     this.closeFog();
   }
   makeEnemy(type, x, y) {
-    const d = type === 'boss' ? { ...BOSS, boss: true, kind: 'boss', sight: 999, anim: 'Shoot', lv: 40 } : ENEMIES[type];
-    return { def: d, type, x, y, hx: x, hy: y, hp: d.hp, maxhp: d.hp, r: d.r, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5), vx: 0, vy: 0, kx: 0, ky: 0, dead: false, deadT: 0, boss: !!d.boss, clone: !!d.clone, phase: 1, invuln: 0, tele: false, hitDone: false, bob: rand(0, 6) };
+    const lv0 = this.world.def.lv;
+    let d, lv = lv0, hp, dmg, r, ess;
+    if (type === 'boss') {
+      const B = D.BOSSES[this.world.def.boss]; d = { ...B, boss: true, kind: 'boss', sight: 999, anim: 'Shoot', tier: 'boss' };
+      hp = B.hp; dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
+    } else {
+      d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
+      hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;
+    }
+    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5),
+      vx: 0, vy: 0, kx: 0, ky: 0, dead: false, deadT: 0, boss: !!d.boss, clone: !!d.clone, big: d.tier === 'big', phase: 1, invuln: 0, tele: false, hitDone: false, bob: rand(0, 6) };
   }
 
   // ---------- boucle ----------
   update(dt) {
+    if (this.state === 'loading' || !this.world) return;
     if (this.hitstop > 0) { this.hitstop -= dt; return; }
     this.t += dt;
     this.shake = Math.max(0, this.shake - dt * 14);
+    this.buffT = Math.max(0, this.buffT - dt);
     if (this.state === 'dead') { this.deadT += dt; this.updateFx(dt); if (this.deadT > 3 && (Input.pressed('interact') || Input.pressed('light') || this.deadT > 6.5)) this.respawn(); return; }
     this.updateChief(dt);
     this.updateFollowers(dt);
     this.updateEnemies(dt);
     this.updateProjs(dt);
     this.updateRings(dt);
+    this.updateZones(dt);
     this.updateFx(dt);
     this.updateWorld(dt);
     const c = this.chief();
@@ -115,7 +208,7 @@ export class Game {
     for (const a of ['light', 'heavy', 'ability', 'dodge']) if (Input.pressed(a)) this.buf = { a, t: 0.3 };
     if (this.buf) { this.buf.t -= dt; if (this.buf.t <= 0) this.buf = null; }
     if (Input.pressed('next')) this.cycleChief();
-    for (let i = 0; i < 6; i++) if (Input.pressed('s' + (i + 1))) this.switchTo(i);
+    for (let i = 0; i < 3; i++) if (Input.pressed('s' + (i + 1))) this.switchTo(i);
     if (Input.pressed('order')) { this.order = { focus: 'garde', garde: 'repli', repli: 'focus' }[this.order]; this.emit('toast', 'Ordre : ' + { focus: 'Focus', garde: 'Garde', repli: 'Repli' }[this.order]); }
     if (Input.pressed('lock')) this.toggleLock();
     if (Input.pressed('berry')) this.useBerry();
@@ -127,7 +220,7 @@ export class Game {
     if (m.exh) { this.stamTick(dt, false); this.switchT -= dt; if (this.switchT <= 0) this.autoSwitch(); return; }
 
     let busy = false;
-    if (m.hurtT > 0) { move(this, m, m.kx * dt, m.ky * dt); m.kx *= 0.88; m.ky *= 0.88; setAnim(m, 'Hurt', false); m.at += dt; busy = true; }
+    if (m.hurtT > 0) { m.hurtT -= dt; move(this, m, m.kx * dt, m.ky * dt); m.kx *= 0.88; m.ky *= 0.88; setAnim(m, 'Hurt', false); m.at += dt; busy = true; }
     else if (m.dodge) {
       const d = m.dodge; d.t += dt; const sp = d.dist / d.dur; move(this, m, d.dx * sp * dt, d.dy * sp * dt);
       setAnim(m, 'Walk'); m.at += dt * 2.4; busy = true; if (d.t >= d.dur) m.dodge = null;
@@ -196,15 +289,14 @@ export class Game {
     const m = this.chief(); if (m.exh || this.berries <= 0 || m.hp >= m.maxhp || m.atk || m.dodge || m.drink > 0) return;
     this.berries--; m.hp = Math.min(m.maxhp, m.hp + m.maxhp * 0.4); m.drink = 0.55; SFX.heal(); this.healFx(m);
   }
-  cycleChief() { for (let k = 1; k <= 6; k++) { const i = (this.chiefIdx + k) % 6; if (!this.team[i].exh) { this.switchTo(i); return; } } }
+  cycleChief() { for (let k = 1; k <= 3; k++) { const i = (this.chiefIdx + k) % 3; if (!this.team[i].exh) { this.switchTo(i); return; } } }
   switchTo(i) {
-    const n = this.team[i]; if (i === this.chiefIdx || n.exh || this.swapCd > 0) return;
+    const n = this.team[i]; if (!n || i === this.chiefIdx || n.exh || this.swapCd > 0) return;
     const o = this.chief(); o.atk = null; o.dodge = null; this.chiefIdx = i; this.swapCd = 0.4; this.lock = null; n.atk = null; n.dodge = null; n.hurtT = 0;
     this.trail = [{ x: n.x, y: n.y }]; SFX.pick();
     for (let k = 0; k < 6; k++) this.spark(n.x, n.y - 8, '#ffffff', 1);
   }
-  autoSwitch() { for (let k = 1; k <= 6; k++) { const i = (this.chiefIdx + k) % 6; if (!this.team[i].exh) { this.switchTo2(i); return; } } this.die(); }
-  switchTo2(i) { this.swapCd = 0; this.switchTo(i); }
+  autoSwitch() { for (let k = 1; k <= 3; k++) { const i = (this.chiefIdx + k) % 3; if (!this.team[i].exh) { this.swapCd = 0; this.switchTo(i); return; } } this.die(); }
 
   // ---------- attaques (chef et suiveurs) ----------
   startAttack(m, kind, tgt) {
@@ -216,13 +308,13 @@ export class Game {
     m.dir = dirFromVec(aim.x, aim.y);
     SFX.swing();
     if (kind === 'ability') {
-      m.cd = m === this.chief() ? 4.5 : 9;
+      m.cd = m === this.chief() ? ab.cd : ab.cd * 2;
       if (ab.kind === 'lunge') m.dash = { vx: aim.x * 330, vy: aim.y * 330, t: 0.2 };
       if (ab.kind === 'smoke') {
-        for (let i = 0; i < 10; i++) this.spark(m.x, m.y - 6, '#9a8cc0', 1.5);
+        for (let i = 0; i < 10; i++) this.spark(m.x, m.y - 6, ab.color, 1.5);
         if (tgt) { const bx = tgt.x - aim.x * (tgt.r + 10), by = tgt.y - aim.y * (tgt.r + 10); if (M.boxFree(this.world, bx, by, 4, 3)) { m.x = bx; m.y = by; } m.inv = Math.max(m.inv, 0.4); }
         else m.dash = { vx: aim.x * 300, vy: aim.y * 300, t: 0.2 };
-        for (let i = 0; i < 10; i++) this.spark(m.x, m.y - 6, '#9a8cc0', 1.5);
+        for (let i = 0; i < 10; i++) this.spark(m.x, m.y - 6, ab.color, 1.5);
       }
     }
   }
@@ -237,33 +329,46 @@ export class Game {
     if (t >= a.total) m.atk = null;
   }
   powerOf(m, a) {
-    const d = m.def; let mult = a.kind === 'heavy' ? 1.9 : a.kind === 'ability' ? d.ability.mult : 1;
-    return d.dmg * dmgMult(m.lvl) * mult * (m === this.chief() ? 1 : 0.7);
+    const d = m.def; const mult = a.kind === 'heavy' ? 1.9 : a.kind === 'ability' ? d.ability.mult : 1;
+    let p = d.dmg * mult * (m === this.chief() ? 1 : 0.7);
+    if (this.buffT > 0) p *= this.buffMult || 1.5;
+    if (a.kind === 'ability') p *= 1 + 0.08 * m.vit.calcium;
+    return p;
   }
   doHit(m, a) {
     const d = m.def, dmg = this.powerOf(m, a), aim = a.aim, heavy = a.kind === 'heavy';
     if (a.kind === 'ability') {
-      const k = d.ability.kind;
+      const tm = d.ability, k = tm.kind, ang = Math.atan2(aim.y, aim.x);
       if (k === 'lunge' || k === 'smoke') this.meleeArc(m, aim, d.range + 14, -0.1, dmg, { heavy: true, stagger: 0.7, knock: 90 });
-      else if (k === 'shock') { this.meleeArc(m, aim, 48, -2, dmg, { heavy: true, stagger: 0.9, knock: 140 }); this.ringFx(m.x, m.y, 48, '#7fd0ff'); SFX.boom(); this.shake = Math.max(this.shake, 2); }
-      else if (k === 'volley') { for (let i = -2; i <= 2; i++) this.fireProj({ x: m.x, y: m.y, ang: Math.atan2(aim.y, aim.x) + i * 0.16, speed: 230, dmg: dmg, r: 3, life: 0.9, team: 'p', color: '#9cff8a', owner: m }); SFX.shoot(); }
-      else if (k === 'burst') { this.fireProj({ x: m.x, y: m.y, ang: Math.atan2(aim.y, aim.x), speed: 190, dmg: dmg, r: 5, life: 1.3, team: 'p', color: '#ff9aff', owner: m, explode: 30, heavy: true }); SFX.shoot(); }
-      else if (k === 'heal') {
-        for (const q of this.team) if (!q.exh && hyp(q.x - m.x, q.y - m.y) < 110) { q.hp = Math.min(q.maxhp, q.hp + q.maxhp * 0.3); this.healFx(q); }
-        this.ringFx(m.x, m.y, 100, '#ffb0d8'); SFX.heal();
-      }
+      else if (k === 'flame') {
+        this.meleeArc(m, aim, 54, 0.35, dmg, { heavy: true, stagger: 0.6, knock: 60 });
+        for (let i = 0; i < 26; i++) { const aa = ang + rand(-0.35, 0.35), s = rand(60, 170); this.parts.push({ x: m.x, y: m.y, z: 8, vx: Math.cos(aa) * s, vy: Math.sin(aa) * s * 0.7, vz: rand(-5, 15), life: rand(0.25, 0.45), max: 0.45, c: Math.random() < 0.5 ? tm.color : '#ffd36a', size: 3 }); }
+        this.fxRings.push({ x: m.x + aim.x * 28, y: m.y + aim.y * 28, r: 30, c: tm.color, t: 0 }); SFX.boom();
+      } else if (k === 'shock') { this.meleeArc(m, aim, tm.radius, -2, dmg, { heavy: true, stagger: 0.9, knock: 140 }); this.ringFx(m.x, m.y, tm.radius, tm.color); SFX.boom(); this.shake = Math.max(this.shake, 2); }
+      else if (k === 'volley') { for (let i = -2; i <= 2; i++) this.fireProj({ x: m.x, y: m.y, ang: ang + i * 0.16, speed: 230, dmg, r: 3, life: 0.9, team: 'p', color: tm.color, owner: m }); SFX.shoot(); }
+      else if (k === 'burst') { this.fireProj({ x: m.x, y: m.y, ang, speed: 190, dmg, r: 5, life: 1.3, team: 'p', color: tm.color, owner: m, explode: 32, heavy: true }); SFX.shoot(); }
+      else if (k === 'leech') { this.fireProj({ x: m.x, y: m.y, ang, speed: 220, dmg, r: 4, life: 1.0, team: 'p', color: tm.color, owner: m, leech: true, heavy: true }); SFX.shoot(); }
+      else if (k === 'beam') {
+        const len = 200; this.beams.push({ x: m.x, y: m.y - 6, ang, len, t: 0, max: 0.28, color: tm.color, w: 6 }); SFX.boom(); this.shake = Math.max(this.shake, 2);
+        let hit = false;
+        for (const e of this.enemies) { if (e.dead) continue; const rx = e.x - m.x, ry = e.y - m.y, al = rx * aim.x + ry * aim.y, pd = Math.abs(rx * aim.y - ry * aim.x); if (al > 0 && al < len + e.r && pd < e.r + 7) { if (this.damageEnemy(e, dmg, m, { heavy: true, stagger: 0.8, knock: 80 })) hit = true; } }
+        if (hit && m === this.chief()) this.hitstop = 0.05;
+      } else if (k === 'heal') {
+        for (const q of this.team) if (!q.exh && hyp(q.x - m.x, q.y - m.y) < tm.radius) { q.hp = Math.min(q.maxhp, q.hp + q.maxhp * tm.mult); this.healFx(q); }
+        this.ringFx(m.x, m.y, tm.radius - 10, tm.color); SFX.heal();
+      } else if (k === 'haste') { this.buffT = 10; this.buffMult = tm.mult; this.ringFx(m.x, m.y, 40, tm.color); SFX.pick(); this.emit('toast', tm.name + ' : dégâts ×' + tm.mult + ' pendant 10 s'); }
       return;
     }
     if (d.mode === 'melee') this.meleeArc(m, aim, d.range + (heavy ? 8 : 4), heavy ? -0.1 : 0.25, dmg, { heavy, stagger: heavy ? 0.7 : 0.38, knock: heavy ? 70 : 30 });
     else {
-      this.fireProj({ x: m.x, y: m.y, ang: Math.atan2(aim.y, aim.x), speed: heavy ? 150 : 210, dmg: dmg, r: heavy ? 5 : 3, life: 1.2, team: 'p', color: d.orb || '#ffe27a', owner: m, heavy });
+      this.fireProj({ x: m.x, y: m.y, ang: Math.atan2(aim.y, aim.x), speed: heavy ? 150 : 210, dmg, r: heavy ? 5 : 3, life: 1.2, team: 'p', color: d.orb || '#ffe27a', owner: m, heavy });
       SFX.shoot();
     }
   }
   meleeArc(m, aim, range, cosMin, dmg, o) {
     let hit = false;
     for (const e of this.enemies) {
-      if (e.dead || e.state === 'dormant' && false) continue;
+      if (e.dead) continue;
       const dx = e.x - m.x, dy = e.y - m.y, d = hyp(dx, dy);
       if (d > range + e.r) continue;
       if (d > e.r + 6 && (dx * aim.x + dy * aim.y) / d < cosMin) continue;
@@ -272,16 +377,13 @@ export class Game {
     if (hit && m === this.chief()) this.hitstop = 0.045;
     return hit;
   }
-  fireProj(p) {
-    const sp = p.speed; this.projs.push({ ...p, vx: Math.cos(p.ang) * sp, vy: Math.sin(p.ang) * sp, age: 0 });
-  }
+  fireProj(p) { this.projs.push({ ...p, vx: Math.cos(p.ang) * p.speed, vy: Math.sin(p.ang) * p.speed, age: 0 }); }
 
   // ---------- dégâts ----------
   damageEnemy(e, dmg, src, o = {}) {
     if (e.dead || e.invuln > 0) return false;
     let back = false;
-    if (src.def && src.def.back && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < 0) { dmg *= src.def.back; back = true; }
-    else if (src.def && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < -4 && e.state !== 'dormant' && !e.boss) { dmg *= 1.15; }
+    if (!e.boss && src.def && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < -4 && e.state !== 'dormant') { dmg *= 1.15; back = true; }
     const crit = Math.random() < 0.08; if (crit) dmg *= 1.5;
     dmg = Math.max(1, Math.round(dmg));
     e.hp -= dmg; e.flash = 0.12; e.aggro = true;
@@ -292,21 +394,22 @@ export class Game {
     const kd = unit(e.x - src.x, e.y - src.y);
     if (!e.boss && !e.def.armor) { e.kx = kd.x * (o.knock || 30) * 3; e.ky = kd.y * (o.knock || 30) * 3; }
     if (e.boss) {
-      const th = BOSS.thresholds;
+      const th = D.BOSS_THRESHOLDS;
       if (e.phase === 1 && e.hp <= th[0] * e.maxhp) { e.hp = th[0] * e.maxhp; this.bossPhase(e, 2); }
       else if (e.phase === 2 && e.hp <= th[1] * e.maxhp) { e.hp = th[1] * e.maxhp; this.bossPhase(e, 3); }
-    } else if (!e.def.armor || o.heavy) {
-      if (e.state !== 'stagger' || true) { e.state = 'stagger'; e.st = o.stagger || 0.35; e.tele = false; }
-    }
+    } else if (!e.def.armor || o.heavy) { e.state = 'stagger'; e.st = o.stagger || 0.35; e.tele = false; }
     if (e.hp <= 0) this.killEnemy(e);
     return true;
   }
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false;
     if (this.lock === e) this.lock = null;
-    if (e.def.essence) { this.essence += e.def.essence; this.floatText(e.x, e.y - 28, '+' + e.def.essence, '#c9a7ff'); }
+    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#c9a7ff'); }
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#c9a7ff', e.boss ? 40 : 12); SFX.hit();
-    if (e.type === 'electrode') { this.miniDead = true; this.save(); this.emit('banner', 'ÉLECTRODE ALPHA VAINCU', 'mini'); }
+    if (e.big && !this.prog[this.mapIdx].bigDead) {
+      this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
+      this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+1 Super Bonbon');
+    }
     if (e.boss) this.bossDefeated(e);
   }
   hurtMember(m, dmg, src, o = {}) {
@@ -314,6 +417,7 @@ export class Game {
     const chief = m === this.chief();
     if (chief && m.dodge && m.dodge.t < m.dodge.iframes) return false;
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
+    dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if (this.guardT < 0.22 && o.parry !== false) {
         SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10);
@@ -334,8 +438,8 @@ export class Game {
     return true;
   }
   memberDown(m) {
-    m.hp = 0; m.exh = true; m.atk = null; m.dodge = null; m.drink = 0; m.deadT = 0; setAnim(m, A.db[m.def.id].anims.Faint ? 'Faint' : 'Hurt', false);
-    this.floatText(m.x, m.y - 24, 'ÉPUISÉ', '#ff9a9a'); SFX.death();
+    m.hp = 0; m.exh = true; m.atk = null; m.dodge = null; m.drink = 0; m.deadT = 0; setAnim(m, hasAnim(m.id, 'Faint') ? 'Faint' : 'Hurt', false);
+    this.floatText(m.x, m.y - 24, 'K.O.', '#ff9a9a'); SFX.death();
     if (m === this.chief()) { this.switchT = 0.8; this.lock = null; this.guarding = false; }
     if (this.team.every(q => q.exh)) this.die();
   }
@@ -343,15 +447,15 @@ export class Game {
     if (this.state === 'dead') return;
     this.state = 'dead'; this.deadT = 0; this.guarding = false;
     const c = this.chief();
-    if (this.essence > 0) this.souvenir = { x: c.x, y: c.y, amount: this.essence };
+    if (this.essence > 0) this.souvenir = { map: this.mapIdx, x: c.x, y: c.y, amount: this.essence };
     this.essence = 0; this.save(); SFX.death(); this.emit('banner', 'VOUS ÊTES MORT', 'death');
   }
-  respawn() {
-    const b = this.last ? M.BONFIRES.find(b => b.id === this.last) : null;
-    for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.inv = 1; m.cd = 0; m.anim = 'Idle'; }
-    this.chiefIdx = 0; this.berries = 5; this.stam = this.maxStam; this.state = 'play'; this.spawnAll();
-    this.placeTeam(b ? (b.tx + 0.5) * TS : (M.START.tx + 0.5) * TS, b ? (b.ty + 1.6) * TS : (M.START.ty + 0.5) * TS);
-    this.snapCam(); this.emit('fade');
+  async respawn() {
+    const l = this.last, map = l ? l.map : 0;
+    this.bossActive = false;
+    for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.inv = 1; m.cd = 0; m.anim = 'Idle'; m.atk = null; m.dodge = null; }
+    this.chiefIdx = 0; this.berries = this.maxBerries; this.stam = this.maxStam; this.buffT = 0;
+    await this.enterMap(map, l ? l.id : 'start');
   }
 
   // ---------- suiveurs ----------
@@ -367,32 +471,28 @@ export class Game {
       if (m.hurtT > 0) { m.hurtT -= dt; move(this, m, m.kx * dt, m.ky * dt); m.kx *= 0.88; m.ky *= 0.88; setAnim(m, 'Hurt', false); m.at += dt; continue; }
       if (m.atk) { this.tickAtk(m, dt); continue; }
       if (m.dash) { move(this, m, m.dash.vx * dt, m.dash.vy * dt); m.dash.t -= dt; if (m.dash.t <= 0) m.dash = null; }
-      const d = m.def;
-      // soin
-      if (d.ability.kind === 'heal' && m.cd <= 0 && this.team.some(q => !q.exh && q.hp < q.maxhp * 0.55 && hyp(q.x - m.x, q.y - m.y) < 90)) { this.startAttack(m, 'ability', null); continue; }
-      // cible
+      const d = m.def, tmk = d.ability.kind;
+      if (tmk === 'heal' && m.cd <= 0 && this.team.some(q => !q.exh && q.hp < q.maxhp * 0.55 && hyp(q.x - m.x, q.y - m.y) < d.ability.radius - 15)) { this.startAttack(m, 'ability', null); continue; }
       let tgt = null, bd = this.order === 'garde' ? 90 : this.order === 'repli' ? d.range : 150;
       if (this.lock && !this.lock.dead && this.order === 'focus') tgt = this.lock;
       else for (const e of this.enemies) {
         if (e.dead || e.state === 'dormant') continue;
         const dd = hyp(e.x - m.x, e.y - m.y); if (dd < bd && hyp(e.x - ch.x, e.y - ch.y) < 200) { bd = dd; tgt = e; }
       }
+      if (tmk === 'haste' && m.cd <= 0 && tgt && this.buffT <= 0) { this.startAttack(m, 'ability', null); continue; }
       let mx = 0, my = 0, spd = d.speed * 1.1, face = null;
       if (tgt && (this.order !== 'repli' || d.mode === 'ranged')) {
         const dx = tgt.x - m.x, dy = tgt.y - m.y, dd = hyp(dx, dy), u = unit(dx, dy); face = u;
         const tether = hyp(ch.x - m.x, ch.y - m.y);
+        const useAb = () => m.cd <= 0 && tmk !== 'heal' && tmk !== 'haste' && Math.random() < 0.3;
         if (d.mode === 'melee') {
           if (this.order === 'garde' && tether > 100) { const l = this.slot(rank); mx = l.x - m.x; my = l.y - m.y; }
           else if (dd > d.range * 0.8) { mx = u.x; my = u.y; }
-          if (dd < d.range + tgt.r + 6 && m.acd <= 0) { this.startAttack(m, Math.random() < 0.25 ? 'heavy' : 'light', tgt); m.acd = rand(0.9, 1.6); continue; }
+          if (dd < d.range + tgt.r + 6 && m.acd <= 0) { this.startAttack(m, useAb() && dd < 60 ? 'ability' : Math.random() < 0.25 ? 'heavy' : 'light', tgt); m.acd = rand(0.9, 1.6); continue; }
         } else {
           if (dd < d.range * 0.5) { mx = -u.x; my = -u.y; } else if (dd > d.range * 0.95 && this.order !== 'repli') { mx = u.x; my = u.y; }
-          if (dd < d.range && m.acd <= 0 && M.lineClear(this.world, m.x, m.y, tgt.x, tgt.y)) {
-            const ab = d.ability.kind !== 'heal' && m.cd <= 0 && Math.random() < 0.25;
-            this.startAttack(m, ab ? 'ability' : 'light', tgt); m.acd = rand(1.0, 1.7); continue;
-          }
+          if (dd < d.range && m.acd <= 0 && M.lineClear(this.world, m.x, m.y, tgt.x, tgt.y)) { this.startAttack(m, useAb() ? 'ability' : 'light', tgt); m.acd = rand(1.0, 1.7); continue; }
         }
-        if (d.mode === 'melee' && m.cd <= 0 && dd < 90 && dd > 30 && Math.random() < 0.01) { this.startAttack(m, 'ability', tgt); continue; }
       } else {
         const l = this.slot(rank), dx = l.x - m.x, dy = l.y - m.y, dd = hyp(dx, dy);
         if (dd > 220) { m.x = l.x; m.y = l.y; }
@@ -404,7 +504,7 @@ export class Game {
       m.at += dt;
     }
   }
-  slot(rank) { const k = Math.min(this.trail.length - 1, rank * 5); return this.trail[Math.max(0, this.trail.length - 1 - k)]; }
+  slot(rank) { const k = Math.min(this.trail.length - 1, rank * 6); return this.trail[Math.max(0, this.trail.length - 1 - k)]; }
 
   // ---------- ennemis ----------
   nearestMember(e) {
@@ -424,13 +524,13 @@ export class Game {
       if (!tg) continue;
       const dx = tg.x - e.x, dy = tg.y - e.y, u = unit(dx, dy);
       const see = td < def.sight && M.lineClear(this.world, e.x, e.y, tg.x, tg.y);
-      const sp = def.speed;
+      const sp = def.speed, hw = Math.min(e.r, 6) * 0.8;
       switch (e.state) {
-        case 'dormant': setAnim(e, 'Idle'); if (td < def.sight) { e.state = 'chase'; } break;
+        case 'dormant': setAnim(e, 'Idle'); if (td < def.sight) e.state = 'chase'; break;
         case 'idle': setAnim(e, 'Idle'); if (see) e.state = 'chase'; break;
         case 'return': {
           const hx = e.hx - e.x, hy = e.hy - e.y, hd = hyp(hx, hy);
-          if (hd < 4) { e.state = def.dormant ? 'dormant' : 'idle'; e.hp = e.maxhp; } else { move(this, e, hx / hd * sp * dt, hy / hd * sp * dt, 5); setAnim(e, 'Walk'); e.face = unit(hx, hy); e.dir = dirFromVec(hx, hy); }
+          if (hd < 4) { e.state = def.dormant ? 'dormant' : 'idle'; e.hp = e.maxhp; } else { move(this, e, hx / hd * sp * dt, hy / hd * sp * dt, hw); setAnim(e, 'Walk'); e.face = unit(hx, hy); e.dir = dirFromVec(hx, hy); }
           if (see && td < def.sight * 0.8) e.state = 'chase';
           break;
         }
@@ -438,20 +538,24 @@ export class Game {
           e.face = u; e.dir = dirFromVec(u.x, u.y);
           if (td > def.sight * 2.2 || hyp(e.x - e.hx, e.y - e.hy) > 420) { e.state = 'return'; break; }
           let mvx = 0, mvy = 0;
-          if (def.kind === 'ranged' || def.kind === 'ranged3') {
+          const kind = def.kind;
+          if (kind === 'ranged' || kind === 'ranged3') {
             if (td < def.range * 0.6) { mvx = -u.x; mvy = -u.y; } else if (td > def.range * 0.95) { mvx = u.x; mvy = u.y; } else { mvx = -u.y * 0.5; mvy = u.x * 0.5; }
             if (td < def.range && e.cd <= 0 && see) { e.state = 'windup'; e.st = def.windup; e.tele = true; SFX.telegraph(); }
-          } else if (def.kind === 'melee') {
+          } else if (kind === 'slam') {
+            if (td < def.range * 0.5) { mvx = -u.x; mvy = -u.y; } else if (td > def.range * 0.9) { mvx = u.x; mvy = u.y; }
+            if (td < def.range && e.cd <= 0 && see) { e.state = 'windup'; e.st = def.windup; e.tele = true; e.slamAt = { x: tg.x, y: tg.y }; SFX.telegraph(); }
+          } else if (kind === 'melee') {
             if (td > 40) { mvx = u.x; mvy = u.y; }
             if (td < 62 && e.cd <= 0) { e.state = 'windup'; e.st = def.windup; e.tele = true; e.lock = u; SFX.telegraph(); }
-          } else if (def.kind === 'bomb') {
+          } else if (kind === 'bomb') {
             mvx = u.x; mvy = u.y;
             if (td < def.range) { e.state = 'windup'; e.st = def.windup; e.tele = true; SFX.telegraph(); }
-          } else if (def.kind === 'roller') {
+          } else if (kind === 'roller') {
             if (td > def.range * 0.8) { mvx = u.x; mvy = u.y; }
             if (td < def.range * 1.4 && e.cd <= 0) { e.state = 'windup'; e.st = def.windup; e.tele = true; SFX.telegraph(); }
           }
-          const ml = hyp(mvx, mvy); if (ml > 0.05) { move(this, e, mvx / ml * sp * dt, mvy / ml * sp * dt, Math.min(e.r, 6) * 0.8); setAnim(e, 'Walk'); } else setAnim(e, 'Idle');
+          const ml = hyp(mvx, mvy); if (ml > 0.05 && sp > 0) { move(this, e, mvx / ml * sp * dt, mvy / ml * sp * dt, hw); setAnim(e, 'Walk'); } else setAnim(e, 'Idle');
           break;
         }
         case 'windup':
@@ -465,8 +569,7 @@ export class Game {
         case 'stagger': e.st -= dt; setAnim(e, 'Hurt', false); if (e.st <= 0) { e.state = 'chase'; e.cd = Math.max(e.cd, 0.4); } break;
         case 'dizzy': e.st -= dt; setAnim(e, 'Hurt', false); if (e.st <= 0) { e.state = 'chase'; e.cd = 1; } break;
       }
-      // séparation
-      for (const o of this.enemies) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = hyp(ox, oy); if (od > 0 && od < e.r + o.r) { move(this, e, ox / od * 30 * dt, oy / od * 30 * dt, 4); } }
+      for (const o of this.enemies) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = hyp(ox, oy); if (od > 0 && od < e.r + o.r) move(this, e, ox / od * 30 * dt, oy / od * 30 * dt, 4); }
     }
     this.enemies = this.enemies.filter(e => !(e.dead && e.deadT > 1.0 && !e.boss));
   }
@@ -474,8 +577,12 @@ export class Game {
     const def = e.def;
     if (def.kind === 'ranged' || def.kind === 'ranged3') {
       const ang = Math.atan2(tg.y - e.y, tg.x - e.x); const n = def.kind === 'ranged3' ? [-0.28, 0, 0.28] : [0];
-      for (const o of n) this.fireProj({ x: e.x, y: e.y, ang: ang + o, speed: def.proj, dmg: def.dmg, r: 3.5, life: 2.6, team: 'e', color: def.color, owner: e });
+      for (const o of n) this.fireProj({ x: e.x, y: e.y, ang: ang + o, speed: def.proj, dmg: e.dmg, r: 3.5, life: 2.6, team: 'e', color: def.color, owner: e });
       SFX.shoot(); setAnim(e, def.anim, false); e.state = 'recover'; e.st = 0.45; e.cd = 1.7 * (def.rec || 1);
+    } else if (def.kind === 'slam') {
+      const s = e.slamAt || tg; this.ringFx(s.x, s.y, def.blast, def.color || '#ffb050'); SFX.boom(); this.shake = Math.max(this.shake, 3); this.burst(s.x, s.y - 4, def.color || '#ffb050', 14);
+      for (const m of this.team) if (!m.exh && hyp(m.x - s.x, m.y - s.y) < def.blast) this.hurtMember(m, e.dmg * 1.3, s, { owner: e, heavy: true, parry: false });
+      setAnim(e, def.anim, false); e.state = 'recover'; e.st = 0.7; e.cd = 1.9; e.slamAt = null;
     } else if (def.kind === 'melee') {
       e.state = 'attack'; e.st = 0.24; e.hitDone = false; setAnim(e, def.anim, false); e.vx = (e.lock || u).x; e.vy = (e.lock || u).y; e.lock = null; SFX.swing();
     } else if (def.kind === 'bomb') {
@@ -488,12 +595,12 @@ export class Game {
     const def = e.def; e.st -= dt;
     if (def.kind === 'melee') {
       move(this, e, e.vx * def.lunge * dt, e.vy * def.lunge * dt, 5);
-      if (!e.hitDone) for (const m of this.team) if (!m.exh && hyp(m.x - e.x, m.y - e.y) < e.r + 10) { const r = this.hurtMember(m, def.dmg, e, { owner: e }); e.hitDone = true; if (r === 'parry') this.parried(e); }
+      if (!e.hitDone) for (const m of this.team) if (!m.exh && hyp(m.x - e.x, m.y - e.y) < e.r + 10) { const r = this.hurtMember(m, e.dmg, e, { owner: e }); e.hitDone = true; if (r === 'parry') this.parried(e); }
       if (e.st <= 0) { e.state = 'recover'; e.st = 0.55; e.cd = 1.3 * (def.rec || 1); }
     } else if (def.kind === 'roller') {
       const px = e.x, py = e.y; const sp = 200 * (e.st > 0.1 ? 1 : 0.4);
       move(this, e, e.vx * sp * dt, e.vy * sp * dt, 7, 5);
-      for (const m of this.team) if (!m.exh && !e.rollHit.has(m) && hyp(m.x - e.x, m.y - e.y) < e.r + 8) { e.rollHit.add(m); const r = this.hurtMember(m, def.dmg, e, { owner: e, heavy: true }); if (r === 'parry') { this.parried(e); return; } }
+      for (const m of this.team) if (!m.exh && !e.rollHit.has(m) && hyp(m.x - e.x, m.y - e.y) < e.r + 8) { e.rollHit.add(m); const r = this.hurtMember(m, e.dmg, e, { owner: e, heavy: true }); if (r === 'parry') { this.parried(e); return; } }
       this.parts.push({ x: e.x, y: e.y, z: 4, vx: 0, vy: 0, vz: 10, life: 0.3, max: 0.3, c: '#ffe27a', size: 2 });
       if (hyp(e.x - px, e.y - py) < 0.4 * 200 * dt * 0.5) { e.state = 'dizzy'; e.st = 1.3; this.shake = 3; SFX.boom(); this.floatText(e.x, e.y - 24, 'Étourdi', '#ffe27a'); }
       else if (e.st <= 0) { e.state = 'recover'; e.st = 0.7; e.cd = 1.2; }
@@ -502,91 +609,140 @@ export class Game {
   parried(e) { if (e.boss) return; e.state = 'dizzy'; e.st = 1.4; e.tele = false; e.invuln = 0; e.cd = 1.2; }
   explode(e) {
     const def = e.def; this.ringFx(e.x, e.y, def.blast, '#ffb050'); SFX.boom(); this.shake = 5; this.burst(e.x, e.y - 6, '#ffb050', 18);
-    for (const m of this.team) if (!m.exh && hyp(m.x - e.x, m.y - e.y) < def.blast) this.hurtMember(m, def.dmg, e, { owner: e, heavy: true, parry: false });
+    for (const m of this.team) if (!m.exh && hyp(m.x - e.x, m.y - e.y) < def.blast) this.hurtMember(m, e.dmg, e, { owner: e, heavy: true, parry: false });
     e.dead = true; e.deadT = 2; e.hp = 0; if (this.lock === e) this.lock = null;
   }
 
-  // ---------- Mewtwo ----------
+  // ---------- boss ----------
   startBoss() {
-    const a = this.world.arena;
+    const a = this.world.arena, dir = this.world.fog.dir;
     this.bossActive = true; this.closeFog();
-    const b = this.makeEnemy('boss', (a.cx + 4) * TS, a.cy * TS);
-    b.state = 'intro'; b.st = 2.2; b.invuln = 2.2; b.cd = 1.5; b.face = { x: -1, y: 0 }; b.dir = 6;
+    const b = this.makeEnemy('boss', (a.cx + dir.x * 4) * TS, (a.cy + dir.y * 4) * TS);
+    b.state = 'intro'; b.st = 2.2; b.invuln = 2.2; b.cd = 1.5; b.face = { x: -dir.x, y: -dir.y }; b.dir = dirFromVec(-dir.x, -dir.y);
     this.enemies.push(b); this.boss = b; SFX.boom();
     this.emit('bossStart', b);
   }
   bossPhase(b, ph) {
-    b.phase = ph; b.state = 'phase'; b.st = 2.0; b.invuln = 2.0; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = [];
-    this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, '#e0a0ff', 30);
-    if (ph === 3) this.spawnClones();
-    this.emit('toast', ph === 2 ? 'Mewtwo libère sa puissance' : 'Mewtwo déploie ses clones');
+    b.phase = ph; b.state = 'phase'; b.st = 2.0; b.invuln = 2.0; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
+    this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
+    if (ph === 3 && b.def.summon) this.spawnSummons(b);
+    this.emit('toast', b.def.name + (ph === 2 ? ' libère sa puissance' : ' est déchaîné'));
   }
-  spawnClones() {
-    const a = this.world.arena;
-    for (let i = 0; i < 3; i++) { const an = i * 2.094 + 0.5; const c = this.makeEnemy('clone', (a.cx + Math.cos(an) * 7) * TS, (a.cy + Math.sin(an) * 7) * TS); c.state = 'chase'; c.cd = 1.5 + i * 0.8; this.enemies.push(c); }
+  spawnSummons(b) {
+    const a = this.world.arena; const type = b.def.summon;
+    for (let i = 0; i < 3; i++) { const an = i * 2.094 + 0.5; const c = this.makeEnemy(type, (a.cx + Math.cos(an) * 7) * TS, (a.cy + Math.sin(an) * 7) * TS); c.state = 'chase'; c.cd = 1.5 + i * 0.8; this.enemies.push(c); }
   }
   bossAI(b, dt) {
     const def = b.def; const [tg, td] = this.nearestMember(b); if (!tg) return;
-    const u = unit(tg.x - b.x, tg.y - b.y);
+    const u = unit(tg.x - b.x, tg.y - b.y); const id = b.sprite;
     switch (b.state) {
-      case 'intro': setAnim(b, 'Appeal', false); b.st -= dt; if (b.st <= 0) { b.state = 'move'; b.invuln = 0; } break;
-      case 'phase': setAnim(b, 'Appeal', false); b.st -= dt; this.shake = Math.max(this.shake, 1.5); if (b.st <= 0) { b.state = 'move'; b.invuln = 0; b.cd = 0.8; } break;
+      case 'intro': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; if (b.st <= 0) { b.state = 'move'; b.invuln = 0; } break;
+      case 'phase': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; this.shake = Math.max(this.shake, 1.5); if (b.st <= 0) { b.state = 'move'; b.invuln = 0; b.cd = 0.8; } break;
       case 'move': {
         b.face = u; b.dir = dirFromVec(u.x, u.y);
-        const want = b.phase === 1 ? 74 : 60; let mx = 0, my = 0;
+        const want = (def.want || 74) - (b.phase - 1) * 7; let mx = 0, my = 0;
         if (td > want + 10) { mx = u.x; my = u.y; } else if (td < want - 25 && td > 30) { mx = -u.x; my = -u.y; } else { mx = -u.y * 0.4; my = u.x * 0.4; }
         const sp = def.speed * (b.phase === 3 ? 1.25 : 1); move(this, b, mx * sp * dt, my * sp * dt, 6, 4);
-        setAnim(b, b.phase >= 2 ? 'Hover' : 'Walk');
-        if (b.cd <= 0) this.bossChoose(b, td, tg);
+        setAnim(b, b.phase >= 2 ? pickAnim(id, ['Hover', 'Walk']) : 'Walk');
+        if (b.cd <= 0) this.bossChoose(b, td);
         break;
       }
-      case 'windup':
-        b.st -= dt; b.face = b.atkType === 'pulse' ? b.face : u; b.dir = dirFromVec(b.face.x, b.face.y); setAnim(b, b.atkType === 'pulse' ? 'SpAttack' : 'Charge'); b.tele = true;
+      case 'windup': {
+        b.st -= dt; const ty = b.atkType;
+        if (ty === 'dash' || ty === 'beam') { if (b.st > 0.3) b.lockDir = u; b.face = b.lockDir || u; } else if (ty !== 'pulse' && ty !== 'nova') b.face = u;
+        b.dir = dirFromVec(b.face.x, b.face.y); setAnim(b, ty === 'pulse' || ty === 'nova' ? pickAnim(id, ['SpAttack', 'Charge']) : 'Charge'); b.tele = true;
         if (b.st <= 0) { b.tele = false; this.bossStrike(b, u, tg); }
         break;
-      case 'recover': b.st -= dt; setAnim(b, 'Idle'); if (b.st <= 0) { b.state = 'move'; if (b.queue > 0) { b.queue--; b.cd = 0; this.bossChoose(b, td, tg, 'ball'); } } break;
+      }
+      case 'dash': {
+        b.st -= dt; const v = b.lockDir; const px = b.x, py = b.y; move(this, b, v.x * 270 * dt, v.y * 270 * dt, 6, 4); setAnim(b, 'Walk'); b.at += dt * 2;
+        this.parts.push({ x: b.x, y: b.y, z: 6, vx: 0, vy: 0, vz: 5, life: 0.3, max: 0.3, c: def.color, size: 3 });
+        for (const m of this.team) if (!m.exh && !b.rollHit.has(m) && hyp(m.x - b.x, m.y - b.y) < b.r + 9) { b.rollHit.add(m); const r = this.hurtMember(m, b.dmg * 1.8, b, { owner: b, heavy: true }); if (r === 'parry') { b.st = 0; } }
+        if (b.st <= 0 || hyp(b.x - px, b.y - py) < 0.4 * 270 * dt * 0.5) { b.state = 'recover'; b.st = 0.8; b.cd = b.phase === 1 ? 1.4 : 0.9; this.shake = 3; }
+        break;
+      }
+      case 'recover': b.st -= dt; setAnim(b, 'Idle');
+        if (b.st <= 0) {
+          b.state = 'move';
+          if (def.blink && Math.random() < 0.7) this.blink(b, tg);
+          if (b.queue > 0) { b.queue--; b.cd = 0; this.bossChoose(b, td, 'ball'); }
+        }
+        break;
     }
-    // clones : relance en phase 3
-    if (b.phase === 3 && b.state === 'move' && !this.enemies.some(e => e.clone && !e.dead) && b.cd < 0) { this.spawnClones(); }
-    if (b.phase === 3) for (const e of this.enemies) if (e.clone && !e.dead) { e.face = unit(tg.x - e.x, tg.y - e.y); e.dir = dirFromVec(e.face.x, e.face.y); }
+    if (b.phase === 3 && def.summon && b.state === 'move' && !this.enemies.some(e => e.clone && !e.dead) && b.cd < 0) this.spawnSummons(b);
+    for (const e of this.enemies) if (e.clone && !e.dead) { e.face = unit(tg.x - e.x, tg.y - e.y); e.dir = dirFromVec(e.face.x, e.face.y); }
   }
-  bossChoose(b, td, tg, force) {
-    const p = Math.random(); let type = 'ball';
-    if (force) type = force;
-    else if (td < 42) type = p < 0.75 ? 'swing' : 'ball';
-    else if (b.phase >= 2 && p < 0.35) type = 'pulse';
-    b.atkType = type; b.state = 'windup'; SFX.telegraph();
-    b.st = type === 'swing' ? 0.5 : type === 'pulse' ? 0.95 : 0.6;
+  blink(b, tg) {
+    const a = this.world.arena;
+    for (let t = 0; t < 12; t++) {
+      const an = rand(0, 6.28), dist = rand(50, 95), x = tg.x + Math.cos(an) * dist, y = tg.y + Math.sin(an) * dist;
+      if (hyp(x - a.cx * TS, y - a.cy * TS) < (a.r - 1.5) * TS && M.boxFree(this.world, x, y, 6, 4)) { for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, b.def.color, 1.5); b.x = x; b.y = y; for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, b.def.color, 1.5); SFX.dodge(); return; }
+    }
+  }
+  bossChoose(b, td, force) {
+    const list = b.def.moves[b.phase - 1]; let type = force;
+    if (!type) {
+      if (td < 42 && list.some(l => l[0] === 'swing') && Math.random() < 0.7) type = 'swing';
+      else {
+        const pool = list.filter(l => l[0] !== b.lastAtk || list.length < 2); let tot = pool.reduce((s, l) => s + l[1], 0), r = Math.random() * tot;
+        type = pool[0][0]; for (const l of pool) { r -= l[1]; if (r <= 0) { type = l[0]; break; } }
+      }
+    }
+    b.lastAtk = type; b.atkType = type; b.state = 'windup'; SFX.telegraph(); b.lockDir = null;
+    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6;
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
-    const def = b.def;
-    if (b.atkType === 'ball') {
-      const ang = Math.atan2(tg.y - b.y, tg.x - b.x);
-      this.fireProj({ x: b.x, y: b.y, ang, speed: 140, dmg: 26, r: 6, life: 3.5, team: 'e', color: '#d89aff', owner: b, big: true }); SFX.shoot();
-      setAnim(b, 'Shoot', false); b.state = 'recover'; b.st = 0.5; b.cd = b.phase === 1 ? 1.5 : b.phase === 2 ? 1.1 : 0.8;
-    } else if (b.atkType === 'swing') {
-      setAnim(b, 'Swing', false); SFX.swing();
+    const T = b.atkType, d = b.dmg, col = b.def.color, id = b.sprite;
+    const rec = (st, cd) => { b.state = 'recover'; b.st = st; b.cd = cd * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1); };
+    if (T === 'ball') {
+      this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.shoot();
+      setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.5, 1.5);
+    } else if (T === 'volley') {
+      const n = b.phase >= 2 ? 5 : 3, ang = Math.atan2(tg.y - b.y, tg.x - b.x);
+      for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: ang + (i - (n - 1) / 2) * 0.22, speed: 165, dmg: d * 0.9, r: 3.5, life: 3, team: 'e', color: col, owner: b });
+      SFX.shoot(); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.4);
+    } else if (T === 'nova') {
+      const n = b.phase === 3 ? 18 : 14, off = rand(0, 6.28);
+      for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: off + i * 6.283 / n, speed: 105, dmg: d * 0.8, r: 3.5, life: 3.2, team: 'e', color: col, owner: b });
+      SFX.boom(); this.shake = 3; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.6);
+    } else if (T === 'swing') {
+      setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.swing();
       for (const m of this.team) {
-        if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, d = hyp(dx, dy);
-        if (d < 46 && (dx * b.face.x + dy * b.face.y) / (d || 1) > 0.0) { const r = this.hurtMember(m, 34, b, { owner: b, heavy: true }); if (r === 'parry') { b.state = 'recover'; b.st = 1.0; b.cd = 0.6; return; } }
+        if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, dist = hyp(dx, dy);
+        if (dist < 46 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
       }
-      this.ringFx(b.x + b.face.x * 20, b.y + b.face.y * 20, 30, '#e0a0ff');
-      b.state = 'recover'; b.st = 0.6; b.cd = b.phase === 1 ? 1.2 : 0.8;
-    } else {
-      setAnim(b, 'SpAttack', false); SFX.boom(); this.shake = 4;
-      for (let i = 0; i < 3; i++) this.rings.push({ x: b.x, y: b.y, r: 4 - i * 40, speed: 95, max: 250, hit: new Set(), dmg: 26 });
-      b.state = 'recover'; b.st = 0.9; b.cd = b.phase === 2 ? 1.4 : 1.0;
+      this.ringFx(b.x + b.face.x * 20, b.y + b.face.y * 20, 30, col); rec(0.6, 1.2);
+    } else if (T === 'pulse') {
+      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.boom(); this.shake = 4;
+      for (let i = 0; i < 3; i++) this.rings.push({ x: b.x, y: b.y, r: 4 - i * 40, speed: 95, max: 250, hit: new Set(), dmg: d * 1.5, color: col });
+      rec(0.9, 1.4);
+    } else if (T === 'dash') {
+      b.state = 'dash'; b.st = 0.5; b.rollHit = new Set(); SFX.swing();
+    } else if (T === 'rain') {
+      const n = 5 + b.phase * 2; SFX.boom();
+      for (let i = 0; i < n; i++) { const p = i === 0 ? { x: tg.x, y: tg.y } : { x: tg.x + rand(-85, 85), y: tg.y + rand(-65, 65) }; this.zones.push({ x: p.x, y: p.y, r: 20, t: 0, delay: 0.85 + i * 0.13, dmg: d * 1.2, color: b.def.rainColor || col }); }
+      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.6, 1.5);
+    } else if (T === 'beam') {
+      const v = b.lockDir || u, ang = Math.atan2(v.y, v.x), len = 260;
+      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.boom(); this.shake = 5;
+      for (const m of this.team) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
+      setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
+    } else if (T === 'summon') {
+      if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
+      setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);
     }
   }
   bossDefeated(b) {
-    this.bossActive = false; this.bossDead = true; this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
-    this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; setAnim(b, 'Faint', false); this.hitstop = 0.25; this.shake = 9;
-    this.openFog(); SFX.victory(); this.save();
-    this.emit('banner', 'LÉGENDAIRE VAINCU', 'victory');
+    const pr = this.prog[this.mapIdx];
+    this.bossActive = false; pr.bossDead = true; this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
+    this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
+    this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
+    this.openFog(); this.buildItems(); SFX.victory(); this.save();
+    this.emit('banner', b.def.name + ' VAINCU', 'victory');
   }
 
-  // ---------- projectiles, anneaux, effets ----------
+  // ---------- projectiles, anneaux, zones, effets ----------
   updateProjs(dt) {
     for (const p of this.projs) {
       p.age += dt; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
@@ -597,7 +753,8 @@ export class Game {
           if (e.dead || p.dead) continue;
           if (hyp(e.x - p.x, e.y - 4 - p.y) < e.r + p.r + 2) {
             if (p.explode) { this.projExplode(p); p.dead = true; break; }
-            this.damageEnemy(e, p.dmg, p.owner, { heavy: p.heavy, stagger: 0.3, knock: 20 }); p.dead = true; if (p.owner === this.chief()) this.hitstop = 0.03; break;
+            if (this.damageEnemy(e, p.dmg, p.owner, { heavy: p.heavy, stagger: 0.3, knock: 20 }) && p.leech) { const o = p.owner; if (o && !o.exh) { o.hp = Math.min(o.maxhp, o.hp + p.dmg * 0.6); this.healFx(o); } }
+            p.dead = true; if (p.owner === this.chief()) this.hitstop = 0.03; break;
           }
         }
       } else {
@@ -624,76 +781,134 @@ export class Game {
       if (r.r > 0) for (const m of this.team) if (!m.exh && !r.hit.has(m) && Math.abs(hyp(m.x - r.x, m.y - r.y) - r.r) < 6) { r.hit.add(m); this.hurtMember(m, r.dmg, r, { parry: false, heavy: true }); }
     }
     this.rings = this.rings.filter(r => r.r < r.max);
+    for (const b of this.beams) b.t += dt; this.beams = this.beams.filter(b => b.t < b.max);
+  }
+  updateZones(dt) {
+    for (const z of this.zones) {
+      z.t += dt;
+      if (!z.done && z.t >= z.delay) {
+        z.done = true; this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); SFX.boom();
+        for (const m of this.team) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true });
+      }
+    }
+    this.zones = this.zones.filter(z => z.t < z.delay + 0.15);
   }
   spark(x, y, c, n = 1) { for (let i = 0; i < n; i++) this.parts.push({ x, y, z: 4, vx: rand(-30, 30), vy: rand(-20, 20), vz: rand(10, 40), life: 0.35, max: 0.35, c, size: 2 }); }
   burst(x, y, c, n) { for (let i = 0; i < n; i++) { const a = rand(0, 6.28), s = rand(20, 80); this.parts.push({ x, y, z: 6, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: rand(10, 60), life: rand(0.25, 0.5), max: 0.5, c, size: 2, g: 160 }); } }
   healFx(m) { for (let i = 0; i < 8; i++) this.parts.push({ x: m.x + rand(-8, 8), y: m.y + rand(-4, 4), z: 0, vx: 0, vy: 0, vz: rand(25, 50), life: 0.8, max: 0.8, c: '#8dffb0', size: 2 }); this.floatText(m.x, m.y - 24, '+', '#8dffb0'); }
-  ringFx(x, y, r, c) { this.fxRings = this.fxRings || []; this.fxRings.push({ x, y, r, c, t: 0 }); }
+  ringFx(x, y, r, c) { this.fxRings.push({ x, y, r, c, t: 0 }); }
   floatText(x, y, s, c) { this.texts.push({ x: x + rand(-4, 4), y, s, c, t: 0 }); }
   updateFx(dt) {
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt; }
     this.parts = this.parts.filter(p => p.life > 0);
     for (const t of this.texts) { t.t += dt; t.y -= 14 * dt; }
     this.texts = this.texts.filter(t => t.t < 0.9);
-    if (this.fxRings) { for (const r of this.fxRings) r.t += dt; this.fxRings = this.fxRings.filter(r => r.t < 0.45); }
+    for (const r of this.fxRings) r.t += dt; this.fxRings = this.fxRings.filter(r => r.t < 0.45);
   }
 
-  // ---------- monde : zones, feux, portes, brume ----------
+  // ---------- monde : zones, feux, portes, brume, coffres ----------
   updateWorld(dt) {
-    const c = this.chief(); this.prompt = null;
+    const c = this.chief(); this.prompt = null; const pr = this.prog[this.mapIdx];
     const z = M.zoneAt(this.world, c.x, c.y);
     if (z && z.area && z.area !== this.lastArea) { this.lastArea = z.area; this.emit('area', z); }
-    // souvenir
     const s = this.souvenir;
-    if (s && hyp(s.x - c.x, s.y - c.y) < 14) { this.essence += s.amount; this.floatText(c.x, c.y - 30, '+' + s.amount, '#c9a7ff'); this.souvenir = null; SFX.pick(); this.save(); this.emit('toast', 'Souvenir récupéré'); }
-    for (const it of this.items) if (it.kind === 'plaque' && hyp(it.x - c.x, it.y - c.y) < 26 && !this.plaque) this.prompt = { text: 'Prendre la Plaque Psy', act: () => { this.plaque = true; this.items = []; SFX.victory(); this.save(); this.emit('banner', 'PLAQUE PSY OBTENUE', 'item'); this.emit('end'); } };
+    if (s && s.map === this.mapIdx && hyp(s.x - c.x, s.y - c.y) < 14) { this.essence += s.amount; this.floatText(c.x, c.y - 30, '+' + s.amount, '#c9a7ff'); this.souvenir = null; SFX.pick(); this.save(); this.emit('toast', 'Souvenir récupéré'); }
     // feux
-    for (const b of M.BONFIRES) if (hyp((b.tx + 0.5) * TS - c.x, (b.ty + 0.5) * TS - c.y) < 42) {
-      this.prompt = this.lit.has(b.id) ? { text: 'Se recueillir au feu', act: () => { this.last = b.id; this.emit('menu', b); } } : { text: 'Allumer le feu', act: () => this.lightBonfire(b) };
+    for (const b of this.world.bonfires) if (hyp((b.tx + 0.5) * TS - c.x, (b.ty + 0.5) * TS - c.y) < 42) {
+      this.prompt = this.lit.has(b.id) ? { text: 'Se recueillir au feu', act: () => { this.last = { map: this.mapIdx, id: b.id }; this.emit('menu', b); } } : { text: 'Allumer le feu', act: () => this.lightBonfire(b) };
     }
-    // porte-raccourci : s'ouvre depuis le nord
-    if (!this.doorOpen) for (const [tx, ty] of this.world.doorTiles) {
+    // coffres
+    for (const ch of this.world.chests) if (!pr.chests.includes(ch.id) && hyp((ch.tx + 0.5) * TS - c.x, (ch.ty + 0.5) * TS - c.y) < 34) this.prompt = { text: 'Ouvrir le coffre', act: () => this.openChest(ch) };
+    // objets du sanctuaire
+    for (const it of this.items) if (hyp(it.x - c.x, it.y - c.y) < 30) {
+      if (it.kind === 'reward') this.prompt = { text: 'Ouvrir le coffre du boss', act: () => this.takeReward() };
+      else this.prompt = { text: this.mapIdx === M.MAPS.length - 1 ? 'Franchir le portail final' : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
+    }
+    // porte-raccourci
+    const dr = this.world.door;
+    if (dr && !pr.doorOpen) for (const [tx, ty] of dr.tiles) {
       const cx = (tx + 0.5) * TS, cy = (ty + 0.5) * TS;
-      if (Math.abs(c.x - cx) < 40 && Math.abs(c.y - cy) < 32) {
-        this.prompt = c.y < cy ? { text: 'Ouvrir la porte', act: () => this.openDoor() } : { text: 'Verrouillée de l’autre côté', act: null };
+      if (Math.abs(c.x - cx) < 40 && Math.abs(c.y - cy) < 40) {
+        const side = (cx - c.x) * dr.dir.x + (cy - c.y) * dr.dir.y;
+        this.prompt = side > 0 ? { text: 'Ouvrir la porte', act: () => this.openDoor() } : { text: 'Verrouillée de l’autre côté', act: null };
       }
     }
     // brume
-    if (!this.bossDead && !this.bossActive) for (const [tx, ty] of this.world.fogTiles) {
-      const cx = (tx + 0.5) * TS, cy = (ty + 0.5) * TS;
-      if (c.x < cx && cx - c.x < 56 && Math.abs(c.y - cy) < 44) this.prompt = { text: 'Franchir la brume', act: () => this.enterFog() };
+    if (!pr.bossDead && !this.bossActive) {
+      const fg = this.world.fog;
+      for (const [tx, ty] of fg.tiles) {
+        const cx = (tx + 0.5) * TS, cy = (ty + 0.5) * TS, along = (cx - c.x) * fg.dir.x + (cy - c.y) * fg.dir.y, perp = Math.abs((cx - c.x) * fg.dir.y - (cy - c.y) * fg.dir.x);
+        if (along > 0 && along < 56 && perp < 44) this.prompt = { text: 'Franchir la brume', act: () => this.enterFog() };
+      }
     }
     if (this.prompt && this.prompt.act && Input.pressed('interact') && !c.atk && !c.dodge && c.hurtT <= 0) this.prompt.act();
   }
   lightBonfire(b) {
-    this.lit.add(b.id); this.last = b.id; this.rest(true); SFX.bonfire(); this.emit('banner', 'FEU ALLUMÉ', 'fire');
+    this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.emit('banner', 'FEU ALLUMÉ', 'fire');
   }
   rest(quiet) {
     for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; }
-    this.berries = 5; this.stam = this.maxStam; this.spawnAll(); this.save();
+    this.berries = this.maxBerries; this.stam = this.maxStam; this.buffT = 0; this.spawnAll(); this.save();
     if (!quiet) SFX.bonfire();
   }
-  openDoor() { this.doorOpen = true; for (const [x, y] of this.world.doorTiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; SFX.door(); this.save(); this.emit('toast', 'Raccourci ouvert'); }
+  openDoor() { this.prog[this.mapIdx].doorOpen = true; for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; SFX.door(); this.save(); this.emit('toast', 'Raccourci ouvert'); }
   enterFog() {
-    const a = this.world.arena; SFX.door();
-    const sx = (a.cx - a.r + 1.5) * TS, sy = a.cy * TS;
-    this.team.forEach((m, i) => { m.x = sx + (i % 2) * 8; m.y = sy + (i - 2.5) * 9; m.atk = null; m.dodge = null; });
+    const a = this.world.arena, dir = this.world.fog.dir; SFX.door();
+    const sx = (a.cx - dir.x * (a.r - 1.5)) * TS, sy = (a.cy - dir.y * (a.r - 1.5)) * TS;
+    this.team.forEach((m, i) => { m.x = sx + (i - 1) * 9 * Math.abs(dir.y); m.y = sy + (i - 1) * 9 * Math.abs(dir.x); m.atk = null; m.dodge = null; });
     this.trail = [{ x: sx, y: sy }]; this.lock = null;
     this.startBoss(); this.emit('fade');
   }
-  levelUp(i) {
-    const m = this.team[i], cost = levelCost(m.lvl);
-    if (this.essence < cost) return false;
-    this.essence -= cost; m.lvl++; this.applyLevels(false); this.save(); SFX.pick(); return true;
+  give(item) {
+    if (item === 'candy' || VIT_KEYS.includes(item)) { this.bag[item] = (this.bag[item] || 0) + 1; return D.ITEM_NAMES[item]; }
+    if (item === 'berrypack') { this.berries += 2; return 'Baies ×2'; }
+    if (item === 'maxberry') { this.maxBerries++; this.berries++; return 'Baie Oran Plus (baies max +1)'; }
+    if (D.TMS[item]) {
+      if (this.tms.includes(item)) { this.bag.candy = (this.bag.candy || 0) + 1; return D.ITEM_NAMES[item] + ' (déjà connue → Super Bonbon)'; }
+      this.tms.push(item); return D.ITEM_NAMES[item];
+    }
+    return item;
   }
+  openChest(ch) {
+    const pr = this.prog[this.mapIdx]; pr.chests.push(ch.id); const n = this.give(ch.item); SFX.pick(); this.save();
+    this.emit('banner', n.toUpperCase().split(' (')[0], 'item'); this.emit('toast', 'Coffre : ' + n);
+  }
+  takeReward() {
+    const pr = this.prog[this.mapIdx]; if (pr.rewardTaken) return; pr.rewardTaken = true;
+    const got = this.world.def.reward.map(i => this.give(i)); this.items = this.items.filter(i => i.kind !== 'reward'); SFX.victory(); this.save();
+    this.emit('banner', 'RÉCOMPENSE', 'item'); this.emit('toast', got.join(' · '));
+  }
+  usePortal() {
+    if (this.mapIdx >= M.MAPS.length - 1) { this.emit('end'); return; }
+    this.enterMap(this.mapIdx + 1, 'start');
+  }
+
+  // ---------- objets, niveaux, CT (menus) ----------
+  gainLevel(m) {
+    const st0 = m.stage; m.lvl++; this.applyLevels(false);
+    if (m.stage > st0) { m.hp = m.maxhp; this.emit('banner', D.NAMES_FR[m.line[st0]].toUpperCase() + ' ÉVOLUE !', 'item'); this.emit('toast', D.NAMES_FR[m.line[st0]] + ' évolue en ' + D.NAMES_FR[m.id]); }
+  }
+  levelUp(i) {
+    const m = this.team[i], cost = D.levelCost(m.lvl);
+    if (m.lvl >= D.MAX_LEVEL || this.essence < cost) return false;
+    this.essence -= cost; this.gainLevel(m); this.save(); SFX.pick(); return true;
+  }
+  useCandy(i) { const m = this.team[i]; if (!(this.bag.candy > 0) || m.lvl >= D.MAX_LEVEL) return false; this.bag.candy--; this.gainLevel(m); this.save(); SFX.pick(); return true; }
+  useVitamin(i, k) { const m = this.team[i]; if (!(this.bag[k] > 0) || m.vit[k] >= 5) return false; this.bag[k]--; m.vit[k]++; this.applyLevels(false); this.save(); SFX.pick(); return true; }
+  teach(i, tm) { const m = this.team[i]; if (!this.tms.includes(tm)) return false; m.tm = tm; m.def.ability = D.TMS[tm]; m.cd = 0; this.save(); SFX.pick(); return true; }
 
   // ---------- développement ----------
   devKey(k) {
     if (!this.dev) return;
     if (k === 'F1') { this.god = !this.god; this.emit('toast', 'Invincible : ' + (this.god ? 'oui' : 'non')); }
-    if (k === 'F2') { const f = this.world.fogTiles[1]; this.placeTeam((f[0] - 0.8) * TS, (f[1] + 0.5) * TS); this.snapCam(); }
+    if (k === 'F2') { const f = this.world.fog, t = f.tiles[1]; this.placeTeam((t[0] + 0.5 - f.dir.x * 1.6) * TS, (t[1] + 0.5 - f.dir.y * 1.6) * TS); this.snapCam(); }
     if (k === 'F3') { this.essence += 1000; }
     if (k === 'F4') { for (const e of this.enemies) if (!e.dead && !e.boss && hyp(e.x - this.chief().x, e.y - this.chief().y) < 260) this.damageEnemy(e, 99999, this.chief(), { heavy: true }); }
     if (k === 'F5' && this.boss && !this.boss.dead) { this.boss.hp = Math.min(this.boss.hp, this.boss.maxhp * 0.27); }
+    if (k === 'F6') { this.unlocked = M.MAPS.length - 1; for (const t of Object.keys(D.TMS)) if (!this.tms.includes(t)) this.tms.push(t); this.bag.candy = (this.bag.candy || 0) + 20; for (const v of VIT_KEYS) this.bag[v] = (this.bag[v] || 0) + 3; this.emit('toast', 'Tout débloqué'); }
   }
 }
+
+// noms des feux d'une autre carte (menu de voyage) : déterminés par la génération
+const bnCache = {};
+function bonfireNames(i) { if (!bnCache[i]) bnCache[i] = Object.fromEntries(M.buildWorld(i).bonfires.map(b => [b.id, b.name])); return bnCache[i]; }

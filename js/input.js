@@ -1,31 +1,81 @@
-// Clavier (QWERTY/AZERTY) + manette. Actions : appui (pressed) et maintien (down).
-const KEYS = {
-  up: ['KeyW', 'KeyZ', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'KeyQ', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
-  light: ['KeyJ'], heavy: ['KeyK'], ability: ['KeyL'], guard: ['KeyH', 'KeyU'], dodge: ['Space'], run: ['ShiftLeft', 'ShiftRight'],
-  interact: ['KeyE'], berry: ['KeyR'], lock: ['KeyT'], next: ['Tab'], order: ['KeyC'], pause: ['Escape', 'KeyP'],
-  s1: ['Digit1', 'Numpad1'], s2: ['Digit2', 'Numpad2'], s3: ['Digit3', 'Numpad3'], s4: ['Digit4', 'Numpad4'], s5: ['Digit5', 'Numpad5'], s6: ['Digit6', 'Numpad6'],
+// Clavier (QWERTY/AZERTY) + souris + manette, avec commandes modifiables (stockées dans le navigateur).
+export const ACTIONS = [
+  ['Déplacement', [['up', 'Haut'], ['down', 'Bas'], ['left', 'Gauche'], ['right', 'Droite'], ['run', 'Courir'], ['dodge', 'Esquive']]],
+  ['Combat', [['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['ability', 'Capacité spéciale (CT)'], ['guard', 'Garde / parade'], ['lock', 'Verrouillage'], ['berry', 'Baie de soin']]],
+  ['Équipe', [['next', 'Chef suivant'], ['s1', 'Chef 1'], ['s2', 'Chef 2'], ['s3', 'Chef 3'], ['order', 'Ordre des suiveurs']]],
+  ['Monde', [['interact', 'Interagir'], ['map', 'Carte / téléportation'], ['bag', 'Sac']]],
+  ['Système', [['pause', 'Pause']]],
+];
+export const DEFAULTS = {
+  up: ['KeyW', 'KeyZ', 'ArrowUp'], down: ['KeyS', 'ArrowDown', ''], left: ['KeyA', 'KeyQ', 'ArrowLeft'], right: ['KeyD', 'ArrowRight', ''],
+  light: ['KeyJ', 'Mouse0', ''], heavy: ['KeyK', 'Mouse2', ''], ability: ['KeyL', '', ''], guard: ['KeyH', 'KeyU', ''], dodge: ['Space', '', ''], run: ['ShiftLeft', 'ShiftRight', ''],
+  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], order: ['KeyC', '', ''], pause: ['Escape', 'KeyP', ''],
+  s1: ['Digit1', 'Numpad1', ''], s2: ['Digit2', 'Numpad2', ''], s3: ['Digit3', 'Numpad3', ''], map: ['KeyM', '', ''], bag: ['KeyB', '', ''],
 };
-const codeToAct = {};
-for (const [a, cs] of Object.entries(KEYS)) for (const c of cs) (codeToAct[c] ||= []).push(a);
+export const PAD_LABELS = [
+  ['Déplacement', 'Stick gauche'], ['Esquive / course (maintenu)', 'A'], ['Interagir', 'B'], ['Attaque légère', 'X'], ['Attaque lourde', 'Y'],
+  ['Garde', 'LB'], ['Capacité spéciale', 'RB'], ['Chef suivant', 'RT'], ['Ordre des suiveurs', 'LT'], ['Baie', 'Croix haut'], ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', 'Select'], ['Sac', 'Croix bas'], ['Pause', 'Start'],
+];
+const STORE = 'pokesouls.controls.v1';
+let binds = {}, codeToAct = {}, layout = null, capture = null;
+
+function rebuild() { codeToAct = {}; for (const [a, cs] of Object.entries(binds)) for (const c of cs) if (c) (codeToAct[c] ||= []).push(a); }
+function load() {
+  binds = JSON.parse(JSON.stringify(DEFAULTS));
+  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s) for (const a of Object.keys(DEFAULTS)) if (Array.isArray(s[a])) binds[a] = [0, 1, 2].map(i => s[a][i] || ''); } catch (e) { /* défauts */ }
+  rebuild();
+}
+function persist() { try { localStorage.setItem(STORE, JSON.stringify(binds)); } catch (e) { /* rien */ } }
+load();
+if (navigator.keyboard && navigator.keyboard.getLayoutMap) navigator.keyboard.getLayoutMap().then(m => { layout = m; }).catch(() => {});
+
+export function keyLabel(code) {
+  if (!code) return '—';
+  if (code === 'Mouse0') return 'Clic gauche'; if (code === 'Mouse1') return 'Clic molette'; if (code === 'Mouse2') return 'Clic droit';
+  const names = { Space: 'Espace', ShiftLeft: 'Maj gauche', ShiftRight: 'Maj droite', ControlLeft: 'Ctrl gauche', ControlRight: 'Ctrl droite', AltLeft: 'Alt gauche', AltRight: 'Alt droite', Escape: 'Échap', Tab: 'Tab', Enter: 'Entrée', Backspace: '⌫',
+    ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };
+  if (names[code]) return names[code];
+  if (layout && layout.get(code)) return layout.get(code).toUpperCase();
+  if (code.startsWith('Key')) return code.slice(3); if (code.startsWith('Digit')) return code.slice(5); if (code.startsWith('Numpad')) return 'Pavé ' + code.slice(6);
+  return code;
+}
+export const Controls = {
+  get: a => binds[a] || ['', '', ''],
+  set(action, slot, code) {
+    if (code) for (const a of Object.keys(binds)) binds[a] = binds[a].map((c, i) => (c === code && !(a === action && i === slot) ? '' : c));
+    binds[action][slot] = code; rebuild(); persist();
+  },
+  reset() { binds = JSON.parse(JSON.stringify(DEFAULTS)); rebuild(); try { localStorage.removeItem(STORE); } catch (e) { /* rien */ } },
+  // écoute la prochaine touche / clic : cb(code) ; Échap annule
+  listen(cb) { capture = cb; },
+  stopListen() { capture = null; },
+  isListening: () => !!capture,
+};
 
 const down = new Set(), pressedNow = new Set(), padPrev = {}, padDown = new Set();
 let padAxes = [0, 0];
+const press = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) { down.add(a); pressedNow.add(a); } };
+const release = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) down.delete(a); };
 
 addEventListener('keydown', e => {
-  const acts = codeToAct[e.code]; if (!acts) return;
+  if (capture) { e.preventDefault(); e.stopPropagation(); if (!e.repeat) { const cb = capture; capture = null; cb(e.code); } return; }
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (!codeToAct[e.code]) return;
   if (e.code === 'Tab' || e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
-  if (e.repeat) return;
-  for (const a of acts) { down.add(a); pressedNow.add(a); }
-});
-addEventListener('keyup', e => { const acts = codeToAct[e.code]; if (acts) for (const a of acts) down.delete(a); });
+  if (e.repeat) return; press(e.code);
+}, true);
+addEventListener('keyup', e => release(e.code));
 addEventListener('blur', () => down.clear());
-addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button,.menu')) return; if (e.button === 0) { down.add('light'); pressedNow.add('light'); } if (e.button === 2) { down.add('heavy'); pressedNow.add('heavy'); } });
-addEventListener('mouseup', e => { if (e.button === 0) down.delete('light'); if (e.button === 2) down.delete('heavy'); });
+const onUi = e => e.target && e.target.closest && e.target.closest('button,.menu,.screen,#hud .slot');
+addEventListener('mousedown', e => {
+  if (capture) { if (onUi(e) && !e.target.closest('.keybtn')) return; e.preventDefault(); const cb = capture; capture = null; cb('Mouse' + e.button); return; }
+  if (onUi(e)) return; press('Mouse' + e.button);
+}, true);
+addEventListener('mouseup', e => release('Mouse' + e.button));
 addEventListener('contextmenu', e => e.preventDefault());
 
-// Manette (disposition standard) : A esquive-course, B interaction, X/Y attaque légère/lourde, LB garde, RB capacité,
-// RT changement de chef, LT ordres, croix : baies / verrouillage (clic stick droit).
-const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'order', 12: 'berry', 11: 'lock', 9: 'pause' };
+// Manette (disposition standard)
+const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'order', 12: 'berry', 13: 'bag', 11: 'lock', 9: 'pause', 8: 'map' };
 function pollPad() {
   const gp = (navigator.getGamepads && [...navigator.getGamepads()].find(Boolean)) || null;
   padAxes = [0, 0];
@@ -38,7 +88,7 @@ function pollPad() {
     padPrev[b] = on;
     if (on) padDown.add(act); else padDown.delete(act);
   }
-  if (gp.buttons[0] && gp.buttons[0].pressed) padDown.add('run'); // A maintenu = course
+  if (gp.buttons[0] && gp.buttons[0].pressed) padDown.add('run');
 }
 export const Input = {
   poll() { pollPad(); },

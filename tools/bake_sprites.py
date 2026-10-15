@@ -7,8 +7,8 @@ import sys, os, json, shutil
 import xml.etree.ElementTree as ET
 from PIL import Image
 raw, out = sys.argv[1], sys.argv[2]
-NAMES = {'0448':'lucario','0282':'gardevoir','0065':'alakazam','0571':'zoroark','0724':'decidueye','0009':'blastoise',
-         '0081':'magnemite','0109':'koffing','0100':'voltorb','0101':'electrode','0137':'porygon','0150':'mewtwo'}
+spec = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'species.json')))
+NAMES = {'%04d' % d: slug for d, slug, fr in spec}
 db = {}
 for pid, name in NAMES.items():
     d = os.path.join(raw, pid)
@@ -33,7 +33,8 @@ for pid, name in NAMES.items():
         fw, fh = int(a.findtext('FrameWidth')), int(a.findtext('FrameHeight'))
         im = Image.open(f)
         dur = [int(x.text) for x in a.iter('Duration')]
-        shutil.copy(f, os.path.join(out, 'sprites', name, src_name + '.png'))
+        dst = os.path.join(out, 'sprites', name, src_name + '.png')
+        if not os.path.exists(dst): im.save(dst, optimize=True)
         entry['anims'][n] = {'file': f'sprites/{name}/{src_name}.png', 'fw': fw, 'fh': fh, 'frames': im.size[0] // fw,
             'dur': dur, 'hit': int(a.findtext('HitFrame') or -1), 'rush': int(a.findtext('RushFrame') or -1), 'ret': int(a.findtext('ReturnFrame') or -1)}
     idle = entry['anims']['Idle']
@@ -44,4 +45,7 @@ for pid, name in NAMES.items():
     if os.path.exists(pp): shutil.copy(pp, os.path.join(out, 'sprites', name, 'portrait.png')); entry['portrait'] = f'sprites/{name}/portrait.png'
     db[name] = entry
 json.dump(db, open(os.path.join(out, 'sprites.json'), 'w'), separators=(',', ':'))
-print({k: sorted(v['anims']) for k, v in db.items()})
+need = {'Idle', 'Walk', 'Attack', 'Hurt'}
+for k, v in db.items():
+    if not need <= set(v['anims']): print('MANQUE', k, sorted(v['anims']))
+print(len(db), 'espèces')
