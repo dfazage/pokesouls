@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PokéSouls — Le Laboratoire oublié</title>
+<meta name="description" content="Fan game non commercial : action-RPG souls-like, équipe de six Pokémon, premier monde : le laboratoire de Mewtwo.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+  <div id="tilt-top"></div><div id="tilt-bot"></div><div id="vignette"></div>
+  <div id="hud"></div>
+  <div id="menu" class="menu"></div>
+  <div id="loading" class="screen show"><h1>PokéSouls</h1><div class="lb"><div id="load-bar"></div></div><p id="load-t">Chargement des sprites…</p></div>
+  <div id="title" class="screen">
+    <div class="tt"><small>Fan game non commercial · version de développement</small><h1>POKÉ<span>SOULS</span></h1><h3>Monde IV · Le Laboratoire oublié</h3></div>
+    <div class="tb"><button id="btn-new">Nouvelle partie</button><button id="btn-continue">Continuer</button></div>
+    <p class="hint">Clavier (WASD/ZQSD + J K L Espace) ou manette. Échap : pause et commandes.</p>
+  </div>
+  <div id="end" class="screen"><h2>Fin de la première version</h2><p>Mewtwo est tombé et la Plaque Psy est à vous.<br>Les cinq autres mondes arrivent.</p><button id="end-close">Continuer à explorer</button></div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
