@@ -10,7 +10,9 @@ const { TS } = M;
 let lightC = null;
 function lightCtx() { if (!lightC) { lightC = document.createElement('canvas'); lightC.width = W; lightC.height = H; } return lightC.getContext('2d'); }
 
-function shadow(ctx, x, y, rx, a = 0.4) { ctx.fillStyle = `rgba(0,0,0,${a})`; ctx.beginPath(); ctx.ellipse(x, y, rx, rx * 0.4, 0, 0, 7); ctx.fill(); }
+let shadowSink = null;
+export function setShadowSink(fn) { shadowSink = fn; }
+function shadow(ctx, x, y, rx, a = 0.4) { if (shadowSink) { shadowSink(x, y, rx, a); return; } ctx.fillStyle = `rgba(0,0,0,${a})`; ctx.beginPath(); ctx.ellipse(x, y, rx, rx * 0.4, 0, 0, 7); ctx.fill(); }
 function hasAnim(id, n) { return !!A.db[id].anims[n]; }
 
 export function render(g, ctx) {
@@ -26,19 +28,9 @@ export function render(g, ctx) {
   groundFx(ctx, g);
 
   const inView = (x, y, pad = 60) => x > sx - pad && x < sx + W + pad && y > sy - pad && y < sy + H + pad + 40;
-  const list = [];
-  for (const d of g.world.decor) { const by = M.decorBaseline(d); if (inView((d.tx + d.w / 2) * TS, by, 50)) list.push({ y: by, f: () => M.drawDecor(ctx, g.world, d, g.t) }); }
-  const pr = g.prog[g.mapIdx];
-  for (const d of g.chestObjs) { const by = M.decorBaseline(d); if (inView((d.tx + 0.5) * TS, by, 50)) list.push({ y: by, f: () => M.drawDecor(ctx, g.world, d, g.t, pr.chests.includes(d.id)) }); }
-  for (const b of g.world.bonfires) { const x = (b.tx + 0.5) * TS, y = (b.ty + 0.6) * TS; if (inView(x, y)) list.push({ y, f: () => drawBonfire(ctx, g, b, x, y) }); }
-  for (const it of g.items) list.push({ y: it.y + 2, f: () => drawItem(ctx, g, it) });
-  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ y: e.y, f: () => drawEnemy(ctx, g, e) });
-  for (const o of g.obs) if (!o.dead && o.solid && o.on && inView(o.x, o.y)) list.push({ y: o.y + o.hh, f: () => drawObsSolid(ctx, g, o) });
-  for (const q of g.allies) list.push({ y: q.y, f: () => drawAlly(ctx, g, q) });
-  { const m = g.chief(); list.push({ y: m.y, f: () => drawMember(ctx, g, m) }); }
-  if (g.souvenir) list.push({ y: g.souvenir.y, f: () => drawSouvenir(ctx, g) });
+  const list = collectDrawList(g, inView);
   list.sort((a, b) => a.y - b.y);
-  for (const o of list) o.f();
+  for (const o of list) o.f(ctx);
 
   // projectiles, particules, textes
   for (const p of g.projs) {
@@ -60,6 +52,24 @@ export function render(g, ctx) {
   ctx.restore();
 
   lighting(ctx, g, sx, sy);
+}
+
+
+// Liste des objets à dessiner (décors, coffres, feux, objets, ennemis, alliés…) : {x, y (pieds), big, f(ctx)}.
+// Partagée par le rendu 2D (tri par y) et le rendu HD-2D (chaque entrée devient un billboard).
+export function collectDrawList(g, inView) {
+  const list = [], pr = g.prog[g.mapIdx];
+  const bigFor = (id, sc) => { const sp = A.db[id]; if (!sp) return false; const an = sp.anims.Idle || Object.values(sp.anims)[0]; return !!an && Math.max(an.fw, an.fh) * sc > 92; };
+  for (const d of g.world.decor) { const by = M.decorBaseline(d), bx = (d.tx + d.w / 2) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t) }); }
+  for (const d of g.chestObjs) { const by = M.decorBaseline(d), bx = (d.tx + 0.5) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t, pr.chests.includes(d.id)) }); }
+  for (const b of g.world.bonfires) { const x = (b.tx + 0.5) * TS, y = (b.ty + 0.6) * TS; if (inView(x, y)) list.push({ x, y, f: c => drawBonfire(c, g, b, x, y) }); }
+  for (const it of g.items) list.push({ x: it.x, y: it.y + 2, f: c => drawItem(c, g, it) });
+  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ x: e.x, y: e.y, big: e.boss || bigFor(e.sprite, e.def.scale || 1), f: c => drawEnemy(c, g, e) });
+  for (const o of g.obs) if (!o.dead && o.solid && o.on && inView(o.x, o.y)) list.push({ x: o.x, y: o.y + o.hh, f: c => drawObsSolid(c, g, o) });
+  for (const q of g.allies) list.push({ x: q.x, y: q.y, big: bigFor(q.id, 1), f: c => drawAlly(c, g, q) });
+  { const m = g.chief(); list.push({ x: m.x, y: m.y, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
+  if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
+  return list;
 }
 
 // ---------- obstacles de boss, alliés du Lien ----------
@@ -134,7 +144,7 @@ function drawObsSolid(ctx, g, o) {
   if (o.hp < o.maxhp) { const w = 16; ctx.fillStyle = '#000'; ctx.fillRect(x - w / 2 - 1, y - 32, w + 2, 4); ctx.fillStyle = '#e8c860'; ctx.fillRect(x - w / 2, y - 31, w * Math.max(0, o.hp / o.maxhp), 2); }
 }
 
-function drawGates(ctx, g) {
+export function drawGates(ctx, g) {
   for (const [tx, ty] of (g.world.door ? g.world.door.tiles : [])) {
     const v = g.world.grid[ty * M.MW + tx]; if (v !== M.T.DOOR) continue;
     const x = tx * TS, y = ty * TS; ctx.fillStyle = '#4d5780'; ctx.fillRect(x, y, TS, TS); ctx.fillStyle = '#2a3150'; ctx.fillRect(x + 2, y + 2, TS - 4, TS - 4);
@@ -167,14 +177,14 @@ function markPips(ctx, g, o, top) {
     ctx.fillStyle = '#000'; ctx.fillRect(x + 1, y + 5, Math.max(0, Math.round(5 * Math.min(1, m.t / m.max))), 1);
   });
 }
-function groundFx(ctx, g) {
+export function groundFx(ctx, g, hook) {
   drawSurfs(ctx, g);
   for (const r of g.rings) {
     if (r.r <= 0) continue; ctx.strokeStyle = r.color || 'rgba(224,160,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
   }
   if (g.fxRings) for (const r of g.fxRings) { const k = r.t / 0.45; ctx.globalAlpha = 1 - k; ctx.strokeStyle = r.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(r.x, r.y, r.r * (0.3 + 0.7 * k), 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
-  drawFxs(g, ctx, true);
+  drawFxs(g, ctx, true, hook);
   drawObsGround(ctx, g);
   for (const z of g.zones) { const k = Math.min(1, z.t / z.delay), f = 0.5 + 0.5 * Math.sin(g.t * 24); ctx.fillStyle = `rgba(255,70,70,${0.12 + 0.18 * f})`; ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 4, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,100,.9)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = 'rgba(255,200,150,.5)'; ctx.beginPath(); ctx.arc(z.x, z.y, (z.r + 4) * k, 0, 7); ctx.fill(); }
   for (const e of g.enemies) {
@@ -264,11 +274,10 @@ function drawItem(ctx, g, it) {
 function drawPlaque(ctx, g, it) { shadow(ctx, it.x, it.y, 8, 0.35); const y = it.y - 10 + Math.sin(g.t * 3) * 2; ctx.fillStyle = '#c690ff'; ctx.fillRect(it.x - 6, y - 8, 12, 16); ctx.fillStyle = '#f2e0ff'; ctx.fillRect(it.x - 4, y - 6, 8, 12); ctx.fillStyle = '#7a4fc0'; ctx.fillRect(it.x - 1, y - 4, 2, 8); ctx.fillRect(it.x - 3, y - 1, 6, 2); }
 function drawSouvenir(ctx, g) { const s = g.souvenir, y = s.y - 8 + Math.sin(g.t * 3) * 2; ctx.fillStyle = 'rgba(201,167,255,.9)'; ctx.beginPath(); ctx.arc(s.x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, y, 2, 0, 7); ctx.fill(); }
 
-function lighting(ctx, g, sx, sy) {
-  const lc = lightCtx(); const c = g.chief();
+export function buildLights(g) {
+  const c = g.chief();
   const inArena = M.inArena(g.world, c.x, c.y);
   const th = g.world.theme, pr = g.prog[g.mapIdx], amb = pr.bossDead && inArena ? th.amb.map(v => Math.min(255, v + 45)) : inArena ? th.ambArena : th.amb;
-  lc.globalCompositeOperation = 'source-over'; lc.fillStyle = `rgb(${amb})`; lc.fillRect(0, 0, W, H);
   const lights = [];
   for (const b of g.world.bonfires) if (g.lit.has(b.id)) lights.push({ x: (b.tx + 0.5) * TS, y: (b.ty + 0.2) * TS, r: 120 + Math.sin(g.t * 9 + b.tx) * 6, c: [255, 160, 70], a: 0.95 });
   for (const d of g.world.decor) { const l = M.decorLight(g.world, d); if (l) lights.push({ ...l, a: 0.6 }); }
@@ -290,6 +299,13 @@ function lighting(ctx, g, sx, sy) {
   if (g.souvenir) lights.push({ x: g.souvenir.x, y: g.souvenir.y - 8, r: 40, c: [200, 160, 255], a: 0.8 });
   for (const it of g.items) lights.push({ x: it.x, y: it.y - 10, r: 70, c: it.kind === 'portal' ? [190, 150, 255] : [255, 220, 130], a: 0.9 });
   if (pr.bossDead) { const a = g.world.arena; lights.push({ x: a.cx * TS, y: a.cy * TS, r: 160, c: [255, 220, 170], a: 0.7 }); }
+  return { amb, lights };
+}
+
+function lighting(ctx, g, sx, sy) {
+  const lc = lightCtx();
+  const { amb, lights } = buildLights(g);
+  lc.globalCompositeOperation = 'source-over'; lc.fillStyle = `rgb(${amb})`; lc.fillRect(0, 0, W, H);
   lc.globalCompositeOperation = 'lighter';
   for (const L of lights) { const x = L.x - sx, y = L.y - sy; if (x < -L.r || y < -L.r || x > W + L.r || y > H + L.r) continue; radial(lc, x, y, L.r, L.c, L.a); }
   ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(lc.canvas, 0, 0);
@@ -299,6 +315,6 @@ function lighting(ctx, g, sx, sy) {
   // flash de transition / mort
   if (g.state === 'dead') { ctx.fillStyle = `rgba(0,0,0,${Math.min(0.7, g.deadT * 0.5)})`; ctx.fillRect(0, 0, W, H); }
 }
-function radial(c, x, y, r, col, a) { const gr = c.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${a})`); gr.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`); c.fillStyle = gr; c.fillRect(x - r, y - r, r * 2, r * 2); }
+export function radial(c, x, y, r, col, a) { const gr = c.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${a})`); gr.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`); c.fillStyle = gr; c.fillRect(x - r, y - r, r * 2, r * 2); }
 const hexCache = {};
-function hexToRgb(h) { if (hexCache[h]) return hexCache[h]; const n = parseInt(h.slice(1), 16); return (hexCache[h] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]); }
+export function hexToRgb(h) { if (hexCache[h]) return hexCache[h]; const n = parseInt(h.slice(1), 16); return (hexCache[h] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]); }

@@ -3,6 +3,8 @@
 html,body{height:100%;background:#03040a;overflow:hidden;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink);user-select:none}
 #stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;background:#05060c;overflow:hidden}
 #game{position:absolute;inset:0;width:1280px;height:720px;image-rendering:pixelated;image-rendering:crisp-edges}
+#game3d{position:absolute;inset:0;width:1280px;height:720px}
+body.hd2d #game,body.hd2d #tilt-top,body.hd2d #tilt-bot,body.hd2d #vignette{display:none}
 #vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(2,3,12,.65) 100%)}
 #tilt-top,#tilt-bot{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px)}
 #tilt-top{top:0;height:90px;mask-image:linear-gradient(#000,transparent);-webkit-mask-image:linear-gradient(#000,transparent)}

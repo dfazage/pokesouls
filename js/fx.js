@@ -163,22 +163,26 @@ export function installFx(Game, { D }) {
 }
 
 // ---------------------------------------------------------------- dessin
-export function drawFxs(g, ctx, ground) {
+// hook (rendu HD-2D) : { ctxFor(f) -> contexte cible, place(ctx, f) -> false pour ignorer l'effet (sinon positionne le contexte) }
+export function drawFxs(g, ctx0, ground, hook) {
   const L = g.fxs; if (!L || !L.length) return;
-  ctx.save(); ctx.imageSmoothingEnabled = true;
+  if (!hook) { ctx0.save(); ctx0.imageSmoothingEnabled = true; }
   for (const f of L) {
     if (f.t < 0 || !!f.ground !== ground) continue;
     const img = FXS.img[f.k], m = FXS.man[f.k]; if (!img) continue;
     let i = Math.floor(f.t * f.fps); if (f.loop) i %= f.n; else if (i >= f.n) continue;
     const c = i % m.cols, r = (i / m.cols) | 0;
     let a = f.alpha; if (f.loop) a *= Math.min(1, f.t / 0.12);
-    ctx.globalAlpha = a; ctx.globalCompositeOperation = f.add ? 'lighter' : 'source-over';
+    const ctx = hook ? hook.ctxFor(f) : ctx0;
+    ctx.save(); ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = a; ctx.globalCompositeOperation = hook ? 'source-over' : f.add ? 'lighter' : 'source-over';
     ctx.filter = f.hue ? `hue-rotate(${f.hue}deg)` : 'none';
-    ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y - f.z)); if (f.rot) ctx.rotate(f.rot); ctx.scale(f.scale * f.flip, f.scale);
+    if (hook) { if (!hook.place(ctx, f)) { ctx.restore(); continue; } } else ctx.translate(Math.round(f.x), Math.round(f.y - f.z));
+    if (f.rot) ctx.rotate(f.rot); ctx.scale(f.scale * f.flip, f.scale);
     ctx.drawImage(img, c * m.fw, r * m.fh, m.fw, m.fh, f.anchor === 'l' ? 0 : -m.fw / 2, -m.fh / 2, m.fw, m.fh);
     ctx.restore();
   }
-  ctx.restore();
+  if (!hook) ctx0.restore();
 }
 // lueurs additives des effets (utilisées par l'éclairage)
 export function fxLights(g) {

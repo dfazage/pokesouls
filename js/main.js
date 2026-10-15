@@ -12,8 +12,19 @@ import { loadFx } from './fx.js';
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), canvas = $('#game'), ctx = canvas.getContext('2d');
 canvas.width = W; canvas.height = H;
-function fit() { const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`; }
+let r3d = null; // rendu HD-2D (module chargé à la demande) ; null = rendu 2D classique
+function fit() {
+  const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+  if (r3d) r3d.setScale(Math.min(2, Math.max(1, Math.round(s * (window.devicePixelRatio || 1) * 2) / 2)));
+}
 addEventListener('resize', fit); fit();
+// HD-2D par défaut ; ?2d force l'ancien rendu. En cas d'échec (WebGL2 absent, erreur), on retombe sur le rendu 2D.
+async function initHD2D() {
+  if (/[?&]2d\b/.test(location.search) || r3d) return;
+  try { const mod = await import('./render3d.js'); r3d = new mod.HD2D(stage, canvas); document.body.classList.add('hd2d'); window.hd2d = r3d; fit(); }
+  catch (e) { console.warn('HD-2D indisponible, rendu 2D classique :', e); r3d = null; document.body.classList.remove('hd2d'); }
+}
+function disableHD2D() { if (!r3d) return; try { r3d.destroy(); } catch (e) { /* ignoré */ } r3d = null; window.hd2d = null; document.body.classList.remove('hd2d'); }
 loadFx(); // feuilles d'effets d'attaque, chargées en arrière-plan
 
 let game = null, hud = null, mode = 'loading', menuKind = null, last = 0;
@@ -69,6 +80,7 @@ function openPause() {
 function newFromTitle() { Game.wipe(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
 
 function frame(now) {
+  if (r3d) r3d.adapt(now - last);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   Input.poll();
   if (mode === 'play') {
@@ -79,13 +91,18 @@ function frame(now) {
   } else if (mode === 'menu' || mode === 'pause') {
     if (Input.pressed('pause') || (menuKind === 'bag' && Input.pressed('bag')) || (menuKind === 'travel' && Input.pressed('map')) || (menuKind === 'bonfire' && Input.pressed('interact'))) closeMenu();
   }
-  if (game && game.world) { render(game, ctx); hud.update(dt); }
+  if (game && game.world) {
+    if (r3d) { try { r3d.render(game); } catch (e) { console.error('HD-2D :', e); disableHD2D(); render(game, ctx); } }
+    else render(game, ctx);
+    hud.update(dt);
+  }
   directMusic(game, ui, dt);
   Input.endFrame();
   requestAnimationFrame(frame);
 }
 
-addEventListener('keydown', e => { if (game && game.dev && /^F[1-9]$/.test(e.code)) { e.preventDefault(); game.devKey(e.code); } });
+addEventListener('keydown', e => { if (game && game.dev && /^F[1-9]$/.test(e.code) && !(e.shiftKey && e.code === 'F8')) { e.preventDefault(); game.devKey(e.code); } });
+addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preventDefault(); if (r3d) disableHD2D(); else initHD2D(); } }); // bascule 2D / HD-2D
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { unlockAudio(); Music.unlock(); }, { passive: true }));
 
 (async function boot() {
@@ -101,6 +118,7 @@ addEventListener('keydown', e => { if (game && game.dev && /^F[1-9]$/.test(e.cod
   $('#btn-keys').onclick = () => openControls(() => hideMenu());
   $('#btn-credits').onclick = () => showCredits(() => hideMenu());
   $('#end-close').onclick = () => $('#end').classList.remove('show');
+  await initHD2D();
   mode = 'title';
   if (/[?&]autostart/.test(location.search)) { if (has) resume(); else newGame({ fire: 0, water: 0, grass: 0 }); }
   requestAnimationFrame(t => { last = t; frame(t); });
