@@ -1,133 +1,113 @@
 {
  "INTRO_TITLE": {
-  "youtube": null,
   "title": "Intro · Love Story x Golden Brown (Sam B Music)",
   "start": 0,
   "end": null,
   "fallback_audio": "intro_title.ogg"
  },
  "HUB_MAIN": {
-  "youtube": "Gjht7acg9d4",
   "title": "DS · Firelink Shrine (Motoi Sakuraba, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "hub_main.ogg"
  },
  "MENU_STARTER": {
-  "youtube": "iRxpAnq3X9c",
   "title": "ER · Roundtable Hold (Tsukasa Saitoh, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "menu_starter.ogg"
  },
  "MAP_1": {
-  "youtube": "jZbBRLkRmSU",
   "title": "ER · Limgrave (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_1.ogg"
  },
  "MAP_2": {
-  "youtube": "7VidABIU21M",
   "title": "DS · Darkroot Garden (Sound Phenomenon, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_2.ogg"
  },
  "MAP_3": {
-  "youtube": "Fia3bHXcFag",
   "title": "DS · Ancient Dragon / Ash Lake (K Playz, fan)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_3.ogg"
  },
  "MAP_4": {
-  "youtube": "tB1Z9-4WrDg",
   "title": "DS · Anor Londo (Solas Composer, fan)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_4.ogg"
  },
  "MAP_5": {
-  "youtube": "DAtqGCKYbYo",
   "title": "ER · Crumbling Farum Azula (Shoi Miyazawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_5.ogg"
  },
  "MAP_6": {
-  "youtube": "waM5_Nv-rHk",
   "title": "ER · Miquella's Haligtree (Tai Tomisawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_6.ogg"
  },
  "MINIBOSS_A": {
-  "youtube": "FbKoy15fwZw",
   "title": "DS · Taurus Demon (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_a.ogg"
  },
  "MINIBOSS_B": {
-  "youtube": "qrE-HvIM1Pg",
   "title": "ER · Margit, the Fell Omen (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_b.ogg"
  },
  "SUBBOSS_BIRDS": {
-  "youtube": "Fg_AkYeZcNM",
   "title": "DS · Sif, the Great Grey Wolf (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_birds.ogg"
  },
  "SUBBOSS_KINGS": {
-  "youtube": "_tnu_zOB8-g",
   "title": "DS · Four Kings (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_kings.ogg"
  },
  "SUBBOSS_KINGS_ALT": {
-  "youtube": "hOxLVIPkHTs",
   "title": "DS · Ornstein & Smough (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_kings_alt.ogg"
  },
  "BOSS_MEWTWO_P1": {
-  "youtube": "Z1ts4FP1WWM",
   "title": "ER · Starscourge Radahn (Shoi Miyazawa, Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p1.ogg"
  },
  "BOSS_MEWTWO_P2": {
-  "youtube": "R3R-hzDPi1A",
   "title": "ER · The Final Battle (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p2.ogg"
  },
  "BOSS_MEW": {
-  "youtube": "3bqLGebDRIY",
   "title": "DS · Gwyn, Lord of Cinder (Topic)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mew.ogg"
  },
  "JINGLE_CAMPFIRE": {
-  "youtube": null,
   "fallback_audio": "jingle_campfire.ogg"
  },
  "JINGLE_DEATH": {
-  "youtube": null,
   "fallback_audio": "jingle_death.ogg"
  },
  "JINGLE_VICTORY": {
-  "youtube": null,
   "fallback_audio": "jingle_victory.ogg"
  }
 }

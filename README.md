@@ -105,7 +105,5 @@ Les fichiers OGG ne sont pas dans le dépôt : voir `assets/audio/music/README.m
 
 ## Musique
 
-Une piste par contexte (menu, cartes, gros mobs, boss, jingles), fondus et boucles. Deux sources :
-1. **YouTube** (OST originales Dark Souls / Elden Ring, projet perso) : via l'API IFrame, deux lecteurs A/B pour les fondus ; configuration dans `assets/audio/music_map.json` (`youtube`, `start`, `end`, `fallback_audio`). Actif par défaut, y compris sur le site publié (lecteur intégré, rien n'est copié) ; `?yt=0` le coupe. Les lecteurs restent visibles dans un coin (bouton ⇄ pour changer de coin), comme l'exigent les conditions de l'API. Une vidéo absente, privée ou non intégrable déclenche le repli et un message dans la console.
-2. **Repli libre** (OpenGameArt, `assets/audio/music/`), utilisé si YouTube est coupé, bloqué ou indisponible. Le dossier facultatif `assets/audio/music_perso/` (ignoré par git) peut contenir des fichiers perso OGG prioritaires sur le repli.
+Une piste par contexte (menu, cartes, gros mobs, boss, jingles), fondus et boucles. Configuration dans `assets/audio/music_map.json` (`start`, `end`, `fallback_audio`). Pistes libres d'OpenGameArt dans `assets/audio/music/` (voir la page Crédits), plus l'intro de l'écran titre. Le dossier facultatif `assets/audio/music_perso/` (ignoré par git) peut contenir des fichiers perso OGG, prioritaires sur ces pistes. La lecture YouTube a été retirée ; les OST originales sont à régler plus tard.
 Les jingles sont toujours des fichiers locaux. Rien ne démarre avant le premier clic. Volume musique réglable dans la page Commandes.
