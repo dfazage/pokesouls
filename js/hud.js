@@ -20,7 +20,7 @@ export function createHud(game) {
     <div id="prompt"><kbd id="k-int"></kbd> <span id="prompt-t"></span></div>
     <div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
-    <div id="banner"></div><div id="fade"></div>`;
+    <div id="bossintro"><div class="veil"></div><div class="txt"><div class="sub"></div><div class="nm"></div><div class="ln"></div></div><div class="bar t"></div><div class="bar b"></div></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
   for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
@@ -55,6 +55,10 @@ export function createHud(game) {
     toast(t) { E.toast.textContent = t; E.toast.classList.add('show'); toastT = 2.6; },
     banner(t, kind) { E.banner.textContent = t; E.banner.className = 'show ' + (kind || ''); void E.banner.offsetWidth; E.banner.style.animation = 'none'; void E.banner.offsetWidth; E.banner.style.animation = ''; bannerT = kind === 'death' ? 5 : 3.4; },
     area(z) { E.area.innerHTML = `<small>${z.zone}</small>${z.area}`; E.area.classList.add('show'); areaT = 3.2; },
+    bossIntro(b) {
+      const el = $('#bossintro', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff'); $('.sub', el).textContent = b.def.sub; $('.nm', el).textContent = b.def.name;
+      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(hud._bi); hud._bi = setTimeout(() => el.classList.remove('show'), 2900);
+    },
     fade() { E.fade.classList.add('on'); setTimeout(() => E.fade.classList.remove('on'), 250); },
   };
   return hud;

@@ -683,7 +683,7 @@ export class Game {
     const a = this.world.arena, dir = this.world.fog.dir;
     this.bossActive = true; this.closeFog();
     const b = this.makeEnemy('boss', (a.cx + dir.x * 4) * TS, (a.cy + dir.y * 4) * TS);
-    b.state = 'intro'; b.st = 2.2; b.invuln = 2.2; b.cd = 1.5; b.face = { x: -dir.x, y: -dir.y }; b.dir = dirFromVec(-dir.x, -dir.y);
+    b.state = 'intro'; b.st = 2.9; b.invuln = 2.9; b.cd = 1.5; b.face = { x: -dir.x, y: -dir.y }; b.dir = dirFromVec(-dir.x, -dir.y);
     this.enemies.push(b); this.boss = b; SFX.boom();
     this.emit('bossStart', b);
   }

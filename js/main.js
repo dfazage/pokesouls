@@ -15,6 +15,8 @@ function fit() { const s = Math.min(innerWidth / 1280, innerHeight / 720); stage
 addEventListener('resize', fit); fit();
 
 let game = null, hud = null, mode = 'loading', menuKind = null, last = 0;
+// braises de l'écran titre
+(() => { const box = document.getElementById('embers'); if (!box) return; for (let i = 0; i < 28; i++) { const s = document.createElement('span'), z = 2 + Math.random() * 3.5; s.style.cssText = `left:${500 + Math.random() * 280 | 0}px;width:${z}px;height:${z}px;--dx:${(Math.random() - 0.5) * 260 | 0}px;animation-duration:${4 + Math.random() * 5}s;animation-delay:-${Math.random() * 9}s`; box.appendChild(s); } })();
 const ui = { screen: 'title', controls: false, menuKind: null };
 const openControls = back => { ui.controls = true; showControls(() => { ui.controls = false; back(); }); };
 
@@ -29,7 +31,7 @@ async function launch(g) {
     else if (type === 'fade') hud.fade();
     else if (type === 'menu') openBonfire(a);
     else if (type === 'jingle') Music.playJingle(a);
-    else if (type === 'bossStart') hud.banner(a.def.name, 'boss');
+    else if (type === 'bossStart') hud.bossIntro(a);
     else if (type === 'end') setTimeout(() => $('#end').classList.add('show'), 1500);
   };
   await game.start(); ui.screen = 'game';

@@ -125,3 +125,46 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 .tf{display:flex;align-items:center;gap:8px;margin-top:4px}.tf span{flex:1;font-size:10px}.tf .ok{color:#8dffb0}.tf .bad{color:#ff9a9a}.tf button{padding:5px 10px;font-size:11px;letter-spacing:0}
 #sbadge{display:inline-block;margin-left:8px;padding:0 6px;font-size:9px;letter-spacing:1px;color:#000;vertical-align:1px}#sbadge:empty{display:none}
 .slot.cool{opacity:.5}
+
+/* ---- écran titre animé ---- */
+#title{justify-content:flex-start;padding-top:96px;gap:34px;background:#05060c;overflow:hidden}
+#title .tt,#title .tb,#title .hint{position:relative;z-index:2}
+.tbg{position:absolute;inset:0;z-index:0;overflow:hidden}.tbg svg{position:absolute;inset:0;width:100%;height:100%}
+.tsky{position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 100%,#5a2a10 0%,#1b1226 45%,#07080f 80%),linear-gradient(#0b0d1c,#07070d)}
+.tmoon{position:absolute;left:50%;top:80px;width:520px;height:520px;margin-left:-260px;border-radius:50%;background:radial-gradient(circle,rgba(150,160,230,.16),rgba(150,160,230,0) 65%)}
+.tfog{position:absolute;left:-20%;width:140%;height:140px;filter:blur(24px);animation:tdrift 14s ease-in-out infinite alternate}
+.tfog.a{top:430px;background:radial-gradient(ellipse at 50% 50%,rgba(170,150,220,.22),rgba(170,150,220,0) 70%)}
+.tfog.b{top:520px;height:120px;animation-duration:19s;animation-direction:alternate-reverse;background:radial-gradient(ellipse at 50% 50%,rgba(255,170,100,.16),rgba(255,170,100,0) 70%)}
+.tglow{position:absolute;left:50%;bottom:0;width:760px;height:320px;margin-left:-380px;background:radial-gradient(ellipse at 50% 70%,rgba(255,140,40,.55),rgba(255,140,40,0) 65%);animation:tglow 1.6s ease-in-out infinite}
+.tbg .tfire{position:absolute;inset:auto auto 34px 50%;width:200px;height:236px;margin-left:-100px}
+.tfire .fl{transform-origin:50% 100%;animation:tflick .7s ease-in-out infinite}.tfire .fl.b{animation-duration:.55s;animation-delay:-.2s}.tfire .fl.c{animation-duration:.9s;animation-delay:-.4s}
+#embers span{position:absolute;bottom:130px;border-radius:50%;background:#ffb347;box-shadow:0 0 8px 2px rgba(255,150,40,.7);animation:trise linear infinite}
+.tvig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 50%,rgba(0,0,0,.75) 100%)}
+@keyframes tflick{0%,100%{transform:scale(1,1) skewX(0)}25%{transform:scale(.94,1.12) skewX(3deg)}50%{transform:scale(1.04,.92) skewX(-2deg)}75%{transform:scale(.97,1.08) skewX(2deg)}}
+@keyframes trise{0%{transform:translate(0,0) scale(1);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),-520px) scale(.2);opacity:0}}
+@keyframes tdrift{0%{transform:translateX(-8%)}100%{transform:translateX(8%)}}
+@keyframes tglow{0%,100%{opacity:.75}50%{opacity:1}}
+@keyframes tshine{0%{background-position:200% 0}100%{background-position:-100% 0}}
+@keyframes tin{0%{opacity:0;transform:translateY(16px);letter-spacing:.9em}100%{opacity:1;transform:none;letter-spacing:.3em}}
+@keyframes tfade{0%{opacity:0}100%{opacity:1}}
+#title .tt h1{font-family:'Cinzel','Trajan Pro',Georgia,serif;font-size:100px;font-weight:800;letter-spacing:.3em;margin-right:-.3em;text-shadow:none;background:linear-gradient(100deg,#8a6a30 0%,#f3d28a 30%,#fff3cf 45%,#e8c27a 55%,#8a6a30 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(255,170,60,.3));animation:tin 2.2s ease-out both,tshine 6s linear 2.4s infinite}
+#title .tt h1 span{color:inherit}
+#title .tt small,#title .tt h3{animation:tfade 3s ease-out both}#title .tt h3{color:#9a9ab8;font-style:italic;letter-spacing:.3em}
+#title .tb{animation:tfade 4s ease-out both}#title .hint{animation:tfade 5s ease-out both}
+#title .tb button{font-family:'Cinzel',Georgia,serif;background:rgba(8,10,28,.55);border-color:#4a4468}#title .tb button:hover:not(:disabled){background:rgba(60,34,14,.7);border-color:#e8c27a;color:#f3d28a;text-shadow:0 0 14px rgba(255,170,60,.8)}
+/* ---- entrée de boss ---- */
+#bossintro{position:absolute;inset:0;z-index:12;pointer-events:none;display:none;--bc:#e0b0ff}
+#bossintro.show{display:block}
+#bossintro .bar{position:absolute;left:0;right:0;height:0;background:#000;animation:bi-bar 2.8s ease both}#bossintro .bar.t{top:0}#bossintro .bar.b{bottom:0}
+#bossintro .veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,color-mix(in srgb,var(--bc) 28%,transparent),rgba(0,0,0,.72) 75%);animation:bi-veil 2.8s ease both}
+#bossintro .txt{position:absolute;left:0;right:0;top:46%;text-align:center}
+#bossintro .sub{font:italic 20px Georgia,serif;letter-spacing:.32em;color:var(--bc);animation:bi-sub 2.8s ease both;opacity:0}
+#bossintro .nm{font:800 84px/1.1 'Cinzel',Georgia,serif;margin:8px 0 0 .42em;color:#fff;text-shadow:0 0 28px var(--bc),0 0 60px var(--bc);animation:bi-name 2.8s cubic-bezier(.2,.8,.2,1) both}
+#bossintro .ln{margin:14px auto 0;width:640px;height:2px;background:linear-gradient(90deg,transparent,var(--bc),transparent);animation:bi-line 2.8s ease both}
+@keyframes bi-bar{0%{height:0}18%,82%{height:90px}100%{height:0}}
+@keyframes bi-veil{0%{opacity:0}20%,75%{opacity:1}100%{opacity:0}}
+@keyframes bi-sub{0%,22%{opacity:0;transform:translateY(8px)}38%,80%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes bi-name{0%{opacity:0;letter-spacing:1.1em;filter:blur(14px);transform:scale(1.12)}30%{opacity:1;filter:blur(0);transform:scale(1)}78%{opacity:1;letter-spacing:.42em}100%{opacity:0;letter-spacing:.5em}}
+@keyframes bi-line{0%,15%{transform:scaleX(0);opacity:1}45%,80%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+#boss.show .bbar .fill{animation:bi-hp 1.6s cubic-bezier(.3,.7,.2,1) both}
+@keyframes bi-hp{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
