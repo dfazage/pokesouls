@@ -5,7 +5,7 @@
 
 export const FXS = { man: {}, img: {}, ready: false };
 // Les planches PMD ont des frames de 16 à 160 px (Dämmerlicht : 192) : on les agrandit par pas entiers pour garder une taille à l'écran comparable.
-const pxScale = m => m.sc || Math.max(1, Math.round(64 / Math.max(m.fw, m.fh)));
+const pxScale = m => m.sc || Math.min(4, Math.max(1, Math.round(64 / Math.max(m.fw, m.fh))));
 
 export async function loadFx() {
   try { FXS.man = await (await fetch('assets/fx.json')).json(); } catch (e) { FXS.man = {}; return; }

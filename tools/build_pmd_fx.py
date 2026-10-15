@@ -28,7 +28,12 @@ NEW = {
   'waterspout': 'Water_Spout_Up.None', 'octazooka': 'Octazooka.None', 'icywind': 'Icy_Wind.None', 'sheercold': 'Sheer_Cold_Front.None',
   'dracometeor': 'Draco_Meteor_Explosion.None', 'dragonpulse': 'Dragon_Pulse_Ball.None', 'dragonrush': 'Dragon_Rush_Front.Flip', 'dragondance': 'Dragon_Dance.None',
   'burned': 'Burned.None', 'willowisp': 'Will_O_Wisp.None',
+  # ulti Lien : anneaux teintés par la couleur du type, éclat doré et étoiles (à la place des effets Dämmerlicht, trop blancs)
+  'linkburst': 'Circle_Yellow_Out.None', 'linkstar': 'Lucky_Chant_Star_Yellow.None',
 }
+for _c in ('Blue', 'Green', 'Pink', 'Purple', 'Red', 'Yellow'):
+    NEW['linkring_' + _c.lower()] = 'Stat_%s_Ring.None' % _c
+    NEW['linkpulse_' + _c.lower()] = 'Circle_Red_Out.None' if _c == 'Red' else 'Circle_Small_%s_Out.None' % _c
 man_path = os.path.join(ROOT, 'assets/fx.json'); man = json.load(open(man_path))
 out_dir = os.path.join(ROOT, 'assets/fx/pmd'); os.makedirs(out_dir, exist_ok=True)
 missing = []

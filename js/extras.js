@@ -1,6 +1,9 @@
 // Extensions du cœur de jeu : ulti « Lien » (coéquipiers), combos à attaque signature, obstacles et éléments de terrain des boss.
 // installExtras() ajoute ces méthodes à la classe Game (game.js lui fournit ses utilitaires).
 
+// Couleur des anneaux du Lien (planches PMD) selon le type du starter.
+const LINKC = { fire: 'red', water: 'blue', grass: 'green' };
+
 // Attaques signature : une par type (feu / eau / plante) et par stade d'évolution (0, 1, 2).
 // kinds : cross (deux entailles), whirl (tourbillon), blast (3 boules explosives), rush (charge perforante), storm (pluie d'impacts), fan (éventail), leaves (nova de feuilles), sun (rayon + soin)
 export const SIGS = {
@@ -73,9 +76,10 @@ export function installExtras(G, d) {
       if (!M.boxFree(this.world, x, y, 4, 3)) { x = c.x; y = c.y; }
       Object.assign(q, { x, y, face: { x: c.face.x, y: c.face.y }, atk: null, dodge: null, dash: null, hurtT: 0, kx: 0, ky: 0, summoned: true, acd: 0.5 + k * 0.3, fx: null, regen: null });
       q.anim = 'Idle'; q.at = 0; q.loop = true; q.dir = dirFromVec(c.face.x, c.face.y);
-      this.ringFx(q.x, q.y, 30, q.def.color); for (let i = 0; i < 14; i++) this.spark(q.x, q.y - 8, i % 2 ? '#ffffff' : q.def.color, 1);
+      this.ringFx(q.x, q.y, 30, q.def.color); for (let i = 0; i < 14; i++) this.spark(q.x, q.y - 8, i % 2 ? '#ffe9a0' : q.def.color, 1);
     });
-    this.fx('storedpower', c.x, c.y, { scale: 1.2, z: 12, add: true, dur: 0.8, glow: '#ffe27a' }); for (const q of al) this.fx('calmmind', q.x, q.y, { scale: 0.7, z: 12, add: true, dur: 0.7, glow: q.def.color });
+    this.fx('linkburst', c.x, c.y, { scale: 1.5, z: 8, dur: 0.7, glow: '#ffe27a' }); this.fx('linkstar', c.x, c.y, { scale: 1.1, z: 14, delay: 0.1, dur: 0.8 });
+    for (const q of al) { const col = LINKC[q.type] || 'yellow'; this.fx('linkring_' + col, q.x, q.y, { scale: 1.1, z: 6, dur: 0.7, glow: q.def.color }); this.fx('linkpulse_' + col, q.x, q.y, { scale: 1.0, z: 10, delay: 0.12, dur: 0.6 }); }
     this.ringFx(c.x, c.y, 44, '#ffe27a'); this.hitstop = 0.12; this.shake = Math.max(this.shake, 4); SFX.boom();
     this.emit('toast', 'Lien : ' + al.map(q => q.def.name).join(' et ') + ' entrent en scène');
     return true;
