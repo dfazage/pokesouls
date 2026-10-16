@@ -244,7 +244,7 @@ export function showReserve(game, onBack) {
       det = `<div class="rdet"><div class="rdh"><b>${esc(b.def.name)}</b><span>Niv. ${b.lvl} · ${b.def.cls}</span>${chips(b)}</div>
         <small><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}${b.key === FALA_KEY ? ' · l’élément dépend du Module équipé' : ''}</small>
         ${b.key === FALA_KEY ? `<div class="pmods"><span>Module</span>${MOD_ORDER.map(id => `<button class="pmod ${b.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-rmod="${id}">${MODULES[id].name}</button>`).join('')}</div>` : ''}
-        <div class="rsw"><button class="pri" id="r-swap">Échanger avec ${esc(o.def.name)}</button><span>Coût : gratuit · choisis qui sort dans la liste de gauche</span></div></div>`;
+        <div class="rsw"><span>Sélectionne de nouveau ${esc(b.def.name)} pour l’échanger avec <b>${esc(o.def.name)}</b> · gratuit · choisis qui sort dans la liste de gauche</span></div></div>`;
     }
     const m = open(`<div class="panel reserve"><div class="bhead"><h2>Réserve du feu</h2></div>
       <div class="rcols"><div class="rteam"><h4>Équipe active · ${game.team.length} / 3</h4>${game.team.map((x, i) => `<button class="rrow ${i === outSel ? 'out' : ''}" data-out="${i}">${thumb(x)}<div><b>${esc(x.def.name)}</b><small>Niv. ${x.lvl} · ${x.def.cls} · ${x.def.typeName}</small></div>${i === outSel ? '<i>SORT</i>' : ''}</button>`).join('')}
@@ -253,9 +253,12 @@ export function showReserve(game, onBack) {
           <div class="rgrid">${game.bench.map((x, i) => `<button class="rcard ${i === resSel ? 'sel' : ''}" data-bi="${i}">${thumb(x)}<div><b>${esc(x.def.name)}</b><small>Niv. ${x.lvl} · ${x.def.cls}</small></div></button>`).join('')}${locked}</div>${det}</div></div>
       <div class="act"><button id="r-back">Retour</button></div></div>`);
     m.querySelectorAll('[data-out]').forEach(x => x.onclick = () => { outSel = +x.dataset.out; render(); });
-    m.querySelectorAll('[data-bi]').forEach(x => x.onclick = () => { resSel = +x.dataset.bi; render(); });
+    m.querySelectorAll('[data-bi]').forEach(x => x.onclick = async () => {
+      const i = +x.dataset.bi;
+      if (i !== resSel) { resSel = i; render(); return; }
+      const nm = game.bench[i].def.name; if (await game.swapMember(outSel, i)) game.emit('toast', `${nm} rejoint l’équipe`); render();
+    });
     m.querySelectorAll('[data-rmod]').forEach(x => x.onclick = () => { game.setModuleOf(game.bench[resSel], x.dataset.rmod); render(); });
-    const sw = $('#r-swap'); if (sw) sw.onclick = async () => { sw.disabled = true; const nm = b.def.name; if (await game.swapMember(outSel, resSel)) game.emit('toast', `${nm} rejoint l’équipe`); render(); };
     $('#r-back').onclick = onBack;
   };
   render();
