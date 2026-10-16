@@ -2,6 +2,8 @@
 // installElements() ajoute ces méthodes à la classe Game (même principe que extras.js).
 // Tous les chiffres sont des valeurs de départ à équilibrer.
 
+import { relayOf } from './relay.js';
+
 // ---------- table des types ----------
 // [fort contre, faible contre] ; le multiplicateur reste modéré : x1,25 / x1 / x0,8 (jamais de x0 ni x2)
 const chart = (s, w) => ({ s: s.split(' ').filter(Boolean), w: w.split(' ').filter(Boolean) });
@@ -321,12 +323,23 @@ export function installElements(G, d) {
 
   // ======================= relais, focus, indices =======================
   // changer de Pokémon juste après une esquive juste ou une parade : le nouveau venu frappe tout de suite avec son élément
-  P.tryRelay = function (n) {
+  P.tryRelay = function (n, o) {
     if (this.t - this.lastPD > 1.0 && this.t - this.lastParry > 1.0) return false;
-    const aim = n.face, dmg = this.powerOf(n, { kind: 'heavy' }) * 1.0;
+    const R = relayOf(n), st = n.stage || 0, sc = 1 + 0.15 * st, aim = n.face, dmg = this.powerOf(n, { kind: 'heavy' }) * R.mult;
     this.curElem = n.type; this.curTrig = this.trigOf(n, { kind: 'relay' });
-    this.ringFx(n.x, n.y, 46, n.def.color); this.floatText(n.x, n.y - 38, 'RELAIS !', '#ffe27a'); SFX.boom(); this.shake = Math.max(this.shake, 3);
-    this.meleeArc(n, aim, 46, -2, dmg, { heavy: true, stagger: 0.7, knock: 90, elem: n.type, trig: this.curTrig });
+    this.ringFx(n.x, n.y, 46, n.def.color); this.floatText(n.x, n.y - 38, R.name.toUpperCase(), '#ffe27a'); SFX.boom(); this.shake = Math.max(this.shake, 3);
+    const base = { heavy: true, stagger: R.stagger || 0.7, knock: R.knock || 90, status: R.status, elem: n.type, trig: this.curTrig };
+    const ang = Math.atan2(aim.y, aim.x), proj = (a, extra) => this.fireProj({ x: n.x, y: n.y, ang: a, speed: R.speed || 230, dmg, r: 4, life: 1.0, team: 'p', color: n.def.color, owner: n, status: R.status, heavy: true, ...extra });
+    if (R.shape === 'arc') this.meleeArc(n, aim, (R.range || 46) * sc, R.cos == null ? 0.35 : R.cos, dmg, base);
+    else if (R.shape === 'ring') this.meleeArc(n, aim, (R.range || 46) * sc, -2, dmg, base);
+    else if (R.shape === 'shot') { proj(ang, { r: 5, explode: R.explode ? Math.round(R.explode * sc) : 0 }); SFX.shoot(); }
+    else if (R.shape === 'fan') { const c = (R.count || 3) + (st >= 2 ? 2 : 0); for (let i = 0; i < c; i++) proj(ang + (i - (c - 1) / 2) * (R.spread || 0.18)); SFX.shoot(); }
+    else if (R.shape === 'leech') { proj(ang, { leech: true }); SFX.shoot(); }
+    if (R.healOut && o && !o.exh && o.hp > 0) {
+      o.hp = Math.min(o.maxhp, o.hp + o.maxhp * R.healOut * (1 + 0.25 * st));
+      if (R.cure) o.fx = null;
+      this.healFx(o);
+    }
     this.lastPD = -9; this.lastParry = -9; this.addLink(8);
     return true;
   };

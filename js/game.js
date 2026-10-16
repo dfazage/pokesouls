@@ -338,7 +338,7 @@ export class Game {
     this.ringFx(n.x, n.y, 22, n.def.color); SFX.pick();
     for (let k = 0; k < 10; k++) this.spark(n.x, n.y - 8, k % 2 ? '#ffffff' : n.def.color, 1);
     this.emit('toast', n.def.name + ' entre au combat');
-    this.tryRelay(n);
+    this.tryRelay(n, o);
     return true;
   }
   autoSwitch() { for (let k = 1; k <= 2; k++) { const i = (this.chiefIdx + k) % 3; if (!this.team[i].exh) { this.switchTo(i, true); return; } } this.die(); }
