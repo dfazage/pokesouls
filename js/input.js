@@ -29,6 +29,7 @@ export function padLabel(a) {
   const w = padBtnName(PADACT.mod);
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
+    case 'link': return PADACT.link === PADDEF.link ? padBtnName(4) + '+' + padBtnName(PADACT.mod) : padBtnName(PADACT.link);
     case 'run': return padBtnName(PADACT.dodge) + ' (maintenu)';
     case 'berry': return w + '+' + padBtnName(3); case 'candy': return w + '+' + padBtnName(2); case 'ether': return w + '+' + padBtnName(1); case 'revive': return w + '+' + padBtnName(0);
     default: return a in PADACT ? padBtnName(PADACT[a]) : '';
@@ -168,10 +169,12 @@ function pollPad() {
   if (any) lastDev = 'pad';
   const mod = !!btnPrev[PADACT.mod];   // R tenu : les boutons de face deviennent des objets
   for (const [b, act] of Object.entries(PAD)) {
+    if (act === 'link' && PADACT.link === PADDEF.link) continue;   // par défaut le Lien se lance par L + R (voir plus bas)
     const item = mod && PAD_ITEM[b], ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant R
-    if (padEdge.has(+b) && !ign && !item) pressedNow.add(act);
+    if (padEdge.has(+b) && !ign && !item && !(act === 'ability' && mod)) pressedNow.add(act);   // L pendant R = Lien, pas la capacité
     if (btnPrev[b] && !ign && !item) padDown.add(act); else padDown.delete(act);
   }
+  if ((padEdge.has(PADACT.mod) && btnPrev[4]) || (padEdge.has(4) && mod)) pressedNow.add('link');   // Lien : L + R
   if (mod) for (const [b, item] of Object.entries(PAD_ITEM)) if (padEdge.has(+b)) pressedNow.add(item);   // R + bouton de face fixe : haut baie, gauche bonbon, droite (A) huile, bas rappel
   { // stick droit, R relâché : un coup de stick à gauche / droite change de cible verrouillée
     const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);

@@ -38,16 +38,19 @@ export function createPadNav() {
       cur.value = Math.max(+cur.min, Math.min(+cur.max, +cur.value + (dir === 'right' ? 5 : -5)));
       cur.dispatchEvent(new Event('input', { bubbles: true })); return;
     }
-    const a = cur.getBoundingClientRect(), [fx, fy] = center(cur);
+    const a = cur.getBoundingClientRect(), [fx, fy] = center(cur), horiz = dir === 'left' || dir === 'right';
     let best = null, bs = Infinity;
     for (const e of list(r)) {
       if (e === cur) continue;
       const q = e.getBoundingClientRect(), x = q.left + q.width / 2, y = q.top + q.height / 2;
-      const horiz = dir === 'left' || dir === 'right';
-      const along = dir === 'right' ? x - fx : dir === 'left' ? fx - x : dir === 'down' ? y - fy : fy - y;
-      if (along < 4) continue;
-      const across = horiz ? gap(a.top, a.bottom, q.top, q.bottom) + Math.abs(y - fy) * 0.15 : gap(a.left, a.right, q.left, q.right) + Math.abs(x - fx) * 0.15;
-      const score = along + across * 3;
+      // distance bord à bord dans le sens du déplacement (les centres trompent entre une grande carte et un petit bouton) ; il faut être réellement « de ce côté »
+      const along = dir === 'right' ? q.left - a.right : dir === 'left' ? a.left - q.right : dir === 'down' ? q.top - a.bottom : a.top - q.bottom;
+      const cAlong = dir === 'right' ? x - fx : dir === 'left' ? fx - x : dir === 'down' ? y - fy : fy - y;
+      if (cAlong < 4 || along < -Math.min(a.width, a.height) * 0.5) continue;
+      // écart sur l'autre axe : 0 si les deux éléments se font face (même rangée / même colonne) ; sinon fortement pénalisé
+      const cross = horiz ? gap(a.top, a.bottom, q.top, q.bottom) : gap(a.left, a.right, q.left, q.right);
+      const off = horiz ? Math.abs(y - fy) : Math.abs(x - fx);
+      const score = Math.max(0, along) + cross * 6 + off * 0.25;
       if (score < bs) { bs = score; best = e; }
     }
     if (best) mark(best);
