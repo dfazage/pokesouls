@@ -561,8 +561,8 @@ export class Game {
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
     if (this.lock === e) this.lock = null;
-    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#c9a7ff'); }
-    this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#c9a7ff', e.boss ? 40 : 12); SFX.hit();
+    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); }
+    this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
     if (e.big && !this.prog[this.mapIdx].bigDead) {
       this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
@@ -934,7 +934,7 @@ export class Game {
     const z = M.zoneAt(this.world, c.x, c.y);
     if (z && z.area && z.area !== this.lastArea) { this.lastArea = z.area; this.emit('area', z); }
     const s = this.souvenir;
-    if (s && s.map === this.mapIdx && hyp(s.x - c.x, s.y - c.y) < 14) { this.essence += s.amount; this.floatText(c.x, c.y - 30, '+' + s.amount, '#c9a7ff'); this.souvenir = null; SFX.pick(); this.save(); this.emit('toast', 'Souvenir récupéré'); }
+    if (s && s.map === this.mapIdx && hyp(s.x - c.x, s.y - c.y) < 14) { this.essence += s.amount; this.floatText(c.x, c.y - 30, '+' + s.amount, '#ffd37a'); this.souvenir = null; SFX.pick(); this.save(); this.emit('toast', 'Souvenir récupéré'); }
     // feux
     for (const b of this.world.bonfires) if (hyp((b.tx + 0.5) * TS - c.x, (b.ty + 0.5) * TS - c.y) < 42) {
       this.prompt = this.lit.has(b.id) ? { text: 'Se recueillir au feu', act: () => { this.last = { map: this.mapIdx, id: b.id }; this.emit('menu', b); } } : { text: 'Allumer le feu', act: () => this.lightBonfire(b) };
