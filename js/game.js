@@ -15,7 +15,9 @@ import { installReserve } from './reserve.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
-const SAVE_KEY = 'pokesouls.gen1.v2';
+const saveKey = ch => (!ch || ch === 'kanto' ? 'pokesouls.gen1.v2' : 'pokesouls.' + ch + '.v1');   // une sauvegarde par chapitre
+const LAST_KEY = 'pokesouls.lastchapter';
+export const lastChapter = () => { try { const c = localStorage.getItem(LAST_KEY); return M.CHAPTER_MAPS[c] && M.CHAPTER_MAPS[c].length && localStorage.getItem(saveKey(c)) ? c : 'kanto'; } catch (e) { return 'kanto'; } };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
 const hyp = Math.hypot;
@@ -47,7 +49,8 @@ const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: fal
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
-  constructor() {
+  constructor(chapter = 'kanto') {
+    this.chapter = M.setChapter(chapter);   // les cartes du chapitre deviennent M.MAPS
     this.emit = () => {};
     this.dev = /[?&]dev/.test(location.search);
     this.god = false;
@@ -93,11 +96,12 @@ export class Game {
     return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
-  save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
-  static exists() { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } }
-  static wipe() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* rien */ } }
+  save() { try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
+  static exists(ch) { try { return !!localStorage.getItem(saveKey(ch)); } catch (e) { return false; } }
+  static existsAny() { return Object.keys(M.CHAPTER_MAPS).some(c => M.CHAPTER_MAPS[c].length && Game.exists(c)); }
+  static wipe(ch) { try { localStorage.removeItem(saveKey(ch)); } catch (e) { /* rien */ } }
   load() {
-    let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { s = null; }
+    let s = null; try { s = JSON.parse(localStorage.getItem(saveKey(this.chapter)) || 'null'); } catch (e) { s = null; }
     if (!s || s.v !== 2 || !(s.picks || s.starters)) return false;
     // anciennes sauvegardes : { fire: n, water: n, grass: n } -> clés de lignées
     this.picks = s.picks || ['fire', 'water', 'grass'].map(t => D.STARTERS[t][s.starters[t]][0]);
@@ -148,7 +152,7 @@ export class Game {
     this.placeTeam(b ? (b.tx + 0.5) * TS : (s.tx + 0.5) * TS, b ? (b.ty + 1.6) * TS : (s.ty + 0.5) * TS);
     this.snapCam(); this.lastArea = null; this.lock = null;
     this.state = 'play';
-    this.emit('area', { zone: 'Chapitre Génération 1 · Carte ' + (idx + 1), area: this.world.name });
+    this.emit('area', { zone: 'Chapitre Génération ' + M.CHAPTER_INFO[this.chapter].gen + ' · Carte ' + (idx + 1), area: this.world.name });
     this.save();
   }
   travelOptions() {

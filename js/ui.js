@@ -25,25 +25,26 @@ function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
 // ---------- choix du chapitre (région) ----------
 const CHAPTERS = [
-  { n: 'I', name: 'Kanto', sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', open: true },
-  { n: 'II', name: 'Johto', sil: 'sil-lugia' }, { n: 'III', name: 'Hoenn', sil: 'sil-rayquaza' },
+  { id: 'kanto', n: 'I', name: 'Kanto', sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', spr: 'mewtwo' },
+  { id: 'johto', n: 'II', name: 'Johto', sub: 'Trois bêtes, un sanctuaire marin, un temple hors du temps', spr: 'lugia', sil: 'sil-lugia' }, { n: 'III', name: 'Hoenn', sil: 'sil-rayquaza' },
   { n: 'IV', name: 'Sinnoh', sil: 'sil-giratina' }, { n: 'V', name: 'Unova', sil: 'sil-kyurem' },
 ];
 export function showWorlds(onPick, onBack) {
   const el = $('#worlds'); el.classList.add('show');
   const lock = '<svg class="wlock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  const mew = A.db && A.db.mewtwo && A.db.mewtwo.anims && A.db.mewtwo.anims.Idle ? A.db.mewtwo.anims.Idle.file : '';
-  el.innerHTML = `<h2>Choisissez un chapitre</h2><p class="sub">PokéSouls se raconte en cinq chapitres, un par région. Le premier est en cours de construction ; les autres restent verrouillés jusqu’à leur tour.</p>
+  const idleOf = k => A.db && A.db[k] && A.db[k].anims && A.db[k].anims.Idle ? A.db[k].anims.Idle.file : '';
+  const isOpen = c => !!(c.id && M.CHAPTER_MAPS[c.id] && M.CHAPTER_MAPS[c.id].length);
+  el.innerHTML = `<h2>Choisissez un chapitre</h2><p class="sub">PokéSouls se raconte en cinq chapitres, un par région. Chaque chapitre a sa propre sauvegarde ; les suivants restent verrouillés jusqu’à leur tour.</p>
     <p class="wtag">▾ EN DÉVELOPPEMENT</p>
-    <div class="wgrid">${CHAPTERS.map(c => c.open
-      ? `<button class="wcard open" id="w-kanto"><span class="wbg"></span>${mew ? `<i class="wspr" style="background-image:url(assets/${mew})"></i>` : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
+    <div class="wgrid">${CHAPTERS.map(c => isOpen(c)
+      ? `<button class="wcard open" id="w-${c.id}"><span class="wbg"></span>${idleOf(c.spr) ? `<i class="wspr" style="background-image:url(assets/${idleOf(c.spr)})"></i>` : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
       : `<div class="wcard locked">${lock}<img class="wsil" src="assets/ui/${c.sil}.png" alt="" aria-hidden="true"><span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
     <div class="act"><button id="w-back">← Retour</button></div>`;
   const back = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onBack(); };
   const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); back(); } };
   window.addEventListener('keydown', onKey, true);
   $('#w-back').onclick = back;
-  $('#w-kanto').onclick = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onPick('kanto'); };
+  CHAPTERS.filter(isOpen).forEach(c => { $('#w-' + c.id).onclick = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onPick(c.id); }; });
 }
 
 export function showStarters(onDone, onBack) {
@@ -151,27 +152,27 @@ export function showBag(game, onClose) {
 // ---------- voyage entre les cartes ----------
 // Carte du monde : îles reliées par une route, liste des chapitres à gauche, fiche de la carte choisie à droite.
 const ROMAN = ['I', 'II', 'III', 'IV', '✦'];
-const NODES = [[11.5, 58], [26, 23], [50.5, 63], [63, 38.5], [86, 18]];   // position des cartes sur l'illustration (en % de la largeur et de la hauteur ; ratio 2576:1438)
+// position des cartes sur l'illustration : M.CHAPTER_INFO[chapitre].nodes (en % de la largeur et de la hauteur ; ratio 2576:1438)
 let travelSel = -1, travelSpot = 'start';
 export function showTravel(game, onClose, onGo) {
-  const opts = game.travelOptions();
+  const opts = game.travelOptions(), info = M.CHAPTER_INFO[game.chapter], NODES = info.nodes;
   if (travelSel < 0 || travelSel >= opts.length) { travelSel = game.mapIdx; travelSpot = 'start'; }
   const render = () => {
     const o = opts[travelSel], d = M.MAPS[o.idx], bs = D.BOSSES[d.boss], col = bs.color;
     if (!o.spots.some(x => x.id === travelSpot)) travelSpot = 'start';
     const here = o.idx === game.mapIdx;
     const hid = k => M.MAPS[k].secret && !opts[k].open;   // la carte secrète reste cachée tant qu'elle n'est pas ouverte
-    const roads = NODES.slice(1).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.558}" x2="${n[0]}" y2="${n[1] * 0.558}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
+    const roads = NODES.slice(1, opts.length).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.558}" x2="${n[0]}" y2="${n[1] * 0.558}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
     const nodes = opts.map((x, k) => { if (hid(k)) return `<span class="wghost" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">?</span>`; const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
     const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
     const prev = opts[o.idx - 1];
     const body = o.open
       ? `<div class="wsp"><h4>Destination</h4>${o.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</div>`
       : `<p class="sub">Cette carte est scellée. Elle s’ouvre quand le boss de <b>${esc(prev ? prev.name : '')}</b> tombe.</p>`;
-    const m = open(`<div class="panel worldmap"><div class="bhead"><h2>Carte du chapitre · Génération 1</h2></div>
+    const m = open(`<div class="panel worldmap"><div class="bhead"><h2>Carte du chapitre · Génération ${info.gen}</h2></div>
       <div class="wm-cols">
         <div class="wm-list"><h4>Chapitres</h4>${list}</div>
-        <div class="wm-map"><svg viewBox="0 0 100 55.8" preserveAspectRatio="none" aria-hidden="true">
+        <div class="wm-map ${game.chapter}" style="background-image:linear-gradient(rgba(6,8,14,.12),rgba(6,8,14,.28)),url(${info.world})"><svg viewBox="0 0 100 55.8" preserveAspectRatio="none" aria-hidden="true">
           <g>${roads}</g></svg>${nodes}</div>
         <div class="wm-det" style="--c:${col}">
           <div class="wd-art ${o.open ? '' : 'sealed'}"><img src="assets/sprites/${bs.sprite}/portrait.png" alt="" onerror="this.style.display='none'"></div>
@@ -277,7 +278,7 @@ function showConfirm(title, text, yes, onYes, onNo) {
 // ---------- crédits ----------
 export function showCredits(onClose) {
   const m = open(`<div class="panel wide"><h2>Crédits</h2>
-    <h4>Musique libre de repli (OpenGameArt.org)</h4><div class="cred">${Object.entries(TRACKS).map(([id, t]) => `<div class="krow"><span><b>${esc(t.title)}</b> — ${esc(t.author)} <small>(${esc(t.use)})</small></span><a href="${t.url}" target="_blank" rel="noopener">${esc(t.license)}</a></div>`).join('')}</div>
+    <h4>Musique libre de repli (OpenGameArt.org)</h4><div class="cred">${Object.entries(TRACKS).filter(([, t]) => t.url).map(([id, t]) => `<div class="krow"><span><b>${esc(t.title)}</b> — ${esc(t.author)} <small>(${esc(t.use)})</small></span><a href="${t.url}" target="_blank" rel="noopener">${esc(t.license)}</a></div>`).join('')}</div>
     <h4>Sprites</h4><p class="sub">PMDCollab SpriteCollab (CC BY-NC 4.0), merci à tous les artistes du projet.</p>
     <h4>Décors et objets</h4><p class="sub">Icônes d'objets : PokéAPI/sprites (Nintendo / Game Freak). Poké Ball : sprite de Pokémon Rubis/Saphir (Game Freak / Nintendo) via The Spriters Resource. Feu de camp et cristaux/piliers de glace : feuilles pixel art fournies pour le projet (auteurs à préciser).</p>
     <h4>Effets d'attaque</h4><p class="sub">effets pixel art de PMDCollab / Pokémon Mystery Dungeon (projet de fan non commercial) ; Dämmerlicht BFX par KotatsuAkira (gratuit, crédit demandé) ; PIPO Fire par PIPOSCHPATZ (CC BY 4.0) ; Water Cannon par Anton Chi.</p>
@@ -335,7 +336,7 @@ export function showReserve(game, onBack) {
     const b = game.bench[resSel], o = game.team[outSel];
     const thumb = m => `<img src="${portrait(m.id)}" alt="">`;
     const chips = m => D.typesOf(m.type, m.id).map(ty => `<u class="ty-${ty}">${D.TYPE_FR[ty] || ty}</u>`).join('');
-    const maps = M.MAPS.map((d, k) => ({ d, k, key: EXTRA_BY_MAP[k] }));
+    const maps = M.MAPS.map((d, k) => ({ d, k, key: game.chapter === 'kanto' ? EXTRA_BY_MAP[k] : null }));
     const found = maps.filter(x => x.key && game.hasMember(x.key)).length;
     const locked = maps.filter(x => !(x.key && game.hasMember(x.key))).map(x => `<div class="rlock"><b>???</b><small>${x.d.secret && x.k > game.unlocked ? '???' : esc(x.d.name)}</small></div>`).join('');
     let det = '<p class="sub">La réserve est vide.</p>';

@@ -207,7 +207,7 @@ export class HD2D {
     const T_ = c => WD.canvasTex(c, { repeatY: true });
     this.tex = [floorTex, emisTex, T_(tx.side), T_(tx.sideE), WD.canvasTex(tx.top, { repeatY: true }), WD.canvasTex(tx.topE, { repeatY: true })];
     const [fT, eT, sT, sE, tT, tE] = this.tex;
-    const tint = cfg.emisTint, pulse = (key === 'lava' || key === 'lab' || key === 'mystic') ? 1 : 0.4;
+    const tint = cfg.emisTint, pulse = (key === 'lava' || key === 'lab' || key === 'mystic' || key === 'bell') ? 1 : 0.4;
     this.mats = {
       ground: WD.terrainMaterial(sh, fT, [g.floor.width, g.floor.height], eT, [emis.width || 1, emis.height || 1], 0, { emisK: cfg.emisK, tint }),
       side: WD.terrainMaterial(sh, sT, [tx.side.width, tx.side.height], sE, [tx.sideE.width, tx.sideE.height], 1, { emisK: cfg.emisK * 1.1, tint, pulse }),

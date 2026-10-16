@@ -7,7 +7,7 @@ export const CINE_UNLOCK = 9.3;   // les commandes sont rendues
 export const CINE_SHORT = 6;      // la version courte démarre ici (revenu après une défaite)
 
 // Signature d'éveil par boss : levit = lévitation psychique, dive = piqué enflammé, descend = descente givrée.
-const SIG = { mewtwo: 'levit', mew: 'levit', moltres: 'dive', zapdos: 'dive', dragonite: 'dive', articuno: 'descend' };
+const SIG = { mewtwo: 'levit', mew: 'levit', moltres: 'dive', zapdos: 'dive', dragonite: 'dive', articuno: 'descend', raikou: 'dive' };
 const IMPACT = { levit: 4.6, dive: 4.6, descend: 5.8 };
 
 // image clé de la caméra : [t, tangage °, distance, champ °, hauteur visée (tuiles), part de focus sur le boss]

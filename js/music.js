@@ -14,6 +14,8 @@ export const TRACKS = {
   MINIBOSS_A: { title: 'Sinister Boss Appears', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/sinister-boss-appears', use: 'Gros mob' },
   MINIBOSS_B: { title: 'Dramatic Boss Encounter', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/dramatic-boss-encounter', use: 'Gros mob (alternance)' },
   SUBBOSS_BIRDS: { title: 'Boss Battle 2 (Symphonic Metal)', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-2-symphonic-metal', use: 'Artikodin, Électhor, Sulfura' },
+  MAP_J1: { title: 'à choisir (Edo)', author: '—', license: '—', url: '', use: 'Johto · Tour Carillon' },
+  SUBBOSS_BEASTS: { title: 'à choisir (Edo, taiko)', author: '—', license: '—', url: '', use: 'Raikou, Entei, Suicune' },
   SUBBOSS_KINGS: { title: 'Boss Battle Music', author: 'SubspaceAudio', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-music', use: 'Rois de Kanto' },
   SUBBOSS_KINGS_ALT: { title: 'Ancient Power of Serpents', author: 'josepharaoh99', license: 'CC0', url: 'https://opengameart.org/content/ancient-power-of-serpents', use: 'Rois de Kanto (variante)' },
   BOSS_MEWTWO_P1: { title: 'Colossal Boss Battle Theme', author: 'Matthew Pablo (http://www.matthewpablo.com)', license: 'CC-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/content/colossal-boss-battle-theme', use: 'Mewtwo, phase 1' },
@@ -113,7 +115,7 @@ export const Music = {
 
 // ---------- chef d'orchestre : choisit la piste selon le contexte (BOSS > MINIBOSS > MAP > HUB > MENU) ----------
 let miniOn = false, miniOff = 0, miniAlt = false, miniId = 'MINIBOSS_A', lastMap = -1;
-const BOSS_TRACK = { articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
+const BOSS_TRACK = { raikou: 'SUBBOSS_BEASTS', entei: 'SUBBOSS_BEASTS', suicune: 'SUBBOSS_BEASTS', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
   if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »

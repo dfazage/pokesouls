@@ -9,9 +9,11 @@ from PIL import Image
 raw, out = sys.argv[1], sys.argv[2]
 spec = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'species.json')))
 NAMES = {'%04d' % d: slug for d, slug, fr in spec}
-db = {}
+dbp = os.path.join(out, 'sprites.json')
+db = json.load(open(dbp)) if os.path.exists(dbp) else {}   # fusion : on n'ajoute que les espèces dont la feuille brute est présente
 for pid, name in NAMES.items():
     d = os.path.join(raw, pid)
+    if not os.path.exists(os.path.join(d, 'AnimData.xml')): continue
     root = ET.parse(os.path.join(d, 'AnimData.xml')).getroot()
     anims = {}
     for a in root.iter('Anim'):
