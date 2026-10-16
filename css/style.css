@@ -543,6 +543,11 @@ button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-siz
 body.padmod #quick .qs:not(.empty){box-shadow:0 0 0 2px var(--acc),0 0 14px var(--acc);transform:scale(1.08)}
 #quick .qs{transition:transform .08s,box-shadow .08s}
 
+/* logo officiel (écran de chargement et accueil) */
+img.logo{display:block;margin:0 auto;height:auto;filter:drop-shadow(0 4px 22px rgba(0,0,0,.55)) drop-shadow(0 0 28px rgba(255,170,60,.22));user-select:none;-webkit-user-drag:none}
+#loading img.logo{width:460px;margin-bottom:22px}
+#title .tt h1{background:none;filter:none;animation:tin 2.2s ease-out both;letter-spacing:0;margin-right:0;font-size:0;line-height:0}
+#title .tt img.logo{width:540px;max-width:90vw;margin:-6px auto 4px}
 /* roue d'objets (manette) */
 #iwheel{position:absolute;left:0;top:0;width:150px;height:150px;opacity:0;pointer-events:none;transition:opacity .08s}
 #iwheel.on{opacity:1}
