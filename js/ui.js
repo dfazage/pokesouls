@@ -151,7 +151,7 @@ export function showBag(game, onClose) {
 // ---------- voyage entre les cartes ----------
 // Carte du monde : îles reliées par une route, liste des chapitres à gauche, fiche de la carte choisie à droite.
 const ROMAN = ['I', 'II', 'III', 'IV', '✦'];
-const NODES = [[13, 64], [32, 40], [52, 62], [72, 38], [88, 16]];   // position des cartes (en % de la zone de carte, ratio 100:70)
+const NODES = [[11.5, 58], [26, 23], [50.5, 63], [63, 38.5], [86, 18]];   // position des cartes sur l'illustration (en % de la largeur et de la hauteur ; ratio 2576:1438)
 let travelSel = -1, travelSpot = 'start';
 export function showTravel(game, onClose, onGo) {
   const opts = game.travelOptions();
@@ -161,7 +161,7 @@ export function showTravel(game, onClose, onGo) {
     if (!o.spots.some(x => x.id === travelSpot)) travelSpot = 'start';
     const here = o.idx === game.mapIdx;
     const hid = k => M.MAPS[k].secret && !opts[k].open;   // la carte secrète reste cachée tant qu'elle n'est pas ouverte
-    const roads = NODES.slice(1).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.7}" x2="${n[0]}" y2="${n[1] * 0.7}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
+    const roads = NODES.slice(1).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.558}" x2="${n[0]}" y2="${n[1] * 0.558}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
     const nodes = opts.map((x, k) => { if (hid(k)) return `<span class="wghost" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">?</span>`; const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
     const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
     const prev = opts[o.idx - 1];
@@ -171,9 +171,7 @@ export function showTravel(game, onClose, onGo) {
     const m = open(`<div class="panel worldmap"><div class="bhead"><h2>Carte du chapitre · Génération 1</h2></div>
       <div class="wm-cols">
         <div class="wm-list"><h4>Chapitres</h4>${list}</div>
-        <div class="wm-map"><svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true">
-          <path class="isle" d="M4 52 C2 36 12 24 24 22 C32 12 48 14 56 22 C66 16 80 24 84 36 C94 40 96 54 86 62 C74 68 60 66 50 68 C36 70 20 68 12 64 C7 61 5 57 4 52Z"/>
-          <path class="isle small" d="M80 8 C84 4 94 5 96 11 C98 18 92 24 86 24 C80 23 76 14 80 8Z"/>
+        <div class="wm-map"><svg viewBox="0 0 100 55.8" preserveAspectRatio="none" aria-hidden="true">
           <g>${roads}</g></svg>${nodes}</div>
         <div class="wm-det" style="--c:${col}">
           <div class="wd-art ${o.open ? '' : 'sealed'}"><img src="assets/sprites/${bs.sprite}/portrait.png" alt="" onerror="this.style.display='none'"></div>
@@ -220,7 +218,7 @@ function padDiagram() {
     ${ln(830, 208, R - 6, 80)}${tx(R, 76, 'start', f[5] + ' · Objets', 'Maintenir + bouton de face')}
     ${ln(616, 297, R - 6, 124)}${tx(R, 120, 'start', s[1] + ' · Pause', '')}
     ${ln(822, 363, R - 6, 170)}<text x="${R}" y="166" class="pd-n">Boutons de face</text>
-    <text x="${R}" y="182" class="pd-a">${f[3]} Attaque lourde</text><text x="${R}" y="196" class="pd-a">${f[2]} Attaque légère</text><text x="${R}" y="210" class="pd-a">${f[1]} Interagir</text><text x="${R}" y="224" class="pd-a">${f[0]} Esquive · maintenu : course</text>
+    <text x="${R}" y="182" class="pd-a">${f[3]} Attaque lourde</text><text x="${R}" y="196" class="pd-a">${f[2]} Attaque légère</text><text x="${R}" y="210" class="pd-a">${f[0]} Interagir</text><text x="${R}" y="224" class="pd-a">${f[1]} Esquive · maintenu : course</text>
     ${ln(660, 520, R - 6, 266)}${tx(R, 262, 'start', 'Stick droit', 'Clic : verrouiller · ← / → : cible')}
     <text x="500" y="306" text-anchor="middle" class="pd-a">Objets rapides : maintenir ${f[5]} puis ${f[3]} baie · ${f[2]} bonbon · ${f[1]} Éther · ${f[0]} Rappel.</text>
   </svg>`;

@@ -613,3 +613,10 @@ svg.pad{max-height:330px}
 #bossline.show{opacity:1;transform:translateX(-50%)}
 #bossline b{display:block;font:700 12px 'Cinzel',Georgia,serif;letter-spacing:.4em;color:var(--bc,#e0b0ff);text-transform:uppercase;margin-bottom:6px}
 #bossline span{font:italic 26px/1.3 'Cormorant Garamond',Georgia,serif;color:#f0e6d0;text-shadow:0 2px 12px #000,0 0 2px #000}
+
+/* carte du chapitre : illustration en fond */
+.wm-map{aspect-ratio:2576/1438;background:linear-gradient(rgba(6,8,14,.12),rgba(6,8,14,.28)),url(../assets/ui/worldmap.jpg) center/cover no-repeat}
+.wm-map .road{stroke:rgba(255,227,166,.85);filter:drop-shadow(0 0 1px #000)}
+.wm-map .road.locked{stroke:rgba(255,255,255,.35)}
+.wn{box-shadow:0 0 0 2px rgba(0,0,0,.55),0 0 14px rgba(0,0,0,.6)}
+.wm-map .wl{color:#fff;text-shadow:0 0 3px #000,0 0 6px #000,1px 1px 0 #000;font-weight:700;background:rgba(8,8,12,.45);padding:1px 6px;border-radius:6px}
