@@ -112,5 +112,18 @@
       3
     ],
     "scale": 0.36
+  },
+  "pillar_plant": {
+    "file": "props/plant_pillars.png",
+    "fw": 72,
+    "fh": 232,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "vary": true,
+    "scale": 0.24
   }
 }
