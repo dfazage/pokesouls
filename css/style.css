@@ -563,3 +563,7 @@ svg.pad{width:100%;height:auto;margin:2px 0 8px;display:block}
 .pd-n{fill:#fff;font:700 11.5px ui-monospace,monospace}.pd-a{fill:rgba(255,255,255,.75);font:11px ui-monospace,monospace}
 .padh{margin:14px 0 0}
 svg.pad{max-height:300px}
+.pd-body{fill:#26262a;stroke:rgba(255,255,255,.28);stroke-width:5}.pd-ring{fill:#1a1a1d;stroke:rgba(255,255,255,.35);stroke-width:5}
+.pd-b{stroke-width:5}.pd-b.in{fill:#17171a;stroke:rgba(255,255,255,.25)}.pd-b:not([class*=" t-"]):not(.in):not(.pd-ring){fill:#2e2e33}
+.pd-f text{font-size:30px}
+svg.pad{max-height:330px}

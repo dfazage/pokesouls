@@ -170,31 +170,36 @@ export function showTravel(game, onClose, onGo) {
 // Schéma de la manette (style Switch Pro) avec l'action de chaque bouton ; les noms des boutons suivent le type détecté.
 function padDiagram() {
   const { f, s } = padFace();
-  const t = (x, y, a, name, act, cls = '') => `<text x="${x}" y="${y}" text-anchor="${a}" class="pd-n ${cls}">${name}</text><text x="${x}" y="${y + 13}" text-anchor="${a}" class="pd-a">${act}</text>`;
-  const ln = d => `<polyline points="${d}" class="pd-l"/>`;
-  return `<svg class="pad" viewBox="0 66 900 268" role="img" aria-label="Schéma de la manette"><g transform="translate(110 0)">
-    <path class="pd-body" d="M150 128h260a62 62 0 0 1 62 62v10a56 56 0 0 1-98 36l-14-16H200l-14 16a56 56 0 0 1-98-36v-10a62 62 0 0 1 62-62z" transform="translate(-30 0)"/>
-    <rect class="pd-t t-eq" x="120" y="84" width="76" height="22" rx="9"/><rect class="pd-t t-fi" x="364" y="84" width="76" height="22" rx="9"/>
-    <rect class="pd-t t-fi" x="116" y="110" width="84" height="14" rx="6"/><rect class="pd-t t-it" x="360" y="110" width="84" height="14" rx="6"/>
-    <circle class="pd-b t-mv" cx="175" cy="166" r="22"/><circle class="pd-b t-mv in" cx="175" cy="166" r="10"/>
-    <path class="pd-b t-mn" d="M205 208h14v-14h14v14h14v14h-14v14h-14v-14h-14z" transform="translate(-14 4)"/>
-    <circle class="pd-b t-lk" cx="330" cy="222" r="19"/><circle class="pd-b t-lk in" cx="330" cy="222" r="9"/>
-    <circle class="pd-b t-fi" cx="385" cy="140" r="11"/><circle class="pd-b t-mv" cx="363" cy="162" r="11"/><circle class="pd-b t-mn" cx="407" cy="162" r="11"/><circle class="pd-b t-eq" cx="385" cy="184" r="11"/>
-    <g class="pd-f"><text x="385" y="144">${f[3]}</text><text x="363" y="166">${f[2]}</text><text x="407" y="166">${f[1]}</text><text x="385" y="188">${f[0]}</text></g>
-    <rect class="pd-b t-mn" x="245" y="140" width="16" height="6" rx="3"/><rect class="pd-b t-mn" x="300" y="140" width="16" height="6" rx="3"/>
-    ${ln('120,95 70,81')}${t(66, 78, 'end', f[6] + ' · Relève', 'Pokémon suivant')}
-    ${ln('116,117 70,119')}${t(66, 116, 'end', f[4] + ' · Capacité', 'Attaque spéciale')}
-    ${ln('245,143 70,157')}${t(66, 154, 'end', s[0] + ' · Carte', 'Téléportation')}
-    ${ln('153,166 70,195')}${t(66, 192, 'end', 'Stick gauche', 'Déplacement · clic : Lien')}
-    ${ln('190,224 70,243')}${t(66, 240, 'end', 'Croix haut', 'Sac (menu)')}
-    ${ln('440,95 470,81')}${t(476, 78, 'start', f[7] + ' · Garde', 'Maintenir · parade juste')}
-    ${ln('444,117 470,119')}${t(476, 116, 'start', f[5] + ' · Objets', 'Maintenir + stick droit')}
-    ${ln('316,143 470,157')}${t(476, 154, 'start', s[1] + ' · Pause', '')}
-    ${ln('420,166 470,200')}<text x="476" y="198" class="pd-n">Boutons de face</text>
-    <text x="476" y="214" class="pd-a">${f[3]} Attaque lourde</text><text x="476" y="228" class="pd-a">${f[2]} Attaque légère</text><text x="476" y="242" class="pd-a">${f[1]} Interagir</text><text x="476" y="256" class="pd-a">${f[0]} Esquive · maintenu : course</text>
-    ${ln('349,226 470,284')}${t(476, 281, 'start', 'Stick droit', 'Clic : verrouiller · gauche / droite : cible')}
-    <text x="270" y="322" text-anchor="middle" class="pd-a">Roue d’objets : maintenir ${f[5]}, pousser le stick droit (↑ baie · ← bonbon · → Éther · ↓ Rappel), relâcher ${f[5]}.</text>
-  </g></svg>`;
+  // Proportions d'une Pro Controller vue de face (repère d'origine 975 × 975, dessin vectoriel original), placée dans le schéma.
+  const K = 0.4, OX = 305, OY = -46, X = x => Math.round(OX + K * x), Y = y => Math.round(OY + K * y);
+  const tx = (x, y, a, name, act) => `<text x="${x}" y="${y}" text-anchor="${a}" class="pd-n">${name}</text>${act ? `<text x="${x}" y="${y + 13}" text-anchor="${a}" class="pd-a">${act}</text>` : ''}`;
+  const ln = (x1, y1, x2, y2) => `<polyline points="${X(x1)},${Y(y1)} ${x2},${y2}" class="pd-l"/>`;
+  const rc = (x, y, w, h, r, c) => `<rect class="pd-b ${c}" x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
+  const ci = (x, y, r, c) => `<circle class="pd-b ${c}" cx="${x}" cy="${y}" r="${r}"/>`;
+  const L = 300, R = 705;   // colonnes de texte (fin du texte à gauche, début à droite)
+  return `<svg class="pad" viewBox="0 0 1000 312" role="img" aria-label="Schéma de la manette"><g transform="translate(${OX} ${OY}) scale(${K})">
+    ${rc(150, 150, 190, 40, 20, 't-eq')}${rc(150, 194, 205, 28, 14, 't-fi')}${rc(640, 150, 190, 40, 20, 't-fi')}${rc(625, 194, 205, 28, 14, 't-it')}
+    <path class="pd-body" d="M150 250Q160 215 230 212L745 212Q815 215 825 250L905 560Q940 700 880 780Q830 830 770 770Q720 700 690 640Q660 600 600 600L375 600Q315 600 285 640Q255 700 205 770Q145 830 95 780Q35 700 70 560Z"/>
+    ${ci(255, 355, 82, 'pd-ring')}${ci(255, 355, 50, 't-mv')}${ci(255, 355, 30, 'in')}
+    <path class="pd-b t-mn" d="M334 430h52v34h34v52h-34v34h-52v-34h-34v-52h34z" transform="translate(-4 -6)"/>
+    ${ci(595, 490, 74, 'pd-ring')}${ci(595, 490, 48, 't-lk')}${ci(595, 490, 28, 'in')}
+    ${ci(715, 303, 34, 't-fi')}${ci(643, 364, 34, 't-mv')}${ci(786, 363, 34, 't-mn')}${ci(715, 425, 34, 't-eq')}
+    ${ci(380, 297, 21, 't-mn')}${ci(595, 297, 21, 't-mn')}${rc(415, 345, 36, 36, 6, '')}${ci(540, 363, 20, '')}${rc(468, 540, 36, 30, 6, '')}
+    <g class="pd-f"><text x="715" y="313">${f[3]}</text><text x="643" y="374">${f[2]}</text><text x="786" y="373">${f[1]}</text><text x="715" y="435">${f[0]}</text><text x="380" y="306">−</text><text x="595" y="306">+</text></g>
+  </g>
+    ${ln(150, 170, L + 6, 34)}${tx(L, 30, 'end', f[6] + ' · Relève', 'Pokémon suivant')}
+    ${ln(150, 208, L + 6, 80)}${tx(L, 76, 'end', f[4] + ' · Capacité', 'Attaque spéciale')}
+    ${ln(360, 297, L + 6, 124)}${tx(L, 120, 'end', s[0] + ' · Carte', 'Téléportation')}
+    ${ln(175, 340, L + 6, 168)}${tx(L, 164, 'end', 'Stick gauche', 'Déplacement · clic : Lien')}
+    ${ln(300, 490, L + 6, 226)}${tx(L, 222, 'end', 'Croix haut', 'Sac (menu)')}
+    ${ln(830, 170, R - 6, 34)}${tx(R, 30, 'start', f[7] + ' · Garde', 'Maintenir · parade juste')}
+    ${ln(830, 208, R - 6, 80)}${tx(R, 76, 'start', f[5] + ' · Objets', 'Maintenir + stick droit')}
+    ${ln(616, 297, R - 6, 124)}${tx(R, 120, 'start', s[1] + ' · Pause', '')}
+    ${ln(822, 363, R - 6, 170)}<text x="${R}" y="166" class="pd-n">Boutons de face</text>
+    <text x="${R}" y="182" class="pd-a">${f[3]} Attaque lourde</text><text x="${R}" y="196" class="pd-a">${f[2]} Attaque légère</text><text x="${R}" y="210" class="pd-a">${f[1]} Interagir</text><text x="${R}" y="224" class="pd-a">${f[0]} Esquive · maintenu : course</text>
+    ${ln(660, 520, R - 6, 266)}${tx(R, 262, 'start', 'Stick droit', 'Clic : verrouiller · ← / → : cible')}
+    <text x="500" y="306" text-anchor="middle" class="pd-a">Roue d’objets : maintenir ${f[5]}, pousser le stick droit (↑ baie · ← bonbon · → Éther · ↓ Rappel), relâcher ${f[5]}.</text>
+  </svg>`;
 }
 
 // ---------- commandes (lecture et modification) ----------
