@@ -324,7 +324,7 @@ export function installElements(G, d) {
   // ======================= relais, focus, indices =======================
   // changer de Pokémon juste après une esquive juste ou une parade : le nouveau venu frappe tout de suite avec son élément
   P.tryRelay = function (n, o) {
-    if (this.t - this.lastPD > 1.0 && this.t - this.lastParry > 1.0) return false;
+    if (this.t - this.lastPD > this.relayWin && this.t - this.lastParry > this.relayWin) return false;
     const R = relayOf(n), st = n.stage || 0, sc = 1 + 0.15 * st, aim = n.face, reson = !!(o && o.type === n.type), dmg = this.powerOf(n, { kind: 'heavy' }) * R.mult * (reson ? 1.25 : 1);
     this.curElem = n.type; this.curTrig = this.trigOf(n, { kind: 'relay' });
     this.ringFx(n.x, n.y, 46, n.def.color); this.floatText(n.x, n.y - 38, R.name.toUpperCase() + (reson ? ' · RÉSONANCE' : ''), reson ? '#ffffff' : '#ffe27a'); SFX.boom(); this.shake = Math.max(this.shake, 3);

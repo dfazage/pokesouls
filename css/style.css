@@ -593,3 +593,13 @@ svg.pad{max-height:330px}
 #worlds .act{margin-top:6px}
 @media (max-width:900px){.wgrid{grid-template-columns:repeat(2,1fr)}.wcard.open{grid-column:1/-1}.wcard{min-height:260px}}
 @keyframes wspr{0%{background-position:0 0}12.5%{background-position:-128px 0}25%{background-position:-256px 0}37.5%{background-position:-384px 0}50%{background-position:-512px 0}62.5%{background-position:-640px 0}75%{background-position:-768px 0}87.5%{background-position:-896px 0}}
+
+/* fenêtre après parade / esquive : deux options bien visibles au-dessus du Pokémon */
+#opp{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;opacity:0;pointer-events:none;transition:opacity .1s;will-change:transform;background:rgba(18,15,12,.82);border:2px solid #ffe27a!important;padding:5px 9px 8px;font:700 11px ui-monospace,monospace;color:#ffe9b0;text-shadow:1px 1px 0 #000;clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
+#opp.on{opacity:1;animation:cbpulse .5s steps(2) infinite}
+#opp i{font-style:normal;min-width:24px;height:24px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:#fff;color:#2a1b08;border:2px solid #d9a441;text-shadow:none}
+#opp em{font-style:normal;margin-right:8px;letter-spacing:.06em;text-transform:uppercase}
+#opp i:nth-of-type(2){background:#9fe8ff;border-color:#4aa8d0}
+#opp.dod i:nth-of-type(1),#opp.dod em:nth-of-type(1){display:none}
+#opp u{position:absolute;left:4px;bottom:2px;height:3px;background:#ffe27a;text-decoration:none;max-width:calc(100% - 8px)}
+#opp.low u{background:#ff6a4a}

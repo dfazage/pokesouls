@@ -618,7 +618,7 @@ export class Game {
     if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if (this.guardT < 0.22 && o.parry !== false) {
         this.lastParry = this.t; this.tutEvent('parry'); SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
-        m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.4;
+        m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.6;
         return 'parry';
       }
       const red = m.def.guard != null ? m.def.guard : 0.35; dmg = Math.max(1, Math.round(dmg * red));
