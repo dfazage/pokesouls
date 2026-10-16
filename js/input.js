@@ -1,3 +1,5 @@
+import { unlockAudio } from './audio.js';
+import { Music } from './music.js';
 // Clavier (QWERTY/AZERTY) + souris + manette, avec commandes modifiables (stockées dans le navigateur).
 export const ACTIONS = [
   ['Déplacement', [['up', 'Haut'], ['down', 'Bas'], ['left', 'Gauche'], ['right', 'Droite'], ['run', 'Courir'], ['dodge', 'Esquive']]],
@@ -157,6 +159,7 @@ function pollPad() {
   let any = Math.hypot(padAxes[0], padAxes[1]) > 0.6;
   rawEdge.length = 0; rawHeld.length = 0;   // boutons bruts du navigateur (assistant de configuration et affichage de contrôle)
   for (let i = 0; i < Math.min(40, gp.buttons.length); i++) { const r = !!(gp.buttons[i] && gp.buttons[i].pressed); if (r && !rawPrev[i]) rawEdge.push(i); rawPrev[i] = r; if (r) rawHeld.push(i); }
+  if (rawEdge.length) { unlockAudio(); Music.unlock(); }   // un bouton de manette débloque le son (pas de clic ni de touche)
   if (rawLearn && rawEdge.length) { const cb = rawLearn; rawLearn = null; btnPrev.length = 0; cb(rawEdge[0]); return; }
   if (rawLearn) return;
   for (let i = 0; i < 17; i++) {
