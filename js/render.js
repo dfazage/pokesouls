@@ -144,7 +144,7 @@ function drawObsSolid(ctx, g, o) {
     if (Math.random() < 0.25) g.parts.push({ x: x + (Math.random() - 0.5) * 8, y, z: h, vx: 0, vy: 0, vz: -10, life: 0.3, max: 0.3, c: '#fff58a', size: 1 }); }
   else if (o.kind === 'basalt' && pickProp('obs_basalt')) {  // colonne de basalte : 6 stades de dégâts de la planche (props.json)
     const r = Math.max(0, Math.min(0.999, o.hp / o.maxhp)), f = 5 - Math.floor(r * 6), p = PROPS.db.obs_basalt, sc = p.scale;
-    ctx.save(); ctx.beginPath(); ctx.rect(x - 40, y - 120 * sc * h0 - 4, 80, 120 * sc * h0 + 6); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 40, y - 128 * sc * h0 - 4, 80, 128 * sc * h0 + 6); ctx.clip();
     drawProp(ctx, 'obs_basalt', x, y + 3 + (1 - h0) * 30, g.t, 0, 0, f); ctx.restore(); }
   else if (o.kind === 'rock' || o.kind === 'basalt') { const h = 18 * h0, lava = o.kind === 'basalt', c1 = lava ? '#3a2a2a' : '#8a7a6a', c2 = lava ? '#54403c' : '#b0a090', c3 = lava ? '#241a1a' : '#5e5246';
     poly(ctx, [x - 9, y, x - 8, y - h * 0.6, x - 3, y - h, x + 4, y - h * 0.9, x + 9, y - h * 0.5, x + 8, y], c1); poly(ctx, [x - 8, y - h * 0.6, x - 3, y - h, x + 1, y - h * 0.7, x - 4, y - h * 0.3], c2); poly(ctx, [x + 2, y, x + 4, y - h * 0.6, x + 8, y - h * 0.5, x + 8, y], c3);
