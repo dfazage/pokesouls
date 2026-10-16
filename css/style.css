@@ -83,11 +83,11 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 #combo[data-n="0"] i:nth-of-type(1),#combo[data-n="1"] i:nth-of-type(2){animation:cbpulse .5s steps(2) infinite}
 #combo[data-n="1"] i:nth-of-type(1),#combo[data-n="2"] i{background:#fff;color:#2a1b08;text-shadow:none;transform:translateY(2px)}
 #combo[data-n="1"] i:nth-of-type(1)::before,#combo[data-n="2"] i::before{background:#d9a441}
-/* dernier bouton prêt : couleur à part (rouge-orangé), clignotement du liseré et rebond « appuyable » */
-#combo[data-n="2"] b{width:30px;height:30px;background:#fff;color:#fff;font-size:12px;text-shadow:1px 1px 0 #7a1d05;animation:cbready .5s steps(1) infinite}
-#combo[data-n="2"] b::before{background:#ff4a1c;animation:cbfill .5s steps(1) infinite}
-@keyframes cbready{0%{background:#fff;transform:translateY(0)}50%{background:#ffd23f;transform:translateY(-3px)}}
-@keyframes cbfill{0%{background:#ff4a1c}50%{background:#ff8a2a}}
+/* dernier bouton prêt : couleur à part (vert), clignotement du liseré et rebond « appuyable » */
+#combo[data-n="2"] b{width:30px;height:30px;background:#fff;color:#fff;font-size:12px;text-shadow:1px 1px 0 #06451c;animation:cbready .5s steps(1) infinite}
+#combo[data-n="2"] b::before{background:#1fbf4f;animation:cbfill .5s steps(1) infinite}
+@keyframes cbready{0%{background:#fff;transform:translateY(0)}50%{background:#c8ff7a;transform:translateY(-3px)}}
+@keyframes cbfill{0%{background:#1fbf4f}50%{background:#3df06e}}
 #combo em{position:absolute;left:0;right:0;bottom:-7px;height:4px;background:#000;box-shadow:0 0 0 1px #6b5a46}
 #combo em u{display:block;height:100%;background:#f2c14e;transition:width .05s steps(4)}
 #combo.low em u{background:#e8553a}
