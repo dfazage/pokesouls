@@ -3,6 +3,7 @@ import { A } from './assets.js';
 import { BOSS_THRESHOLDS, NAMES_FR, STATUS } from './data.js';
 import * as M from './maps.js';
 import { Controls, keyLabel } from './input.js';
+import { itemIconFile } from './items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 export const portrait = id => 'assets/' + A.db[id].portrait;
@@ -26,9 +27,10 @@ export function createHud(game) {
       <div class="bar hp"><span class="bl">PV</span><div class="track"><div class="fill" id="chief-hp"></div></div><span class="bv" id="chief-hpt"></span></div><div class="bar st"><span class="bl">END</span><div class="track"><div class="fill" id="chief-st"></div></div><span class="bv"></span></div></div></div>
     <div id="party">${game.team.map((t, i) => `<div class="slot t-${t.type}" data-i="${i}"><img alt=""><em>${i + 1}</em><div class="sbar"><div class="fill"></div></div><b class="mu"></b></div>`).join('')}</div>
     <div id="quick">
-      <div class="qs"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="14" r="6.5" fill="#ff7a8a"/><path d="M12 7.5c0-2 1.2-3.4 3.2-3.8" stroke="#8be3a2" stroke-width="2" stroke-linecap="round"/></svg><b id="berries"></b><small>Baie</small><kbd id="k-berry"></kbd></div>
-      <div class="qs"><svg viewBox="0 0 24 24" fill="none" stroke="#a4f0c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v5l-4.5 8.5A3 3 0 0 0 8.2 21h7.6a3 3 0 0 0 2.7-4.5L14 8V3"/><path d="M8 15h8"/></svg><b id="ethers"></b><small>Huile</small><kbd id="k-ether"></kbd></div>
-      <div class="qs" id="q-candy"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd37a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="8" width="10" height="8" rx="3"/><path d="M7 12l-3-3v6l3-3zM17 12l3-3v6l-3-3z"/></svg><b id="candy"></b><small>Bonbon</small></div>
+      <div class="qs q-up"><img src="${itemIconFile('berry')}" alt=""><b id="berries"></b><kbd id="k-berry"></kbd></div>
+      <div class="qs q-left"><img src="${itemIconFile('candy')}" alt=""><b id="candy"></b></div>
+      <div class="qs q-right"><img src="${itemIconFile('ether')}" alt=""><b id="ethers"></b><kbd id="k-ether"></kbd></div>
+      <div class="qs q-down"><img src="${itemIconFile('revive')}" alt=""><b id="revive"></b></div>
     </div>
     <div id="linkbox"><span class="ll">LIEN</span><div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b><kbd id="k-link"></kbd></div>
     <div id="combo"><span class="cl">COMBO</span><i></i><i></i><b id="combo-t"></b></div>
@@ -41,7 +43,7 @@ export function createHud(game) {
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
     <div id="bossintro"><div class="veil"></div><div class="txt"><div class="sub"></div><div class="nm"></div><div class="ln"></div></div><div class="bar t"></div><div class="bar b"></div></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
-  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
+  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
   slots.forEach(s => s.addEventListener('click', () => game.switchTo(+s.dataset.i)));
   let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '';
@@ -58,6 +60,7 @@ export function createHud(game) {
       E.berries.textContent = game.berries + '/' + game.maxBerries; E.ess.textContent = game.essence;
       E.ethers.textContent = game.ethers + '/' + game.maxEthers;
       { const cn = game.bag.candy || 0; E.candy.textContent = '×' + cn; E.candy.parentNode.classList.toggle('empty', !cn); }
+      { const rv = game.bag.revive || 0; E.revive.textContent = '×' + rv; E.revive.parentNode.classList.toggle('empty', !rv); }
       E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);
       { const lk = game.linkT > 0; E['link-f'].style.width = (lk ? 100 * game.linkT / 8 : game.link) + '%'; E.linkbox.classList.toggle('ready', !lk && game.link >= 100); E.linkbox.classList.toggle('on', lk); E['link-t'].textContent = lk ? Math.ceil(game.linkT) + ' s' : game.link >= 100 ? 'PRÊT' : Math.floor(game.link) + ' %'; root.classList.toggle('linking', lk);
         const cb = game.comboN > 0 && game.t - game.comboAt <= 0.5; E.combo.classList.toggle('on', cb || game.comboN > 0 && game.chief().atk); E.combo.dataset.n = game.comboN; }
