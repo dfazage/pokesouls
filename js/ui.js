@@ -23,7 +23,30 @@ function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music
 
 // ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
-export function showStarters(onDone) {
+// ---------- choix du chapitre (région) ----------
+const CHAPTERS = [
+  { n: 'I', name: 'Kanto', sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', open: true },
+  { n: 'II', name: 'Johto', sil: 'sil-lugia' }, { n: 'III', name: 'Hoenn', sil: 'sil-rayquaza' },
+  { n: 'IV', name: 'Sinnoh', sil: 'sil-giratina' }, { n: 'V', name: 'Unova', sil: 'sil-kyurem' },
+];
+export function showWorlds(onPick, onBack) {
+  const el = $('#worlds'); el.classList.add('show');
+  const lock = '<svg class="wlock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const mew = A.db && A.db.mewtwo && A.db.mewtwo.anims && A.db.mewtwo.anims.Idle ? A.db.mewtwo.anims.Idle.file : '';
+  el.innerHTML = `<h2>Choisissez un chapitre</h2><p class="sub">PokéSouls se raconte en cinq chapitres, un par région. Le premier est en cours de construction ; les autres restent verrouillés jusqu’à leur tour.</p>
+    <p class="wtag">▾ EN DÉVELOPPEMENT</p>
+    <div class="wgrid">${CHAPTERS.map(c => c.open
+      ? `<button class="wcard open" id="w-kanto"><span class="wbg"></span>${mew ? `<i class="wspr" style="background-image:url(assets/${mew})"></i>` : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
+      : `<div class="wcard locked">${lock}<img class="wsil" src="assets/ui/${c.sil}.png" alt="" aria-hidden="true"><span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
+    <div class="act"><button id="w-back">← Retour</button></div>`;
+  const back = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onBack(); };
+  const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); back(); } };
+  window.addEventListener('keydown', onKey, true);
+  $('#w-back').onclick = back;
+  $('#w-kanto').onclick = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onPick('kanto'); };
+}
+
+export function showStarters(onDone, onBack) {
   const el = $('#starters'); el.classList.add('show');
   const picks = []; let focus = POOL[0].key;
   const draw = () => {
@@ -38,13 +61,14 @@ export function showStarters(onDone) {
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
         <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
         <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
-        <div class="act"><button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
+        <div class="act">${onBack ? '<button id="st-back">← Retour</button>' : ''}<button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
     el.querySelectorAll('.pth').forEach(b => b.onclick = () => {
       const k = b.dataset.k; focus = k;
       const i = picks.indexOf(k); if (i >= 0) picks.splice(i, 1); else { if (picks.length === 3) picks.shift(); picks.push(k); }
       draw();
     });
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
+    const sb = $('#st-back'); if (sb) sb.onclick = () => { el.classList.remove('show'); onBack(); };
     const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { el.classList.remove('show'); onDone([...picks]); } };
   };
   draw();
