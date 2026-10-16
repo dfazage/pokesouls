@@ -125,5 +125,19 @@
     ],
     "vary": true,
     "scale": 0.24
+  },
+  "pillar_lab": {
+    "file": "props/lab_pillars.png",
+    "fw": 64,
+    "fh": 216,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "vary": true,
+    "scale": 0.26
   }
 }
