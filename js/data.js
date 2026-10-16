@@ -20,7 +20,7 @@ export const NAMES_FR = {
   squirtle: 'Carapuce', wartortle: 'Carabaffe', blastoise: 'Tortank', totodile: 'Kaiminus', croconaw: 'Crocrodil', feraligatr: 'Aligatueur', mudkip: 'Gobou', marshtomp: 'Flobio', swampert: 'Laggron', piplup: 'Tiplouf', prinplup: 'Prinplouf', empoleon: 'Pingoléon', oshawott: 'Moustillon', dewott: 'Mateloutre', samurott: 'Clamiral', froakie: 'Grenousse', frogadier: 'Croâporal', greninja: 'Amphinobi', popplio: 'Otaquin', brionne: 'Otarlette', primarina: 'Oratoria', sobble: 'Larméléon', drizzile: 'Lézargus', inteleon: 'Intéléon', quaxly: 'Coiffeton', quaxwell: 'Canarbello', quaquaval: 'Palmaval',
   bulbasaur: 'Bulbizarre', ivysaur: 'Herbizarre', venusaur: 'Florizarre', chikorita: 'Germignon', bayleef: 'Macronium', meganium: 'Méganium', treecko: 'Arcko', grovyle: 'Massko', sceptile: 'Jungko', turtwig: 'Tortipouss', grotle: 'Boskara', torterra: 'Torterra', snivy: 'Vipélierre', servine: 'Lianaja', serperior: 'Majaspic', chespin: 'Marisson', quilladin: 'Boguérisse', chesnaught: 'Blindépique', rowlet: 'Brindibou', dartrix: 'Efflèche', decidueye: 'Archéduc', grookey: 'Ouistempo', thwackey: 'Badabouin', rillaboom: 'Gorythmic', sprigatito: 'Poussacha', floragato: 'Matourgeon', meowscarada: 'Miascarade',
   seel: 'Otaria', dewgong: 'Lamantine', shellder: 'Kokiyas', cloyster: 'Crustabri', krabby: 'Krabby', kingler: 'Krabboss', lapras: 'Lokhlass', staryu: 'Stari', starmie: 'Staross', articuno: 'Artikodin',
-  magnemite: 'Magnéti', magneton: 'Magnéton', voltorb: 'Voltorbe', electrode: 'Électrode', electrodeA: 'Électrode Alpha', electabuzz: 'Élektek', pikachu: 'Pikachu', raichu: 'Raichu', zapdos: 'Électhor',
+  magnemite: 'Magnéti', magneton: 'Magnéton', voltorb: 'Voltorbe', electrode: 'Électrode', electrodeA: 'Électrode Alpha', dragoniteK: 'Dracolosse', electabuzz: 'Élektek', pikachu: 'Pikachu', raichu: 'Raichu', zapdos: 'Électhor',
   growlithe: 'Caninos', arcanine: 'Arcanin', ponyta: 'Ponyta', rapidash: 'Galopa', magmar: 'Magmar', vulpix: 'Goupix', ninetales: 'Feunard', moltres: 'Sulfura',
   machop: 'Machoc', machoke: 'Machopeur', machamp: 'Mackogneur', geodude: 'Racaillou', graveler: 'Gravalanch', golem: 'Grolem', onix: 'Onix', rhyhorn: 'Rhinocorne', rhydon: 'Rhinoféros', dragonite: 'Dracolosse', dragonair: 'Draco', snorlax: 'Ronflex',
   koffing: 'Smogo', weezing: 'Smogogo', porygon: 'Porygon', mewtwo: 'Mewtwo', exeggcute: 'Noeunoeuf', exeggutor: 'Noadkoko', abra: 'Abra', kadabra: 'Kadabra', haunter: 'Spectrum', gengar: 'Ectoplasma', mrmime: 'M. Mime', chansey: 'Leveinard', mew: 'Mew', clone: 'Clone', decoy: 'Mirage',
@@ -154,7 +154,9 @@ export const ENEMIES = {
   rapidash: E('mid', 'roller', { range: 80, anim: 'Attack', hp: 80 }),
   arcanine: E('mid', 'melee', { lunge: 210, range: 26, anim: 'Attack', speed: 64, dmg: 13, hp: 95 }),
   magmar: E('big', 'slam', { range: 110, anim: 'Shoot', color: '#ff6a30', blast: 46, scale: 1.35 }),
-  // Route Victoire
+  // Mini-boss de Mont Braise : Dracolosse, roi de Kanto
+  dragoniteK: E('big', 'slam', { range: 115, anim: 'Attack', blast: 52, scale: 1.25, hp: 420, sprite: 'dragonite' }),
+  // Anciens mobs de la Route Victoire
   machop: E('mini', 'melee', { lunge: 150, range: 24, anim: 'Attack', hp: 30 }),
   geodude: E('mini', 'melee', { lunge: 110, range: 22, anim: 'Attack', speed: 38, hp: 40 }),
   rhyhorn: E('mini', 'roller', { range: 65, anim: 'Attack', hp: 36, dmg: 9 }),

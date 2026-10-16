@@ -126,8 +126,8 @@ export function showBag(game, onClose) {
 
 // ---------- voyage entre les cartes ----------
 // Carte du monde : îles reliées par une route, liste des chapitres à gauche, fiche de la carte choisie à droite.
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
-const NODES = [[13, 66], [30, 40], [47, 62], [62, 33], [77, 60], [88, 20]];   // position des cartes (en % de la zone de carte, ratio 100:70)
+const ROMAN = ['I', 'II', 'III', 'IV', '✦'];
+const NODES = [[13, 64], [32, 40], [52, 62], [72, 38], [88, 16]];   // position des cartes (en % de la zone de carte, ratio 100:70)
 let travelSel = -1, travelSpot = 'start';
 export function showTravel(game, onClose, onGo) {
   const opts = game.travelOptions();
@@ -136,9 +136,10 @@ export function showTravel(game, onClose, onGo) {
     const o = opts[travelSel], d = M.MAPS[o.idx], bs = D.BOSSES[d.boss], col = bs.color;
     if (!o.spots.some(x => x.id === travelSpot)) travelSpot = 'start';
     const here = o.idx === game.mapIdx;
-    const roads = NODES.slice(1).map((n, k) => `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.7}" x2="${n[0]}" y2="${n[1] * 0.7}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
-    const nodes = opts.map((x, k) => { const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
-    const list = opts.map((x, k) => `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
+    const hid = k => M.MAPS[k].secret && !opts[k].open;   // la carte secrète reste cachée tant qu'elle n'est pas ouverte
+    const roads = NODES.slice(1).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.7}" x2="${n[0]}" y2="${n[1] * 0.7}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
+    const nodes = opts.map((x, k) => { if (hid(k)) return `<span class="wghost" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">?</span>`; const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
+    const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
     const prev = opts[o.idx - 1];
     const body = o.open
       ? `<div class="wsp"><h4>Destination</h4>${o.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</div>`
@@ -267,9 +268,9 @@ export function showReserve(game, onBack) {
     const b = game.bench[resSel], o = game.team[outSel];
     const thumb = m => `<img src="${portrait(m.id)}" alt="">`;
     const chips = m => D.typesOf(m.type, m.id).map(ty => `<u class="ty-${ty}">${D.TYPE_FR[ty] || ty}</u>`).join('');
-    const maps = M.MAPS.map((d, k) => ({ d, key: EXTRA_BY_MAP[k] }));
+    const maps = M.MAPS.map((d, k) => ({ d, k, key: EXTRA_BY_MAP[k] }));
     const found = maps.filter(x => x.key && game.hasMember(x.key)).length;
-    const locked = maps.filter(x => !(x.key && game.hasMember(x.key))).map(x => `<div class="rlock"><b>???</b><small>${esc(x.d.name)}</small></div>`).join('');
+    const locked = maps.filter(x => !(x.key && game.hasMember(x.key))).map(x => `<div class="rlock"><b>???</b><small>${x.d.secret && x.k > game.unlocked ? '???' : esc(x.d.name)}</small></div>`).join('');
     let det = '<p class="sub">La réserve est vide.</p>';
     if (b) {
       const ri = relayInfo(b.line);

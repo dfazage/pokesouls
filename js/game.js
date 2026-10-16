@@ -90,7 +90,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -111,6 +111,12 @@ export class Game {
     this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i] }));
     this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
+    if (s.mv !== 2) {   // l'ancienne carte 4 (Route Victoire) n'existe plus : Labo et Île Mystère reculent d'un cran
+      const mp = n => (n > 3 ? n - 1 : n);
+      s.unlocked = mp(s.unlocked || 0);
+      if (s.map === 3) { s.map = 2; s.last = null; } else { s.map = mp(s.map || 0); if (s.last) s.last = { ...s.last, map: mp(s.last.map) }; }
+      if (s.prog) s.prog = s.prog.filter((_, i) => i !== 3);
+    }
     this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
     this.applyLevels(true);
@@ -882,6 +888,7 @@ export class Game {
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
     this.openFog(); this.buildItems(); SFX.victory(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
+    { const nx = M.MAPS[this.mapIdx + 1]; if (nx && nx.secret) setTimeout(() => this.emit('toast', 'Un lieu secret est apparu sur la carte…'), 4500); }
     this.emit('banner', b.def.name + ' VAINCU', 'victory');
   }
 
@@ -969,7 +976,7 @@ export class Game {
     // objets du sanctuaire
     for (const it of this.items) if (hyp(it.x - c.x, it.y - c.y) < 30) {
       if (it.kind === 'reward') this.prompt = { text: 'Ouvrir le coffre du boss', act: () => this.takeReward() };
-      else this.prompt = { text: this.mapIdx === M.MAPS.length - 1 ? 'Franchir le portail final' : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
+      else this.prompt = { text: (this.world.def.final || this.world.def.secret) ? 'Franchir le portail final' : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
     }
     // porte-raccourci
     const dr = this.world.door;
@@ -1033,7 +1040,7 @@ export class Game {
     this.emit('banner', 'RÉCOMPENSE', 'item', this.world.def.reward[0]); this.emit('toast', got.join(' · '), this.world.def.reward[0]);
   }
   usePortal() {
-    if (this.mapIdx >= M.MAPS.length - 1) { this.emit('end'); return; }
+    if (this.world.def.final || this.world.def.secret || this.mapIdx >= M.MAPS.length - 1) { this.emit('end', !!this.world.def.secret); return; }
     this.enterMap(this.mapIdx + 1, 'start');
   }
 

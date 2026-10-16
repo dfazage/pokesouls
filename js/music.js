@@ -118,7 +118,7 @@ export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
   if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »
   if (ui.controls || !g || !g.world) return Music.direct('HUB_MAIN');
-  if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], g.world.def.boss === 'mewtwo' ? 'BOSS_MEWTWO_P2' : null, 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
+  if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.world.def.mus || g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], g.world.def.boss === 'mewtwo' ? 'BOSS_MEWTWO_P2' : null, 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
   const b = g.bossActive && g.boss && !g.boss.dead ? g.boss : null;
   if (b) {
     const key = g.world.def.boss, ratio = b.hp / b.maxhp; let id = BOSS_TRACK[key], tempo = 1;
@@ -132,5 +132,5 @@ export function directMusic(g, ui, dt) {
   if (miniOn) return Music.direct(miniId);
   if (ui.menuKind === 'bonfire') return Music.direct('HUB_MAIN');
   if (g.hubAt) { if (Math.hypot(g.hubAt.x - c.x, g.hubAt.y - c.y) < 140) return Music.direct('HUB_MAIN'); g.hubAt = null; }
-  return Music.direct(`MAP_${g.mapIdx + 1}`);
+  return Music.direct(`MAP_${g.world.def.mus || g.mapIdx + 1}`);
 }
