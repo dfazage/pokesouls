@@ -1,6 +1,79 @@
 {
-  "chest_closed":  { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [0], "scale": 1.125 },
-  "chest_open":    { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [1], "scale": 1.125 },
-  "bonfire_unlit": { "file": "props/campfire.png", "fw": 48, "fh": 87, "frames": [7] },
-  "bonfire_lit":   { "file": "props/campfire.png", "fw": 48, "fh": 87, "frames": [4, 5, 4, 6, 5], "fps": 6 }
+  "chest_closed": {
+    "file": "props/pokeball.png",
+    "fw": 16,
+    "fh": 18,
+    "frames": [
+      0
+    ],
+    "scale": 1.125
+  },
+  "chest_open": {
+    "file": "props/pokeball.png",
+    "fw": 16,
+    "fh": 18,
+    "frames": [
+      1
+    ],
+    "scale": 1.125
+  },
+  "bonfire_unlit": {
+    "file": "props/campfire.png",
+    "fw": 48,
+    "fh": 87,
+    "frames": [
+      7
+    ],
+    "scale": 0.7
+  },
+  "bonfire_lit": {
+    "file": "props/campfire.png",
+    "fw": 48,
+    "fh": 87,
+    "frames": [
+      4,
+      5,
+      4,
+      6,
+      5
+    ],
+    "fps": 6,
+    "scale": 0.7
+  },
+  "pillar_ice": {
+    "file": "props/ice.png",
+    "fw": 31,
+    "fh": 50,
+    "cols": 6,
+    "frames": [
+      0,
+      2,
+      3,
+      4
+    ],
+    "vary": true
+  },
+  "crystal_ice": {
+    "file": "props/ice.png",
+    "fw": 31,
+    "fh": 50,
+    "cols": 6,
+    "frames": [
+      5,
+      6,
+      7
+    ],
+    "vary": true
+  },
+  "rock_ice": {
+    "file": "props/ice.png",
+    "fw": 31,
+    "fh": 50,
+    "cols": 6,
+    "frames": [
+      8,
+      9
+    ],
+    "vary": true
+  }
 }
