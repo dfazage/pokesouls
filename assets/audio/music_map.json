@@ -109,5 +109,17 @@
  },
  "JINGLE_VICTORY": {
   "fallback_audio": "jingle_victory.ogg"
+ },
+ "MAP_J1": {
+  "title": "Provisoire (en attendant la musique Edo)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_2.ogg"
+ },
+ "SUBBOSS_BEASTS": {
+  "title": "Provisoire (en attendant la musique Edo)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_birds.ogg"
  }
 }

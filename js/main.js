@@ -4,7 +4,7 @@ import { loadItemIcons, itemIconFile } from './items.js';
 import { Input } from './input.js';
 import { createPadNav } from './padnav.js';
 import { unlockAudio } from './audio.js';
-import { Game, W, H } from './game.js';
+import { Game, W, H, lastChapter } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
@@ -82,12 +82,12 @@ async function launch(g) {
   await game.start(); ui.screen = 'game';
   $('#loading').classList.remove('show'); mode = 'play'; Input.clear();
 }
-async function newGame(choice) {
-  Game.wipe(); const g = new Game(); g.newGame(choice);
+async function newGame(choice, chapter = 'kanto') {
+  Game.wipe(chapter); const g = new Game(chapter); g.newGame(choice);
   await loadPortraits(g.team.flatMap(m => m.line));
   await launch(g);
 }
-async function resume() { const g = new Game(); if (!g.hasSave) return; await launch(g); }
+async function resume() { const g = new Game(lastChapter()); if (!g.hasSave) return; await launch(g); }
 
 function closeMenu() { Controls_stop(); hideMenu(); mode = 'play'; menuKind = null; ui.menuKind = null; Input.clear(); }
 function Controls_stop() { /* l'écran des commandes arrête lui-même l'écoute */ }
@@ -109,7 +109,7 @@ function openPause() {
   const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), title: () => { closeMenu(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }, reset: () => { closeMenu(); newFromTitle(); } };
   back();
 }
-function newFromTitle() { Game.wipe(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
+function newFromTitle() { Game.wipe(game && game.chapter); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
 
 function frame(now) {
   if (r3d) r3d.adapt(now - last);
@@ -148,11 +148,11 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits([...POOL.map(p => p.key), 'genesect']); bar.style.width = '100%'; }
   catch (e) { $('#load-t').textContent = 'Erreur de chargement : ' + e.message; throw e; }
   $('#loading').classList.remove('show');
-  const has = Game.exists();
+  const has = Game.existsAny();
   $('#btn-continue').disabled = !has;
   $('#title').classList.add('show');
   const toTitle = () => { ui.screen = 'title'; $('#title').classList.add('show'); };
-  const toWorlds = () => { ui.screen = 'worlds'; showWorlds(() => { ui.screen = 'starters'; showStarters(c => newGame(c), toWorlds); }, toTitle); };
+  const toWorlds = () => { ui.screen = 'worlds'; showWorlds(ch => { ui.screen = 'starters'; showStarters(c => newGame(c, ch), toWorlds); }, toTitle); };
   $('#btn-new').onclick = () => { $('#title').classList.remove('show'); toWorlds(); };
   $('#btn-continue').onclick = () => resume();
   $('#btn-keys').onclick = () => openControls(() => hideMenu());
@@ -165,6 +165,6 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   }
   await initHD2D();
   mode = 'title';
-  if (/[?&]autostart/.test(location.search)) { if (has) resume(); else newGame(['charmander', 'squirtle', 'bulbasaur']); }
+  if (/[?&]autostart/.test(location.search)) { const chq = (location.search.match(/[?&]chapter=(\w+)/) || [])[1]; if (chq) newGame(['charmander', 'squirtle', 'bulbasaur'], chq); else if (has) resume(); else newGame(['charmander', 'squirtle', 'bulbasaur']); }   // ?chapter=johto : nouvelle partie de test dans ce chapitre
   requestAnimationFrame(t => { last = t; frame(t); });
 })();

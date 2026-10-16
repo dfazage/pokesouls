@@ -15,6 +15,7 @@ const ROMAN = ['', 'I', 'II', 'III'];
 const MOTIF = {
   articuno: '<g stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"><path d="M0-90V90M-78-45L78 45M-78 45L78-45"/><path d="M-14-70L0-52L14-70M-14 70L0 52L14 70M-66-22L-46-30L-50-52M66 22L46 30L50 52M-66 22L-46 30L-50 52M66-22L46-30L50-52"/></g><circle r="14" fill="currentColor"/>',
   zapdos: '<path d="M18-92L-40 6H-4L-20 92L44-12H8Z" fill="currentColor"/>',
+  raikou: '<path d="M-52 52C-52 4-30-36 0-52C30-36 52 4 52 52Z" fill="currentColor"/><rect x="-62" y="52" width="124" height="9" rx="3" fill="currentColor"/><circle cy="74" r="9" fill="currentColor"/><path d="M8-34L-18 8H-2L-10 42L20-8H4Z" fill="#fff"/>',
   moltres: '<path d="M0 92C-62 80-60 20-22-24C-18 8 8 8 4-52C52-14 76 36 62 70C54 88 30 92 0 92Z" fill="currentColor"/><path d="M0 84C-26 78-26 44-8 22C-4 38 12 36 10 6C30 28 36 54 28 70Z" fill="#fff" fill-opacity=".55"/>',
   dragonite: '<g fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><polygon points="0,-92 80,-46 80,46 0,92 -80,46 -80,-46"/><polygon points="0,-58 50,-29 50,29 0,58 -50,29 -50,-29" stroke-opacity=".6"/></g><path d="M-26 28C-14-34-4-58 0-74C4-58 14-34 26 28C14 14 8 10 0 16C-8 10-14 14-26 28Z" fill="currentColor"/>',
   mewtwo: '<path d="M-96 0C-48-56 48-56 96 0C48 56-48 56-96 0Z" fill="#12081e" stroke="currentColor" stroke-width="5"/><circle r="30" fill="currentColor"/><circle r="15" fill="#fff"/><ellipse rx="5" ry="22" fill="#2a1050"/>',

@@ -63,6 +63,7 @@ export const PLAN = {
   dragonite: { 2: [['rock', 2]], 3: [['rock', 3]] },
   mewtwo:    { 2: [['crystal', 3]], 3: [['crystal', 3], ['gravity', 2]] },
   mew:       { 2: [['thorn', 2], ['flower', 2]], 3: [['thorn', 3], ['flower', 2]] },
+  raikou:    { 2: [['pylon', 1]], 3: [['pylon', 2]] },
 };
 
 export function installExtras(G, d) {
@@ -264,7 +265,7 @@ export function installExtras(G, d) {
         if (spot) { this.spawnObs(kind, spot.x, spot.y); any = true; }
       }
     }
-    if (b.sprite === 'zapdos') {
+    if (b.sprite === 'zapdos' || b.sprite === 'raikou') {
       const n = b.phase === 2 ? 2 : 4;
       for (let i = 0; i < n; i++) {
         let p = i === 0 ? { x: c.x, y: c.y } : { x: c.x + rand(-75, 75), y: c.y + rand(-55, 55) }, pyl = null, bd = 120;

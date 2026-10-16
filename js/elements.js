@@ -41,8 +41,9 @@ export const ENEMY_TYPES = {
   koffing: ['poison'], porygon: ['normal'], weezing: ['poison'], electrodeA: ['electric'], dragoniteK: ['dragon', 'flying'],
   exeggcute: ['grass', 'psychic'], abra: ['psychic'], haunter: ['ghost', 'poison'], kadabra: ['psychic'], gengar: ['ghost', 'poison'], mrmime: ['psychic', 'fairy'], exeggutor: ['grass', 'psychic'],
   clone: ['psychic'], decoy: ['psychic', 'fairy'],
+  pichu: ['electric'], mareep: ['electric'], flaaffy: ['electric'], ampharos: ['electric'], chinchou: ['water', 'electric'], lanturn: ['water', 'electric'], togetic: ['fairy', 'flying'],
 };
-export const BOSS_TYPES = { articuno: ['ice', 'flying'], zapdos: ['electric', 'flying'], moltres: ['fire', 'flying'], dragonite: ['dragon', 'flying'], mewtwo: ['psychic'], mew: ['psychic'] };
+export const BOSS_TYPES = { articuno: ['ice', 'flying'], zapdos: ['electric', 'flying'], moltres: ['fire', 'flying'], dragonite: ['dragon', 'flying'], mewtwo: ['psychic'], mew: ['psychic'], raikou: ['electric'] };
 
 // indices de lore affichés à l'entrée du boss (jamais l'explication, seulement l'indice)
 export const BOSS_LORE = {
@@ -52,6 +53,7 @@ export const BOSS_LORE = {
   dragonite: '« Ses écailles ne cèdent qu’au gel suivi d’un choc. »',
   mewtwo: '« Un esprit ne craint que l’ombre. »',
   mew: '« Les ronces craignent la flamme. L’ombre trouble les rêves. »',
+  raikou: '« Le bronze appelle la foudre. La terre et la pierre l’étouffent. »',
 };
 
 // répliques de boss : intro (carte-titre), changement de phase (2, 3) et mort ; une phrase chacune
@@ -62,6 +64,7 @@ export const BOSS_LINES = {
   dragonite: { intro: '« Un prétendant de plus. Prouve que tu mérites ma couronne. »', p2: '« Tu tiens debout. Bien. »', p3: '« Assez ! Voici la colère du roi ! »', death: '« Digne… Kanto est à toi. »' },
   mewtwo:    { intro: '« Te voilà enfin. J’ai été créé pour combattre, pas pour être aimé. »', p2: '« Ton esprit s’ouvre. Le mien aussi. »', p3: '« Je ne suis pas seul. Je ne l’ai jamais été. »', death: '« …enfin… le silence. »' },
   mew:       { intro: '« Hihi ! Tu es venu jusqu’ici ? Alors jouons. »', p2: '« Et si tout était possible ? »', p3: '« Tous les possibles… même ta défaite. »', death: '« C’était… un beau jeu. À bientôt. »' },
+  raikou:    { intro: '« La cloche a sonné. Le tonnerre répond. »', p2: '« Entends-tu le bronze gronder ? »', p3: '« Que le ciel te frappe, voyageur ! »', death: '« …le tonnerre… s’éteint… »' },
 };
 
 // ---------- marques (états élémentaires) ----------
@@ -100,7 +103,7 @@ export const REACTION_HELP = {
   fragilisation: 'Givré + Sol/Roche/Combat : poise brisée, dégâts subis ×1,3.',
 };
 // quels boss ont une aura permanente (marque entretenue) ; articuno : carapace de glace
-const BOSS_AURA = { zapdos: 'charge', moltres: 'flame', articuno: 'frost' };
+const BOSS_AURA = { raikou: 'charge', zapdos: 'charge', moltres: 'flame', articuno: 'frost' };
 const SHELL_HP = 70, SHELL_REGEN = 14;
 
 export function installElements(G, d) {

@@ -28,6 +28,7 @@ export const NAMES_FR = {
   machop: 'Machoc', machoke: 'Machopeur', machamp: 'Mackogneur', geodude: 'Racaillou', graveler: 'Gravalanch', golem: 'Grolem', onix: 'Onix', rhyhorn: 'Rhinocorne', rhydon: 'Rhinoféros', dragonite: 'Dracolosse', dragonair: 'Draco', snorlax: 'Ronflex',
   koffing: 'Smogo', weezing: 'Smogogo', porygon: 'Porygon', mewtwo: 'Mewtwo', exeggcute: 'Noeunoeuf', exeggutor: 'Noadkoko', abra: 'Abra', kadabra: 'Kadabra', haunter: 'Spectrum', gengar: 'Ectoplasma', mrmime: 'M. Mime', chansey: 'Leveinard', mew: 'Mew', clone: 'Clone', decoy: 'Mirage',
 };
+Object.assign(NAMES_FR, { raikou: 'Raikou', entei: 'Entei', suicune: 'Suicune', lugia: 'Lugia', celebi: 'Celebi', mareep: 'Wattouat', flaaffy: 'Lainergie', ampharos: 'Pharamp', chinchou: 'Loupio', lanturn: 'Lanturn', slugma: 'Limagma', magcargo: 'Volcaropod', houndour: 'Malosse', houndoom: 'Démolosse', magby: 'Magby', marill: 'Marill', azumarill: 'Azumarill', wooper: 'Axoloto', quagsire: 'Maraiste', horsea: 'Hypotrempe', seadra: 'Hypocéan', tentacool: 'Tentacool', tentacruel: 'Tentacruel', mantine: 'Démanta', kingdra: 'Hyporoi', hoppip: 'Granivol', skiploom: 'Floravol', sunkern: 'Tournegrin', sunflora: 'Héliatronc', pineco: 'Pomdepik', forretress: 'Foretress' });   // Johto (chapitre II)
 NAMES_FR.genesect = 'Fala';   // Genesect secret, débloqué par sa quête dans la Centrale
 // noms des espèces du pool jouable (GDD v3)
 Object.assign(NAMES_FR, { bagon: 'Draby', shelgon: 'Drackhaus', salamence: 'Drattak', riolu: 'Riolu', lucario: 'Lucario', meowth: 'Miaouss', persian: 'Persian', sneasel: 'Farfuret', weavile: 'Dimoret', zorua: 'Zorua', zoroark: 'Zoroark', munchlax: 'Goinfrex', steelix: 'Steelix', beldum: 'Terhal', metang: 'Métang', metagross: 'Métalosse', hippopotas: 'Hippopotas', hippowdon: 'Hippodocus', scyther: 'Insécateur', scizor: 'Cizayox', weedle: 'Aspicot', kakuna: 'Coconfort', beedrill: 'Dardargnan', remoraid: 'Rémoraid', octillery: 'Octillery', starly: 'Étourmi', staravia: 'Étourvol', staraptor: 'Étouraptor', magnezone: 'Magnézone', alakazam: 'Alakazam', pichu: 'Pichu', litwick: 'Lugulabre', lampent: 'Funécire', chandelure: 'Chandelure', gastly: 'Fantominus', eevee: 'Évoli', happiny: 'Ptiravi', blissey: 'Leuphorya', ralts: 'Tarsal', kirlia: 'Kirlia', gardevoir: 'Gardevoir', togepi: 'Togepi', togetic: 'Togetic', togekiss: 'Togekiss', budew: 'Rozbouton', roselia: 'Rosélia', roserade: 'Roserade' });
@@ -108,6 +109,7 @@ export const ENEMY_STATUS = {
   vulpix: ['burn', 0.25], growlithe: ['burn', 0.2], ponyta: ['burn', 0.2], ninetales: ['burn', 0.3], rapidash: ['burn', 0.3], arcanine: ['burn', 0.3], magmar: ['burn', 0.4],
   koffing: ['poison', 0.3], weezing: ['poison', 0.35], porygon: ['para', 0.2], electrodeA: ['para', 0.4],
   exeggcute: ['confuse', 0.2], abra: ['confuse', 0.25], haunter: ['confuse', 0.25], kadabra: ['confuse', 0.3], gengar: ['poison', 0.3], mrmime: ['confuse', 0.3], exeggutor: ['confuse', 0.35],
+  pichu: ['para', 0.2], mareep: ['para', 0.25], chinchou: ['para', 0.25], flaaffy: ['para', 0.3], lanturn: ['para', 0.3], togetic: ['confuse', 0.2], ampharos: ['para', 0.4],
   machoke: null, dragonair: ['para', 0.2], clone: ['confuse', 0.3], decoy: ['confuse', 0.3],
 };
 
@@ -181,6 +183,14 @@ export const ENEMIES = {
   gengar: E('mid', 'melee', { lunge: 220, range: 26, anim: 'Attack', dmg: 13, hp: 90, speed: 62 }),
   mrmime: E('mid', 'slam', { range: 105, anim: 'Shoot', color: '#ff9aff', blast: 38, hp: 90 }),
   exeggutor: E('big', 'slam', { range: 115, anim: 'Shoot', color: '#ffb0d8', blast: 48, scale: 1.15 }),
+  // Johto · Tour Carillon
+  pichu: E('mini', 'melee', { lunge: 170, range: 20, anim: 'Attack', speed: 64, hp: 20 }),
+  mareep: E('mini', 'ranged', { range: 100, proj: 105, anim: 'Shoot', color: '#ffe84a', hp: 24, speed: 44 }),
+  chinchou: E('mini', 'ranged', { range: 100, proj: 100, anim: 'Shoot', color: '#8ef0ff', fly: true, hp: 22 }),
+  flaaffy: E('mid', 'ranged3', { range: 110, proj: 120, anim: 'Shoot', color: '#ffe84a' }),
+  lanturn: E('mid', 'slam', { range: 105, anim: 'Shoot', color: '#8ef0ff', blast: 36, hp: 90 }),
+  togetic: E('mid', 'melee', { lunge: 190, range: 24, anim: 'Attack', fly: true, dmg: 11, hp: 80 }),
+  ampharos: E('big', 'slam', { range: 115, anim: 'Shoot', color: '#ffe84a', blast: 46, scale: 1.25 }),
   // Invocations de boss
   clone: { tier: 'mini', kind: 'ranged', hp: 30, dmg: 10, speed: 0, sight: 400, range: 400, windup: 0.9, anim: 'Shoot', proj: 120, color: '#c070ff', rec: 2.4, clone: true, k: 0, sprite: 'mewtwo' },
   decoy: { tier: 'mini', kind: 'ranged', hp: 34, dmg: 8, speed: 50, sight: 400, range: 220, windup: 0.8, anim: 'Shoot', proj: 110, color: '#ffb0d8', rec: 1.6, clone: true, k: 0, sprite: 'mew', fly: true },
@@ -202,5 +212,8 @@ export const BOSSES = {
     moves: [[['ball', 3], ['swing', 3]], [['ball', 3], ['swing', 2], ['pulse', 3]], [['ball', 3], ['swing', 2], ['pulse', 3], ['summon', 2]]] },
   mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', scale: 1.15, hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
+  // ----- Johto -----
+  raikou: { sprite: 'raikou', phases: ['Le tonnerre approche', 'Foudre de bronze'], status: ['para', 0.3], name: 'RAIKOU', sub: 'Le Tonnerre', scale: 1.15, hp: 420, dmg: 13, r: 11, speed: 68, color: '#f2c84a', glow: [255, 205, 80], rainColor: '#fff0a0',
+    moves: [[['dash', 3], ['ball', 2], ['rain', 2]], [['dash', 2], ['volley', 2], ['rain', 3], ['nova', 2]], [['dash', 3], ['rain', 3], ['nova', 3], ['beam', 2]]] },
 };
 export const BOSS_THRESHOLDS = [0.6, 0.25];

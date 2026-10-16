@@ -12,11 +12,13 @@ export const THEMES = {
   plant: { floor: [58, 58, 70], arena: [66, 60, 56], wallA: '#444458', wallB: '#40405a', face: '#27273a', faceTop: '#62627c', accent: [255, 232, 80], accent2: [120, 230, 255], fx: 'circuit', amb: [160, 160, 180], ambArena: [150, 140, 150], decor: ['generator', 'pillar', 'console'] },
   lava: { floor: [66, 40, 38], arena: [78, 42, 34], wallA: '#5a3430', wallB: '#56302c', face: '#321a18', faceTop: '#8a5040', accent: [255, 130, 50], accent2: [255, 200, 90], fx: 'lava', amb: [200, 150, 130], ambArena: [210, 130, 100], decor: ['brazier', 'rock', 'crystal'] },
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
+  // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : charpente de temple sous l'orage
+  bell: { floor: [62, 46, 40], arena: [74, 54, 44], wallA: '#4e3c38', wallB: '#4a3834', face: '#2a1f1d', faceTop: '#80604c', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'wood', amb: [182, 162, 150], ambArena: [205, 172, 126], decor: ['lantern', 'pillar', 'bell', 'torii'] },
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
 // ---------- définitions des cartes ----------
-export const MAPS = [
+const KANTO = [
   { id: 'm1', name: 'Îles Écume', sub: 'Grottes gelées', theme: 'ice', mus: 1, lv: 8, seed: 11, boss: 'articuno',
     path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
     areas: ['Rivage gelé', 'Grotte des phoques', 'Bassin glacé', 'Galerie de givre', 'Caverne de cristal', 'Lac souterrain', 'Antichambre du blizzard'], sanctuary: "Nid d'Artikodin",
@@ -43,11 +45,29 @@ export const MAPS = [
     loot: ['candy', 'protein', 'ct_softboiled', 'hpup', 'berrypack', 'maxberry', 'maxether', 'revive'], reward: ['ct_hyper', 'candy', 'candy'] },
 ];
 
+// ---------- chapitres : chaque génération a ses cartes ; MAPS contient celles du chapitre actif (remplacées sur place, toutes les références la voient) ----------
+const JOHTO = [
+  { id: 'j1', name: 'Tour Carillon', sub: 'Où gronde la foudre', theme: 'bell', mus: 'J1', lv: 8, seed: 71, boss: 'raikou',
+    path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
+    areas: ['Escalier des lanternes', 'Galerie des ex-voto', 'Cour des cloches', 'Salle des tatamis', 'Corridor de laque', 'Chambre du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
+    mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos' },
+    loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_earthquake'], reward: ['ct_thunder', 'candy'] },
+];
+export const CHAPTER_MAPS = { kanto: KANTO, johto: JOHTO };
+export const CHAPTER_INFO = {
+  kanto: { n: 'I', name: 'Kanto', gen: 1, sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', world: 'assets/ui/worldmap.jpg', nodes: [[11.5, 58], [26, 23], [50.5, 63], [63, 38.5], [86, 18]] },
+  johto: { n: 'II', name: 'Johto', gen: 2, sub: 'Trois bêtes, un sanctuaire marin et un temple hors du temps', world: 'assets/ui/worldmap.jpg', nodes: [[14, 62], [34, 28], [56, 66], [74, 36], [88, 14]] },
+};
+export const MAPS = [];
+export let CHAPTER = 'kanto';
+export function setChapter(id) { if (!CHAPTER_MAPS[id]) id = 'kanto'; CHAPTER = id; MAPS.length = 0; MAPS.push(...CHAPTER_MAPS[id]); return id; }
+setChapter('kanto');
+
 // ---------- aléatoire à graine ----------
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 const rnd = (x, y, s = 0) => { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
 
-const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1] };
+const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1], lantern: [1, 1], bell: [2, 2], torii: [2, 1] };
 
 // ---------- carte du laboratoire (dessinée à la main) ----------
 const LAB = (() => {
@@ -368,6 +388,12 @@ export function bakeFloor(world) {
     } else if (fx === 'stone') {
       if (r < 0.3) { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(x + 3 + r * 30 % 12, y + 5, 5, 3); g.fillRect(x + 12, y + 14 + r * 10 % 6, 4, 3); }
       if (r > 0.9) { g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x + 6, y + 10, 8, 2); }
+    } else if (fx === 'wood') {   // lattes de bois : joints décalés, clous, brûlures de foudre
+      g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(x, y + 8, TS, 1); g.fillRect(x, y + 16, TS, 1);
+      g.fillStyle = 'rgba(0,0,0,.26)'; g.fillRect(x + 6 + (((tx * 7 + ty * 3) % 3) * 5), y, 1, 8); g.fillRect(x + 14 - (((tx + ty * 5) % 3) * 4), y + 9, 1, 7); g.fillRect(x + 4 + (((tx * 5 + ty) % 4) * 4), y + 17, 1, 7);
+      g.fillStyle = 'rgba(255,225,170,.06)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 9, TS, 1);
+      if (r > 0.86) { g.fillStyle = 'rgba(210,170,90,.5)'; g.fillRect(x + 3, y + 3, 1, 1); g.fillRect(x + TS - 4, y + 12, 1, 1); }
+      if (r < 0.07) { g.strokeStyle = 'rgba(120,200,255,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 3); g.lineTo(x + 10, y + 10); g.lineTo(x + 8, y + 13); g.lineTo(x + 17, y + 21); g.stroke(); ge.strokeStyle = '#8fd0ff'; ge.lineWidth = 1; ge.beginPath(); ge.moveTo(x + 4, y + 3); ge.lineTo(x + 10, y + 10); ge.lineTo(x + 8, y + 13); ge.lineTo(x + 17, y + 21); ge.stroke(); }
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
       if (r > 0.92) { g.fillStyle = ac; g.fillRect(x + 8 + r * 20 % 8, y + 8, 2, 2); ge.fillStyle = ac; ge.fillRect(x + 7.5 + r * 20 % 8, y + 7.5, 3, 3); }
@@ -442,7 +468,7 @@ export function drawDecor(ctx, world, d, time, opened) {
     } else { ctx.strokeStyle = '#6a7699'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gx + 6, gy); ctx.lineTo(gx + 14, gy + 20); ctx.lineTo(gx + 8, gy + 34); ctx.lineTo(gx + 20, gy + 52); ctx.stroke(); ctx.fillStyle = 'rgba(122,242,228,.25)'; ctx.fillRect(gx + 2, gy + 44, gw - 4, 8); }
     ctx.fillStyle = '#6a7699'; ctx.fillRect(x + 6, gy - 5, w - 12, 6); ctx.fillStyle = '#8b97b8'; ctx.fillRect(x + 6, gy - 5, w - 12, 2); ctx.fillStyle = '#34405e'; ctx.fillRect(x + 20, gy - 12, 8, 8);
   } else if (K === 'pillar') {
-    const lite = th.fx === 'ice' ? ['#9cc4e8', '#c8e4ff', '#7aa0c8'] : th.fx === 'stone' ? ['#8a7a68', '#a89a86', '#6a5c4c'] : th.fx === 'lava' ? ['#6a3e38', '#8a5a4e', '#4a2a26'] : th.fx === 'moss' ? ['#4a7a6a', '#6aa08c', '#365a4e'] : ['#7e89ad', '#9aa5c6', '#4d5780'];
+    const lite = th.fx === 'ice' ? ['#9cc4e8', '#c8e4ff', '#7aa0c8'] : th.fx === 'stone' ? ['#8a7a68', '#a89a86', '#6a5c4c'] : th.fx === 'lava' ? ['#6a3e38', '#8a5a4e', '#4a2a26'] : th.fx === 'moss' ? ['#4a7a6a', '#6aa08c', '#365a4e'] : th.fx === 'wood' ? ['#6a4a3a', '#8a6650', '#46302a'] : ['#7e89ad', '#9aa5c6', '#4d5780'];
     ctx.fillStyle = '#5a6488'; ctx.globalAlpha = 0.6; ctx.fillRect(x + 3, base - 6, w - 6, 6); ctx.globalAlpha = 1;
     ctx.fillStyle = lite[0]; ctx.fillRect(x + 6, base - 38, w - 12, 34); ctx.fillStyle = lite[1]; ctx.fillRect(x + 6, base - 38, 3, 34); ctx.fillStyle = lite[2]; ctx.fillRect(x + w - 10, base - 38, 4, 34);
     ctx.fillStyle = lite[2]; ctx.fillRect(x + 3, base - 42, w - 6, 6);
@@ -470,6 +496,33 @@ export function drawDecor(ctx, world, d, time, opened) {
   } else if (K === 'brazier') {
     ctx.fillStyle = '#3a2c28'; ctx.fillRect(x + 7, base - 16, 10, 14); ctx.fillStyle = '#5a463e'; ctx.fillRect(x + 4, base - 22, 16, 6); ctx.fillStyle = '#2a1e1a'; ctx.fillRect(x + 4, base - 4, 16, 3);
     for (let i = 0; i < 4; i++) { const t = time * 7 + i * 1.9 + d.seed, hh = 8 + Math.sin(t) * 3; ctx.fillStyle = i % 2 ? '#ff9a2e' : '#ffd36a'; ctx.beginPath(); ctx.ellipse(x + 8 + i * 3, base - 26 - hh / 2, 2.2, hh / 2, 0, 0, 7); ctx.fill(); }
+  } else if (K === 'lantern') {   // tōrō : lanterne de pierre
+    ctx.fillStyle = '#5c5a60'; ctx.fillRect(x + 5, base - 5, 14, 5); ctx.fillStyle = '#74727a'; ctx.fillRect(x + 5, base - 5, 14, 1);
+    ctx.fillStyle = '#66646c'; ctx.fillRect(x + 9, base - 17, 6, 12); ctx.fillStyle = '#7e7c84'; ctx.fillRect(x + 9, base - 17, 2, 12);
+    ctx.fillStyle = '#4c4a52'; ctx.fillRect(x + 6, base - 20, 12, 3);
+    ctx.fillStyle = '#58565e'; ctx.fillRect(x + 6, base - 29, 12, 9);
+    const fl = 0.75 + 0.25 * Math.sin(time * 9 + d.seed); ctx.fillStyle = `rgba(255,${190 + 30 * fl | 0},90,${0.85 + 0.15 * fl})`; ctx.fillRect(x + 9, base - 27, 6, 5);
+    ctx.fillStyle = '#4a484f'; ctx.beginPath(); ctx.moveTo(x + 2, base - 29); ctx.lineTo(x + 22, base - 29); ctx.lineTo(x + 17, base - 36); ctx.lineTo(x + 7, base - 36); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6a6870'; ctx.fillRect(x + 7, base - 36, 10, 1); ctx.fillStyle = '#5c5a60'; ctx.fillRect(x + 11, base - 39, 2, 3);
+  } else if (K === 'bell') {   // bonshō : cloche de bronze sous sa charpente
+    ctx.fillStyle = '#4a3024'; ctx.fillRect(x + 3, base - 58, 5, 56); ctx.fillRect(x + w - 8, base - 58, 5, 56); ctx.fillStyle = '#6a4a38'; ctx.fillRect(x + 3, base - 58, 1, 56); ctx.fillRect(x + w - 8, base - 58, 1, 56);
+    ctx.fillStyle = '#3a261c'; ctx.fillRect(x, base - 62, w, 6); ctx.fillStyle = '#6a4a38'; ctx.fillRect(x, base - 62, w, 1);
+    ctx.fillStyle = '#2a1c14'; ctx.fillRect(x + w / 2 - 1, base - 56, 2, 6);
+    const sw = Math.sin(time * 1.4 + d.seed) * 1.5, cx = x + w / 2 + sw;
+    ctx.fillStyle = '#7c6034'; ctx.beginPath(); ctx.moveTo(cx - 6, base - 50); ctx.lineTo(cx + 6, base - 50); ctx.lineTo(cx + 11, base - 22); ctx.lineTo(cx - 11, base - 22); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#9a7a44'; ctx.fillRect(cx - 5, base - 49, 2, 26); ctx.fillStyle = '#56421f'; ctx.fillRect(cx + 5, base - 49, 2, 26);
+    ctx.fillStyle = '#6a502a'; ctx.fillRect(cx - 12, base - 24, 24, 3); ctx.fillStyle = '#b08a4a'; ctx.fillRect(cx - 12, base - 24, 24, 1);
+    ctx.fillStyle = '#4a361c'; for (const yy of [-40, -33]) ctx.fillRect(cx - 8, base + yy, 16, 1);
+    ctx.fillStyle = '#5a3a28'; ctx.fillRect(x + 2, base - 12, w - 4, 3); ctx.fillStyle = '#3a261c'; ctx.fillRect(x + w / 2 - 3, base - 20, 6, 10);
+    if (((time * 2 + d.seed) | 0) % 7 === 0) { ctx.strokeStyle = ac2; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - 3, base - 24); ctx.lineTo(cx, base - 30); ctx.lineTo(cx - 2, base - 33); ctx.lineTo(cx + 3, base - 40); ctx.stroke(); }
+  } else if (K === 'torii') {   // portique de sanctuaire (laque rouge passée)
+    const red = '#8f3a30', redH = '#b0503f', blk = '#241c1a';
+    ctx.fillStyle = red; ctx.fillRect(x + 5, base - 46, 6, 44); ctx.fillRect(x + w - 11, base - 46, 6, 44);
+    ctx.fillStyle = redH; ctx.fillRect(x + 5, base - 46, 1, 44); ctx.fillRect(x + w - 11, base - 46, 1, 44);
+    ctx.fillStyle = blk; ctx.fillRect(x + 3, base - 4, 10, 3); ctx.fillRect(x + w - 13, base - 4, 10, 3);
+    ctx.fillStyle = red; ctx.fillRect(x + 8, base - 36, w - 16, 4);
+    ctx.fillStyle = blk; ctx.fillRect(x - 3, base - 52, w + 6, 4); ctx.fillStyle = '#3a2e2a'; ctx.fillRect(x - 6, base - 55, w + 12, 3); ctx.fillRect(x - 6, base - 58, 4, 3); ctx.fillRect(x + w + 2, base - 58, 4, 3);
+    ctx.fillStyle = red; ctx.fillRect(x + w / 2 - 3, base - 48, 6, 12); ctx.fillStyle = '#d8b050'; ctx.fillRect(x + w / 2 - 2, base - 45, 4, 6);
   } else if (K === 'generator') {
     ctx.fillStyle = '#3a3a4c'; ctx.fillRect(x + 3, base - 36, w - 6, 32); ctx.fillStyle = '#5a5a74'; ctx.fillRect(x + 3, base - 36, w - 6, 3);
     ctx.fillStyle = '#26263a'; ctx.fillRect(x + 8, base - 28, w - 16, 14);
@@ -498,6 +551,8 @@ export function decorLight(world, d, opened) {
   if (d.kind === 'pillar') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.2) * TS, r: 26, c: th.accent2.map(v => v * 0.6 | 0) };
   if (d.kind === 'crystal') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.1) * TS, r: 54, c: A };
   if (d.kind === 'brazier') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.1) * TS, r: 70, c: [255, 150, 60] };
+  if (d.kind === 'lantern') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.1) * TS, r: 74, c: [255, 190, 90] };
+  if (d.kind === 'bell') return { x: (d.tx + 1) * TS, y: (d.ty + 0.4) * TS, r: 48, c: [130, 180, 255] };
   if (d.kind === 'generator') return { x: (d.tx + 1) * TS, y: (d.ty + 0.3) * TS, r: 50, c: A };
   if (d.kind === 'tree') return { x: (d.tx + 1) * TS, y: (d.ty + 0.2) * TS, r: 56, c: A };
   if (d.kind === 'statue') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.3) * TS, r: 28, c: th.accent2 };
