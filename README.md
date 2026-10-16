@@ -70,11 +70,11 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Action | Par défaut | Manette |
 |---|---|---|
 | Déplacement | WASD / ZQSD / flèches | stick gauche |
-| Course / Esquive | Maj / Espace | B (maintenu = course) |
+| Course / Esquive | Maj / Espace | A (maintenu = course) |
 | Attaque légère / lourde | J (clic gauche) / K (clic droit) | Y / X |
 | Capacité spéciale (CT) | L | L |
 | Garde (parade juste après l'appui) | H | ZR (maintenu) |
-| Interagir | E | A |
+| Interagir | E | B |
 | Baie de soin | R | R maintenu + X |
 | Super Bonbon (Pokémon actif) | C | R maintenu + Y |
 | Fiole d'endurance (Huile) | F | R maintenu + A |

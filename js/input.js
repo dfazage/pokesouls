@@ -118,8 +118,8 @@ addEventListener('contextmenu', e => e.preventDefault());
 // Disposition : B esquive, Y/X attaques, A interagir, ZL relève, ZR garde, L capacité, clic stick G lien, clic stick D verrouillage, croix haut sac.
 // R maintenu + bouton de face = objets rapides (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel : la croix du HUD).
 // R relâché : un coup de stick droit à gauche / droite change de cible verrouillée ; le clic du stick droit verrouille.
-const PADDEF = { dodge: 0, interact: 1, light: 2, heavy: 3, guard: 7, ability: 4, next: 6, bag: 12, link: 10, lock: 11, pause: 9, map: 8, mod: 5 };
-const PADSTORE = 'pokesouls.padmap.v1';
+const PADDEF = { dodge: 1, interact: 0, light: 2, heavy: 3, guard: 7, ability: 4, next: 6, bag: 12, link: 10, lock: 11, pause: 9, map: 8, mod: 5 };
+const PADSTORE = 'pokesouls.padmap.v2';
 const PADACT = { ...PADDEF };   // action → indice de bouton (réassignable dans l'écran Commandes)
 try { const sv = JSON.parse(localStorage.getItem(PADSTORE) || 'null'); if (sv) for (const a of Object.keys(PADDEF)) if (Number.isInteger(sv[a]) && sv[a] >= 0 && sv[a] < 32) PADACT[a] = sv[a]; } catch (e) { /* défauts */ }
 const padPersist = () => { try { localStorage.setItem(PADSTORE, JSON.stringify(PADACT)); } catch (e) { /* rien */ } };
