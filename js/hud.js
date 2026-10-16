@@ -22,19 +22,26 @@ export const kl = a => keyLabel(Controls.get(a)[0]);
 export function createHud(game) {
   const root = $('#hud');
   root.innerHTML = `
-    <div id="chief"><img id="chief-p" alt=""><div class="cinfo"><div class="cname"><b id="chief-n"></b> <span id="chief-c"></span> <i id="chief-l"></i></div>
-      <div class="bar hp"><div class="fill" id="chief-hp"></div><span id="chief-hpt"></span></div><div class="bar st"><div class="fill" id="chief-st"></div></div><div id="combo"><i></i><i></i><b id="combo-t">▸</b></div></div></div>
+    <div id="chief"><img id="chief-p" alt=""><div class="cinfo"><div class="cname"><b id="chief-n"></b><i id="chief-l"></i></div><div class="csub"><span id="chief-c"></span><span id="sbadge"></span></div>
+      <div class="bar hp"><span class="bl">PV</span><div class="track"><div class="fill" id="chief-hp"></div></div><span class="bv" id="chief-hpt"></span></div><div class="bar st"><span class="bl">END</span><div class="track"><div class="fill" id="chief-st"></div></div><span class="bv"></span></div></div></div>
     <div id="party">${game.team.map((t, i) => `<div class="slot t-${t.type}" data-i="${i}"><img alt=""><em>${i + 1}</em><div class="sbar"><div class="fill"></div></div><b class="mu"></b></div>`).join('')}</div>
-    <div id="skills"><div class="skill"><kbd id="k-ab"></kbd><b id="ab-n"></b><span id="buff"></span><span id="sbadge"></span><div class="cd"><div class="fill" id="ab-cd"></div></div></div><div class="berries"><kbd id="k-berry"></kbd>Baies <b id="berries"></b></div><div class="berries"><kbd id="k-ether"></kbd>Huile <b id="ethers"></b></div><div class="berries" id="linkbox"><kbd id="k-link"></kbd>Lien <div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b></div></div>
-    <div id="right"><div id="essence"><span>Essence</span> <b id="ess"></b></div><div id="hints"></div></div>
-    <div id="boss"><div class="bname"><b id="boss-n"></b> <span id="boss-s"></span></div><div class="bbar"><div class="fill" id="boss-hp"></div>${BOSS_THRESHOLDS.map(t => `<i class="th" style="left:${t * 100}%"></i>`).join('')}</div></div>
+    <div id="quick">
+      <div class="qs"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="14" r="6.5" fill="#ff7a8a"/><path d="M12 7.5c0-2 1.2-3.4 3.2-3.8" stroke="#8be3a2" stroke-width="2" stroke-linecap="round"/></svg><b id="berries"></b><small>Baie</small><kbd id="k-berry"></kbd></div>
+      <div class="qs"><svg viewBox="0 0 24 24" fill="none" stroke="#a4f0c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v5l-4.5 8.5A3 3 0 0 0 8.2 21h7.6a3 3 0 0 0 2.7-4.5L14 8V3"/><path d="M8 15h8"/></svg><b id="ethers"></b><small>Huile</small><kbd id="k-ether"></kbd></div>
+      <div class="qs" id="q-candy"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd37a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="8" width="10" height="8" rx="3"/><path d="M7 12l-3-3v6l3-3zM17 12l3-3v6l-3-3z"/></svg><b id="candy"></b><small>Bonbon</small></div>
+    </div>
+    <div id="linkbox"><span class="ll">LIEN</span><div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b><kbd id="k-link"></kbd></div>
+    <div id="combo"><span class="cl">COMBO</span><i></i><i></i><b id="combo-t"></b></div>
+    <div id="skills"><div class="skill" id="ability"><kbd id="k-ab"></kbd><span id="buff"></span><b id="ab-n"></b><div class="cd"><div class="fill" id="ab-cd"></div></div></div></div>
+    <div id="right"><div id="essence"><span>ESSENCE</span> <b id="ess"></b></div></div><div id="hints"></div>
+    <div id="boss"><div class="bname"><b id="boss-n"></b><span id="boss-s"></span><em id="boss-ph"></em></div><div class="bbar"><div class="fill" id="boss-hp"></div>${BOSS_THRESHOLDS.map(t => `<i class="th" style="left:${t * 100}%"></i>`).join('')}</div></div>
     <div id="prompt"><kbd id="k-int"></kbd> <span id="prompt-t"></span></div>
     <div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
     <div id="bossintro"><div class="veil"></div><div class="txt"><div class="sub"></div><div class="nm"></div><div class="ln"></div></div><div class="bar t"></div><div class="bar b"></div></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
-  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
+  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
   slots.forEach(s => s.addEventListener('click', () => game.switchTo(+s.dataset.i)));
   let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '';
@@ -48,17 +55,19 @@ export function createHud(game) {
       E['chief-st'].style.width = (100 * game.stam / game.maxStam) + '%';
       E['ab-cd'].style.width = (100 * (1 - Math.max(0, c.cd) / c.def.ability.cd)) + '%';
       E.buff.textContent = game.buffT > 0 ? '⚔ ' + Math.ceil(game.buffT) + ' s' : '';
-      E.berries.textContent = '×' + game.berries + ' / ' + game.maxBerries + (game.bag.candy ? '  ·  Bonbons ×' + game.bag.candy : ''); E.ess.textContent = game.essence;
-      E.ethers.textContent = '×' + game.ethers + ' / ' + game.maxEthers;
+      E.berries.textContent = game.berries + '/' + game.maxBerries; E.ess.textContent = game.essence;
+      E.ethers.textContent = game.ethers + '/' + game.maxEthers;
+      { const cn = game.bag.candy || 0; E.candy.textContent = '×' + cn; E.candy.parentNode.classList.toggle('empty', !cn); }
+      E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);
       { const lk = game.linkT > 0; E['link-f'].style.width = (lk ? 100 * game.linkT / 8 : game.link) + '%'; E.linkbox.classList.toggle('ready', !lk && game.link >= 100); E.linkbox.classList.toggle('on', lk); E['link-t'].textContent = lk ? Math.ceil(game.linkT) + ' s' : game.link >= 100 ? 'PRÊT' : Math.floor(game.link) + ' %'; root.classList.toggle('linking', lk);
-        const cb = game.comboN > 0 && game.t - game.comboAt <= 0.5; E.combo.classList.toggle('on', cb || game.comboN > 0 && game.chief().atk); E.combo.dataset.n = game.comboN; E['combo-t'].textContent = game.comboN >= 2 ? 'LOURD !' : ''; }
+        const cb = game.comboN > 0 && game.t - game.comboAt <= 0.5; E.combo.classList.toggle('on', cb || game.comboN > 0 && game.chief().atk); E.combo.dataset.n = game.comboN; }
       { const fx = c.fx ? STATUS[c.fx.k] : null; E.sbadge.textContent = fx ? fx.name.toUpperCase() : ''; E.sbadge.style.background = fx ? fx.color : 'transparent'; }
       slots.forEach((s, k) => { const m = game.team[k]; const im = s.querySelector('img'); if (im.dataset.id !== m.id) { im.dataset.id = m.id; im.src = portrait(m.id); } s.classList.toggle('on', k === i); s.classList.toggle('down', m.exh); s.classList.toggle('cool', game.swapCd > 0 && k !== i); s.querySelector('.fill').style.width = (100 * m.hp / m.maxhp) + '%'; });
       { const mu = game.matchups(); slots.forEach((s2, k) => { const q = mu && mu[k], el = s2.querySelector('.mu'); const t = q ? (q.mult > 1 ? '▲' : q.mult < 1 ? '▼' : '') : ''; if (el.textContent !== t) { el.textContent = t; el.className = 'mu ' + (q && q.mult > 1 ? 'up' : 'dn'); } s2.classList.toggle('react', !!(q && q.react)); }); }
       let b = game.bossActive && game.boss && !game.boss.dead ? game.boss : null, mini = false;
       if (!b) { b = game.enemies.find(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230) || null; mini = !!b; }
-      E.boss.classList.toggle('show', !!b); E.boss.classList.toggle('mini', mini);
-      if (b) { const nm = mini ? NAMES_FR[b.type].toUpperCase() : b.def.name; if (nm !== bossName) { bossName = nm; E['boss-n'].textContent = nm; E['boss-s'].textContent = mini ? 'Gros Pokémon' : b.def.sub; } E['boss-hp'].style.width = (100 * Math.max(0, b.hp) / b.maxhp) + '%'; }
+      E.boss.classList.toggle('show', !!b); E.boss.classList.toggle('mini', mini); root.classList.toggle('hasboss', !!b);
+      if (b) { const nm = mini ? NAMES_FR[b.type].toUpperCase() : b.def.name; if (nm !== bossName) { bossName = nm; E['boss-n'].textContent = nm; E['boss-s'].textContent = mini ? 'Gros Pokémon' : b.def.sub; } E['boss-hp'].style.width = (100 * Math.max(0, b.hp) / b.maxhp) + '%'; const ph = mini ? '' : 'PHASE ' + ROMAN[b.phase || 1]; if (E['boss-ph'].textContent !== ph) E['boss-ph'].textContent = ph; }
       const p = game.prompt; E.prompt.classList.toggle('show', !!p); if (p) E['prompt-t'].textContent = p.text;
       const a = game.world.arena, dx = a.cx * M.TS - c.x, dy = a.cy * M.TS - c.y, near = Math.hypot(dx, dy) < 420;
       E.compass.classList.toggle('show', !near && game.lit.size > 0 && !game.prog[game.mapIdx].bossDead); E.arrow.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
