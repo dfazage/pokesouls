@@ -2,6 +2,7 @@ import { loadDb, loadPortraits, A } from './assets.js';
 import { loadProps } from './props.js';
 import { loadItemIcons, itemIconFile } from './items.js';
 import { Input } from './input.js';
+import { createPadNav } from './padnav.js';
 import { unlockAudio } from './audio.js';
 import { Game, W, H } from './game.js';
 import { render } from './render.js';
@@ -52,6 +53,8 @@ const keepAwake = async () => { try { if ('wakeLock' in navigator && !wake && !d
 addEventListener('pointerdown', keepAwake, { passive: true });
 
 let game = null, hud = null, mode = 'loading', menuKind = null, last = 0;
+const padNav = createPadNav();
+let lastPadMode = false;
 // braises de l'écran titre
 (() => { const box = document.getElementById('embers'); if (!box) return; for (let i = 0; i < 28; i++) { const s = document.createElement('span'), z = 2 + Math.random() * 3.5; s.style.cssText = `left:${500 + Math.random() * 280 | 0}px;width:${z}px;height:${z}px;--dx:${(Math.random() - 0.5) * 260 | 0}px;animation-duration:${4 + Math.random() * 5}s;animation-delay:-${Math.random() * 9}s`; box.appendChild(s); } })();
 const ui = { screen: 'title', controls: false, menuKind: null };
@@ -108,6 +111,8 @@ function frame(now) {
   if (r3d) r3d.adapt(now - last);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   Input.poll();
+  padNav.update(dt); // menus : navigation manette (avant la logique de mode pour qu'un retour « B » ne ferme pas tout le feu de camp)
+  { const pm = Input.usingPad(); if (pm !== lastPadMode) { lastPadMode = pm; if (game && game.tut) game.renderTut(); } } // le tuto réaffiche ses boutons quand on change de périphérique
   if (mode === 'play') {
     if (Input.pressed('pause')) openPause();
     else if (Input.pressed('bag') && game.state === 'play') openBag();
