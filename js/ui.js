@@ -3,7 +3,7 @@ import { A } from './assets.js';
 import { iconImg } from './items.js';
 import * as D from './data.js';
 import * as M from './maps.js';
-import { ACTIONS, padLabels, padKindName, padFace, Controls, keyLabel } from './input.js';
+import { ACTIONS, padLabels, padKindName, padFace, padBtnName, PAD_ACTIONS, Input, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
@@ -204,13 +204,13 @@ function padDiagram() {
 
 // ---------- commandes (lecture et modification) ----------
 export function showControls(onClose) {
-  let waiting = null;
+  let waiting = null, padWait = null;
   const render = () => {
     const rows = ACTIONS.map(([grp, list]) => `<h4>${grp}</h4>` + list.map(([a, label]) => `<div class="krow"><span>${label}</span>${[0, 1, 2].map(s => {
       const on = waiting && waiting[0] === a && waiting[1] === s;
       return `<button class="keybtn ${on ? 'wait' : ''}" data-a="${a}" data-s="${s}">${on ? 'Appuyez…' : keyLabel(Controls.get(a)[s])}</button>`; }).join('')}</div>`).join('')).join('');
     const m = open(`<div class="panel wide kp"><h2>Commandes</h2><p class="sub">Cliquez sur une case puis appuyez sur la touche (ou un bouton de souris) voulue. Échap annule, Retour arrière efface la case. Une touche ne peut servir qu’à une action : elle est retirée de l’ancienne. Les réglages sont enregistrés dans ce navigateur.</p>
-      ${volRow()}<h4 class="padh">Manette${padKindName() ? ' détectée : ' + padKindName() : ' (disposition Nintendo Switch)'}</h4>${padDiagram()}<div class="kcols"><div>${rows}</div><div><h4>Manette</h4><div class="krow"><span>Menus : naviguer</span><kbd>Croix ou stick gauche</kbd></div><div class="krow"><span>Valider / retour · onglets</span><kbd>${padFace().f[0]} / ${padFace().f[1]} · ${padFace().f[4]} / ${padFace().f[5]}</kbd></div>
+      ${volRow()}<h4 class="padh">Manette${padKindName() ? ' détectée : ' + padKindName() : ' (disposition Nintendo Switch)'}</h4>${padDiagram()}<div class="kcols"><div>${rows}</div><div><h4>Manette : réassigner les boutons</h4>${Input.padCustom() ? '<p class="sub">Disposition personnalisée : le schéma montre la disposition par défaut.</p>' : ''}${PAD_ACTIONS.map(([a, l]) => `<div class="krow"><span>${l}</span><button class="keybtn padbtn ${padWait === a ? 'wait' : ''}" data-pa="${a}">${padWait === a ? 'Appuyez sur un bouton…' : padBtnName(Input.padIndex(a))}</button></div>`).join('')}<div class="krow"><span></span><button id="pad-reset" class="warn">Boutons par défaut</button></div><p class="sub">${Input.padInfo().id ? 'Manette : ' + Input.padInfo().id + ' (' + (Input.padInfo().mapping || 'disposition non standard') + ')' : 'Branche une manette et appuie sur un bouton pour la détecter.'}</p><div class="krow"><span>Menus : naviguer</span><kbd>Croix ou stick gauche</kbd></div><div class="krow"><span>Valider / retour · onglets</span><kbd>${padFace().f[0]} / ${padFace().f[1]} · ${padFace().f[4]} / ${padFace().f[5]}</kbd></div>
       <h4>Pour info</h4><div class="krow"><span>Parade</span><kbd>Garde juste avant le coup</kbd></div><div class="krow"><span>Mode développeur</span><kbd>?dev dans l’adresse · F1–F6</kbd></div></div></div>
       <div class="act"><button id="k-reset" class="warn">Valeurs par défaut</button><button id="m-close">Fermer</button></div></div>`);
     bindVol();
@@ -222,7 +222,9 @@ export function showControls(onClose) {
         render();
       });
     });
-    $('#k-reset').onclick = () => { Controls.stopListen(); waiting = null; Controls.reset(); render(); };
+    $('#k-reset').onclick = () => { Controls.stopListen(); Input.padStopLearn(); padWait = null; waiting = null; Controls.reset(); Input.padResetMap(); render(); };
+    m.querySelectorAll('.padbtn').forEach(b => b.onclick = () => { Controls.stopListen(); waiting = null; padWait = b.dataset.pa; render(); Input.padLearn(i => { Input.padAssign(padWait, i); padWait = null; render(); }); });
+    const pr = m.querySelector('#pad-reset'); if (pr) pr.onclick = () => { Input.padStopLearn(); padWait = null; Input.padResetMap(); render(); };
     $('#m-close').onclick = () => { Controls.stopListen(); onClose(); };
   };
   render();
