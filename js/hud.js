@@ -2,7 +2,7 @@
 import { A } from './assets.js';
 import { BOSS_THRESHOLDS, NAMES_FR, STATUS } from './data.js';
 import * as M from './maps.js';
-import { Controls, keyLabel } from './input.js';
+import { Controls, keyLabel, Input, padLabel } from './input.js';
 import { itemIconFile } from './items.js';
 import { BOSS_LORE } from './elements.js';
 
@@ -19,7 +19,9 @@ const MOTIF = {
   mewtwo: '<path d="M-96 0C-48-56 48-56 96 0C48 56-48 56-96 0Z" fill="#12081e" stroke="currentColor" stroke-width="5"/><circle r="30" fill="currentColor"/><circle r="15" fill="#fff"/><ellipse rx="5" ry="22" fill="#2a1050"/>',
   mew: '<g fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round"><circle r="86"/><circle r="56" stroke-dasharray="1 9"/></g><circle r="38" fill="currentColor"/><circle r="22" fill="#fff" fill-opacity=".7"/><circle cx="-12" cy="-4" r="5" fill="#2a1050"/><circle cx="12" cy="-4" r="5" fill="#2a1050"/>',
 };
-export const kl = a => keyLabel(Controls.get(a)[0]);
+// Étiquette d'une action : bouton de la manette si une manette est en service, sinon première touche du clavier.
+export const kl = a => (Input.usingPad() && padLabel(a)) || keyLabel(Controls.get(a)[0]);
+const khint = a => { const l = kl(a); return Input.usingPad() && l.length === 1 ? 'Croix ' + l : l; };
 
 export function createHud(game) {
   const root = $('#hud');
@@ -57,7 +59,7 @@ export function createHud(game) {
     $('.veil', el).style.opacity = q.dim.toFixed(2); $('.flash', el).style.opacity = (q.flash * 0.85).toFixed(2);
     const lk = $('.skip .lk', el), txt = t < 9.3 ? 'Contrôle verrouillé' : 'Contrôle rendu'; if (lk.textContent !== txt) lk.textContent = txt;
   }
-  let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '', introEl = null, introT = -1;
+  let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '', introEl = null, introT = -1, lastPad = false;
 
   const hud = {
     update(dt) {
@@ -86,7 +88,8 @@ export function createHud(game) {
       const p = game.prompt; E.prompt.classList.toggle('show', !!p); if (p) E['prompt-t'].textContent = p.text;
       const a = game.world.arena, dx = a.cx * M.TS - c.x, dy = a.cy * M.TS - c.y, near = Math.hypot(dx, dy) < 420;
       E.compass.classList.toggle('show', !near && game.lit.size > 0 && !game.prog[game.mapIdx].bossDead); E.arrow.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-      if ((keyT -= dt) <= 0) { keyT = 0.5; E['k-ab'].textContent = kl('ability'); E['k-berry'].textContent = kl('berry'); E['k-ether'].textContent = kl('ether'); E['k-link'].textContent = kl('link'); E['k-int'].textContent = kl('interact'); E.hints.textContent = `${kl('map')} Carte · ${kl('bag')} Sac · ${kl('pause')} Pause / Commandes`; }
+      { const pm = Input.usingPad(); if (pm !== lastPad) { lastPad = pm; keyT = 0; root.classList.toggle('padmode', pm); } }
+      if ((keyT -= dt) <= 0) { keyT = 0.5; E['k-ab'].textContent = kl('ability'); E['k-berry'].textContent = kl('berry'); E['k-ether'].textContent = kl('ether'); E['k-link'].textContent = kl('link'); E['k-int'].textContent = kl('interact'); E.hints.textContent = `${khint('map')} Carte · ${khint('bag')} Sac · ${khint('pause')} Pause / Commandes`; const sk = $('.skip kbd', root); if (sk) sk.textContent = kl('interact'); }
       if (toastT > 0 && (toastT -= dt) <= 0) E.toast.classList.remove('show');
       if (bannerT > 0 && (bannerT -= dt) <= 0) E.banner.className = '';
       if (areaT > 0 && (areaT -= dt) <= 0) E.area.classList.remove('show');

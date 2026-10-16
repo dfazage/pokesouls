@@ -3,7 +3,7 @@ import { A } from './assets.js';
 import { iconImg } from './items.js';
 import * as D from './data.js';
 import * as M from './maps.js';
-import { ACTIONS, PAD_LABELS, Controls, keyLabel } from './input.js';
+import { ACTIONS, padLabels, padKindName, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
@@ -134,7 +134,7 @@ export function showControls(onClose) {
       const on = waiting && waiting[0] === a && waiting[1] === s;
       return `<button class="keybtn ${on ? 'wait' : ''}" data-a="${a}" data-s="${s}">${on ? 'Appuyez…' : keyLabel(Controls.get(a)[s])}</button>`; }).join('')}</div>`).join('')).join('');
     const m = open(`<div class="panel wide kp"><h2>Commandes</h2><p class="sub">Cliquez sur une case puis appuyez sur la touche (ou un bouton de souris) voulue. Échap annule, Retour arrière efface la case. Une touche ne peut servir qu’à une action : elle est retirée de l’ancienne. Les réglages sont enregistrés dans ce navigateur.</p>
-      ${volRow()}<div class="kcols"><div>${rows}</div><div><h4>Manette (disposition standard, fixe)</h4>${PAD_LABELS.map(([a, b]) => `<div class="krow"><span>${a}</span><kbd>${b}</kbd></div>`).join('')}
+      ${volRow()}<div class="kcols"><div>${rows}</div><div><h4>Manette${padKindName() ? ' détectée : ' + padKindName() : ' (disposition standard, fixe)'}</h4>${padLabels().map(([a, b]) => `<div class="krow"><span>${a}</span><kbd>${b}</kbd></div>`).join('')}
       <h4>Pour info</h4><div class="krow"><span>Parade</span><kbd>Garde juste avant le coup</kbd></div><div class="krow"><span>Mode développeur</span><kbd>?dev dans l’adresse · F1–F6</kbd></div></div></div>
       <div class="act"><button id="k-reset" class="warn">Valeurs par défaut</button><button id="m-close">Fermer</button></div></div>`);
     bindVol();

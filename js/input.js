@@ -12,10 +12,31 @@ export const DEFAULTS = {
   interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], link: ['KeyV', '', ''], pause: ['Escape', 'KeyP', ''],
   s1: ['Digit1', 'Numpad1', ''], s2: ['Digit2', 'Numpad2', ''], s3: ['Digit3', 'Numpad3', ''], map: ['KeyM', '', ''], bag: ['KeyB', '', ''],
 };
-export const PAD_LABELS = [
-  ['Déplacement', 'Stick gauche'], ['Esquive / course (maintenu)', 'A'], ['Interagir', 'B'], ['Attaque légère', 'X'], ['Attaque lourde', 'Y'],
-  ['Garde', 'LB'], ['Capacité spéciale', 'RB'], ['Relève (Pokémon suivant)', 'RT'], ['Fiole d’endurance', 'LT'], ['Baie', 'Croix haut'], ['Lien (alliés)', 'LB + RB ensemble'], ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', 'Select'], ['Sac', 'Croix bas'], ['Pause', 'Start'],
-];
+// ---- étiquettes de manette : elles suivent le type détecté (Xbox, Nintendo Switch / Joy-Con, PlayStation) ----
+// Indices de la disposition « standard » : 0 bas, 1 droite, 2 gauche, 3 haut, 4 L1, 5 R1, 6 L2, 7 R2.
+const FACE = { xbox: ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT'], nin: ['B', 'A', 'Y', 'X', 'L', 'R', 'ZL', 'ZR'], ps: ['✕', '○', '□', '△', 'L1', 'R1', 'L2', 'R2'] };
+const SYS = { xbox: ['Select', 'Start'], nin: ['−', '+'], ps: ['Select', 'Options'] };
+const KIND_NAME = { xbox: 'Xbox / standard', nin: 'Nintendo Switch', ps: 'PlayStation' };
+let padKind = 'xbox', padOn = false, lastDev = 'kb';
+const kindOf = id => (/054c|playstation|dualshock|dualsense/i.test(id) ? 'ps' : /057e|nintendo|joy-?con|pro controller|switch/i.test(id) ? 'nin' : 'xbox');
+export function padLabel(a) {
+  const f = FACE[padKind], s = SYS[padKind];
+  switch (a) {
+    case 'up': case 'down': case 'left': case 'right': return 'Stick G';
+    case 'dodge': return f[0]; case 'run': return f[0] + ' (maintenu)'; case 'interact': return f[1]; case 'light': return f[2]; case 'heavy': return f[3];
+    case 'guard': return f[4]; case 'ability': return f[5]; case 'ether': return f[6]; case 'next': return f[7]; case 'link': return f[4] + ' + ' + f[5];
+    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return '↑'; case 'bag': return '↓';
+    default: return '';
+  }
+}
+export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
+export function padLabels() {
+  const f = FACE[padKind];
+  return [['Déplacement', 'Stick gauche'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
+    ['Garde / parade', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Fiole d’endurance', padLabel('ether')], ['Baie', 'Croix haut'], ['Lien (alliés)', padLabel('link') + ' ensemble'],
+    ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix bas'], ['Pause', padLabel('pause')],
+    ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
+}
 const STORE = 'pokesouls.controls.v1';
 let binds = {}, codeToAct = {}, layout = null, capture = null;
 
@@ -58,6 +79,7 @@ const press = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) 
 const release = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) down.delete(a); };
 
 addEventListener('keydown', e => {
+  lastDev = 'kb';
   if (capture) { e.preventDefault(); e.stopPropagation(); if (!e.repeat) { const cb = capture; capture = null; cb(e.code); } return; }
   if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   if (!codeToAct[e.code]) return;
@@ -71,6 +93,7 @@ const onUi = e => e.target && e.target.closest && e.target.closest('button,.menu
 addEventListener('pointerdown', e => { if (e.pointerType === 'touch') lastTouchT = performance.now(); }, true);
 addEventListener('mousedown', e => {
   if (performance.now() - lastTouchT < 1000) return;
+  lastDev = 'kb';
   if (capture) { if (onUi(e) && !e.target.closest('.keybtn')) return; e.preventDefault(); const cb = capture; capture = null; cb('Mouse' + e.button); return; }
   if (onUi(e)) return; press('Mouse' + e.button);
 }, true);
@@ -84,27 +107,47 @@ export const Touch = {
 };
 addEventListener('contextmenu', e => e.preventDefault());
 
-// Manette (disposition standard)
+// Manette (disposition standard). Une Joy-Con fusionnée ou une Pro Controller est vue comme une manette standard par Chrome.
 const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'ether', 12: 'berry', 13: 'bag', 11: 'lock', 9: 'pause', 8: 'map' };
+const btnPrev = [], padEdge = new Set();
+function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
+addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
+addEventListener('gamepaddisconnected', () => { padReset(); padOn = false; padAxes = [0, 0]; });
+addEventListener('blur', padReset);
 function pollPad() {
-  const gp = (navigator.getGamepads && [...navigator.getGamepads()].find(Boolean)) || null;
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+  const gp = pads.find(p => p.mapping === 'standard') || pads[0] || null;
   padAxes = [0, 0];
-  if (!gp) return;
+  if (!gp) { if (padOn) { padReset(); padOn = false; } return; }
+  padOn = true; padKind = kindOf(gp.id);
   const dz = v => (Math.abs(v) < 0.2 ? 0 : v);
   padAxes = [dz(gp.axes[0] || 0), dz(gp.axes[1] || 0)];
-  for (const [b, act] of Object.entries(PAD)) {
-    const on = !!(gp.buttons[b] && gp.buttons[b].pressed);
-    if (on && !padPrev[b]) pressedNow.add(act);
-    padPrev[b] = on;
-    if (on) padDown.add(act); else padDown.delete(act);
+  let any = Math.hypot(padAxes[0], padAxes[1]) > 0.6;
+  for (let i = 0; i < 17; i++) {
+    const on = !!(gp.buttons[i] && gp.buttons[i].pressed);
+    if (on && !btnPrev[i]) padEdge.add(i);
+    btnPrev[i] = on; if (on) any = true;
   }
-  if (gp.buttons[0] && gp.buttons[0].pressed) padDown.add('run');
-  { const both = !!(gp.buttons[4] && gp.buttons[4].pressed && gp.buttons[5] && gp.buttons[5].pressed); if (both && !padPrev.chord) pressedNow.add('link'); padPrev.chord = both; }
+  if (any) lastDev = 'pad';
+  for (const [b, act] of Object.entries(PAD)) {
+    if (padEdge.has(+b)) pressedNow.add(act);
+    if (btnPrev[b]) padDown.add(act); else padDown.delete(act);
+  }
+  // La course se maintient avec le bouton d'esquive ; elle doit être retirée dès qu'il est relâché (sinon elle reste active en permanence).
+  if (btnPrev[0]) padDown.add('run'); else padDown.delete('run');
+  { const both = !!(btnPrev[4] && btnPrev[5]); if (both && !padPrev.chord) pressedNow.add('link'); padPrev.chord = both; }
 }
 export const Input = {
   poll() { pollPad(); },
-  endFrame() { pressedNow.clear(); },
+  endFrame() { pressedNow.clear(); padEdge.clear(); },
   pressed: a => pressedNow.has(a),
+  // aides pour la navigation manette dans les menus (js/padnav.js)
+  padEdge: i => padEdge.has(i),
+  padHeld: i => !!btnPrev[i],
+  padStick: () => padAxes,
+  eat: a => { pressedNow.delete(a); },
+  // vrai quand une manette est branchée et que c'est elle qui a servi en dernier (hors mode tactile)
+  usingPad: () => padOn && lastDev === 'pad' && !document.body.classList.contains('touch'),
   down: a => down.has(a) || padDown.has(a) || touchDown.has(a),
   axis() {
     let x = (Input.down('right') ? 1 : 0) - (Input.down('left') ? 1 : 0) + padAxes[0] + touchAxes[0];
@@ -112,5 +155,5 @@ export const Input = {
     const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
     return [x, y];
   },
-  clear() { down.clear(); pressedNow.clear(); touchDown.clear(); },
+  clear() { down.clear(); pressedNow.clear(); touchDown.clear(); padEdge.clear(); },
 };

@@ -2,7 +2,7 @@
 // installTutorial() ajoute les méthodes à la classe Game ; createTutorialUi() dessine l'invite à l'écran.
 // Le tutoriel se lance au premier démarrage d'une nouvelle partie (état « pending ») et peut être passé.
 
-import { Input } from './input.js';
+import { Input, padLabel } from './input.js';
 import { kl } from './hud.js';
 
 // actions affichées en pastilles ; evt : événement du moteur qui fait progresser l'étape
@@ -116,14 +116,16 @@ export function installTutorial(Game, { M, D, TS, SFX, hyp }) {
 // ---------- invite à l'écran ----------
 const LABEL = { up: 'Haut', down: 'Bas', left: 'Gauche', right: 'Droite', run: 'Courir', dodge: 'Esquive', light: 'Légère', heavy: 'Lourde', guard: 'Garde', ability: 'CT', next: 'Relève', s1: '1', s2: '2', s3: '3', link: 'Lien', berry: 'Baie', ether: 'Huile', lock: 'Verrou' };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DIR = new Set(['up', 'down', 'left', 'right']);
 
 export function createTutorialUi(root, game) {
   const el = document.createElement('div'); el.id = 'tut'; el.hidden = true; root.appendChild(el);
   const touch = () => document.body.classList.contains('touch');
   const chips = keys => {
-    const seen = new Set();
-    return keys.filter(k => { const t = touch() ? LABEL[k] : kl(k); const key = k === 'up' || k === 'down' || k === 'left' || k === 'right' ? 'move' : k + t; if (seen.has(key)) return false; seen.add(key); return true; })
-      .map(k => touch() ? `<span class="tk">${esc(LABEL[k])}</span>` : `<span class="tk"><kbd>${esc(kl(k))}</kbd>${esc(LABEL[k])}</span>`).join('');
+    const seen = new Set(), pad = !touch() && Input.usingPad();
+    // à la manette : les actions sans bouton (appel direct des Pokémon 1, 2, 3) sont masquées et les quatre directions deviennent « Stick G »
+    return keys.filter(k => { if (pad && !padLabel(k)) return false; const t = touch() ? LABEL[k] : kl(k); const key = k === 'up' || k === 'down' || k === 'left' || k === 'right' ? 'move' : k + t; if (seen.has(key)) return false; seen.add(key); return true; })
+      .map(k => touch() ? `<span class="tk">${esc(LABEL[k])}</span>` : `<span class="tk"><kbd>${esc(kl(k))}</kbd>${esc(pad && DIR.has(k) ? 'Déplacer' : LABEL[k])}</span>`).join('');
   };
   const api = {
     hide() { el.hidden = true; },

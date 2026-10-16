@@ -435,3 +435,8 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 #tut .tt-d i.d{background:#6cd84c}#tut .tt-d i.c{background:#ffe27a}
 #tut.done{border-color:#ffe27a}
 body.touch #tut{left:12px;top:70px;width:260px;font-size:11px}
+
+/* navigation manette dans les menus (js/padnav.js) */
+body.padnav .padfocus{outline:3px solid var(--acc-2);outline-offset:3px;box-shadow:0 0 18px rgba(255,227,166,.6);position:relative;z-index:2}
+body.padnav input[type=range].padfocus{accent-color:var(--acc-2)}
+#hud.padmode #tut .tk kbd{white-space:nowrap}
