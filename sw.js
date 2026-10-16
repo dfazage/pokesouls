@@ -2,7 +2,7 @@
 // - Code et données (HTML, JS, CSS, JSON) : réseau d'abord, copie locale si hors ligne ou réseau lent, donc les mises à jour arrivent tout de suite.
 // - Médias (assets/ : sprites, effets, musiques) : copie locale d'abord, remplie au fil du jeu. Ce qui a déjà été joué reste disponible hors ligne.
 // Changer VERSION invalide toutes les copies locales.
-const VERSION = 'v28';
+const VERSION = 'v31';
 const SHELL = `pokesouls-shell-${VERSION}`;
 const MEDIA = `pokesouls-media-${VERSION}`;
 const SHELL_FILES = [
@@ -11,7 +11,7 @@ const SHELL_FILES = [
   'js/bosscine.js', 'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/input.js', 'js/items.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
   'js/touch.js', 'js/padnav.js', 'js/ui.js', 'js/vendor/three.module.min.js',
   'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/audio/music_map.json',
-  'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
+  'assets/logo.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 
 self.addEventListener('install', e => {
