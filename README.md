@@ -39,7 +39,7 @@ Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à é
 - **Marques** : chaque coup élémentaire pose une marque (Trempé, Enflammé, Givré, Chargé, Enraciné, Toxique), 2 au maximum par cible. Un coup compatible déclenche une **réaction** : Conduction (Trempé + Électrik, ou Chargé + Eau), Gel net, Vapeur, Embrasement, Fumées, Fonte, Fragilisation, Isolation. Le portrait de l'équipe s'illumine quand un Pokémon peut en déclencher une.
 - **Surfaces de terrain** : flaques (conduisent l'électricité), feu au sol, vapeur (aveugle), nuage toxique.
 - **Boss** : Électhor entretient une aura Chargée (l'eau ou la terre la contredit), Sulfura une aura de feu (l'eau l'éteint), Artikodin une carapace de glace (le feu la brise). Un indice de lore s'affiche à l'entrée.
-- **Relais** : changer de Pokémon juste après une esquive juste ou une parade déclenche une frappe immédiate avec l'élément du nouvel arrivant.
+- **Relais** : changer de Pokémon juste après une esquive juste ou une parade déclenche l'**attaque d'entrée** propre à l'espèce du nouvel arrivant (`js/relay.js`, 15 familles de starters des générations 1 à 5 : Boule de feu, Vague repoussante, Vampigraine, etc.). Le gabarit en fixe la fonction : Assaut (frappe), Rempart (onde qui repousse ou étourdit), Distance (tir ou éventail), Soutien (soigne le Pokémon qui vient de sortir). Elle pose les marques de son élément, donc les réactions existantes s'enchaînent. Les formes évoluées agrandissent la portée et le soin. Les familles des générations 6 à 9 utilisent une frappe de relais par défaut.
 
 Les ennemis en retour : l'eau trempe l'équipe, l'électricité frappe plus fort un Pokémon trempé.
 
