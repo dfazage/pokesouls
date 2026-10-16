@@ -12,8 +12,8 @@ function noise(dur, vol = 0.08, lp = 2000) {
   const s = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp;
   s.buffer = b; g.gain.value = vol; s.connect(f).connect(g).connect(ac.destination); s.start();
 }
-// cris de boss : fichiers réels, cherchés d'abord dans assets/audio/cries/<id>.mp3 (à déposer à côté du jeu), sinon chargés depuis Pokémon Showdown
-const CRY_URL = id => ['assets/audio/cries/' + id + '.mp3', 'https://play.pokemonshowdown.com/audio/cries/' + id + '.mp3'];
+// cris de boss : fichiers réels dans assets/audio/cries/<id>.ogg (dépôt PokeAPI/cries)
+const CRY_URL = id => ['assets/audio/cries/' + id + '.ogg'];
 const cryCache = {};
 function playCry(id) {
   const urls = CRY_URL(id); let i = 0;
