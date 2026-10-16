@@ -535,3 +535,7 @@ button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-siz
 .wd-art.sealed img{filter:brightness(0) opacity(.55)}
 .wghost{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:16px;color:rgba(255,255,255,.55);border:2px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.04);pointer-events:none}
 .wr.ghost{cursor:default;opacity:.35}
+
+/* manette : R maintenu = objets rapides actifs */
+body.padmod #quick .qs:not(.empty){box-shadow:0 0 0 2px var(--acc),0 0 14px var(--acc);transform:scale(1.08)}
+#quick .qs{transition:transform .08s,box-shadow .08s}

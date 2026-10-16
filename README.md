@@ -70,20 +70,22 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Action | Par défaut | Manette |
 |---|---|---|
 | Déplacement | WASD / ZQSD / flèches | stick gauche |
-| Course / Esquive | Maj / Espace | A |
-| Attaque légère / lourde | J (clic gauche) / K (clic droit) | X / Y |
-| Capacité spéciale (CT) | L | RB |
-| Garde (parade juste après l'appui) | H | LB |
-| Interagir | E | B |
-| Baie de soin | R | croix haut |
-| Fiole d'endurance (Huile) | F | croix droite |
-| Super Bonbon (Pokémon actif) | C | croix gauche |
-| Rappel (relève un Pokémon épuisé) | G | croix bas |
-| Lien (appeler les alliés) | V | LB + RB |
+| Course / Esquive | Maj / Espace | B (maintenu = course) |
+| Attaque légère / lourde | J (clic gauche) / K (clic droit) | Y / X |
+| Capacité spéciale (CT) | L | L |
+| Garde (parade juste après l'appui) | H | ZR (maintenu) |
+| Interagir | E | A |
+| Baie de soin | R | R + X |
+| Super Bonbon (Pokémon actif) | C | R + Y |
+| Fiole d'endurance (Huile) | F | R + A |
+| Rappel (relève un Pokémon épuisé) | G | R + B |
+| Lien (appeler les alliés) | V | clic stick gauche |
 | Verrouillage | T | clic stick droit |
-| Relève du Pokémon | Tab ou 1 à 3 | RT |
-| Carte / Sac | M / B | Select / ZL |
-| Pause | Échap | Start |
+| Relève du Pokémon | Tab ou 1 à 3 | ZL |
+| Carte / Sac | M / B | − / croix haut |
+| Pause | Échap | + |
+
+Libellés de la disposition Nintendo Switch ; Xbox et PlayStation suivent les mêmes positions (A = bas, B = droite, X = gauche, Y = haut côté Xbox). Maintenir R active les objets rapides sur les boutons de face, ce qui libère la croix.
 
 La manette n'a pas encore été testée.
 

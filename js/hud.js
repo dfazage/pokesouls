@@ -73,6 +73,7 @@ export function createHud(game) {
       E.buff.textContent = game.buffT > 0 ? '⚔ ' + Math.ceil(game.buffT) + ' s' : '';
       E.berries.textContent = game.berries + '/' + game.maxBerries; E.ess.textContent = game.essence;
       E.ethers.textContent = game.ethers + '/' + game.maxEthers;
+      document.body.classList.toggle('padmod', Input.usingPad() && Input.padHeld(5));   // R tenu : les objets rapides s'éclairent
       { const cn = game.bag.candy || 0; E.candy.textContent = '×' + cn; E.candy.parentNode.classList.toggle('empty', !cn); }
       { const rv = game.bag.revive || 0; E.revive.textContent = '×' + rv; E.revive.parentNode.classList.toggle('empty', !rv); }
       E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);
