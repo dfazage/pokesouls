@@ -2,7 +2,7 @@
 // installTutorial() ajoute les méthodes à la classe Game ; createTutorialUi() dessine l'invite à l'écran.
 // Le tutoriel se lance au premier démarrage d'une nouvelle partie (état « pending ») et peut être passé.
 
-import { Input, padLabel } from './input.js';
+import { Input, padLabel, padBtnName, keyLabel } from './input.js';
 import { kl } from './hud.js';
 
 // actions affichées en pastilles ; evt : événement du moteur qui fait progresser l'étape
@@ -10,13 +10,14 @@ const STEPS = [
   { id: 'move', title: 'Bouger et courir', keys: ['up', 'down', 'left', 'right', 'run'], text: 'Rejoins le mannequin en courant : maintiens la touche de course. Courir consomme de l’endurance.', goal: 'Cours jusqu’au mannequin.' },
   { id: 'hit', title: 'Attaque légère et lourde', keys: ['light', 'heavy'], need: 3, text: 'Frappe le mannequin. La légère est rapide, la lourde est lente et casse la garde. Chaque coup coûte de l’endurance.', goal: 'Touche 3 fois, dont 1 coup lourd.' },
   { id: 'dodge', title: 'Esquiver', keys: ['dodge'], need: 1, aggro: true, text: 'Le mannequin va frapper : un cercle apparaît au sol. Esquive à la dernière seconde, c’est une esquive juste. La jauge de Lien monte.', goal: 'Réussis 1 esquive juste.' },
-  { id: 'parry', title: 'Garder et parer', keys: ['guard'], need: 1, aggro: true, text: 'Appuie sur la garde juste avant l’impact : parade. Le mannequin vacille et ton prochain coup part plus fort.', goal: 'Réussis 1 parade.' },
-  { id: 'combo', title: 'Combo signature', keys: ['light', 'light', 'heavy'], need: 1, text: 'Attaque légère, légère, lourde en moins d’une demi-seconde : l’attaque signature de ton Pokémon.', goal: 'Lance 1 attaque signature.' },
+  { id: 'parry', title: 'Garder et parer', keys: ['guard'], need: 1, aggro: true, text: 'Appuie sur la garde juste avant l’impact : parade. Le mannequin vacille et ton prochain coup part plus fort.', goal: 'Réussis 1 parade.', seqs: [{ label: 'Riposte', keys: ['guard', 'heavy'] }], extra: 'Juste après une parade, un coup lourd est une riposte : le bandeau « Riposte » s’affiche au-dessus de ton Pokémon.' },
+  { id: 'combo', title: 'Combo signature', keys: ['light', 'light', 'heavy'], need: 1, text: 'Attaque légère, légère, lourde en moins d’une demi-seconde : l’attaque signature de ton Pokémon.', goal: 'Lance 1 attaque signature.', seqs: [{ label: 'Signature', keys: ['light', 'light', 'heavy'] }] },
   { id: 'ct', title: 'Capacité spéciale', keys: ['ability'], need: 1, text: 'La capacité spéciale (CT) consomme de l’endurance et se recharge. Chaque Pokémon a la sienne.', goal: 'Lance 1 capacité spéciale.' },
-  { id: 'relay', title: 'Relève et relais', keys: ['next', 's1', 's2', 's3'], need: 1, aggro: true, text: 'Esquive ou pare, puis change de Pokémon dans la seconde qui suit : le nouveau venu frappe tout de suite avec son attaque de relais.', goal: 'Déclenche 1 relais.' },
+  { id: 'relay', title: 'Relève et relais', keys: ['next', 's1', 's2', 's3'], need: 1, aggro: true, text: 'Esquive ou pare, puis change de Pokémon dans la seconde qui suit : le nouveau venu frappe tout de suite avec son attaque de relais.', goal: 'Déclenche 1 relais.', seqs: [{ label: 'Relais', keys: ['dodge', 'next'] }, { label: 'ou', keys: ['guard', 'next'] }] },
   { id: 'link', title: 'Le Lien', keys: ['link'], need: 1, text: 'La jauge de Lien monte quand tu touches, esquives et pares. Pleine, elle libère tes deux autres Pokémon pendant 8 s. Elle est pleine pour cet essai.', goal: 'Libère le Lien.' },
   { id: 'berry', title: 'Se soigner', keys: ['berry', 'ether'], need: 1, text: 'La baie soigne 40 % des PV et guérit les altérations. L’huile recharge endurance et CT. Le feu de camp restaure toute l’équipe.', goal: 'Utilise 1 baie.' },
   { id: 'lock', title: 'Verrouiller et types', keys: ['lock'], need: 1, text: 'Verrouille une cible. Les flèches vertes et rouges sur les portraits indiquent l’avantage de type. Deux marques compatibles déclenchent une réaction.', goal: 'Verrouille le mannequin.' },
+  { id: 'recap', title: 'Les enchaînements à retenir', info: true, text: 'Trois enchaînements à connaître. Les fenêtres sont courtes : un bandeau apparaît au-dessus de ton Pokémon quand l’un d’eux est disponible.', seqs: [{ label: 'Signature', keys: ['light', 'light', 'heavy'], note: 'Attaque spéciale du Pokémon' }, { label: 'Riposte', keys: ['guard', 'heavy'], note: 'Parade, puis coup lourd' }, { label: 'Relais', keys: ['dodge', 'next'], note: 'Esquive ou parade, puis relève' }], goal: 'Appuie sur {interact} pour terminer l’entraînement.' },
 ];
 
 export function installTutorial(Game, { M, D, TS, SFX, hyp }) {
@@ -65,7 +66,7 @@ export function installTutorial(Game, { M, D, TS, SFX, hyp }) {
     const T = this.tut; if (!T) { this.tutUi.hide(); return; }
     if (T.done) { this.tutUi.render({ done: true }); return; }
     const s = STEPS[T.i];
-    this.tutUi.render({ n: T.i + 1, total: STEPS.length, title: s.title, text: s.text, goal: s.goal, keys: s.keys, progress: this.tutProgress(), ok: T.fin });
+    this.tutUi.render({ n: T.i + 1, total: STEPS.length, title: s.title, text: s.text, extra: s.extra, goal: s.goal, keys: s.keys, seqs: s.seqs, info: s.info, progress: this.tutProgress(), ok: T.fin });
   };
 
   P.tutEvent = function (name, data) {
@@ -92,6 +93,7 @@ export function installTutorial(Game, { M, D, TS, SFX, hyp }) {
     for (const m of this.team) { if (s && s.id !== 'berry') m.hp = Math.max(m.hp, m.maxhp * 0.45); m.cd = 0; }
     if (this.stam < this.maxStam * 0.6) this.stam = this.maxStam * 0.6;
     if (T.fin) { T.wait -= dt; if (T.wait <= 0) this.nextTutStep(); return; }
+    if (s && s.info && Input.pressed('interact')) { T.fin = true; T.wait = 0.4; SFX.pick(); this.renderTut(); return; }
     if (s && s.id === 'move') {
       const [ax, ay] = Input.axis();
       if ((ax || ay) && Input.down('run')) T.run += dt;
@@ -121,22 +123,31 @@ const DIR = new Set(['up', 'down', 'left', 'right']);
 export function createTutorialUi(root, game) {
   const el = document.createElement('div'); el.id = 'tut'; el.hidden = true; root.appendChild(el);
   const touch = () => document.body.classList.contains('touch');
+  const lab = k => (touch() ? LABEL[k] : kl(k)) || '';
+  const padMode = () => !touch() && Input.usingPad();
+  const skipKey = () => (padMode() ? padBtnName(8) : keyLabel('Enter'));
+  // pastille « bouton pixel » : la touche, et dessous le nom de l'action
+  const px = k => `<span class="px"><kbd>${esc(lab(k))}</kbd><small>${esc(LABEL[k])}</small></span>`;
+  const seq = q => `<div class="sq"><b>${esc(q.label)}</b>${q.keys.map((k, i) => (i ? '<i>›</i>' : '') + px(k)).join('')}${q.note ? `<em>${esc(q.note)}</em>` : ''}</div>`;
   const chips = keys => {
-    const seen = new Set(), pad = !touch() && Input.usingPad();
+    const seen = new Set(), pad = padMode();
     // à la manette : les actions sans bouton (appel direct des Pokémon 1, 2, 3) sont masquées et les quatre directions deviennent « Stick G »
-    return keys.filter(k => { if (pad && !padLabel(k)) return false; const t = touch() ? LABEL[k] : kl(k); const key = k === 'up' || k === 'down' || k === 'left' || k === 'right' ? 'move' : k + t; if (seen.has(key)) return false; seen.add(key); return true; })
-      .map(k => touch() ? `<span class="tk">${esc(LABEL[k])}</span>` : `<span class="tk"><kbd>${esc(kl(k))}</kbd>${esc(pad && DIR.has(k) ? 'Déplacer' : LABEL[k])}</span>`).join('');
+    return keys.filter(k => { if (pad && !padLabel(k)) return false; const key = DIR.has(k) ? 'move' : k + lab(k); if (seen.has(key)) return false; seen.add(key); return true; })
+      .map(k => pad && DIR.has(k) ? `<span class="px"><kbd>${esc(kl(k))}</kbd><small>Déplacer</small></span>` : px(k)).join('');
   };
   const api = {
     hide() { el.hidden = true; },
     render(s) {
       el.hidden = false;
       if (s.done) { el.className = 'done'; el.innerHTML = `<div class="tt-h"><b>${s.skipped ? 'Tutoriel passé' : 'Entraînement terminé'}</b></div><p>${s.skipped ? 'Les commandes restent dans le menu pause.' : 'Tu connais les bases. Explore, et allume des feux pour te reposer.'}</p>`; return; }
-      el.className = s.ok ? 'ok' : '';
+      el.className = (s.ok ? 'ok ' : '') + (s.seqs && s.seqs.length ? 'hasseq' : '');
       const dots = Array.from({ length: s.total }, (_, i) => `<i class="${i < s.n - 1 ? 'd' : i === s.n - 1 ? 'c' : ''}"></i>`).join('');
-      el.innerHTML = `<div class="tt-h"><span>Étape ${s.n} sur ${s.total}</span><b>${esc(s.title)}</b><button id="tut-skip" type="button">Passer</button></div>
-        <p>${esc(s.text)}</p><div class="tt-k">${chips(s.keys)}</div>
-        <div class="tt-g">${s.ok ? '<b>Bien joué</b>' : esc(s.goal)}${s.progress ? ` <em>${esc(s.progress)}</em>` : ''}</div><div class="tt-d">${dots}</div>`;
+      const goal = (s.goal || '').replace('{interact}', `<kbd class="inl">${esc(kl('interact'))}</kbd>`);
+      el.innerHTML = `<div class="tt-h"><span>Étape ${s.n} sur ${s.total}</span><b>${esc(s.title)}</b><button id="tut-skip" type="button"><kbd>${esc(skipKey())}</kbd> Passer</button></div>
+        <p>${esc(s.text)}</p>${s.extra ? `<p class="ex">${esc(s.extra)}</p>` : ''}
+        ${s.seqs && s.seqs.length ? `<div class="tt-s">${s.seqs.map(seq).join('')}</div>` : ''}
+        ${s.info ? '' : `<div class="tt-k">${chips(s.keys)}</div>`}
+        <div class="tt-g">${s.ok ? '<b>Bien joué</b>' : goal}${s.progress ? ` <em>${esc(s.progress)}</em>` : ''}</div><div class="tt-d">${dots}</div>`;
       const b = el.querySelector('#tut-skip'); if (b) b.onclick = () => game.skipTutorial();
     },
   };
