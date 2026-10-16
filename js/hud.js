@@ -4,6 +4,7 @@ import { BOSS_THRESHOLDS, NAMES_FR, STATUS } from './data.js';
 import * as M from './maps.js';
 import { Controls, keyLabel } from './input.js';
 import { itemIconFile } from './items.js';
+import { BOSS_LORE } from './elements.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 export const portrait = id => 'assets/' + A.db[id].portrait;
@@ -41,12 +42,22 @@ export function createHud(game) {
     <div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
-    <div id="bossintro"><div class="veil"></div><div class="txt"><div class="sub"></div><div class="nm"></div><div class="ln"></div></div><div class="bar t"></div><div class="bar b"></div></div><div id="banner"></div><div id="fade"></div>`;
+    <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
   for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
   slots.forEach(s => s.addEventListener('click', () => game.switchTo(+s.dataset.i)));
-  let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '';
+  // carton-titre, barres et voile de la cinématique d'intro, pilotés par le temps de game.cine
+  function cineHud(q) {
+    const el = introEl || $('#bossintro', root); root.classList.toggle('cine', !!q && q.t < 9.3);
+    if (!q) { if (el.classList.contains('show')) el.classList.remove('show', 'bars', 'out', 'c-tag', 'c-nm', 'c-ep', 'c-lore'); return; }
+    const t = q.t, out = t >= 9.0;
+    el.classList.add('show'); el.classList.toggle('bars', t < 9.0); el.classList.toggle('out', out);
+    el.classList.toggle('c-tag', t >= 6.2 && !out); el.classList.toggle('c-nm', t >= 6.7 && !out); el.classList.toggle('c-ep', t >= 7.4 && !out); el.classList.toggle('c-lore', t >= 8.0 && !out);
+    $('.veil', el).style.opacity = q.dim.toFixed(2); $('.flash', el).style.opacity = (q.flash * 0.85).toFixed(2);
+    const lk = $('.skip .lk', el), txt = t < 9.3 ? 'Contrôle verrouillé' : 'Contrôle rendu'; if (lk.textContent !== txt) lk.textContent = txt;
+  }
+  let lastChief = -1, toastT = 0, bannerT = 0, areaT = 0, keyT = 0, bossName = '', introEl = null, introT = -1;
 
   const hud = {
     update(dt) {
@@ -69,7 +80,8 @@ export function createHud(game) {
       { const mu = game.matchups(); slots.forEach((s2, k) => { const q = mu && mu[k], el = s2.querySelector('.mu'); const t = q ? (q.mult > 1 ? '▲' : q.mult < 1 ? '▼' : '') : ''; if (el.textContent !== t) { el.textContent = t; el.className = 'mu ' + (q && q.mult > 1 ? 'up' : 'dn'); } s2.classList.toggle('react', !!(q && q.react)); }); }
       let b = game.bossActive && game.boss && !game.boss.dead ? game.boss : null, mini = false;
       if (!b) { b = game.enemies.find(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230) || null; mini = !!b; }
-      E.boss.classList.toggle('show', !!b); E.boss.classList.toggle('mini', mini); root.classList.toggle('hasboss', !!b);
+      const cq = game.cine; E.boss.classList.toggle('show', !!b && !(cq && cq.t < 9.2)); E.boss.classList.toggle('mini', mini);
+      cineHud(cq); root.classList.toggle('hasboss', !!b);
       if (b) { const nm = mini ? NAMES_FR[b.type].toUpperCase() : b.def.name; if (nm !== bossName) { bossName = nm; E['boss-n'].textContent = nm; E['boss-s'].textContent = mini ? 'Gros Pokémon' : b.def.sub; } E['boss-hp'].style.width = (100 * Math.max(0, b.hp) / b.maxhp) + '%'; const ph = mini ? '' : 'PHASE ' + ROMAN[b.phase || 1]; if (E['boss-ph'].textContent !== ph) E['boss-ph'].textContent = ph; }
       const p = game.prompt; E.prompt.classList.toggle('show', !!p); if (p) E['prompt-t'].textContent = p.text;
       const a = game.world.arena, dx = a.cx * M.TS - c.x, dy = a.cy * M.TS - c.y, near = Math.hypot(dx, dy) < 420;
@@ -82,9 +94,12 @@ export function createHud(game) {
     toast(t, icon) { E.toast.textContent = ''; if (icon) { const im = new Image(); im.className = 'itemico'; im.src = icon; E.toast.append(im); } E.toast.append(document.createTextNode(t)); E.toast.classList.add('show'); toastT = 2.6; },
     banner(t, kind, icon) { E.banner.textContent = ''; if (icon) { const im = new Image(); im.className = 'itemico'; im.src = icon; E.banner.append(im); } E.banner.append(document.createTextNode(t)); E.banner.className = 'show ' + (kind || ''); void E.banner.offsetWidth; E.banner.style.animation = 'none'; void E.banner.offsetWidth; E.banner.style.animation = ''; bannerT = kind === 'death' ? 5 : 3.4; },
     area(z) { E.area.innerHTML = `<small>${z.zone}</small>${z.area}`; E.area.classList.add('show'); areaT = 3.2; },
+    // la cinématique elle-même est pilotée par game.cine (voir bosscine.js) : ici on prépare les textes
     bossIntro(b) {
-      const el = $('#bossintro', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff'); $('.sub', el).textContent = b.def.sub; $('.nm', el).textContent = b.def.name;
-      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(hud._bi); hud._bi = setTimeout(() => el.classList.remove('show'), 2900);
+      const el = $('#bossintro', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff');
+      $('.tag', el).textContent = (game.world.def && game.world.def.name) || ''; $('.nm', el).textContent = b.def.name; $('.ep', el).textContent = b.def.sub; $('.lore', el).textContent = BOSS_LORE[b.sprite] || '';
+      $('.skip kbd', el).textContent = kl('interact'); introEl = el;
+      $('.skip', el).onclick = () => game.skipCine();
     },
     phaseScreen(b, ph) {
       const el = $('#phasescreen', root), col = b.def.color || '#e0b0ff', g = b.def.glow || [255, 255, 255];
