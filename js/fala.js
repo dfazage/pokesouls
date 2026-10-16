@@ -116,7 +116,7 @@ export function installFala(Game, { M, TS, SFX, hyp }) {
     SFX.door(); this.shake && this.shake(3, 0.3);
     this.emit('toast', 'Un mur illusoire se dissipe'); this.save();
   };
-  P.falaNpcPos = function () { const s = this.world.secret; return s && s.opened ? { x: (s.npc.tx + 0.5) * TS, y: (s.npc.ty + 0.5) * TS } : null; };
+  P.falaNpcPos = function () { const s = this.world.secret; return s && s.opened && !this.falaQ().done ? { x: (s.npc.tx + 0.5) * TS, y: (s.npc.ty + 0.5) * TS } : null; };
 
   P.updateFala = function (dt) {
     if (!this.hasFala()) return;
