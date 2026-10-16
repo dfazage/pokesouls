@@ -9,7 +9,7 @@ export const ACTIONS = [
 export const DEFAULTS = {
   up: ['KeyW', 'KeyZ', 'ArrowUp'], down: ['KeyS', 'ArrowDown', ''], left: ['KeyA', 'KeyQ', 'ArrowLeft'], right: ['KeyD', 'ArrowRight', ''],
   light: ['KeyJ', 'Mouse0', ''], heavy: ['KeyK', 'Mouse2', ''], ability: ['KeyL', '', ''], guard: ['KeyH', 'KeyU', ''], dodge: ['Space', '', ''], run: ['ShiftLeft', 'ShiftRight', ''],
-  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], candy: ['KeyC', '', ''], revive: ['KeyG', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], link: ['KeyV', '', ''], pause: ['Escape', 'KeyP', ''],
+  skip: ['Enter', '', ''], interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], candy: ['KeyC', '', ''], revive: ['KeyG', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], link: ['KeyV', '', ''], pause: ['Escape', 'KeyP', ''],
   s1: ['Digit1', 'Numpad1', ''], s2: ['Digit2', 'Numpad2', ''], s3: ['Digit3', 'Numpad3', ''], map: ['KeyM', '', ''], bag: ['KeyB', '', ''],
 };
 // ---- étiquettes de manette : elles suivent le type détecté (Xbox, Nintendo Switch / Joy-Con, PlayStation) ----
