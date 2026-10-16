@@ -255,7 +255,7 @@ export function buildProps(w, key, seed, shared) {
   const MG = 24;
   // distance (Tchebychev) au sol : on n'implante rien contre les murs
   const W2 = MW + 2 * MG, H2 = MH + 2 * MG, near = new Uint8Array(W2 * H2);
-  const R_ = 4;
+  const R_ = cfg.prop === 'tower' ? 7 : 4;   // les tours restent loin de la zone jouable
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (w.grid[ty * MW + tx] !== T.VOID) {
     for (let j = -R_; j <= R_; j++) for (let i = -R_; i <= R_; i++) near[(ty + MG + j) * W2 + (tx + MG + i)] = 1;
   }
@@ -280,7 +280,7 @@ export function buildProps(w, key, seed, shared) {
   items.forEach(([x, z, a, b2, c], i) => {
     let sx, sy, sz, y = -DEPTH;
     if (cfg.prop === 'mono') { sx = 0.5 + a * 0.8; sy = 1.5 + b2 * 4.5; sz = 0.5 + c * 0.8; y = -2 + a * 5.5; }
-    else if (cfg.prop === 'tower') { sx = 0.9 + a * 1.4; sz = 0.9 + c * 1.4; sy = 5 + b2 * 8; }
+    else if (cfg.prop === 'tower') { sx = 0.9 + a * 1.4; sz = 0.9 + c * 1.4; sy = DEPTH + 0.2 + b2 * 1.3; }   // sommets entre le sol et ~1,5 tuile au-dessus : les tours ne cachent plus le jeu
     else if (cfg.prop === 'spire') { sx = sz = 0.5 + a * 0.9; sy = 5.5 + b2 * 7; }
     else if (cfg.prop === 'column') { sx = sz = 0.7 + a * 0.8; sy = 3.8 + b2 * 4.5; }
     else if (cfg.prop === 'stalag') { sx = sz = 0.7 + a * 1.1; sy = 5 + b2 * 6; }
