@@ -69,14 +69,14 @@ export function createPadNav() {
       if (!dir) { const [x, y] = Input.padStick(); if (Math.max(Math.abs(x), Math.abs(y)) > 0.6) dir = Math.abs(x) > Math.abs(y) ? (x > 0 ? 'right' : 'left') : (y > 0 ? 'down' : 'up'); }
       if (dir !== held) { held = dir; rep = 0.38; if (dir) move(dir, r); }
       else if (dir && (rep -= dt) <= 0) { rep = 0.11; move(dir, r); }
-      if (Input.padEdge(12) || Input.padEdge(13)) { Input.eat('berry'); Input.eat('bag'); } // la croix sert ici à naviguer, pas aux raccourcis de jeu
+      if (Input.padEdge(12) || Input.padEdge(13) || Input.padEdge(14) || Input.padEdge(15)) { for (const a of ['berry', 'revive', 'candy', 'ether']) Input.eat(a); } // la croix sert ici à naviguer, pas aux raccourcis de jeu
       if (!cur || !cur.isConnected) return;
       // valider
       if (Input.padEdge(0) && !cur.matches('input')) { cur.click(); return; }
       // onglets (sac) : L / R
       if (Input.padEdge(4) || Input.padEdge(5)) {   // L / R : onglet précédent / suivant (boucle)
         const tabs = [...r.querySelectorAll('.tabs button')];
-        if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; tabs[(idx + dir + tabs.length) % tabs.length].click(); return; }
+        if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; const t = tabs[(idx + dir + tabs.length) % tabs.length]; key = keyOf(t); [cx, cy] = center(t); t.click(); return; }
       }
       // retour
       if (Input.padEdge(1)) {
