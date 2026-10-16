@@ -133,9 +133,9 @@ const physIdx = Array.from({ length: 17 }, (_, i) => i);
 try { const sv = JSON.parse(localStorage.getItem(PHYSSTORE) || 'null'); if (Array.isArray(sv)) sv.forEach((v, i) => { if (i < 17 && Number.isInteger(v) && v >= 0 && v < 40) physIdx[i] = v; }); } catch (e) { /* identité */ }
 const physPersist = () => { try { localStorage.setItem(PHYSSTORE, JSON.stringify(physIdx)); } catch (e) { /* rien */ } };
 // Manettes Nintendo : certains navigateurs numérotent les boutons d'après leurs étiquettes (A = indice 0, B = indice 1, X = 2, Y = 3) et non d'après leur position.
-// Dans ce cas on peut échanger A/B et X/Y ; réglable dans l'écran Commandes (désactivé par défaut : disposition d'origine).
+// Dans ce cas on peut échanger A/B et X/Y ; réglable dans l'écran Commandes (activé par défaut : B = bouton du bas = esquive, A = bouton de droite, X = haut, Y = gauche).
 const NSWAPSTORE = 'pokesouls.nswap.v1';
-let nswap = false; try { nswap = localStorage.getItem(NSWAPSTORE) === '1'; } catch (e) { /* défaut */ }
+let nswap = true; try { nswap = localStorage.getItem(NSWAPSTORE) !== '0'; } catch (e) { /* défaut */ }
 const NSW = [1, 0, 3, 2];
 const physOf = i => (padKind === 'nin' && nswap && i < 4 && physIdx[i] === i ? NSW[i] : physIdx[i]);
 let rawLearn = null; const rawPrev = [], rawEdge = [], rawHeld = [];
@@ -189,6 +189,8 @@ export const Input = {
   padSetPhys(pos, raw) { physIdx[pos] = raw; physPersist(); },
   padResetPhys() { for (let i = 0; i < 17; i++) physIdx[i] = i; try { localStorage.removeItem(PHYSSTORE); } catch (e) { /* rien */ } },
   padPhysCustom: () => physIdx.some((v, i) => v !== i),
+  // menus : convention Nintendo (A, à droite, valide ; B, en bas, retour) ; Xbox / PlayStation : bouton du bas valide
+  padOk: () => (padKind === 'nin' ? 1 : 0), padNo: () => (padKind === 'nin' ? 0 : 1),
   padNswap: () => nswap, padSetNswap(v) { nswap = !!v; try { localStorage.setItem(NSWAPSTORE, v ? '1' : '0'); } catch (e) { /* rien */ } },
   padIndex: a => PADACT[a],
   padAssign(a, i) { const old = PADACT[a]; for (const o of Object.keys(PADACT)) if (o !== a && PADACT[o] === i) PADACT[o] = old; PADACT[a] = i; padRebuild(); padPersist(); },

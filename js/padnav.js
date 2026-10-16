@@ -72,14 +72,14 @@ export function createPadNav() {
       if (Input.padEdge(12) || Input.padEdge(13) || Input.padEdge(14) || Input.padEdge(15)) { for (const a of ['berry', 'revive', 'candy', 'ether', 'bag']) Input.eat(a); } // la croix sert ici à naviguer, pas aux raccourcis de jeu
       if (!cur || !cur.isConnected) return;
       // valider
-      if (Input.padEdge(0) && !cur.matches('input')) { cur.click(); return; }
+      if (Input.padEdge(Input.padOk()) && !cur.matches('input')) { cur.click(); return; }
       // onglets (sac) : L / R
       if (Input.padEdge(4) || Input.padEdge(5)) {   // L / R : onglet précédent / suivant (boucle)
         const tabs = [...r.querySelectorAll('.tabs button')];
         if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; const t = tabs[(idx + dir + tabs.length) % tabs.length]; key = keyOf(t); [cx, cy] = center(t); t.click(); if (cur) cur.classList.remove('padfocus'); cur = null; return; }
       }
       // retour
-      if (Input.padEdge(1)) {
+      if (Input.padEdge(Input.padNo())) {
         Input.eat('interact');
         for (const s of BACK) { const b = r.querySelector(s); if (b && !b.disabled && visible(b)) { b.click(); return; } }
         const last = [...r.querySelectorAll('[data-r]')].pop(); // choix des compagnons : retirer le dernier
