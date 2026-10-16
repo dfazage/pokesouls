@@ -125,14 +125,45 @@ export function showBag(game, onClose) {
 }
 
 // ---------- voyage entre les cartes ----------
+// Carte du monde : îles reliées par une route, liste des chapitres à gauche, fiche de la carte choisie à droite.
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+const NODES = [[13, 66], [30, 40], [47, 62], [62, 33], [77, 60], [88, 20]];   // position des cartes (en % de la zone de carte, ratio 100:70)
+let travelSel = -1, travelSpot = 'start';
 export function showTravel(game, onClose, onGo) {
   const opts = game.travelOptions();
-  const m = open(`<div class="panel wide"><h2>Carte du chapitre · Génération 1</h2><p class="sub">Téléportez-vous vers l’entrée d’une carte débloquée ou vers un feu déjà allumé. Impossible pendant un combat de boss. Vaincre le boss d’une carte ouvre la suivante.</p>
-    <div class="maps">${opts.map(o => `<div class="mp ${o.open ? '' : 'locked'} ${o.idx === game.mapIdx ? 'here' : ''}"><div class="mh"><b>${o.idx + 1}. ${esc(o.name)}</b><span>${esc(o.sub)}</span><em>${o.open ? (o.done ? '✔ ' : '') + 'Boss : ' + esc(o.boss) : 'Verrouillée'}</em></div>
-      <div class="spots">${o.spots.map(s => `<button data-go="${o.idx}:${s.id}">${esc(s.name)}</button>`).join('')}</div></div>`).join('')}</div>
-    <div class="act"><button id="m-close">Fermer</button></div></div>`);
-  m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [i, id] = b.dataset.go.split(':'); onGo(+i, id); });
-  $('#m-close').onclick = onClose;
+  if (travelSel < 0 || travelSel >= opts.length) { travelSel = game.mapIdx; travelSpot = 'start'; }
+  const render = () => {
+    const o = opts[travelSel], d = M.MAPS[o.idx], bs = D.BOSSES[d.boss], col = bs.color;
+    if (!o.spots.some(x => x.id === travelSpot)) travelSpot = 'start';
+    const here = o.idx === game.mapIdx;
+    const roads = NODES.slice(1).map((n, k) => `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.7}" x2="${n[0]}" y2="${n[1] * 0.7}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
+    const nodes = opts.map((x, k) => { const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
+    const list = opts.map((x, k) => `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
+    const prev = opts[o.idx - 1];
+    const body = o.open
+      ? `<div class="wsp"><h4>Destination</h4>${o.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</div>`
+      : `<p class="sub">Cette carte est scellée. Elle s’ouvre quand le boss de <b>${esc(prev ? prev.name : '')}</b> tombe.</p>`;
+    const m = open(`<div class="panel worldmap"><div class="bhead"><h2>Carte du chapitre · Génération 1</h2></div>
+      <div class="wm-cols">
+        <div class="wm-list"><h4>Chapitres</h4>${list}</div>
+        <div class="wm-map"><svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true">
+          <path class="isle" d="M4 52 C2 36 12 24 24 22 C32 12 48 14 56 22 C66 16 80 24 84 36 C94 40 96 54 86 62 C74 68 60 66 50 68 C36 70 20 68 12 64 C7 61 5 57 4 52Z"/>
+          <path class="isle small" d="M80 8 C84 4 94 5 96 11 C98 18 92 24 86 24 C80 23 76 14 80 8Z"/>
+          <g>${roads}</g></svg>${nodes}</div>
+        <div class="wm-det" style="--c:${col}">
+          <div class="wd-art ${o.open ? '' : 'sealed'}"><img src="assets/sprites/${bs.sprite}/portrait.png" alt="" onerror="this.style.display='none'"></div>
+          <h3>${ROMAN[o.idx]} · ${esc(o.name)}</h3><p class="sub">${esc(o.sub)}${here ? ' · vous êtes ici' : ''}</p>
+          <dl><dt>Boss</dt><dd>${o.open ? esc(bs.name) : '???'}</dd><dt>Niveau conseillé</dt><dd>${d.lv}</dd><dt>Feux allumés</dt><dd>${o.open ? o.spots.length - 1 : 0}</dd><dt>État</dt><dd>${!o.open ? 'Scellée' : o.done ? 'Boss vaincu ✔' : 'Boss en vie'}</dd></dl>
+          ${body}
+          <button class="pri wgo" id="t-go" ${o.open ? '' : 'disabled'}>Voyager</button></div>
+      </div>
+      <div class="act"><button id="m-close">Retour</button></div></div>`);
+    m.querySelectorAll('[data-n]').forEach(x => x.onclick = () => { travelSel = +x.dataset.n; travelSpot = 'start'; render(); });
+    m.querySelectorAll('[data-spot]').forEach(x => x.onclick = () => { travelSpot = x.dataset.spot; render(); });
+    const go = $('#t-go'); if (go) go.onclick = () => onGo(o.idx, travelSpot);
+    $('#m-close').onclick = () => { travelSel = -1; onClose(); };
+  };
+  render();
 }
 
 // ---------- commandes (lecture et modification) ----------
