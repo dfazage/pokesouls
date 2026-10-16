@@ -1,5 +1,5 @@
 // Quête secrète de Fala, le Genesect de la Centrale abandonnée (carte 2).
-// - Profil permanent (localStorage) : Fala devient sélectionnable à l'écran de départ une fois la quête terminée.
+// - Récompense : Fala rejoint la réserve du feu (voir reserve.js) et peut être échangé contre un compagnon à chaque feu de camp, dans la partie en cours.
 // - État de la quête dans la sauvegarde de la partie : prog[carte].fala = { helped, mods (ramassés), given (rapportés), done }.
 // - Salle secrète derrière un faux mur (généré dans maps.js), quatre Modules dans les salles de la carte, dialogues.
 import { A, drawSprite, TICK } from './assets.js';
@@ -14,26 +14,13 @@ export const MODULES = {
 export const MOD_ORDER = ['aqua', 'pyro', 'cryo', 'choc'];
 export const FALA_KEY = 'genesect';
 
-// ---------- profil permanent ----------
-const PROFILE_KEY = 'pokesouls.profile.v1';
-export function loadProfile() {
-  let p = null; try { p = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); } catch (e) { p = null; }
-  p = p && typeof p === 'object' ? p : {};
-  return { fala: !!p.fala, falaMod: MODULES[p.falaMod] ? p.falaMod : 'choc' };
-}
-export function saveProfile(patch) {
-  const p = { ...loadProfile(), ...patch };
-  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) { /* stockage indisponible */ }
-  return p;
-}
-export const falaUnlocked = () => loadProfile().fala;
-export const falaModule = () => loadProfile().falaMod;
+export const DEFAULT_MODULE = 'choc';   // Module équipé par défaut quand Fala rejoint la réserve
 
 // ---------- dialogues (Fala parle par phrases courtes et hésitantes) ----------
 const L = (who, text, extra) => ({ who, text, ...extra });
 const scene3 = [
   L('Fala', 'Quatre Modules. Pyro, Aqua, Choc, Cryo. Ma plaque chauffera quand tu t’approcheras.'),
-  L('Fala', 'Rapporte-les-moi, et quand tu recommenceras, je serai là.'),
+  L('Fala', 'Rapporte-les-moi, et je te suivrai de feu en feu.'),
 ];
 const ask = () => L('Fala', 'Mon canon est vide. Mes Modules ont été arrachés. Ils sont éparpillés dans les salles de cette centrale.', {
   choices: [
@@ -56,12 +43,18 @@ export const SCRIPTS = {
   finale: () => [
     L('Fala', 'Tous les quatre. Je suis... presque entier.'),
     L('Fala', 'Je ne sais pas ce que j’étais avant eux. Mais je sais ce que je veux être : celui qui reste.'),
-    L('Fala', 'Va. Tu mourras, tu reviendras. Moi, je serai toujours là.'),
-    L('Système', 'Fala est désormais sélectionnable aux prochaines parties.', { system: true }),
+    L('Fala', 'Va. Tu mourras, tu reviendras. Moi, je serai là, à chaque feu.'),
+  ],
+  // explications affichées juste après la quête : comment utiliser les compagnons de la réserve
+  tuto: () => [
+    L('Réserve du feu', 'Fala rejoint la réserve du feu. Les Pokémon bonus que tu recrutes y attendent, à l’abri.', { system: true }),
+    L('Réserve du feu', 'À chaque feu de camp, ouvre « Réserve » pour l’échanger contre l’un de tes trois compagnons. C’est gratuit.', { system: true }),
+    L('Réserve du feu', 'Celui qui sort garde son niveau, ses vitamines et sa CT. Il reste à la réserve et peut revenir au feu suivant.', { system: true }),
+    L('Réserve du feu', 'Fala change d’élément avec ses Modules : Aqua, Pyro, Cryo ou Choc. Choisis-en un dans la Réserve ou au feu de camp.', { system: true }),
   ],
   done: () => [L('Fala', 'Va. Quand tu reviendras, je serai là.')],
+  together: () => [L('Fala', 'Je suis avec toi. Où que tu ailles, je reste.')],
 };
-export const READY_LINE = '...Prêt.';
 
 // ---------- rendu (liste de dessin partagée 2D / HD-2D) ----------
 const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
@@ -97,7 +90,7 @@ const HINTS = {
 };
 
 // ---------- mixin Game ----------
-export function installFala(Game, { M, TS, SFX, hyp, Input }) {
+export function installFala(Game, { M, TS, SFX, hyp }) {
   const P = Game.prototype;
   P.falaProg = function () { return this.prog[this.mapIdx]; };
   P.falaQ = function () {
@@ -108,7 +101,12 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
   };
   P.hasFala = function () { return !!(this.world && this.world.def.fala); };
   // restaure l'état de la carte à l'entrée (salle secrète déjà ouverte)
-  P.falaEnter = function () { if (this.hasFala() && this.falaQ().wall) M.openSecret(this.world); this.falaHinted = new Set(); };
+  P.falaEnter = function () {
+    this.falaHinted = new Set();
+    if (!this.hasFala()) return;
+    const q = this.falaQ(); if (q.wall) M.openSecret(this.world);
+    if (q.done && !this.hasMember(FALA_KEY)) this.recruit(FALA_KEY);   // parties déjà terminées avant la réserve du feu
+  };
 
   P.breakSecret = function () {
     if (!this.world.secret || !M.openSecret(this.world)) return;
@@ -152,7 +150,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
   P.talkFala = function () {
     const q = this.falaQ();
     const open = (lines, done) => this.emit('dialogue', { lines, done });
-    if (q.done) return open(SCRIPTS.done());
+    if (q.done) return open(this.team.some(m => m.key === FALA_KEY) ? SCRIPTS.together() : SCRIPTS.done());
     if (!q.helped) {
       const first = !q.met; q.met = true;
       return open(first ? SCRIPTS.meet() : SCRIPTS.ask(), res => { if (res === 'help') { q.helped = true; this.emit('toast', 'Nouvelle quête : Les Modules de Fala (0/4)'); } this.save(); });
@@ -165,19 +163,20 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     open(lines, () => {
       for (const id of carried) { q.given.push(id); const name = this.give(MODULES[id].reward); this.emit('toast', `${MODULES[id].name} remis · ${name} · ${q.given.length}/4`); }
       if (finishing) {
-        q.done = true; saveProfile({ fala: true }); SFX.pick(); this.emit('jingle', 'JINGLE_CAMPFIRE'); this.emit('banner', 'FALA DÉBLOQUÉ', 'fire');
+        q.done = true; this.recruit(FALA_KEY); SFX.pick(); this.emit('jingle', 'JINGLE_CAMPFIRE'); this.emit('banner', 'FALA REJOINT LA RÉSERVE', 'fire'); this.emit('dialogue', { lines: SCRIPTS.tuto() });
       }
       this.save();
     });
   };
 
-  // Module équipé : change l'élément de Fala (gratuit, au feu de camp)
-  P.setModule = function (i, id) {
-    const m = this.team[i]; if (!m || m.key !== FALA_KEY || !MODULES[id]) return;
-    m.mod = id; m.type = MODULES[id].type; saveProfile({ falaMod: id });
-    if (this.onModuleChange) this.onModuleChange(m);
+  // Module équipé : change l'élément de Fala (gratuit, au feu de camp ou à la réserve)
+  P.setModuleOf = function (m, id) {
+    if (!m || m.key !== FALA_KEY || !MODULES[id]) return;
+    m.mod = id; m.type = MODULES[id].type;
+    this.fixTm(m);
     this.applyLevels(false); this.save();
   };
+  P.setModule = function (i, id) { this.setModuleOf(this.team[i], id); };
 
   // dessin et lumières
   P.falaDraw = function (inView) {
@@ -209,8 +208,8 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     const steps = MOD_ORDER.map(id => ({ id, name: 'Module ' + MODULES[id].name, color: MODULES[id].color, state: q.given.includes(id) ? 'given' : q.mods.includes(id) ? 'carried' : 'missing', hint: HINTS[id] }));
     const carried = q.mods.filter(id => !q.given.includes(id)).length;
     return [{ id: 'fala', title: 'Les Modules de Fala', zone: 'Centrale abandonnée', status: q.done ? 'done' : 'active', progress: `${q.given.length}/4`, steps,
-      summary: q.done ? 'Fala t’attend au menu de départ.' : carried ? `${carried} Module${carried > 1 ? 's' : ''} à rapporter à Fala.` : 'Retrouve les Modules arrachés à Fala.',
-      reward: 'Fala sélectionnable aux prochaines parties · un objet par Module' }];
+      summary: q.done ? 'Fala t’attend à la réserve du feu.' : carried ? `${carried} Module${carried > 1 ? 's' : ''} à rapporter à Fala.` : 'Retrouve les Modules arrachés à Fala.',
+      reward: 'Fala rejoint la réserve du feu (échangeable à chaque feu de camp) · un objet par Module' }];
   };
   P.falaLights = function () {
     const out = [];

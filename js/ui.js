@@ -9,7 +9,8 @@ import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
 import { Music, TRACKS } from './music.js';
 import { SFX } from './audio.js';
-import { MODULES, MOD_ORDER, FALA_KEY, loadProfile, saveProfile, READY_LINE } from './fala.js';
+import { MODULES, MOD_ORDER, FALA_KEY } from './fala.js';
+import { EXTRA_BY_MAP } from './reserve.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -26,21 +27,16 @@ export function showStarters(onDone) {
   const el = $('#starters'); el.classList.add('show');
   const picks = []; let focus = POOL[0].key;
   const draw = () => {
-    const prof = loadProfile();
     const f = poolEntry(focus), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
     const types = D.typesOf(f.type, f.key);
     el.innerHTML = `<h2>Choisissez vos trois compagnons</h2>
       <p class="sub">Trois Pokémon au choix parmi 39 lignées, rangées par style de combat. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais. Deux Pokémon du même type en résonance frappent plus fort.</p>
       <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
         <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on' : ''} ${p.key === focus ? 'foc' : ''}" data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
-      <div class="psecret ${prof.fala ? '' : 'locked'}" style="--c:#7fe0c0"><h3>${prof.fala ? 'Secret' : '???'}</h3>${prof.fala
-        ? `<button class="pth ${picks.includes(FALA_KEY) ? 'on' : ''} ${focus === FALA_KEY ? 'foc' : ''}" data-k="${FALA_KEY}" title="${esc(D.NAMES_FR[FALA_KEY])}"><img src="${portrait(FALA_KEY)}" alt="">${picks.includes(FALA_KEY) ? `<i>${picks.indexOf(FALA_KEY) + 1}</i>` : ''}</button><small>Fala, le Genesect de la Centrale. Choisissez son Module ci-dessous.</small>`
-        : `<button class="pth lock" disabled title="???"><b>?</b></button><small>Quelque chose dort quelque part dans la Centrale abandonnée.</small>`}</div>
       <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
         <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
-        <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}${f.key === FALA_KEY ? ' · l’élément dépend du Module équipé' : ''}</small>
-        ${f.key === FALA_KEY ? `<small class="pmods">${MOD_ORDER.map(id => `<button class="pmod ${prof.falaMod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-m="${id}">${MODULES[id].name}</button>`).join('')}</small>${picks.includes(FALA_KEY) ? `<small class="fready">« ${READY_LINE} »</small>` : ''}` : ''}</div></div>
+        <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
         <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
         <div class="act"><button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
     el.querySelectorAll('.pth').forEach(b => b.onclick = () => {
@@ -48,7 +44,6 @@ export function showStarters(onDone) {
       const i = picks.indexOf(k); if (i >= 0) picks.splice(i, 1); else { if (picks.length === 3) picks.shift(); picks.push(k); }
       draw();
     });
-    el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { saveProfile({ falaMod: b.dataset.m }); draw(); });
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
     const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { el.classList.remove('show'); onDone([...picks]); } };
   };
@@ -63,12 +58,13 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
       <div class="lv">${game.team.map((t, i) => { const c = D.levelCost(t.lvl), ok = game.essence >= c && t.lvl < D.MAX_LEVEL;
         const nxtStage = t.stage < 2 && t.lvl + 1 >= D.EVOLVE_AT[t.stage] ? ` · <em>évolue en ${esc(D.NAMES_FR[t.line[t.stage + 1]])}</em>` : '';
         return `<div class="row"><img src="${portrait(t.id)}" alt=""><div><b>${esc(t.def.name)}</b> <span>${t.def.typeName} · ${t.def.cls}</span><small>Niv. ${t.lvl}${t.lvl < D.MAX_LEVEL ? ` · PV ${t.maxhp}` : ' · max'}${nxtStage}</small>${t.key === FALA_KEY ? `<small class="pmods">Module : ${MOD_ORDER.map(id => `<button class="pmod ${t.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-mod="${i}:${id}">${MODULES[id].name}</button>`).join('')}</small>` : ''}</div><button data-up="${i}" ${ok ? '' : 'disabled'}>Monter · ${c}</button></div>`; }).join('')}</div>
-      <div class="act"><button id="m-bag">Équipe</button><button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
+      <div class="act"><button id="m-bag">Équipe</button>${game.bench.length ? '<button id="m-reserve">Réserve</button>' : ''}<button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
     m.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { game.levelUp(+b.dataset.up); render(); });
     m.querySelectorAll('[data-mod]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.mod.split(':'); game.setModule(+k, id); render(); });
     $('#m-rest').onclick = () => { game.rest(); game.last = { map: game.mapIdx, id: bonfire.id }; game.save(); game.emit('toast', 'L’équipe se repose'); onClose(); };
     $('#m-close').onclick = onClose;
     $('#m-bag').onclick = () => extra.bag(() => render());
+    const rb = $('#m-reserve'); if (rb) rb.onclick = () => extra.reserve();
     $('#m-travel').onclick = () => extra.travel();
   };
   render();
@@ -228,4 +224,39 @@ export function showDialogue(lines, done) {
     m.onclick = e => { if (e.target === m && shown < full.length) finish(); };
   };
   next();
+}
+
+// ---------- réserve du feu : échanger un équipier contre un Pokémon bonus recruté en partie ----------
+let resSel = 0, outSel = 2;
+export function showReserve(game, onBack) {
+  const render = () => {
+    if (!game.bench[resSel]) resSel = 0;
+    if (outSel >= game.team.length) outSel = game.team.length - 1;
+    const b = game.bench[resSel], o = game.team[outSel];
+    const thumb = m => `<img src="${portrait(m.id)}" alt="">`;
+    const chips = m => D.typesOf(m.type, m.id).map(ty => `<u class="ty-${ty}">${D.TYPE_FR[ty] || ty}</u>`).join('');
+    const maps = M.MAPS.map((d, k) => ({ d, key: EXTRA_BY_MAP[k] }));
+    const found = maps.filter(x => x.key && game.hasMember(x.key)).length;
+    const locked = maps.filter(x => !(x.key && game.hasMember(x.key))).map(x => `<div class="rlock"><b>???</b><small>${esc(x.d.name)}</small></div>`).join('');
+    let det = '<p class="sub">La réserve est vide.</p>';
+    if (b) {
+      const ri = relayInfo(b.line);
+      det = `<div class="rdet"><div class="rdh"><b>${esc(b.def.name)}</b><span>Niv. ${b.lvl} · ${b.def.cls}</span>${chips(b)}</div>
+        <small><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}${b.key === FALA_KEY ? ' · l’élément dépend du Module équipé' : ''}</small>
+        ${b.key === FALA_KEY ? `<div class="pmods"><span>Module</span>${MOD_ORDER.map(id => `<button class="pmod ${b.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-rmod="${id}">${MODULES[id].name}</button>`).join('')}</div>` : ''}
+        <div class="rsw"><button class="pri" id="r-swap">Échanger avec ${esc(o.def.name)}</button><span>Coût : gratuit · choisis qui sort dans la liste de gauche</span></div></div>`;
+    }
+    const m = open(`<div class="panel reserve"><div class="bhead"><h2>Réserve du feu</h2></div>
+      <div class="rcols"><div class="rteam"><h4>Équipe active · ${game.team.length} / 3</h4>${game.team.map((x, i) => `<button class="rrow ${i === outSel ? 'out' : ''}" data-out="${i}">${thumb(x)}<div><b>${esc(x.def.name)}</b><small>Niv. ${x.lvl} · ${x.def.cls} · ${x.def.typeName}</small></div>${i === outSel ? '<i>SORT</i>' : ''}</button>`).join('')}
+        <p class="sub">Celui qui sort garde son niveau, ses vitamines et sa CT. Il attend à la réserve du feu.</p></div>
+        <div class="rres"><h4>Réserve · ${found} / ${maps.length} bonus trouvés</h4>
+          <div class="rgrid">${game.bench.map((x, i) => `<button class="rcard ${i === resSel ? 'sel' : ''}" data-bi="${i}">${thumb(x)}<div><b>${esc(x.def.name)}</b><small>Niv. ${x.lvl} · ${x.def.cls}</small></div></button>`).join('')}${locked}</div>${det}</div></div>
+      <div class="act"><button id="r-back">Retour</button></div></div>`);
+    m.querySelectorAll('[data-out]').forEach(x => x.onclick = () => { outSel = +x.dataset.out; render(); });
+    m.querySelectorAll('[data-bi]').forEach(x => x.onclick = () => { resSel = +x.dataset.bi; render(); });
+    m.querySelectorAll('[data-rmod]').forEach(x => x.onclick = () => { game.setModuleOf(game.bench[resSel], x.dataset.rmod); render(); });
+    const sw = $('#r-swap'); if (sw) sw.onclick = async () => { sw.disabled = true; const nm = b.def.name; if (await game.swapMember(outSel, resSel)) game.emit('toast', `${nm} rejoint l’équipe`); render(); };
+    $('#r-back').onclick = onBack;
+  };
+  render();
 }
