@@ -25,6 +25,8 @@ export const NAMES_FR = {
   machop: 'Machoc', machoke: 'Machopeur', machamp: 'Mackogneur', geodude: 'Racaillou', graveler: 'Gravalanch', golem: 'Grolem', onix: 'Onix', rhyhorn: 'Rhinocorne', rhydon: 'Rhinoféros', dragonite: 'Dracolosse', dragonair: 'Draco', snorlax: 'Ronflex',
   koffing: 'Smogo', weezing: 'Smogogo', porygon: 'Porygon', mewtwo: 'Mewtwo', exeggcute: 'Noeunoeuf', exeggutor: 'Noadkoko', abra: 'Abra', kadabra: 'Kadabra', haunter: 'Spectrum', gengar: 'Ectoplasma', mrmime: 'M. Mime', chansey: 'Leveinard', mew: 'Mew', clone: 'Clone', decoy: 'Mirage',
 };
+// noms des espèces du pool jouable (GDD v3)
+Object.assign(NAMES_FR, { bagon: 'Draby', shelgon: 'Drackhaus', salamence: 'Drattak', riolu: 'Riolu', lucario: 'Lucario', meowth: 'Miaouss', persian: 'Persian', sneasel: 'Farfuret', weavile: 'Dimoret', zorua: 'Zorua', zoroark: 'Zoroark', munchlax: 'Goinfrex', steelix: 'Steelix', beldum: 'Terhal', metang: 'Métang', metagross: 'Métalosse', hippopotas: 'Hippopotas', hippowdon: 'Hippodocus', scyther: 'Insécateur', scizor: 'Cizayox', weedle: 'Aspicot', kakuna: 'Coconfort', beedrill: 'Dardargnan', remoraid: 'Rémoraid', octillery: 'Octillery', starly: 'Étourmi', staravia: 'Étourvol', staraptor: 'Étouraptor', magnezone: 'Magnézone', alakazam: 'Alakazam', pichu: 'Pichu', litwick: 'Lugulabre', lampent: 'Funécire', chandelure: 'Chandelure', gastly: 'Fantominus', eevee: 'Évoli', happiny: 'Ptiravi', blissey: 'Leuphorya', ralts: 'Tarsal', kirlia: 'Kirlia', gardevoir: 'Gardevoir', togepi: 'Togepi', togetic: 'Togetic', togekiss: 'Togekiss', budew: 'Rozbouton', roselia: 'Rosélia', roserade: 'Roserade' });
 // Archétypes par type (stade 1, niveau 5)
 export const ARCH = {
   fire: { cls: 'Brûleur', mode: 'melee', hp: 90, speed: 84, range: 26, dmg: 9, light: 'Attack', heavy: 'Swing', orb: '#ff9a40', color: '#ff7a30', typeName: 'Feu', tm: 'ct_flamethrower' },
@@ -63,8 +65,20 @@ export const TMS = {
 export const SECOND_TYPE = { charizard: 'flying', combusken: 'fighting', blaziken: 'fighting', monferno: 'fighting', infernape: 'fighting', pignite: 'fighting', emboar: 'fighting', delphox: 'psychic', skeledirge: 'ghost', crocalor: 'ghost', incineroar: 'dark',
   marshtomp: 'ground', swampert: 'ground', empoleon: 'steel', greninja: 'dark', primarina: 'fairy', brionne: 'fairy', quaquaval: 'fighting', quaxwell: 'fighting',
   bulbasaur: 'poison', ivysaur: 'poison', venusaur: 'poison', torterra: 'ground', grotle: 'ground', chesnaught: 'fighting', quilladin: 'fighting', rowlet: 'flying', dartrix: 'flying', decidueye: 'ghost', meowscarada: 'dark', floragato: 'dark' };
-export const TYPE_FR = { fire: 'Feu', water: 'Eau', grass: 'Plante', flying: 'Vol', fighting: 'Combat', psychic: 'Psy', ghost: 'Spectre', dark: 'Ténèbres', ground: 'Sol', steel: 'Acier', fairy: 'Fée', poison: 'Poison', electric: 'Électrik', ice: 'Glace', normal: 'Normal' };
-export const typesOf = (family, id) => (SECOND_TYPE[id] ? [family, SECOND_TYPE[id]] : [family]);
+export const TYPE_FR = { bug: 'Insecte', rock: 'Roche', fire: 'Feu', water: 'Eau', grass: 'Plante', flying: 'Vol', fighting: 'Combat', psychic: 'Psy', ghost: 'Spectre', dark: 'Ténèbres', ground: 'Sol', steel: 'Acier', fairy: 'Fée', poison: 'Poison', electric: 'Électrik', ice: 'Glace', normal: 'Normal' };
+// types complets des formes hors starters (les starters gardent la table SECOND_TYPE de data.js)
+export const FORM_TYPES = {
+  machop: ['fighting'], machoke: ['fighting'], machamp: ['fighting'], bagon: ['dragon'], shelgon: ['dragon'], salamence: ['dragon', 'flying'], riolu: ['fighting'], lucario: ['fighting', 'steel'],
+  meowth: ['normal'], persian: ['normal'], sneasel: ['dark', 'ice'], weavile: ['dark', 'ice'], zorua: ['dark'], zoroark: ['dark'],
+  munchlax: ['normal'], snorlax: ['normal'], onix: ['rock', 'ground'], steelix: ['steel', 'ground'], beldum: ['steel', 'psychic'], metang: ['steel', 'psychic'], metagross: ['steel', 'psychic'], hippopotas: ['ground'], hippowdon: ['ground'], scyther: ['bug', 'flying'], scizor: ['bug', 'steel'],
+  weedle: ['bug', 'poison'], kakuna: ['bug', 'poison'], beedrill: ['bug', 'poison'], remoraid: ['water'], octillery: ['water'], starly: ['normal', 'flying'], staravia: ['normal', 'flying'], staraptor: ['normal', 'flying'],
+  magnemite: ['electric', 'steel'], magneton: ['electric', 'steel'], magnezone: ['electric', 'steel'], abra: ['psychic'], kadabra: ['psychic'], alakazam: ['psychic'], pichu: ['electric'], pikachu: ['electric'], raichu: ['electric'],
+  litwick: ['ghost', 'fire'], lampent: ['ghost', 'fire'], chandelure: ['ghost', 'fire'], gastly: ['ghost', 'poison'], haunter: ['ghost', 'poison'], gengar: ['ghost', 'poison'],
+  eevee: ['normal'], happiny: ['normal'], chansey: ['normal'], blissey: ['normal'], ralts: ['psychic', 'fairy'], kirlia: ['psychic', 'fairy'], gardevoir: ['psychic', 'fairy'],
+  togepi: ['fairy'], togetic: ['fairy', 'flying'], togekiss: ['fairy', 'flying'], budew: ['grass', 'poison'], roselia: ['grass', 'poison'], roserade: ['grass', 'poison'],
+};
+
+export const typesOf = (family, id) => FORM_TYPES[id] || (SECOND_TYPE[id] ? [family, SECOND_TYPE[id]] : [family]);
 export function tmCompat(tmKey, family, id, stage) {
   const t = TMS[tmKey]; if (!t) return { ok: false, why: 'CT inconnue' };
   if ((t.minStage || 0) > stage) return { ok: false, why: 'Nécessite le stade ' + (t.minStage + 1) + ' d’évolution' };

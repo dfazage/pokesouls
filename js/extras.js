@@ -1,8 +1,11 @@
 // Extensions du cœur de jeu : ulti « Lien » (coéquipiers), combos à attaque signature, obstacles et éléments de terrain des boss.
 // installExtras() ajoute ces méthodes à la classe Game (game.js lui fournit ses utilitaires).
 
-// Couleur des anneaux du Lien (planches PMD) selon le type du starter.
-export const LINKC = { fire: 'red', water: 'blue', grass: 'green' };
+import { TYPE_COLOR } from './pool.js';
+import { TYPE_FR } from './data.js';
+
+// Couleur des anneaux du Lien (planches PMD) selon le type du Pokémon.
+export const LINKC = { fire: 'red', water: 'blue', grass: 'green', electric: 'yellow', psychic: 'pink', fairy: 'pink', ghost: 'purple', poison: 'purple', dark: 'purple', dragon: 'blue', ice: 'blue', flying: 'blue', fighting: 'red', rock: 'yellow', ground: 'yellow', steel: 'blue', bug: 'green', normal: 'yellow' };
 
 // Attaques signature : une par type (feu / eau / plante) et par stade d'évolution (0, 1, 2).
 // kinds : cross (deux entailles), whirl (tourbillon), blast (3 boules explosives), rush (charge perforante), storm (pluie d'impacts), fan (éventail), leaves (nova de feuilles), sun (rayon + soin)
@@ -23,6 +26,21 @@ export const SIGS = {
     { name: 'Fléau Solaire', kind: 'sun', anims: ['SpAttack', 'Shoot', 'Charge'], color: '#e4ff7a', mult: 3.3, st: null },
   ],
 };
+
+// Attaques signature des types sans kit propre : un kit par gabarit (A, R, D, S), couleur et nom du type.
+const GEN_KITS = {
+  A: [['Croix', 'cross', ['Double', 'Attack', 'Strike'], 2.4], ['Tourbillon', 'whirl', ['Rotate', 'Spin', 'Swing', 'Attack'], 2.8], ['Charge', 'rush', ['Charge', 'Kick', 'Strike', 'Attack'], 3.2]],
+  R: [['Charge', 'rush', ['Charge', 'Kick', 'Strike', 'Attack'], 2.3], ['Tourbillon', 'whirl', ['Rotate', 'Spin', 'Swing', 'Attack'], 2.6], ['Déluge', 'storm', ['Appeal', 'SpAttack', 'Shoot', 'Charge'], 3.0]],
+  D: [['Éventail', 'fan', ['Double', 'Shoot', 'Attack'], 2.2], ['Rafale', 'storm', ['Appeal', 'SpAttack', 'Shoot', 'Charge'], 2.8], ['Grande explosion', 'blast', ['SpAttack', 'Shoot', 'Charge', 'Attack'], 3.3]],
+  S: [['Éventail', 'fan', ['Double', 'Shoot', 'Attack'], 2.0], ['Nova', 'leaves', ['SpAttack', 'Shoot', 'Charge'], 2.6], ['Rayon bienfaisant', 'sun', ['SpAttack', 'Shoot', 'Charge'], 3.2]],
+};
+const genSigs = {};
+export function sigsOf(m) {
+  if (SIGS[m.type]) return SIGS[m.type];
+  const k = m.gab + m.type; if (genSigs[k]) return genSigs[k];
+  const col = (TYPE_COLOR[m.type] || TYPE_COLOR.normal)[0], tn = TYPE_FR[m.type] || '';
+  return (genSigs[k] = GEN_KITS[m.gab].map(([n, kind, anims, mult]) => ({ name: n + ' ' + tn, kind, anims, color: col, mult, radius: 52, n: 6, st: null })));
+}
 
 // Obstacles et éléments de terrain. solid : bloque déplacements, projectiles et rayons ; hp : détruisible ; weak : élément qui l'abîme x3 ; quench : éléments qui dissipent la zone
 export const OBS = {
@@ -135,7 +153,7 @@ export function installExtras(G, d) {
   };
   P.comboReset = function () { this.comboN = 0; this.comboAt = -9; };
   P.startSignature = function (m) {
-    const sg = SIGS[m.type][m.stage], df = m.def, tgt = this.aimTarget(m);
+    const sg = sigsOf(m)[m.stage], df = m.def, tgt = this.aimTarget(m);
     let aim = tgt ? unit(tgt.x - m.x, tgt.y - m.y) : { x: m.face.x, y: m.face.y };
     if (m.fx && m.fx.k === 'confuse') { const a = Math.atan2(aim.y, aim.x) + rand(-0.7, 0.7); aim = { x: Math.cos(a), y: Math.sin(a) }; }
     const anim = pickAnim(df.id, sg.anims), tm = timing(df.id, anim), sp = Math.max(1, tm.hit / 0.42, tm.total / 1.15);

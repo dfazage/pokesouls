@@ -6,11 +6,11 @@ import * as M from './maps.js';
 import { ACTIONS, PAD_LABELS, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
+import { POOL, GABS, poolEntry, archOf } from './pool.js';
 import { Music, TRACKS } from './music.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const TYPES = [['fire', 'Feu', '#ff7a30'], ['water', 'Eau', '#4aa8ff'], ['grass', 'Plante', '#6cd84c']];
 const menu = () => $('#menu');
 export function hideMenu() { const m = menu(); m.classList.remove('show'); m.innerHTML = ''; }
 function open(html) { const m = menu(); m.classList.add('show'); m.innerHTML = html; return m; }
@@ -18,23 +18,31 @@ function open(html) { const m = menu(); m.classList.add('show'); m.innerHTML = h
 const volRow = () => `<div class="vol"><label>Musique <input type="range" id="vol-music" min="0" max="100" value="${Math.round(Music.getVolume() * 100)}"><b id="vol-v">${Math.round(Music.getVolume() * 100)} %</b></label></div>`;
 function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; }; }
 
-// ---------- choix des starters ----------
+// ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
+const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
 export function showStarters(onDone) {
   const el = $('#starters'); el.classList.add('show');
-  const pick = { fire: 0, water: 0, grass: 0 };
+  const picks = []; let focus = POOL[0].key;
   const draw = () => {
-    el.innerHTML = `<h2>Choisissez vos trois compagnons</h2><p class="sub">Un starter de chaque type, parmi toutes les générations. Chacun a sa propre attaque de relais (changement de Pokémon juste après une esquive ou une parade parfaite). Ils évolueront au niveau ${D.EVOLVE_AT[0]} puis ${D.EVOLVE_AT[1]}.</p>
-      <div class="scols">${TYPES.map(([t, label, col]) => {
-        const sel = D.STARTERS[t][pick[t]];
-        return `<div class="scol" style="--c:${col}"><h3>${label} · ${D.ARCH[t].cls}</h3>
-          <div class="sgrid">${D.STARTERS[t].map((l, i) => `<button class="sth ${i === pick[t] ? 'on' : ''}" data-t="${t}" data-i="${i}" title="${esc(D.NAMES_FR[l[0]])}"><img src="${portrait(l[0])}" alt=""><small>Gén. ${D.GEN_OF[l[0]]}</small></button>`).join('')}</div>
-          <div class="sprev"><img src="${portrait(sel[0])}" alt=""><div><b>${esc(D.NAMES_FR[sel[0]])}</b><small>${sel.map(s => esc(D.NAMES_FR[s])).join(' → ')}</small>
-          <small>${D.ARCH[t].mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(D.TMS[D.ARCH[t].tm].name)}</small>
-          ${(ri => `<small class="srel"><b>Relais · ${esc(ri.name)}</b> (${ri.gab}) : ${esc(ri.text)}${ri.own ? '' : ' · attaque par défaut'}</small>`)(relayInfo(sel))}</div></div></div>`;
-      }).join('')}</div>
-      <div class="act"><button id="st-go">Commencer l’aventure</button></div>`;
-    el.querySelectorAll('.sth').forEach(b => b.onclick = () => { pick[b.dataset.t] = +b.dataset.i; draw(); });
-    $('#st-go').onclick = () => { el.classList.remove('show'); onDone({ ...pick }); };
+    const f = poolEntry(focus), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
+    const types = D.typesOf(f.type, f.key);
+    el.innerHTML = `<h2>Choisissez vos trois compagnons</h2>
+      <p class="sub">Trois Pokémon au choix parmi 39 lignées, rangées par style de combat. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais. Deux Pokémon du même type en résonance frappent plus fort.</p>
+      <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
+        <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on' : ''} ${p.key === focus ? 'foc' : ''}" data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
+        <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
+        <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
+        <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
+        <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
+        <div class="act"><button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
+    el.querySelectorAll('.pth').forEach(b => b.onclick = () => {
+      const k = b.dataset.k; focus = k;
+      const i = picks.indexOf(k); if (i >= 0) picks.splice(i, 1); else { if (picks.length === 3) picks.shift(); picks.push(k); }
+      draw();
+    });
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
+    const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { el.classList.remove('show'); onDone([...picks]); } };
   };
   draw();
 }

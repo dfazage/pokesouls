@@ -2,7 +2,7 @@
 
 Fan game **non commercial** : action-RPG souls-like en temps réel, pixel art sur un monde HD-2D.
 
-**Chapitre 1 : Génération 1** · six cartes, trois starters, les oiseaux légendaires, un roi de Kanto, Mewtwo et Mew.
+**Chapitre 1 : Génération 1** · six cartes, trois compagnons, les oiseaux légendaires, un roi de Kanto, Mewtwo et Mew.
 
 Jouer : https://dfazage.github.io/pokesouls/
 
@@ -19,7 +19,7 @@ Chaque chapitre correspond à une génération. Chaque chapitre compte six carte
 | 5 | Laboratoire oublié | Mewtwo | Électrode Alpha |
 | 6 | Île Mystère | Mew | Noadkoko |
 
-- **Équipe de trois, un seul Pokémon en jeu** : au départ, vous choisissez un starter Feu, un Eau et un Plante parmi toutes les générations. Un seul est sur le terrain ; les deux autres attendent en réserve (ils ne combattent pas, ne subissent rien et ne se régénèrent pas). Relève avec Tab ou 1 à 3 : invulnérabilité brève, délai de 1,2 s avant la relève suivante, altérations d'état effacées. Si le Pokémon actif tombe K.O., le suivant entre automatiquement ; la partie est perdue quand les trois sont K.O. Ils évoluent aux niveaux 16 et 36.
+- **Équipe de trois, un seul Pokémon en jeu** : au départ, vous choisissez trois compagnons libres parmi 39 lignées, rangées en quatre gabarits (Assaut, Rempart, Distance, Soutien, `js/pool.js`). Le gabarit fixe le style de combat, le type fixe l'élément. Un seul est sur le terrain ; les deux autres attendent en réserve (ils ne combattent pas, ne subissent rien et ne se régénèrent pas). Relève avec Tab ou 1 à 3 : invulnérabilité brève, délai de 1,2 s avant la relève suivante, altérations d'état effacées. Si le Pokémon actif tombe K.O., le suivant entre automatiquement ; la partie est perdue quand les trois sont K.O. Ils évoluent aux niveaux 16 et 36.
 - **Monde** : mini mobs, mobs moyens, gros mob (mini-boss, donne un Super Bonbon). Les mobs vaincus réapparaissent après 2 minutes environ, hors de l'écran (les gros mobs et les boss ne reviennent pas). Tout revient au repos à un feu.
 - **Altérations d'état** : Brûlure (dégâts continus, −20 % de dégâts infligés), Poison (dégâts continus, ne tue pas), Gel (immobilisé 1,8 s), Paralysie (−40 % de vitesse, endurance plus lente), Confusion (déplacements et visées déviés). Certains ennemis, les boss et plusieurs CT les infligent ; les baies, Synthèse, Glas de Soin et le feu de camp les guérissent. Le gel et la confusion n'affectent pas les gros mobs ni les boss.
 - **Fioles d'endurance (Huile)** : touche F, endurance pleine et CT rechargée (3 par défaut, rechargées au feu). Les coffres donnent des Huiles et des Huiles Max (+1 fiole).
@@ -39,7 +39,7 @@ Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à é
 - **Marques** : chaque coup élémentaire pose une marque (Trempé, Enflammé, Givré, Chargé, Enraciné, Toxique), 2 au maximum par cible. Un coup compatible déclenche une **réaction** : Conduction (Trempé + Électrik, ou Chargé + Eau), Gel net, Vapeur, Embrasement, Fumées, Fonte, Fragilisation, Isolation. Le portrait de l'équipe s'illumine quand un Pokémon peut en déclencher une.
 - **Surfaces de terrain** : flaques (conduisent l'électricité), feu au sol, vapeur (aveugle), nuage toxique.
 - **Boss** : Électhor entretient une aura Chargée (l'eau ou la terre la contredit), Sulfura une aura de feu (l'eau l'éteint), Artikodin une carapace de glace (le feu la brise). Un indice de lore s'affiche à l'entrée.
-- **Relais** : changer de Pokémon juste après une esquive juste ou une parade déclenche l'**attaque d'entrée** propre à l'espèce du nouvel arrivant (`js/relay.js`, 15 familles de starters des générations 1 à 5 : Boule de feu, Vague repoussante, Vampigraine, etc.). Le gabarit en fixe la fonction : Assaut (frappe), Rempart (onde qui repousse ou étourdit), Distance (tir ou éventail), Soutien (soigne le Pokémon qui vient de sortir). Elle pose les marques de son élément, donc les réactions existantes s'enchaînent. Les formes évoluées agrandissent la portée et le soin. Les familles des générations 6 à 9 utilisent une frappe de relais par défaut.
+- **Relais** : changer de Pokémon juste après une esquive juste ou une parade déclenche l'**attaque d'entrée** propre à la lignée du nouvel arrivant (`js/relay.js`, 39 lignées). Elle pose la marque de son élément, donc les réactions s'enchaînent. Deux Pokémon du même type en **résonance** : attaque x1,25. Le relais ajoute 8 s au Lien. Les anciennes sauvegardes (Feu, Eau, Plante) sont converties automatiquement.
 
 Les ennemis en retour : l'eau trempe l'équipe, l'électricité frappe plus fort un Pokémon trempé.
 
