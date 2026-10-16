@@ -145,9 +145,15 @@ export function showControls(onClose) {
 // ---------- pause ----------
 export function showPauseMenu(game, h) {
   open(`<div class="panel"><h2>Pause</h2><p class="sub">${esc(game.world.name)} · Carte ${game.mapIdx + 1}/6</p>
-    ${volRow()}<div class="act col"><button id="p-res">Reprendre</button><button id="p-bag">Sac et équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
+    ${volRow()}<div class="act col"><button id="p-res" class="pri">Reprendre</button><button id="p-bag">Sac et équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-title">Retour au menu principal</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
+  const back = () => showPauseMenu(game, h);
   bindVol(); $('#p-credits').onclick = h.credits; $('#p-res').onclick = h.resume; $('#p-bag').onclick = h.bag; $('#p-map').onclick = h.travel; $('#p-keys').onclick = h.keys;
-  $('#p-reset').onclick = () => { if (confirm('Effacer la sauvegarde et recommencer ?')) h.reset(); };
+  $('#p-title').onclick = () => showConfirm('Retour au menu principal', 'La progression depuis le dernier feu de camp sera perdue. Ta sauvegarde est conservée : tu pourras la reprendre avec « Continuer ».', 'Quitter vers le menu', h.title, back);
+  $('#p-reset').onclick = () => showConfirm('Effacer la sauvegarde', 'Ta partie sera supprimée définitivement et tu recommenceras depuis le choix des starters.', 'Tout effacer', h.reset, back);
+}
+function showConfirm(title, text, yes, onYes, onNo) {
+  open(`<div class="panel confirm"><h2>${esc(title)}</h2><p class="sub">${esc(text)}</p><div class="act"><button id="c-no" class="pri">Annuler</button><button id="c-yes" class="warn">${esc(yes)}</button></div></div>`);
+  $('#c-no').onclick = onNo; $('#c-yes').onclick = onYes;
 }
 
 // ---------- crédits ----------

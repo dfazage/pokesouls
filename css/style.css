@@ -259,6 +259,63 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 @keyframes ph-name{0%,10%{opacity:0;letter-spacing:.8em;filter:blur(12px)}30%{opacity:1;letter-spacing:.14em;filter:blur(0)}80%{opacity:1;letter-spacing:.18em}100%{opacity:0;letter-spacing:.22em}}
 
 
+/* ---- UI glassmorphisme : boutons, menus, écrans (accent or braisé) ---- */
+:root{--g-bg:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.05)),rgba(12,10,8,.38);--g-bd:1px solid rgba(255,255,255,.2);--g-sh:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.3);--g-blur:blur(20px) saturate(150%);--card:rgba(255,255,255,.06);--card-bd:1px solid rgba(255,255,255,.14);--line:rgba(255,255,255,.12)}
+kbd{border:1px solid rgba(255,255,255,.34);border-bottom-width:1px;border-radius:7px;background:rgba(26,21,16,.88);font-weight:600;letter-spacing:.06em}
+/* boutons */
+button{font:600 13px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;color:#fff;background:var(--g-bg);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);border:var(--g-bd);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.28);padding:12px 28px;transition:background .15s,border-color .15s,box-shadow .15s,transform .1s}
+button:hover:not(:disabled){background:linear-gradient(135deg,rgba(255,227,166,.28),rgba(217,164,65,.12)),rgba(12,10,8,.4);border-color:rgba(255,227,166,.7);box-shadow:0 6px 22px rgba(217,164,65,.28),inset 0 1px 0 rgba(255,255,255,.4)}
+button:active:not(:disabled){transform:scale(.97)}
+button:focus-visible{outline:2px solid var(--acc-2);outline-offset:2px}
+button:disabled{opacity:.35}
+button.pri{background:linear-gradient(135deg,rgba(255,227,166,.34),rgba(217,164,65,.16)),rgba(12,10,8,.4);border-color:rgba(255,227,166,.6);color:var(--acc-2)}
+button.warn{border-color:rgba(255,93,115,.55);color:#ffb3bd}
+button.warn:hover:not(:disabled){background:linear-gradient(135deg,rgba(255,93,115,.32),rgba(255,93,115,.1)),rgba(12,10,8,.4);border-color:#ff8a9a;box-shadow:0 6px 22px rgba(255,93,115,.3),inset 0 1px 0 rgba(255,255,255,.35)}
+.row button,.ic button,.tf button,.keybtn,.spots button{border-radius:10px;font-size:11px}
+/* menus et panneaux */
+.menu{background:radial-gradient(ellipse at 50% 45%,rgba(30,22,14,.55),rgba(4,3,2,.82));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.panel{background:var(--g-bg);backdrop-filter:var(--g-blur);-webkit-backdrop-filter:var(--g-blur);border:var(--g-bd);border-radius:22px;box-shadow:var(--g-sh)}
+.panel.confirm{width:480px}
+.panel h2{font-size:20px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+.panel h4{color:var(--acc-2);letter-spacing:.2em;font-size:11px;font-weight:600;text-transform:uppercase}
+.sub,.essl{color:rgba(255,255,255,.72)}.essl b{color:var(--acc-2)}
+.act{gap:10px}
+.row,.irow,.sprev{border-top:1px solid var(--line)}
+.row img,.sprev img,.mc img,.bt img{background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.2),rgba(255,255,255,.04));border-radius:14px}
+.row em,.ib em{color:var(--acc-2)}
+.row span,.row small,.irow small,.sprev small,.mc small,.mc span,.ib small,.tc small,.bt small,.iconsum span,.iconsum small,.keys,.krow>span,.vol,.cred small{color:rgba(255,255,255,.72)}
+/* cartes */
+.scol,.mc,.mp,.bt,.ic,.tc,.iconsum div,.sth{background:var(--card);border:var(--card-bd);border-radius:16px}
+.scol{border-color:color-mix(in srgb,var(--c) 55%,transparent)}
+.scol h3,.mh em{color:var(--c,var(--acc-2))}.mh em{color:var(--acc-2)}
+.sth{overflow:hidden}.sth img{border-radius:12px 12px 0 0}
+.sth.on{background:rgba(255,255,255,.12);border-color:var(--c);box-shadow:0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}
+.mc.t-fire,.mc.t-water,.mc.t-grass,.tc{border-top-width:3px}
+.mp.here,.bt.sel,.tc.eq{border-color:rgba(255,227,166,.75);background:rgba(217,164,65,.14);box-shadow:0 0 18px rgba(217,164,65,.22)}
+.bt{border-left-width:4px;border-radius:16px}
+.bn i{border-color:rgba(255,255,255,.3);border-radius:99px;padding:1px 8px}.bn i.act{background:var(--acc-2);border-color:var(--acc-2);color:#1a1510}
+.tchips u,.tc .th u{border-radius:99px}
+.ico{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px}
+.iconsum b{color:var(--acc-2)}.pips{color:var(--acc)}
+.hpb{background:rgba(255,255,255,.13);border:0;border-radius:99px;overflow:hidden;height:12px}.hpb div{background:linear-gradient(90deg,#ff5d73,#ff9a8b);box-shadow:0 0 10px rgba(255,93,115,.6)}
+.mini-b{background:var(--card);border:var(--card-bd);border-radius:12px;overflow:hidden}.mini-b.cur{border-color:var(--acc-2);box-shadow:0 0 10px rgba(217,164,65,.5)}
+.tabs button{border-radius:99px;padding:8px 18px;letter-spacing:.08em}
+.tabs button.on{background:linear-gradient(135deg,rgba(255,227,166,.34),rgba(217,164,65,.16)),rgba(12,10,8,.4);border-color:rgba(255,227,166,.7);color:var(--acc-2)}
+.keybtn{background:var(--card);border:var(--card-bd)}.keybtn.wait{border-color:var(--acc-2);color:var(--acc-2)}
+.vol input{accent-color:var(--acc)}.vol b{color:#fff}
+.cred a{color:var(--acc-2)}
+.tf .ok{color:#a4f0c6}.tf .bad{color:#ffb3bd}
+/* écrans plein cadre */
+.screen{background:radial-gradient(ellipse at 50% 40%,#3d3128,#1c1713 45%,#0a0908 100%)}
+.screen h1{text-shadow:0 0 30px rgba(217,164,65,.5)}
+#title{background:#05060c}
+.tt small,.hint{color:rgba(255,255,255,.65)}.tt h3{color:var(--acc-2)}
+.lb{height:8px;border-radius:99px;background:rgba(255,255,255,.13);overflow:hidden}#load-bar{border-radius:99px;background:linear-gradient(90deg,#d9a441,#ffe3a6);box-shadow:0 0 12px rgba(217,164,65,.6)}
+#title .tb button{font-family:'Cinzel',Georgia,serif;letter-spacing:.14em;background:var(--g-bg);border-color:rgba(255,255,255,.2)}
+#title .tb button:hover:not(:disabled){background:linear-gradient(135deg,rgba(255,227,166,.3),rgba(217,164,65,.12)),rgba(12,10,8,.4);border-color:rgba(255,227,166,.75);color:var(--acc-2);text-shadow:0 0 14px rgba(255,170,60,.7)}
+#end p{color:rgba(255,255,255,.72)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,button,.tbtn{background:rgba(22,18,14,.9)}}
+
 /* ---- téléphone / tablette (PWA) : commandes tactiles ---- */
 html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 #touch{position:absolute;inset:0;z-index:10;display:none;pointer-events:none;touch-action:none}
@@ -317,3 +374,12 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 .tc .th .itemico{width:24px;height:24px}
 #toast .itemico{width:22px;height:22px;margin-right:8px;vertical-align:-6px}
 #banner .itemico{width:56px;height:56px;margin-right:20px}
+
+/* commandes tactiles en verre */
+.tbtn{background:var(--g-bg);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%);border:var(--g-bd);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28)}
+.tbtn.big{background:linear-gradient(135deg,rgba(255,227,166,.34),rgba(217,164,65,.16)),rgba(12,10,8,.4);border-color:rgba(255,227,166,.7);color:var(--acc-2)}
+.tbtn.gold{border-color:rgba(255,227,166,.7);color:var(--acc-2)}
+.tbtn.sys{color:rgba(255,255,255,.8);font-size:12px}
+.tbtn.on{background:rgba(217,164,65,.5);border-color:#fff}
+#tj-base{border:1px solid rgba(255,255,255,.25);background:radial-gradient(circle,rgba(255,255,255,.04),rgba(217,164,65,.16));backdrop-filter:blur(6px)}
+#tj-knob{background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,.14));border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
