@@ -440,3 +440,14 @@ body.touch #tut{left:12px;top:70px;width:260px;font-size:11px}
 body.padnav .padfocus{outline:3px solid var(--acc-2);outline-offset:3px;box-shadow:0 0 18px rgba(255,227,166,.6);position:relative;z-index:2}
 body.padnav input[type=range].padfocus{accent-color:var(--acc-2)}
 #hud.padmode #tut .tk kbd{white-space:nowrap}
+
+/* ---- Quête de Fala : carte secrète de l'écran de départ, Modules, dialogues ---- */
+.psecret{display:flex;align-items:center;gap:12px;max-width:1200px;margin:12px auto 0;padding:8px 12px;background:var(--card);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:16px;text-align:left}
+.psecret h3{color:var(--c);letter-spacing:3px;font-size:14px;min-width:70px}.psecret small{color:var(--dim);font-size:11px}
+.psecret .pth{width:58px;flex:none}.psecret.locked{opacity:.55;filter:grayscale(1)}.pth.lock{display:flex;align-items:center;justify-content:center;cursor:not-allowed}.pth.lock b{font-size:22px;color:#6a7098}
+.pmods{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.pmod{padding:2px 10px;font-size:11px;border-radius:10px;border:1px solid var(--m);background:transparent;color:var(--m)}.pmod.on{background:var(--m);color:#000}
+.fready{color:#7fe0c0!important;font-style:italic}
+.panel.dlg{width:min(640px,92vw)}.dlg .dwho{display:flex;align-items:center;gap:10px;margin-bottom:10px}.dlg .dwho img{width:56px;height:56px;image-rendering:pixelated;background:#141a3a;border-radius:12px;border:1px solid #2a3060}
+.dlg .dwho b{color:#7fe0c0;letter-spacing:2px;font-size:15px}.dlg .dwho u{text-decoration:none;font-size:10px;padding:1px 8px;border-radius:9px;color:#000}
+.dlg p{font-size:15px;line-height:1.7;min-height:64px;margin:0 0 14px}.dlg.sys p{color:#ffd98a;font-style:italic;text-align:center}.dlg .act{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}

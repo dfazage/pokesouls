@@ -25,6 +25,7 @@ export const NAMES_FR = {
   machop: 'Machoc', machoke: 'Machopeur', machamp: 'Mackogneur', geodude: 'Racaillou', graveler: 'Gravalanch', golem: 'Grolem', onix: 'Onix', rhyhorn: 'Rhinocorne', rhydon: 'Rhinoféros', dragonite: 'Dracolosse', dragonair: 'Draco', snorlax: 'Ronflex',
   koffing: 'Smogo', weezing: 'Smogogo', porygon: 'Porygon', mewtwo: 'Mewtwo', exeggcute: 'Noeunoeuf', exeggutor: 'Noadkoko', abra: 'Abra', kadabra: 'Kadabra', haunter: 'Spectrum', gengar: 'Ectoplasma', mrmime: 'M. Mime', chansey: 'Leveinard', mew: 'Mew', clone: 'Clone', decoy: 'Mirage',
 };
+NAMES_FR.genesect = 'Fala';   // Genesect secret, débloqué par sa quête dans la Centrale
 // noms des espèces du pool jouable (GDD v3)
 Object.assign(NAMES_FR, { bagon: 'Draby', shelgon: 'Drackhaus', salamence: 'Drattak', riolu: 'Riolu', lucario: 'Lucario', meowth: 'Miaouss', persian: 'Persian', sneasel: 'Farfuret', weavile: 'Dimoret', zorua: 'Zorua', zoroark: 'Zoroark', munchlax: 'Goinfrex', steelix: 'Steelix', beldum: 'Terhal', metang: 'Métang', metagross: 'Métalosse', hippopotas: 'Hippopotas', hippowdon: 'Hippodocus', scyther: 'Insécateur', scizor: 'Cizayox', weedle: 'Aspicot', kakuna: 'Coconfort', beedrill: 'Dardargnan', remoraid: 'Rémoraid', octillery: 'Octillery', starly: 'Étourmi', staravia: 'Étourvol', staraptor: 'Étouraptor', magnezone: 'Magnézone', alakazam: 'Alakazam', pichu: 'Pichu', litwick: 'Lugulabre', lampent: 'Funécire', chandelure: 'Chandelure', gastly: 'Fantominus', eevee: 'Évoli', happiny: 'Ptiravi', blissey: 'Leuphorya', ralts: 'Tarsal', kirlia: 'Kirlia', gardevoir: 'Gardevoir', togepi: 'Togepi', togetic: 'Togetic', togekiss: 'Togekiss', budew: 'Rozbouton', roselia: 'Rosélia', roserade: 'Roserade' });
 // Archétypes par type (stade 1, niveau 5)
@@ -77,6 +78,7 @@ export const FORM_TYPES = {
   eevee: ['normal'], happiny: ['normal'], chansey: ['normal'], blissey: ['normal'], ralts: ['psychic', 'fairy'], kirlia: ['psychic', 'fairy'], gardevoir: ['psychic', 'fairy'],
   togepi: ['fairy'], togetic: ['fairy', 'flying'], togekiss: ['fairy', 'flying'], budew: ['grass', 'poison'], roselia: ['grass', 'poison'], roserade: ['grass', 'poison'],
 };
+FORM_TYPES.genesect = ['bug', 'steel'];   // Fala (secret) : défense Insecte/Acier ; l'élément offensif vient du Module équipé
 
 export const typesOf = (family, id) => FORM_TYPES[id] || (SECOND_TYPE[id] ? [family, SECOND_TYPE[id]] : [family]);
 export function tmCompat(tmKey, family, id, stage) {

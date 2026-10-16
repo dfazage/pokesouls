@@ -8,7 +8,7 @@ import { Game, W, H } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
-import { showStarters, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
+import { showStarters, showDialogue, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
@@ -71,6 +71,7 @@ async function launch(g) {
     else if (type === 'area') hud.area(a);
     else if (type === 'fade') hud.fade();
     else if (type === 'menu') openBonfire(a);
+    else if (type === 'dialogue') openMenu('dialogue', () => showDialogue(a.lines, res => { closeMenu(); if (a.done) a.done(res); }));
     else if (type === 'jingle') Music.playJingle(a);
     else if (type === 'bossStart') hud.bossIntro(a);
     else if (type === 'bossPhase') hud.phaseScreen(a, b);
@@ -140,7 +141,7 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
 
 (async function boot() {
   const bar = $('#load-bar');
-  try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits(POOL.map(p => p.key)); bar.style.width = '100%'; }
+  try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits([...POOL.map(p => p.key), 'genesect']); bar.style.width = '100%'; }
   catch (e) { $('#load-t').textContent = 'Erreur de chargement : ' + e.message; throw e; }
   $('#loading').classList.remove('show');
   const has = Game.exists();

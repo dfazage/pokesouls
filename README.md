@@ -6,6 +6,11 @@ Fan game **non commercial** : action-RPG souls-like en temps réel, pixel art su
 
 Jouer : https://dfazage.github.io/pokesouls/
 
+## Quête secrète : Fala (Centrale abandonnée)
+
+Un Genesect nommé **Fala** dort dans une salle cachée de la Lisière de la Centrale abandonnée (carte 2) : un coup porté près d'un mur qui scintille dissipe le faux mur. Il demande de retrouver ses quatre **Modules** (Aqua, Pyro, Cryo, Choc), éparpillés dans quatre salles de la carte (sans marqueur : sa plaque « chauffe » quand on s'en approche, la lueur du Module grandit). Les rapporter donne un petit objet par Module ; la quête terminée, **Fala est sélectionnable à l'écran de départ des prochaines parties** (profil permanent `pokesouls.profile.v1`). Le Module équipé (changeable gratuitement au feu de camp) donne l'élément de son attaque de relais.
+Code : `js/fala.js` (profil, dialogues, quête), génération de la salle dans `js/maps.js` (`generate`, `openSecret`).
+
 ## Le chapitre
 
 Chaque chapitre correspond à une génération. Chaque chapitre compte six cartes, reliées par un portail (après le boss) et par un menu de téléportation.

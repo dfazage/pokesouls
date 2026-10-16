@@ -44,6 +44,8 @@ export const RELAY = {
   pichu: { name: 'Étincelle', gab: 'D', shape: 'shot', mult: 0.9, explode: 22, speed: 280, status: ['para', 0.45] },
   litwick: { name: 'Flammèche', gab: 'D', shape: 'shot', mult: 0.95, explode: 26, status: ['burn', 0.45] },
   gastly: { name: 'Léchouille', gab: 'D', shape: 'shot', mult: 1.0, explode: 24, status: ['para', 0.35] },
+  // Secret : Fala (Genesect). Canon techno ; l'élément (et donc la marque posée) vient du Module équipé.
+  genesect: { name: 'Canon techno', gab: 'D', shape: 'shot', mult: 1.1, explode: 26, speed: 270 },
   // Soutien
   eevee: { name: 'Charme', gab: 'S', shape: 'ring', mult: 0.4, range: 40, stagger: 0.3, knock: 30, healOut: 0.2 },
   happiny: { name: 'Soin', gab: 'S', shape: 'ring', mult: 0.3, range: 36, stagger: 0.2, knock: 20, healOut: 0.3, cure: true },

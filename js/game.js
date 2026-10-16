@@ -10,6 +10,7 @@ import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
 import { installBossCine } from './bosscine.js';
+import { installFala, FALA_KEY, MODULES, falaModule } from './fala.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -38,6 +39,7 @@ export function speciesForMap(idx) {
   const d = M.MAPS[idx], set = new Set();
   for (const t of [...d.mobs.mini, ...d.mobs.mid, d.mobs.big]) set.add(D.spriteOfEnemy(t));
   const b = D.BOSSES[d.boss]; set.add(b.sprite); if (b.summon) set.add(D.spriteOfEnemy(b.summon));
+  if (d.fala) set.add(FALA_KEY);   // quête de Fala
   return [...set];
 }
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
@@ -65,12 +67,12 @@ export class Game {
   // ---------- état ----------
   chief() { return this.team[this.chiefIdx]; }
   makeMember(key, i) {
-    const e = poolEntry(key);
-    return { key, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
+    const e0 = poolEntry(key), mod = key === FALA_KEY ? falaModule() : null, e = mod ? { ...e0, type: MODULES[mod].type } : e0;   // Fala : l'élément vient du Module équipé
+    return { key, mod, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
       hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0, fx: null, regen: null, frzImm: 0 };
   }
   computeDef(m) {
-    const a = archOf(poolEntry(m.key)), st = stageOf(m.lvl), id = m.line[st], v = m.vit;
+    const a = archOf({ ...poolEntry(m.key), type: m.type }), st = stageOf(m.lvl), id = m.line[st], v = m.vit;
     m.stage = st; m.id = id;
     m.def = { ...a, id, name: D.NAMES_FR[id], hp: Math.round(a.hp * D.hpMult(m.lvl) * D.STAGE_HP[st] * (1 + 0.08 * v.hpup)),
       dmg: a.dmg * D.dmgMult(m.lvl) * D.STAGE_DMG[st] * (1 + 0.06 * v.protein), speed: a.speed * (1 + 0.03 * v.carbos), ability: D.TMS[m.tm] };
@@ -87,7 +89,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -98,7 +100,7 @@ export class Game {
     if (!s || s.v !== 2 || !(s.picks || s.starters)) return false;
     // anciennes sauvegardes : { fire: n, water: n, grass: n } -> clés de lignées
     this.picks = s.picks || ['fire', 'water', 'grass'].map(t => D.STARTERS[t][s.starters[t]][0]);
-    this.team = this.picks.map((key, i) => { const t = poolEntry(key).type; const m = this.makeMember(key, i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
+    this.team = this.picks.map((key, i) => { const m = this.makeMember(key, i); if (key === FALA_KEY && MODULES[(s.mods || [])[i]]) { m.mod = s.mods[i]; m.type = MODULES[m.mod].type; } const t = m.type; m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
     this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
@@ -119,7 +121,7 @@ export class Game {
     this.state = 'loading'; if (!silent) this.emit('fade');
     await loadSpecies(speciesForMap(idx), null, true);
     if (this.world) { this.prog[this.mapIdx].lit = [...this.lit]; }
-    this.mapIdx = idx; this.world = M.buildWorld(idx); this.obs = []; this.world.obs = this.obs; this.gust = null; this.later = []; this.fxs = []; this.endLink(true); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
+    this.mapIdx = idx; this.world = M.buildWorld(idx); this.falaEnter(); this.obs = []; this.world.obs = this.obs; this.gust = null; this.later = []; this.fxs = []; this.endLink(true); this.floor = this.floors[idx] || (this.floors[idx] = M.bakeFloor(this.world));
     const pr = this.prog[idx]; this.lit = new Set(pr.lit);
     if (pr.doorOpen && this.world.door) for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
     if (pr.bossDead) this.openFog();
@@ -975,6 +977,7 @@ export class Game {
         if (along > 0 && along < 56 && perp < 44) this.prompt = { text: 'Franchir la brume', act: () => this.enterFog() };
       }
     }
+    this.updateFala(dt);
     if (this.prompt && this.prompt.act && Input.pressed('interact') && !c.atk && !c.dodge && c.hurtT <= 0) this.prompt.act();
   }
   lightBonfire(b) {
@@ -1061,6 +1064,7 @@ installFx(Game, { D });
 installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
 installTutorial(Game, { M, D, TS, SFX, hyp });
 installBossCine(Game, { Input, TS, W, H, clamp, hyp, setAnim, SFX, M });
+installFala(Game, { M, TS, SFX, hyp });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération

@@ -33,6 +33,8 @@ const GEN_FIX = { eevee: 1 };
 
 const familyOf = key => STARTER_FAMILY[key] || (FORM_TYPES[key] || ['normal'])[0];
 
+// Fala (Genesect secret) : hors du pool de 39 lignées, sélectionnable seulement après sa quête (voir fala.js). L'élément vient de son Module.
+export const FALA = { key: 'genesect', gab: 'D', line: ['genesect', 'genesect', 'genesect'], gen: 5, type: 'electric', starter: false, secret: true };
 export const POOL = ROWS.map(([gab, a, b, c, gen]) => ({ key: a, gab, line: [a, b, c], gen: GEN_FIX[a] || gen, type: familyOf(a), starter: !!STARTER_FAMILY[a] }));
 const byKey = Object.fromEntries(POOL.map(p => [p.key, p]));
 
@@ -41,6 +43,7 @@ const LEGACY_GAB = { fire: 'D', water: 'R', grass: 'S' };
 for (const t of Object.keys(D.STARTERS)) for (const l of D.STARTERS[t]) {
   if (!byKey[l[0]]) byKey[l[0]] = { key: l[0], gab: LEGACY_GAB[t], line: l, gen: D.GEN_OF[l[0]], type: t, starter: true, legacy: true };
 }
+byKey[FALA.key] = FALA;
 export const poolEntry = key => byKey[key] || null;
 
 // archétype d'un membre : stats du gabarit, couleurs du type

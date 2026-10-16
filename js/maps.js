@@ -26,7 +26,7 @@ export const MAPS = [
     path: [[3, 2], [2, 2], [1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [2, 0]],
     areas: ['Hall des turbines', 'Salle des câbles', 'Atelier rouillé', 'Salle des générateurs', 'Couloir des relais', 'Poste de commande', 'Antichambre du transformateur'], sanctuary: "Cœur de la Centrale",
     mobs: { mini: ['magnemite', 'voltorb', 'pikachu'], mid: ['magneton', 'electrode', 'raichu'], big: 'electabuzz' },
-    loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'] },
+    loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0] } },
   { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', lv: 22, seed: 37, boss: 'moltres',
     path: [[0, 0], [0, 1], [1, 1], [1, 2], [2, 2], [2, 1], [3, 1], [3, 0]],
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
@@ -205,7 +205,44 @@ function generate(def) {
     if (k >= 2) { const nd = k === 6 ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(r, pick(tiers.mid), k); }
     if (k === 4) place(r, tiers.big, k);
   });
-  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf };
+  // quête de Fala : salle secrète voisine de la Lisière et emplacement des Modules.
+  // Calculé après tout le reste et sans toucher à la grille : la carte du reste du jeu est inchangée.
+  let secret = null; const modules = [];
+  if (def.fala) {
+    const SWd = 9, SHt = 7, PAD = 2;
+    const voidBox = (x0, y0, x1, y1) => { for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) { if (i < 2 || j < 2 || i >= MW - 2 || j >= MH - 2 || grid[j * MW + i] !== T.VOID) return false; } return true; };
+    search: for (const ri_ of def.fala.hub) {
+      const r = rooms[ri_];
+      for (const side of ['N', 'E', 'W', 'S']) for (const off of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+        let sx, sy, gap;
+        if (side === 'N' || side === 'S') {
+          sx = r.x + Math.floor((r.w - SWd) / 2) + off; sy = side === 'N' ? r.y - 1 - SHt : r.y + r.h + 1;
+          const gx = sx + Math.floor(SWd / 2) - 1, gy = side === 'N' ? r.y - 1 : r.y + r.h;
+          if (gx < r.x || gx + 1 >= r.x + r.w) continue; gap = [[gx, gy], [gx + 1, gy]];
+        } else {
+          sy = r.y + Math.floor((r.h - SHt) / 2) + off; sx = side === 'W' ? r.x - 1 - SWd : r.x + r.w + 1;
+          const gy = sy + Math.floor(SHt / 2) - 1, gx = side === 'W' ? r.x - 1 : r.x + r.w;
+          if (gy < r.y || gy + 1 >= r.y + r.h) continue; gap = [[gx, gy], [gx, gy + 1]];
+        }
+        // marge de 2 tuiles de vide autour de la salle (hors côté de l'entrée, où il ne reste que la tuile du faux mur)
+        const x0 = sx - (side === 'E' ? 1 : PAD), x1 = sx + SWd - 1 + (side === 'W' ? 1 : PAD), y0 = sy - (side === 'S' ? 1 : PAD), y1 = sy + SHt - 1 + (side === 'N' ? 1 : PAD);
+        if (!voidBox(x0, y0, x1, y1)) continue;
+        const tiles = []; for (let j = sy; j < sy + SHt; j++) for (let i = sx; i < sx + SWd; i++) tiles.push([i, j]); gap.forEach(g_ => tiles.push(g_));
+        const far = { N: [sx + 1, sy + 1], S: [sx + 1, sy + SHt - 2], W: [sx + 1, sy + 1], E: [sx + SWd - 3, sy + 1] }[side];
+        const far2 = { N: [sx + SWd - 3, sy + 1], S: [sx + SWd - 3, sy + SHt - 2], W: [sx + 1, sy + SHt - 2], E: [sx + SWd - 3, sy + SHt - 2] }[side];
+        secret = { side, x: sx, y: sy, w: SWd, h: SHt, gap, tiles, name: 'Cellule de maintenance', npc: { tx: sx + Math.floor(SWd / 2), ty: sy + Math.floor(SHt / 2) }, decor: [{ kind: 'console', tx: far[0], ty: far[1] }, { kind: 'console', tx: far2[0], ty: far2[1] }] };
+        break search;
+      }
+    }
+    for (const [id, ri_] of Object.entries(def.fala.modules)) {
+      const r = rooms[ri_];
+      for (let t = 0; t < 200; t++) {
+        const x = r.x + 1 + Math.floor(R() * (r.w - 2)), y = r.y + 1 + Math.floor(R() * (r.h - 2));
+        if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 1); modules.push({ id, tx: x, ty: y, room: ri_ }); break;
+      }
+    }
+  }
+  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret, modules };
 }
 
 // ---------- monde ----------
@@ -228,8 +265,12 @@ export function buildWorld(idx) {
   }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
-  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })) });
-  // masque de murs : vide adjacent (8 voisins) à du sol
+  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
+  computeWall(world);
+  return world;
+}
+// masque de murs : vide adjacent (8 voisins) à du sol
+function computeWall(world) {
   const wall = new Uint8Array(MW * MH), g = world.grid;
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     if (g[y * MW + x] !== T.VOID) continue;
@@ -238,7 +279,16 @@ export function buildWorld(idx) {
     wall[y * MW + x] = near ? 1 : 0;
   }
   world.wall = wall;
-  return world;
+}
+// Quête de Fala : brise le faux mur, la salle secrète apparaît (sol, décor, nom de zone). Renvoie false si déjà ouverte ou absente.
+export function openSecret(world) {
+  const s = world.secret; if (!s || s.opened) return false; s.opened = true;
+  for (const [x, y] of s.tiles) world.grid[y * MW + x] = T.FLOOR;
+  const ri = world.rooms.length; world.rooms.push({ id: 'SF', x: s.x, y: s.y, w: s.w, h: s.h, zone: 'Lisière', name: s.name });
+  for (const [x, y] of s.tiles) world.roomOf[y * MW + x] = ri;
+  for (const d of s.decor) { const [w, h] = FOOT[d.kind]; world.decor.push({ kind: d.kind, tx: d.tx, ty: d.ty, w, h, room: ri, seed: (d.tx * 31 + d.ty * 17) % 97 }); for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) world.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
+  computeWall(world);
+  return true;
 }
 
 // couloirs sans nom : on cherche la salle nommée la plus proche pour la bannière
