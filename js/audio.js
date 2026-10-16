@@ -19,7 +19,7 @@ function playCry(id) {
   const urls = CRY_URL(id); let i = 0;
   const go = () => {
     if (i >= urls.length) return;
-    const a = cryCache[id + i] || (cryCache[id + i] = new Audio(urls[i])); a.volume = 0.68;
+    const a = cryCache[id + i] || (cryCache[id + i] = new Audio(urls[i])); a.volume = 0.5;
     a.onerror = () => { i++; go(); };
     try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => { if (!a.paused) return; i++; go(); }); } catch (e) { i++; go(); }
   };
