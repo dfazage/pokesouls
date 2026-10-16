@@ -30,7 +30,7 @@ export function padLabel(a) {
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'run': return padBtnName(PADACT.dodge) + ' (maintenu)';
-    case 'berry': return w + '+' + padBtnName(PADACT.heavy); case 'candy': return w + '+' + padBtnName(PADACT.light); case 'ether': return w + '+' + padBtnName(PADACT.interact); case 'revive': return w + '+' + padBtnName(PADACT.dodge);
+    case 'berry': return w + '+' + padBtnName(3); case 'candy': return w + '+' + padBtnName(2); case 'ether': return w + '+' + padBtnName(1); case 'revive': return w + '+' + padBtnName(0);
     default: return a in PADACT ? padBtnName(PADACT[a]) : '';
   }
 }
@@ -123,8 +123,8 @@ const PADSTORE = 'pokesouls.padmap.v1';
 const PADACT = { ...PADDEF };   // action → indice de bouton (réassignable dans l'écran Commandes)
 try { const sv = JSON.parse(localStorage.getItem(PADSTORE) || 'null'); if (sv) for (const a of Object.keys(PADDEF)) if (Number.isInteger(sv[a]) && sv[a] >= 0 && sv[a] < 32) PADACT[a] = sv[a]; } catch (e) { /* défauts */ }
 const padPersist = () => { try { localStorage.setItem(PADSTORE, JSON.stringify(PADACT)); } catch (e) { /* rien */ } };
-let PAD = {}, PAD_ITEM = {}, padLearn = null, padInfo = { id: '', mapping: '' };
-const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; PAD_ITEM = { [PADACT.heavy]: 'berry', [PADACT.light]: 'candy', [PADACT.interact]: 'ether', [PADACT.dodge]: 'revive' }; };
+let PAD = {}, PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' }, padLearn = null, padInfo = { id: '', mapping: '' };
+const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; };
 padRebuild();
 // R tenu + bouton de face = objet : haut (lourd) = baie, gauche (léger) = bonbon, droite (interagir) = Éther, bas (esquive) = Rappel. Suit les boutons réassignés.
 // Couche « physique » : indice réel renvoyé par le navigateur → position standard (0 bas, 1 droite, 2 gauche, 3 haut, 4 L, 5 R, 6 ZL, 7 ZR, 8 −, 9 +, 10 clic G, 11 clic D), réglée par l'assistant de l'écran Commandes.
@@ -169,9 +169,10 @@ function pollPad() {
   const mod = !!btnPrev[PADACT.mod];   // R tenu : les boutons de face deviennent des objets
   for (const [b, act] of Object.entries(PAD)) {
     const item = mod && PAD_ITEM[b], ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant R
-    if (padEdge.has(+b) && !ign) pressedNow.add(item || act);
+    if (padEdge.has(+b) && !ign && !item) pressedNow.add(act);
     if (btnPrev[b] && !ign && !item) padDown.add(act); else padDown.delete(act);
   }
+  if (mod) for (const [b, item] of Object.entries(PAD_ITEM)) if (padEdge.has(+b)) pressedNow.add(item);   // R + bouton de face fixe : haut baie, gauche bonbon, droite (A) huile, bas rappel
   { // stick droit, R relâché : un coup de stick à gauche / droite change de cible verrouillée
     const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);
     const f = !mod && mag > 0.7 && Math.abs(rx) > Math.abs(ry) * 1.3 ? Math.sign(rx) : 0;
