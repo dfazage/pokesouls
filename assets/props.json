@@ -1,6 +1,6 @@
 {
-  "chest_closed":  { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [0], "scale": 2 },
-  "chest_open":    { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [1], "scale": 2 },
+  "chest_closed":  { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [0], "scale": 1.5 },
+  "chest_open":    { "file": "props/pokeball.png", "fw": 16, "fh": 18, "frames": [1], "scale": 1.5 },
   "bonfire_unlit": { "file": "props/campfire.png", "fw": 48, "fh": 87, "frames": [7] },
   "bonfire_lit":   { "file": "props/campfire.png", "fw": 48, "fh": 87, "frames": [4, 5, 4, 6, 5], "fps": 6 }
 }
