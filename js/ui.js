@@ -8,13 +8,14 @@ import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
 import { Music, TRACKS } from './music.js';
+import { SFX } from './audio.js';
 import { MODULES, MOD_ORDER, FALA_KEY, loadProfile, saveProfile, READY_LINE } from './fala.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const menu = () => $('#menu');
-export function hideMenu() { const m = menu(); m.classList.remove('show'); m.innerHTML = ''; }
-function open(html) { const m = menu(); m.classList.add('show'); m.innerHTML = html; return m; }
+export function hideMenu() { const m = menu(); m.classList.remove('show', 'dock'); m.innerHTML = ''; }
+function open(html) { const m = menu(); m.classList.add('show'); m.classList.remove('dock'); m.innerHTML = html; return m; }
 
 const volRow = () => `<div class="vol"><label>Musique <input type="range" id="vol-music" min="0" max="100" value="${Math.round(Music.getVolume() * 100)}"><b id="vol-v">${Math.round(Music.getVolume() * 100)} %</b></label></div>`;
 function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; }; }
@@ -62,7 +63,7 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
       <div class="lv">${game.team.map((t, i) => { const c = D.levelCost(t.lvl), ok = game.essence >= c && t.lvl < D.MAX_LEVEL;
         const nxtStage = t.stage < 2 && t.lvl + 1 >= D.EVOLVE_AT[t.stage] ? ` · <em>évolue en ${esc(D.NAMES_FR[t.line[t.stage + 1]])}</em>` : '';
         return `<div class="row"><img src="${portrait(t.id)}" alt=""><div><b>${esc(t.def.name)}</b> <span>${t.def.typeName} · ${t.def.cls}</span><small>Niv. ${t.lvl}${t.lvl < D.MAX_LEVEL ? ` · PV ${t.maxhp}` : ' · max'}${nxtStage}</small>${t.key === FALA_KEY ? `<small class="pmods">Module : ${MOD_ORDER.map(id => `<button class="pmod ${t.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-mod="${i}:${id}">${MODULES[id].name}</button>`).join('')}</small>` : ''}</div><button data-up="${i}" ${ok ? '' : 'disabled'}>Monter · ${c}</button></div>`; }).join('')}</div>
-      <div class="act"><button id="m-bag">Sac et équipe</button><button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
+      <div class="act"><button id="m-bag">Équipe</button><button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
     m.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { game.levelUp(+b.dataset.up); render(); });
     m.querySelectorAll('[data-mod]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.mod.split(':'); game.setModule(+k, id); render(); });
     $('#m-rest').onclick = () => { game.rest(); game.last = { map: game.mapIdx, id: bonfire.id }; game.save(); game.emit('toast', 'L’équipe se repose'); onClose(); };
@@ -74,7 +75,7 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
 }
 
 // ---------- sac et équipe ----------
-let bagSel = 0, bagTab = 'items';
+let bagSel = 0, bagTab = 'items', questSel = null;
 export function showBag(game, onClose) {
   const names = D.VITAMINS;
   const render = () => {
@@ -98,6 +99,9 @@ export function showBag(game, onClose) {
       body = `<div class="iconsum"><div><span>${iconImg('berry')}Baies</span><b>${game.berries} / ${game.maxBerries}</b><small>soigne 40 % et guérit les altérations</small></div>
         <div><span>${iconImg('ether')}Huile</span><b>${game.ethers} / ${game.maxEthers}</b><small>endurance pleine, CT rechargée</small></div>
         <div><span>Essence</span><b>${game.essence}</b><small>à dépenser au feu de camp</small></div></div><div class="igrid">${cards.join('')}</div>`;
+    } else if (bagTab === 'quest') {
+      const qs = game.questLog();
+      body = qs.length ? `<div class="qlist">${qs.map(q => `<div class="qc ${q.status} ${questSel === q.id ? 'open' : ''}" data-q="${q.id}" tabindex="0"><div class="qh"><b>${esc(q.title)}</b><span>${q.status === 'done' ? 'Terminée' : q.progress}</span></div><small>${esc(q.zone)} · ${esc(q.summary)}</small>${questSel === q.id ? `<div class="qd">${q.steps.map(s => `<div class="qs ${s.state}"><i style="background:${s.color}"></i><div><b>${esc(s.name)}</b><small>${esc(s.state === 'given' ? 'Rapporté à Fala' : s.state === 'carried' ? 'Récupéré · à rapporter à Fala' : s.hint)}</small></div></div>`).join('')}<small class="qr">Récompense : ${esc(q.reward)}</small></div>` : '<em class="qm">Détails ▾</em>'}</div>`).join('')}</div>` : '<p class="sub">Aucune quête pour le moment. Certains habitants de ces lieux ont peut-être besoin d’aide...</p>';
     } else {
       const cards = [...game.tms].sort((a, b) => (D.tmCompat(b, sel.type, sel.id, sel.stage).ok - D.tmCompat(a, sel.type, sel.id, sel.stage).ok) || (sel.tm === b) - (sel.tm === a)).map(t => {
         const T = D.TMS[t], c = D.tmCompat(t, sel.type, sel.id, sel.stage), eq = sel.tm === t;
@@ -108,11 +112,12 @@ export function showBag(game, onClose) {
       }).join('');
       body = `<p class="sub">Compatibilité affichée pour <b>${esc(sel.def.name)}</b> (${D.typesOf(sel.type, sel.id).map(t => D.TYPE_FR[t]).join(' / ')}, stade ${sel.stage + 1}).</p><div class="tgrid">${cards || '<p class="sub">Aucune CT.</p>'}</div>`;
     }
-    const m = open(`<div class="panel bag"><div class="bhead"><h2>Sac</h2><div class="tabs"><button class="${bagTab === 'items' ? 'on' : ''}" data-tab="items">Objets</button><button class="${bagTab === 'tms' ? 'on' : ''}" data-tab="tms">Capsules techniques (${game.tms.length})</button></div></div>
+    const m = open(`<div class="panel bag"><div class="bhead"><h2>Équipe</h2><div class="tabs"><button class="${bagTab === 'items' ? 'on' : ''}" data-tab="items">Objets</button><button class="${bagTab === 'tms' ? 'on' : ''}" data-tab="tms">Capsules techniques (${game.tms.length})</button><button class="${bagTab === 'quest' ? 'on' : ''}" data-tab="quest">Quêtes${game.questLog().some(q => q.status === 'active') ? ' •' : ''}</button></div></div>
       <div class="bcols"><div class="bteam"><h4>Équipe — un seul Pokémon en jeu</h4>${team}</div><div class="bbody">${body}</div></div>
       <div class="act"><button id="m-close">Fermer</button></div></div>`);
     m.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { bagSel = +b.dataset.sel; render(); });
     m.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { bagTab = b.dataset.tab; render(); });
+    m.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { questSel = questSel === b.dataset.q ? null : b.dataset.q; render(); });
     m.querySelectorAll('[data-use]').forEach(b => b.onclick = () => {
       const [kind, key] = b.dataset.use.split(':');
       if (kind === 'candy') game.useCandy(bagSel); else if (kind === 'vit') game.useVitamin(bagSel, key); else if (kind === 'revive') game.useRevive(bagSel); else game.teach(bagSel, key);
@@ -163,7 +168,7 @@ export function showControls(onClose) {
 // ---------- pause ----------
 export function showPauseMenu(game, h) {
   open(`<div class="panel"><h2>Pause</h2><p class="sub">${esc(game.world.name)} · Carte ${game.mapIdx + 1}/6</p>
-    ${volRow()}<div class="act col"><button id="p-res" class="pri">Reprendre</button><button id="p-bag">Sac et équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-title">Retour au menu principal</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
+    ${volRow()}<div class="act col"><button id="p-res" class="pri">Reprendre</button><button id="p-bag">Équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-title">Retour au menu principal</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
   const back = () => showPauseMenu(game, h);
   bindVol(); $('#p-credits').onclick = h.credits; $('#p-res').onclick = h.resume; $('#p-bag').onclick = h.bag; $('#p-map').onclick = h.travel; $('#p-keys').onclick = h.keys;
   $('#p-title').onclick = () => showConfirm('Retour au menu principal', 'La progression depuis le dernier feu de camp sera perdue. Ta sauvegarde est conservée : tu pourras la reprendre avec « Continuer ».', 'Quitter vers le menu', h.title, back);
@@ -187,21 +192,40 @@ export function showCredits(onClose) {
 }
 
 // ---------- dialogues (quête de Fala) ----------
+// Carte posée en bas de l'écran (on continue de voir le jeu), portrait de Fala, texte lettre par lettre avec bip à l'ancienne.
 // lines : [{ who, text, choices?: [{ label, key, then: [lignes], again? }], module?, system? }] ; done(clé du dernier choix) à la fin.
 export function showDialogue(lines, done) {
-  const q = lines.slice(); let result = null, cur = null;
-  const next = () => { if (!q.length) { done(result); return; } cur = q.shift(); draw(); };
+  const q = lines.slice(); let result = null, cur = null, timer = null, shown = 0;
+  const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+  const next = () => { stop(); if (!q.length) { done(result); return; } cur = q.shift(); draw(); };
   const draw = () => {
-    const mod = cur.module ? MODULES[cur.module] : null;
-    const m = open(`<div class="panel dlg ${cur.system ? 'sys' : ''}"><div class="dwho">${cur.who === 'Fala' ? `<img src="${portrait(FALA_KEY)}" alt="">` : ''}<b>${esc(cur.who)}</b>${mod ? `<u style="background:${mod.color}">Module ${mod.name}</u>` : ''}</div>
-      <p>${esc(cur.text)}</p><div class="act">${cur.choices ? cur.choices.map((c, k) => `<button data-c="${k}">${esc(c.label)}</button>`).join('') : '<button id="d-next">Suite</button>'}</div></div>`);
-    m.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
-      const c = cur.choices[+b.dataset.c]; result = c.key;
-      const again = c.again ? [{ ...cur, choices: cur.choices.filter(x => x !== c) }] : [];
-      q.unshift(...c.then, ...again); next();
-    });
-    const n = $('#d-next'); if (n) n.onclick = next;
-    const first = m.querySelector('button'); if (first) first.focus();
+    const mod = cur.module ? MODULES[cur.module] : null, hidden = cur.who === '???';
+    const m = open(`<div class="panel dlg ${cur.system ? 'sys' : ''}">${cur.system ? '' : `<div class="dpic ${hidden ? 'hid' : ''}"><img src="${portrait(FALA_KEY)}" alt=""></div>`}
+      <div class="dbody"><div class="dwho"><b>${esc(cur.who)}</b>${mod ? `<u style="background:${mod.color}">Module ${mod.name}</u>` : ''}</div>
+      <p id="d-text"></p><div class="act"><button id="d-next" ${cur.choices ? 'hidden' : ''}>Suite</button></div></div></div>`);
+    m.classList.add('dock');
+    const el = $('#d-text'), full = cur.text, pitch = cur.who === 'Fala' ? 0.8 : 1;
+    const showChoices = () => {
+      if (!cur.choices) return;
+      const act = m.querySelector('.act'); act.innerHTML = cur.choices.map((c, k) => `<button data-c="${k}">${esc(c.label)}</button>`).join('');
+      act.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
+        const c = cur.choices[+b.dataset.c]; result = c.key;
+        const again = c.again ? [{ ...cur, choices: cur.choices.filter(x => x !== c) }] : [];
+        q.unshift(...c.then, ...again); next();
+      });
+      const f = act.querySelector('button'); if (f) f.focus();
+    };
+    shown = 0; el.textContent = '';
+    const nb = $('#d-next'); if (nb) nb.focus();
+    const finish = () => { stop(); shown = full.length; el.textContent = full; showChoices(); };
+    timer = setInterval(() => {
+      if (!el.isConnected) { stop(); return; }   // menu fermé (Échap) : on arrête la machine à écrire
+      shown++; el.textContent = full.slice(0, shown);
+      const ch = full[shown - 1]; if (ch && /[^\s.,…!?—-]/.test(ch) && shown % 2 === 1 && !cur.system) SFX.blip(pitch);
+      if (shown >= full.length) finish();
+    }, 28);
+    if (nb) nb.onclick = () => { if (shown < full.length) finish(); else next(); };
+    m.onclick = e => { if (e.target === m && shown < full.length) finish(); };
   };
   next();
 }

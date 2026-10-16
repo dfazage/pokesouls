@@ -316,7 +316,7 @@ function drawItem(ctx, g, it) {
     for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(${g.world.theme.accent2[0]},${g.world.theme.accent2[1]},${g.world.theme.accent2[2]},${0.7 - i * 0.2})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(it.x, it.y - 14, 8 + i * 3 + Math.sin(g.t * 3 + i) * 1.5, 14 + i * 3, 0, 0, 7); ctx.stroke(); }
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(it.x, it.y - 14, 6, 11, 0, 0, 7); ctx.fill(); return;
   }
-  M.drawDecor(ctx, g.world, { kind: 'chest', tx: Math.floor(it.x / TS) - 0 , ty: Math.floor(it.y / TS), w: 1, h: 1, seed: 3 }, g.t, false);
+  M.drawDecor(ctx, g.world, { kind: 'chest', tx: it.x / TS - 0.5, ty: it.y / TS - 1, w: 1, h: 1, seed: 3 }, g.t, false);   // pieds du coffre = point de pose de l'objet
 }
 function drawPlaque(ctx, g, it) { shadow(ctx, it.x, it.y, 8, 0.35); const y = it.y - 10 + Math.sin(g.t * 3) * 2; ctx.fillStyle = '#c690ff'; ctx.fillRect(it.x - 6, y - 8, 12, 16); ctx.fillStyle = '#f2e0ff'; ctx.fillRect(it.x - 4, y - 6, 8, 12); ctx.fillStyle = '#7a4fc0'; ctx.fillRect(it.x - 1, y - 4, 2, 8); ctx.fillRect(it.x - 3, y - 1, 6, 2); }
 function drawSouvenir(ctx, g) { const s = g.souvenir, y = s.y - 8 + Math.sin(g.t * 3) * 2; ctx.fillStyle = 'rgba(201,167,255,.9)'; ctx.beginPath(); ctx.arc(s.x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, y, 2, 0, 7); ctx.fill(); }
