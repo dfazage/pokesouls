@@ -4,7 +4,7 @@ import { BOSS_THRESHOLDS, NAMES_FR, STATUS } from './data.js';
 import * as M from './maps.js';
 import { Controls, keyLabel, Input, padLabel } from './input.js';
 import { itemIconFile } from './items.js';
-import { BOSS_LORE } from './elements.js';
+import { BOSS_LORE, BOSS_LINES } from './elements.js';
 import { W as GW } from './game.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -43,10 +43,10 @@ export function createHud(game) {
     <div id="right"><div id="essence"><span>ESSENCE</span> <b id="ess"></b></div></div><div id="hints"></div>
     <div id="boss"><div class="bname"><b id="boss-n"></b><span id="boss-s"></span><em id="boss-ph"></em></div><div class="bbar"><div class="fill" id="boss-hp"></div>${BOSS_THRESHOLDS.map(t => `<i class="th" style="left:${t * 100}%"></i>`).join('')}</div></div>
     <div id="prompt"><kbd id="k-int"></kbd> <span id="prompt-t"></span></div>
-    <div id="toast"></div><div id="area"></div>
+    <div id="bossline"><b></b><span></span></div><div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
-    <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
-    <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
+    <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div><div class="say"></div></div><div class="bar t"></div><div class="bar b"></div></div>
+    <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="say"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
   for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'cb1', 'cb2', 'cb3', 'cb-bar', 'opp', 'op1', 'op2', 'op-bar', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
@@ -119,7 +119,7 @@ export function createHud(game) {
     // la cinématique elle-même est pilotée par game.cine (voir bosscine.js) : ici on prépare les textes
     bossIntro(b) {
       const el = $('#bossintro', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff');
-      $('.tag', el).textContent = (game.world.def && game.world.def.name) || ''; $('.nm', el).textContent = b.def.name; $('.ep', el).textContent = b.def.sub; $('.lore', el).textContent = BOSS_LORE[b.sprite] || '';
+      $('.tag', el).textContent = (game.world.def && game.world.def.name) || ''; $('.nm', el).textContent = b.def.name; $('.ep', el).textContent = b.def.sub; $('.say', el).textContent = (BOSS_LINES[b.sprite] || {}).intro || ''; $('.lore', el).textContent = BOSS_LORE[b.sprite] || '';
       $('.skip kbd', el).textContent = kl('interact'); introEl = el;
       $('.skip', el).onclick = () => game.skipCine();
     },
@@ -127,8 +127,13 @@ export function createHud(game) {
       const el = $('#phasescreen', root), col = b.def.color || '#e0b0ff', g = b.def.glow || [255, 255, 255];
       el.style.setProperty('--bc', col); el.style.setProperty('--gl', g.join(','));
       $('.pm', el).innerHTML = MOTIF[b.sprite] || ''; el.dataset.ph = ph;
-      $('.sub', el).textContent = 'PHASE ' + ROMAN[ph]; $('.nm', el).textContent = (b.def.phases && b.def.phases[ph - 2]) || '';
+      $('.sub', el).textContent = 'PHASE ' + ROMAN[ph]; $('.nm', el).textContent = (b.def.phases && b.def.phases[ph - 2]) || ''; $('.say', el).textContent = (BOSS_LINES[b.sprite] || {})['p' + ph] || '';
       el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(hud._ps); hud._ps = setTimeout(() => el.classList.remove('show'), 2500);
+    },
+    bossLine(b, which) {   // réplique en sous-titre (mort du boss)
+      const t = (BOSS_LINES[b.sprite] || {})[which]; if (!t) return;
+      const el = $('#bossline', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff'); $('b', el).textContent = b.def.name; $('span', el).textContent = t;
+      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(hud._bl); hud._bl = setTimeout(() => el.classList.remove('show'), 4200);
     },
     fade() { E.fade.classList.add('on'); setTimeout(() => E.fade.classList.remove('on'), 250); },
   };

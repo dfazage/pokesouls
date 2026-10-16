@@ -897,7 +897,7 @@ export class Game {
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
     this.openFog(); this.buildItems(); SFX.victory(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
     { const nx = M.MAPS[this.mapIdx + 1]; if (nx && nx.secret) setTimeout(() => this.emit('toast', 'Un lieu secret est apparu sur la carte…'), 4500); }
-    this.emit('banner', b.def.name + ' VAINCU', 'victory');
+    this.emit('banner', b.def.name + ' VAINCU', 'victory'); setTimeout(() => this.emit('bossLine', b, 'death'), 1400);
   }
 
   // ---------- projectiles, anneaux, zones, effets ----------

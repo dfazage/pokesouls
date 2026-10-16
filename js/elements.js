@@ -54,6 +54,16 @@ export const BOSS_LORE = {
   mew: '« Les ronces craignent la flamme. L’ombre trouble les rêves. »',
 };
 
+// répliques de boss : intro (carte-titre), changement de phase (2, 3) et mort ; une phrase chacune
+export const BOSS_LINES = {
+  articuno:  { intro: '« Le silence est ma demeure. Pourquoi la troubler ? »', p2: '« Le froid ne pardonne pas. »', p3: '« Tout se fige. Tout. »', death: '« …que la glace… se brise… »' },
+  zapdos:    { intro: '« Entends-tu gronder le ciel ? C’est moi. »', p2: '« L’orage m’obéit ! »', p3: '« Que la foudre te juge ! »', death: '« La tempête… s’éloigne. »' },
+  moltres:   { intro: '« Je suis le feu qui renaît. Viens te consumer. »', p2: '« Mes braises ne s’éteignent jamais. »', p3: '« De mes cendres, je me relève ! »', death: '« Les flammes… retournent à la terre. »' },
+  dragonite: { intro: '« Un prétendant de plus. Prouve que tu mérites ma couronne. »', p2: '« Tu tiens debout. Bien. »', p3: '« Assez ! Voici la colère du roi ! »', death: '« Digne… Kanto est à toi. »' },
+  mewtwo:    { intro: '« Te voilà enfin. J’ai été créé pour combattre, pas pour être aimé. »', p2: '« Ton esprit s’ouvre. Le mien aussi. »', p3: '« Je ne suis pas seul. Je ne l’ai jamais été. »', death: '« …enfin… le silence. »' },
+  mew:       { intro: '« Hihi ! Tu es venu jusqu’ici ? Alors jouons. »', p2: '« Et si tout était possible ? »', p3: '« Tous les possibles… même ta défaite. »', death: '« C’était… un beau jeu. À bientôt. »' },
+};
+
 // ---------- marques (états élémentaires) ----------
 export const MARKS = {
   wet: { name: 'Trempé', tag: 'EAU', color: '#4aa8ff' },
