@@ -79,6 +79,23 @@ function drawFala(ctx, g, x, y) {
   const q = g.falaQ(), n = q.given.length; if (n) { const M = MODULES[q.given[(Math.floor(g.t * 0.8)) % n]]; ctx.fillStyle = M.color; ctx.globalAlpha = 0.6 + 0.3 * Math.sin(g.t * 4); ctx.fillRect(x - 2, y - 14, 4, 3); ctx.globalAlpha = 1; }
 }
 
+// repère de quête flottant : « ! » quête à prendre, « ? » mystère / quête à rendre
+function drawMark(ctx, g, x, y, ch, color) {
+  const bob = Math.sin(g.t * 4) * 3, cy = y - 46 + bob, pulse = 0.5 + 0.5 * Math.sin(g.t * 5);
+  ctx.fillStyle = `rgba(0,0,0,.3)`; ctx.beginPath(); ctx.ellipse(x, y, 5, 2, 0, 0, 7); ctx.fill();
+  const [r, gr, b] = hexRgb(color);
+  ctx.fillStyle = `rgba(${r},${gr},${b},${0.18 + 0.18 * pulse})`; ctx.beginPath(); ctx.arc(x, cy, 15 + 2 * pulse, 0, 7); ctx.fill();
+  ctx.fillStyle = '#0b0e24'; ctx.beginPath(); ctx.arc(x, cy, 10, 0, 7); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = color; ctx.fillText(ch, x, cy + 1); ctx.textBaseline = 'alphabetic';
+}
+const HINTS = {
+  aqua: 'Dans la salle voisine de la cachette de Fala.',
+  pyro: 'Là où les générateurs tournaient encore, il y a longtemps.',
+  cryo: 'Près des commandes, dans la pièce qui garde le froid.',
+  choc: 'Juste avant le cœur de la centrale, là où le courant gronde.',
+};
+
 // ---------- mixin Game ----------
 export function installFala(Game, { M, TS, SFX, hyp, Input }) {
   const P = Game.prototype;
@@ -167,12 +184,33 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     const out = [];
     if (!this.hasFala()) return out;
     const q = this.falaQ(), np = this.falaNpcPos();
-    if (np && inView(np.x, np.y)) out.push({ x: np.x, y: np.y, f: c => drawFala(c, this, np.x, np.y) });
+    if (np && inView(np.x, np.y)) {
+      out.push({ x: np.x, y: np.y, f: c => drawFala(c, this, np.x, np.y) });
+      const carried = q.mods.some(id => !q.given.includes(id));
+      const ch = q.done ? null : !q.helped ? '!' : carried ? '?' : null;
+      if (ch) out.push({ x: np.x, y: np.y + 1, f: c => drawMark(c, this, np.x, np.y - 22, ch, '#ffd23f') });
+    }
+    // faux mur : repère « ? » visible de loin
+    const s = this.world.secret;
+    if (s && !s.opened) {
+      const gx = (s.gap[0][0] + s.gap[1][0] + 1) / 2 * TS, gy = (s.gap[0][1] + s.gap[1][1] + 1) / 2 * TS, n = { N: [0, 1], S: [0, -1], W: [1, 0], E: [-1, 0] }[s.side];
+      const fx = gx + n[0] * TS * 0.9, fy = gy + n[1] * TS * 0.9, c = this.chief();
+      if (hyp(fx - c.x, fy - c.y) < 380 && inView(fx, fy, 120)) out.push({ x: fx, y: fy, f: ctx => drawMark(ctx, this, fx, fy, '?', '#7fe0c0') });
+    }
     if (q.helped) for (const m of this.world.modules) {
       if (q.mods.includes(m.id)) continue;
       const x = (m.tx + 0.5) * TS, y = (m.ty + 0.5) * TS; if (inView(x, y)) out.push({ x, y, f: c => drawModule(c, this, m, x, y) });
     }
     return out;
+  };
+  // journal de quêtes (onglet Quêtes du menu Équipe)
+  P.questLog = function () {
+    const q = this.falaQ(); if (!q.helped) return [];
+    const steps = MOD_ORDER.map(id => ({ id, name: 'Module ' + MODULES[id].name, color: MODULES[id].color, state: q.given.includes(id) ? 'given' : q.mods.includes(id) ? 'carried' : 'missing', hint: HINTS[id] }));
+    const carried = q.mods.filter(id => !q.given.includes(id)).length;
+    return [{ id: 'fala', title: 'Les Modules de Fala', zone: 'Centrale abandonnée', status: q.done ? 'done' : 'active', progress: `${q.given.length}/4`, steps,
+      summary: q.done ? 'Fala t’attend au menu de départ.' : carried ? `${carried} Module${carried > 1 ? 's' : ''} à rapporter à Fala.` : 'Retrouve les Modules arrachés à Fala.',
+      reward: 'Fala sélectionnable aux prochaines parties · un objet par Module' }];
   };
   P.falaLights = function () {
     const out = [];

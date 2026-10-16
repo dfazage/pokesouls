@@ -26,6 +26,7 @@ export const SFX = {
   death() { tone(220, 40, 1.2, 'sawtooth', 0.1); noise(1, 0.08, 400); },
   victory() { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.8, 'triangle', 0.07, i * 0.15)); },
   heal() { tone(500, 900, 0.3, 'sine', 0.07); },
+  blip(pitch = 1) { tone((700 + Math.random() * 120) * pitch, (640 + Math.random() * 100) * pitch, 0.035, 'square', 0.035); },
   pick() { tone(700, 1000, 0.12, 'triangle', 0.06); },
   boom() { noise(0.4, 0.2, 700); tone(100, 30, 0.4, 'sawtooth', 0.1); },
   door() { noise(0.4, 0.07, 500); },
