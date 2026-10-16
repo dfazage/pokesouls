@@ -5,6 +5,7 @@ import * as D from './data.js';
 import * as M from './maps.js';
 import { ACTIONS, PAD_LABELS, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
+import { relayInfo } from './relay.js';
 import { Music, TRACKS } from './music.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -22,13 +23,14 @@ export function showStarters(onDone) {
   const el = $('#starters'); el.classList.add('show');
   const pick = { fire: 0, water: 0, grass: 0 };
   const draw = () => {
-    el.innerHTML = `<h2>Choisissez vos trois compagnons</h2><p class="sub">Un starter de chaque type, parmi toutes les générations. Ils évolueront au niveau ${D.EVOLVE_AT[0]} puis ${D.EVOLVE_AT[1]}.</p>
+    el.innerHTML = `<h2>Choisissez vos trois compagnons</h2><p class="sub">Un starter de chaque type, parmi toutes les générations. Chacun a sa propre attaque de relais (changement de Pokémon juste après une esquive ou une parade parfaite). Ils évolueront au niveau ${D.EVOLVE_AT[0]} puis ${D.EVOLVE_AT[1]}.</p>
       <div class="scols">${TYPES.map(([t, label, col]) => {
         const sel = D.STARTERS[t][pick[t]];
         return `<div class="scol" style="--c:${col}"><h3>${label} · ${D.ARCH[t].cls}</h3>
           <div class="sgrid">${D.STARTERS[t].map((l, i) => `<button class="sth ${i === pick[t] ? 'on' : ''}" data-t="${t}" data-i="${i}" title="${esc(D.NAMES_FR[l[0]])}"><img src="${portrait(l[0])}" alt=""><small>Gén. ${D.GEN_OF[l[0]]}</small></button>`).join('')}</div>
           <div class="sprev"><img src="${portrait(sel[0])}" alt=""><div><b>${esc(D.NAMES_FR[sel[0]])}</b><small>${sel.map(s => esc(D.NAMES_FR[s])).join(' → ')}</small>
-          <small>${D.ARCH[t].mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(D.TMS[D.ARCH[t].tm].name)}</small></div></div></div>`;
+          <small>${D.ARCH[t].mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(D.TMS[D.ARCH[t].tm].name)}</small>
+          ${(ri => `<small class="srel"><b>Relais · ${esc(ri.name)}</b> (${ri.gab}) : ${esc(ri.text)}${ri.own ? '' : ' · attaque par défaut'}</small>`)(relayInfo(sel))}</div></div></div>`;
       }).join('')}</div>
       <div class="act"><button id="st-go">Commencer l’aventure</button></div>`;
     el.querySelectorAll('.sth').forEach(b => b.onclick = () => { pick[b.dataset.t] = +b.dataset.i; draw(); });
