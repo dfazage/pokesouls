@@ -1,4 +1,5 @@
 import { loadDb, loadPortraits, A } from './assets.js';
+import { loadProps } from './props.js';
 import { Input } from './input.js';
 import { unlockAudio } from './audio.js';
 import { Game, W, H } from './game.js';
@@ -131,7 +132,7 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
 
 (async function boot() {
   const bar = $('#load-bar');
-  try { await loadDb(); bar.style.width = '50%'; await loadPortraits(['fire', 'water', 'grass'].flatMap(t => STARTERS[t].map(l => l[0]))); bar.style.width = '100%'; }
+  try { await loadDb(); await loadProps(); bar.style.width = '50%'; await loadPortraits(['fire', 'water', 'grass'].flatMap(t => STARTERS[t].map(l => l[0]))); bar.style.width = '100%'; }
   catch (e) { $('#load-t').textContent = 'Erreur de chargement : ' + e.message; throw e; }
   $('#loading').classList.remove('show');
   const has = Game.exists();

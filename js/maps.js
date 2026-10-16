@@ -1,5 +1,6 @@
 // Les six cartes du Chapitre Génération 1 : définition, génération des salles, collisions et rendu du décor.
 // Cartes 1, 2, 3, 4 et 6 : disposition générée (graine fixe). Carte 5 (Laboratoire oublié) : dessinée à la main.
+import { pickProp, drawProp } from './props.js';
 export const TS = 24, MW = 124, MH = 64, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
 
@@ -368,6 +369,9 @@ export function drawDecor(ctx, world, d, time, opened) {
   const th = world.theme, x = d.tx * TS, base = (d.ty + d.h) * TS, w = d.w * TS, ac = rgb(th.accent), ac2 = rgb(th.accent2);
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, base - 3, w * 0.5, 5, 0, 0, 7); ctx.fill();
   const K = d.kind;
+  // sprite du manifeste (assets/props.json) : clé par thème (ex. pillar_ice), puis clé générique ; chests : chest_open / chest_closed
+  const pk = K === 'chest' ? pickProp(opened ? 'chest_open' : 'chest_closed', 'chest') : pickProp(K + '_' + th.fx, K);
+  if (pk && drawProp(ctx, pk, x + w / 2, base - 2, time, d.seed * 0.37)) return;
   if (K === 'tank' || K === 'tankbroken') {
     const broken = K === 'tankbroken';
     ctx.fillStyle = '#4a5578'; ctx.fillRect(x + 4, base - 10, w - 8, 8); ctx.fillStyle = '#6a7699'; ctx.fillRect(x + 4, base - 10, w - 8, 2);
