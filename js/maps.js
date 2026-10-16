@@ -426,7 +426,7 @@ export function drawDecor(ctx, world, d, time, opened) {
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, base - 3, w * 0.5, 5, 0, 0, 7); ctx.fill();
   const K = d.kind;
   // sprite du manifeste (assets/props.json) : clé par thème (ex. pillar_ice), puis clé générique ; chests : chest_open / chest_closed
-  const pk = K === 'chest' ? pickProp(opened ? 'chest_open' : 'chest_closed', 'chest') : pickProp(K + '_' + th.fx, K);
+  const pk = K === 'chest' ? pickProp(opened ? 'chest_open' : 'chest_closed', 'chest') : pickProp(K + '_' + world.def.theme, K + '_' + th.fx, K);   // clé par thème (ex. pillar_plant), puis par effet, puis générique
   if (pk && drawProp(ctx, pk, x + w / 2, base - 2, time, d.seed * 0.37, d.seed || 0)) return;
   if (K === 'tank' || K === 'tankbroken') {
     const broken = K === 'tankbroken';
