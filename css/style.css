@@ -564,6 +564,7 @@ svg.pad{max-height:300px}
 .pd-b{stroke-width:5}.pd-b.in{fill:#17171a;stroke:rgba(255,255,255,.25)}.pd-b:not([class*=" t-"]):not(.in):not(.pd-ring){fill:#2e2e33}
 .pd-f text{font-size:30px}
 svg.pad{max-height:330px}
+.wiz{padding:10px 12px;margin:6px 0 10px;border:1px solid var(--acc);border-radius:12px;background:rgba(255,255,255,.05)}.wiz p{margin:6px 0 8px}
 
 /* accueil : silhouette de Mewtwo en fond, feu de camp animé (sprite du jeu) */
 .tmew{position:absolute;left:50%;top:-30px;width:760px;height:760px;margin-left:-380px;background:url(../assets/title_mewtwo.jpg) center/cover;filter:brightness(.72) contrast(1.15) saturate(.8);opacity:.85;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(ellipse 52% 56% at 50% 46%,#000 38%,transparent 74%);mask-image:radial-gradient(ellipse 52% 56% at 50% 46%,#000 38%,transparent 74%);animation:tmewin 3s ease-out both,tmewb 7s ease-in-out 3s infinite}

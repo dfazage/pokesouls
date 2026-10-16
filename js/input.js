@@ -30,7 +30,7 @@ export function padLabel(a) {
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'run': return padBtnName(PADACT.dodge) + ' (maintenu)';
-    case 'berry': return w + '+' + padBtnName(3); case 'candy': return w + '+' + padBtnName(2); case 'ether': return w + '+' + padBtnName(1); case 'revive': return w + '+' + padBtnName(0);
+    case 'berry': return w + '+' + padBtnName(PADACT.heavy); case 'candy': return w + '+' + padBtnName(PADACT.light); case 'ether': return w + '+' + padBtnName(PADACT.interact); case 'revive': return w + '+' + padBtnName(PADACT.dodge);
     default: return a in PADACT ? padBtnName(PADACT[a]) : '';
   }
 }
@@ -123,10 +123,16 @@ const PADSTORE = 'pokesouls.padmap.v1';
 const PADACT = { ...PADDEF };   // action → indice de bouton (réassignable dans l'écran Commandes)
 try { const sv = JSON.parse(localStorage.getItem(PADSTORE) || 'null'); if (sv) for (const a of Object.keys(PADDEF)) if (Number.isInteger(sv[a]) && sv[a] >= 0 && sv[a] < 32) PADACT[a] = sv[a]; } catch (e) { /* défauts */ }
 const padPersist = () => { try { localStorage.setItem(PADSTORE, JSON.stringify(PADACT)); } catch (e) { /* rien */ } };
-let PAD = {}, padLearn = null, padInfo = { id: '', mapping: '' };
-const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; };
+let PAD = {}, PAD_ITEM = {}, padLearn = null, padInfo = { id: '', mapping: '' };
+const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; PAD_ITEM = { [PADACT.heavy]: 'berry', [PADACT.light]: 'candy', [PADACT.interact]: 'ether', [PADACT.dodge]: 'revive' }; };
 padRebuild();
-const PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' };   // R tenu + bouton de face (haut, gauche, droite, bas)
+// R tenu + bouton de face = objet : haut (lourd) = baie, gauche (léger) = bonbon, droite (interagir) = Éther, bas (esquive) = Rappel. Suit les boutons réassignés.
+// Couche « physique » : indice réel renvoyé par le navigateur → position standard (0 bas, 1 droite, 2 gauche, 3 haut, 4 L, 5 R, 6 ZL, 7 ZR, 8 −, 9 +, 10 clic G, 11 clic D), réglée par l'assistant de l'écran Commandes.
+const PHYSSTORE = 'pokesouls.padphys.v1';
+const physIdx = Array.from({ length: 17 }, (_, i) => i);
+try { const sv = JSON.parse(localStorage.getItem(PHYSSTORE) || 'null'); if (Array.isArray(sv)) sv.forEach((v, i) => { if (i < 17 && Number.isInteger(v) && v >= 0 && v < 40) physIdx[i] = v; }); } catch (e) { /* identité */ }
+const physPersist = () => { try { localStorage.setItem(PHYSSTORE, JSON.stringify(physIdx)); } catch (e) { /* rien */ } };
+let rawLearn = null; const rawPrev = [], rawEdge = [], rawHeld = [];
 let modNow = false, flickPrev = 0;
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
@@ -142,8 +148,12 @@ function pollPad() {
   const dz = v => (Math.abs(v) < 0.2 ? 0 : v);
   padAxes = [dz(gp.axes[0] || 0), dz(gp.axes[1] || 0)];
   let any = Math.hypot(padAxes[0], padAxes[1]) > 0.6;
+  rawEdge.length = 0; rawHeld.length = 0;   // boutons bruts du navigateur (assistant de configuration et affichage de contrôle)
+  for (let i = 0; i < Math.min(40, gp.buttons.length); i++) { const r = !!(gp.buttons[i] && gp.buttons[i].pressed); if (r && !rawPrev[i]) rawEdge.push(i); rawPrev[i] = r; if (r) rawHeld.push(i); }
+  if (rawLearn && rawEdge.length) { const cb = rawLearn; rawLearn = null; btnPrev.length = 0; cb(rawEdge[0]); return; }
+  if (rawLearn) return;
   for (let i = 0; i < 17; i++) {
-    const on = !!(gp.buttons[i] && gp.buttons[i].pressed);
+    const pi = physIdx[i], on = !!(gp.buttons[pi] && gp.buttons[pi].pressed);
     if (on && !btnPrev[i]) padEdge.add(i);
     btnPrev[i] = on; if (on) any = true;
   }
@@ -169,6 +179,10 @@ export const PAD_ACTIONS = [['dodge', 'Esquive / course'], ['light', 'Attaque l�
 export const Input = {
   // réassignation des boutons de la manette (écran Commandes)
   padLearn(cb) { padLearn = cb; }, padStopLearn() { padLearn = null; }, padInfo: () => padInfo,
+  padRawLearn(cb) { rawLearn = cb; }, padRawStop() { rawLearn = null; }, padRawHeld: () => rawHeld.slice(),
+  padSetPhys(pos, raw) { physIdx[pos] = raw; physPersist(); },
+  padResetPhys() { for (let i = 0; i < 17; i++) physIdx[i] = i; try { localStorage.removeItem(PHYSSTORE); } catch (e) { /* rien */ } },
+  padPhysCustom: () => physIdx.some((v, i) => v !== i),
   padIndex: a => PADACT[a],
   padAssign(a, i) { const old = PADACT[a]; for (const o of Object.keys(PADACT)) if (o !== a && PADACT[o] === i) PADACT[o] = old; PADACT[a] = i; padRebuild(); padPersist(); },
   padResetMap() { Object.assign(PADACT, PADDEF); padRebuild(); try { localStorage.removeItem(PADSTORE); } catch (e) { /* rien */ } },
