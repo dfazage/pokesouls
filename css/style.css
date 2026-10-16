@@ -20,7 +20,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   #chief,.slot,#quick .qs,#linkbox,#combo,#skills .skill,#essence,#boss,#prompt,#toast,#compass{background:rgba(18,15,12,.82)}}
 /* Pokémon actif */
-#chief{position:absolute;left:28px;top:28px;display:flex;align-items:center;gap:14px;width:332px;padding:14px 18px;border-radius:22px}
+#chief{position:absolute;right:28px;top:28px;display:flex;align-items:center;gap:14px;width:332px;padding:14px 18px;border-radius:22px}
 #chief img{width:58px;height:58px;flex:none;border-radius:50%;object-fit:cover;image-rendering:pixelated;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.28),rgba(255,255,255,.06));box-shadow:0 0 0 2px rgba(255,255,255,.35),0 0 20px rgba(217,164,65,.35)}
 .cinfo{flex:1;min-width:0}
 .cname{display:flex;align-items:baseline;gap:10px;font-size:15px;letter-spacing:.12em;text-transform:uppercase;text-shadow:0 1px 2px rgba(0,0,0,.6)}
@@ -37,7 +37,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 #chief .bv{width:60px;text-align:right;font-size:11px;font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 #sbadge{display:inline-block;padding:1px 8px;font-size:9px;font-weight:600;letter-spacing:.12em;color:#1a140d;border-radius:99px}#sbadge:empty{display:none}
 /* équipe : trois pastilles, le Pokémon actif est cerclé d'or */
-#party{position:absolute;left:28px;top:152px;display:flex;gap:10px}
+#party{position:absolute;right:28px;top:152px;display:flex;gap:10px}
 .slot{position:relative;width:104px;height:54px;border-radius:16px;pointer-events:auto;cursor:pointer;opacity:.86;transition:opacity .15s,transform .15s,box-shadow .15s}
 .slot img{position:absolute;left:10px;top:9px;width:34px;height:34px;border-radius:50%;object-fit:cover;image-rendering:pixelated;background:rgba(255,255,255,.1);box-shadow:0 0 0 1.5px rgba(255,255,255,.35)}
 .slot em{position:absolute;right:10px;top:6px;font:600 10px ui-monospace,monospace;font-style:normal;color:rgba(255,255,255,.7)}
@@ -50,13 +50,13 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 .slot .mu{position:absolute;right:10px;top:21px;font:bold 11px monospace}.slot .mu.up{color:#8dff9a}.slot .mu.dn{color:#ff8a8a}
 .slot.react{box-shadow:0 0 10px 2px rgba(255,232,74,.8);animation:reactp .5s infinite alternate}
 @keyframes reactp{to{box-shadow:0 0 16px 4px rgba(255,232,74,.35)}}
-/* objets rapides */
-#quick{position:absolute;left:28px;bottom:28px;display:flex;gap:10px}
-#quick .qs{position:relative;width:64px;height:64px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-#quick .qs svg{width:24px;height:24px}
-#quick .qs b{font-size:12px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-#quick .qs small{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7)}
-#quick .qs kbd{position:absolute;right:6px;top:-9px}
+/* objets rapides : croix haut (baie), gauche (bonbon), droite (huile), bas (rappel) */
+#quick{position:absolute;left:28px;bottom:28px;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:6px}
+#quick .qs{position:relative;width:54px;height:54px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#quick .q-up{grid-column:2;grid-row:1}#quick .q-left{grid-column:1;grid-row:2}#quick .q-right{grid-column:3;grid-row:2}#quick .q-down{grid-column:2;grid-row:3}
+#quick .qs img{width:30px;height:30px;image-rendering:pixelated;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+#quick .qs b{font-size:11px;font-weight:700;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+#quick .qs kbd{position:absolute;right:5px;top:-9px}
 #quick .qs.empty{opacity:.45}
 /* Lien */
 #linkbox{position:absolute;left:50%;bottom:28px;width:360px;height:54px;margin-left:-180px;padding:0 18px 0 22px;border-radius:99px;display:flex;align-items:center;gap:14px;transition:box-shadow .3s,border-color .3s}
@@ -87,7 +87,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 .cd{position:absolute;left:24px;right:24px;bottom:13px;height:3px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}.cd .fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc-2))}
 #buff{position:absolute;bottom:92px;right:0;white-space:nowrap;color:#ffb27a;font-size:11px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 /* essence et indices */
-#right{position:absolute;right:28px;top:28px}
+#right{position:absolute;left:28px;top:28px}
 #essence{height:44px;padding:0 20px;border-radius:99px;display:flex;align-items:center;gap:11px}
 #essence::before{content:"";width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--acc));box-shadow:0 0 12px var(--acc)}
 #essence span{order:2;font-size:10px;letter-spacing:.18em;color:rgba(255,255,255,.7);margin:0}#essence b{order:1;font-size:17px;font-weight:600;letter-spacing:.04em;color:#fff}
@@ -278,14 +278,14 @@ body.touch #touch.on{display:block}
 
 /* HUD plus lisible et dégagé des pouces */
 body.touch #hud kbd,body.touch #hints{display:none}
-body.touch #chief{zoom:1.1}
-body.touch #party{top:158px}
+body.touch #chief{zoom:1.05;width:300px;right:20px}
+body.touch #party{top:156px;right:20px}
 body.touch #quick{left:28px;bottom:auto;top:252px;zoom:.9}
 body.touch #skills{right:auto;left:252px;bottom:auto;top:228px}
 body.touch #skills .skill{width:112px;height:58px;border-radius:18px}
 body.touch #skills .skill .cd{left:16px;right:16px;bottom:9px}
 body.touch #buff{bottom:auto;top:62px;right:auto;left:0}
-body.touch #combo{right:auto;left:28px;top:298px;bottom:auto}
+body.touch #combo{right:auto;left:200px;top:298px;bottom:auto}
 body.touch #linkbox{width:280px;margin-left:-140px;bottom:14px;height:44px}
 body.touch #boss,body.touch #boss.mini{left:405px;margin-left:0;width:290px;top:24px}
 body.touch #compass{left:540px}
