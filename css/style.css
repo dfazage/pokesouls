@@ -478,3 +478,6 @@ body.padnav input[type=range].padfocus{accent-color:var(--acc-2)}
 .rdet{display:flex;flex-direction:column;gap:10px;padding:14px 16px;background:var(--card);border:var(--card-bd);border-radius:16px}.rdh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.rdh b{font-size:17px;letter-spacing:.1em;text-transform:uppercase}.rdh span{color:rgba(255,255,255,.72);font-size:12px}
 .rdet small{color:rgba(255,255,255,.72);font-size:12px;line-height:1.6}.rdet small b{color:var(--acc-2)}.rdet .pmods span{color:var(--acc-2);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-right:4px}
 .rsw{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:4px}.rsw span{font-size:12px;color:rgba(255,255,255,.72)}
+
+/* Quêtes : cartes cliquables (boutons, pour la manette) */
+button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-size:12px;font-weight:400;padding:12px 14px;border-radius:14px;box-shadow:none}

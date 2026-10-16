@@ -74,7 +74,10 @@ export function createPadNav() {
       // valider
       if (Input.padEdge(0) && !cur.matches('input')) { cur.click(); return; }
       // onglets (sac) : L / R
-      if (Input.padEdge(4) || Input.padEdge(5)) { const t = r.querySelector('.tabs button:not(.on)'); if (t) { t.click(); return; } }
+      if (Input.padEdge(4) || Input.padEdge(5)) {   // L / R : onglet précédent / suivant (boucle)
+        const tabs = [...r.querySelectorAll('.tabs button')];
+        if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; tabs[(idx + dir + tabs.length) % tabs.length].click(); return; }
+      }
       // retour
       if (Input.padEdge(1)) {
         Input.eat('interact');
