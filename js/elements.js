@@ -325,9 +325,9 @@ export function installElements(G, d) {
   // changer de Pokémon juste après une esquive juste ou une parade : le nouveau venu frappe tout de suite avec son élément
   P.tryRelay = function (n, o) {
     if (this.t - this.lastPD > 1.0 && this.t - this.lastParry > 1.0) return false;
-    const R = relayOf(n), st = n.stage || 0, sc = 1 + 0.15 * st, aim = n.face, dmg = this.powerOf(n, { kind: 'heavy' }) * R.mult;
+    const R = relayOf(n), st = n.stage || 0, sc = 1 + 0.15 * st, aim = n.face, reson = !!(o && o.type === n.type), dmg = this.powerOf(n, { kind: 'heavy' }) * R.mult * (reson ? 1.25 : 1);
     this.curElem = n.type; this.curTrig = this.trigOf(n, { kind: 'relay' });
-    this.ringFx(n.x, n.y, 46, n.def.color); this.floatText(n.x, n.y - 38, R.name.toUpperCase(), '#ffe27a'); SFX.boom(); this.shake = Math.max(this.shake, 3);
+    this.ringFx(n.x, n.y, 46, n.def.color); this.floatText(n.x, n.y - 38, R.name.toUpperCase() + (reson ? ' · RÉSONANCE' : ''), reson ? '#ffffff' : '#ffe27a'); SFX.boom(); this.shake = Math.max(this.shake, 3);
     const base = { heavy: true, stagger: R.stagger || 0.7, knock: R.knock || 90, status: R.status, elem: n.type, trig: this.curTrig };
     const ang = Math.atan2(aim.y, aim.x), proj = (a, extra) => this.fireProj({ x: n.x, y: n.y, ang: a, speed: R.speed || 230, dmg, r: 4, life: 1.0, team: 'p', color: n.def.color, owner: n, status: R.status, heavy: true, ...extra });
     if (R.shape === 'arc') this.meleeArc(n, aim, (R.range || 46) * sc, R.cos == null ? 0.35 : R.cos, dmg, base);

@@ -7,7 +7,7 @@ import { Game, W, H } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { showStarters, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
-import { STARTERS } from './data.js';
+import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
 import { initTouch } from './touch.js';
@@ -133,7 +133,7 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
 
 (async function boot() {
   const bar = $('#load-bar');
-  try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits(['fire', 'water', 'grass'].flatMap(t => STARTERS[t].map(l => l[0]))); bar.style.width = '100%'; }
+  try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits(POOL.map(p => p.key)); bar.style.width = '100%'; }
   catch (e) { $('#load-t').textContent = 'Erreur de chargement : ' + e.message; throw e; }
   $('#loading').classList.remove('show');
   const has = Game.exists();
@@ -151,6 +151,6 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   }
   await initHD2D();
   mode = 'title';
-  if (/[?&]autostart/.test(location.search)) { if (has) resume(); else newGame({ fire: 0, water: 0, grass: 0 }); }
+  if (/[?&]autostart/.test(location.search)) { if (has) resume(); else newGame(['charmander', 'squirtle', 'bulbasaur']); }
   requestAnimationFrame(t => { last = t; frame(t); });
 })();

@@ -4,6 +4,7 @@ import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
 import * as D from './data.js';
+import { poolEntry, archOf, startTm } from './pool.js';
 import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
@@ -47,7 +48,7 @@ export class Game {
     this.god = false;
     this.t = 0; this.state = 'loading'; this.hitstop = 0; this.shake = 0;
     this.cam = { x: 0, y: 0 };
-    this.team = []; this.starters = null;
+    this.team = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
     this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
@@ -61,12 +62,13 @@ export class Game {
 
   // ---------- état ----------
   chief() { return this.team[this.chiefIdx]; }
-  makeMember(type, lineIdx, i) {
-    return { type, lineIdx, line: D.STARTERS[type][lineIdx], i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: D.ARCH[type].tm, stage: 0,
+  makeMember(key, i) {
+    const e = poolEntry(key);
+    return { key, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
       hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0, fx: null, regen: null, frzImm: 0 };
   }
   computeDef(m) {
-    const a = D.ARCH[m.type], st = stageOf(m.lvl), id = m.line[st], v = m.vit;
+    const a = archOf(poolEntry(m.key)), st = stageOf(m.lvl), id = m.line[st], v = m.vit;
     m.stage = st; m.id = id;
     m.def = { ...a, id, name: D.NAMES_FR[id], hp: Math.round(a.hp * D.hpMult(m.lvl) * D.STAGE_HP[st] * (1 + 0.08 * v.hpup)),
       dmg: a.dmg * D.dmgMult(m.lvl) * D.STAGE_DMG[st] * (1 + 0.06 * v.protein), speed: a.speed * (1 + 0.03 * v.carbos), ability: D.TMS[m.tm] };
@@ -75,15 +77,15 @@ export class Game {
     for (const m of this.team) { this.computeDef(m); const mx = m.def.hp; if (full) m.hp = mx; else if (mx > m.maxhp) m.hp += mx - m.maxhp; m.maxhp = mx; m.hp = Math.min(m.hp, mx); }
     this.maxStam = 100 + 6 * this.team.reduce((s, m) => s + m.vit.zinc, 0); this.stam = Math.min(this.stam, this.maxStam);
   }
-  newGame(choice) {
-    this.starters = choice;
-    this.team = ['fire', 'water', 'grass'].map((t, i) => this.makeMember(t, choice[t], i));
+  newGame(picks) {
+    this.picks = picks.slice(0, 3);
+    this.team = this.picks.map((k, i) => this.makeMember(k, i));
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 }; this.ethers = this.maxEthers = 3; this.applyLevels(true);
     this.save();
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, starters: this.starters, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -91,9 +93,10 @@ export class Game {
   static wipe() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* rien */ } }
   load() {
     let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { s = null; }
-    if (!s || s.v !== 2 || !s.starters) return false;
-    this.starters = s.starters;
-    this.team = ['fire', 'water', 'grass'].map((t, i) => { const m = this.makeMember(t, s.starters[t], i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
+    if (!s || s.v !== 2 || !(s.picks || s.starters)) return false;
+    // anciennes sauvegardes : { fire: n, water: n, grass: n } -> clés de lignées
+    this.picks = s.picks || ['fire', 'water', 'grass'].map(t => D.STARTERS[t][s.starters[t]][0]);
+    this.team = this.picks.map((key, i) => { const t = poolEntry(key).type; const m = this.makeMember(key, i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
     this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
