@@ -8,6 +8,7 @@ import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
 import { Music, TRACKS } from './music.js';
+import { MODULES, MOD_ORDER, FALA_KEY, loadProfile, saveProfile, READY_LINE } from './fala.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -24,16 +25,21 @@ export function showStarters(onDone) {
   const el = $('#starters'); el.classList.add('show');
   const picks = []; let focus = POOL[0].key;
   const draw = () => {
+    const prof = loadProfile();
     const f = poolEntry(focus), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
     const types = D.typesOf(f.type, f.key);
     el.innerHTML = `<h2>Choisissez vos trois compagnons</h2>
       <p class="sub">Trois Pokémon au choix parmi 39 lignées, rangées par style de combat. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais. Deux Pokémon du même type en résonance frappent plus fort.</p>
       <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
         <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on' : ''} ${p.key === focus ? 'foc' : ''}" data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="psecret ${prof.fala ? '' : 'locked'}" style="--c:#7fe0c0"><h3>${prof.fala ? 'Secret' : '???'}</h3>${prof.fala
+        ? `<button class="pth ${picks.includes(FALA_KEY) ? 'on' : ''} ${focus === FALA_KEY ? 'foc' : ''}" data-k="${FALA_KEY}" title="${esc(D.NAMES_FR[FALA_KEY])}"><img src="${portrait(FALA_KEY)}" alt="">${picks.includes(FALA_KEY) ? `<i>${picks.indexOf(FALA_KEY) + 1}</i>` : ''}</button><small>Fala, le Genesect de la Centrale. Choisissez son Module ci-dessous.</small>`
+        : `<button class="pth lock" disabled title="???"><b>?</b></button><small>Quelque chose dort quelque part dans la Centrale abandonnée.</small>`}</div>
       <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
         <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
-        <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
+        <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}${f.key === FALA_KEY ? ' · l’élément dépend du Module équipé' : ''}</small>
+        ${f.key === FALA_KEY ? `<small class="pmods">${MOD_ORDER.map(id => `<button class="pmod ${prof.falaMod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-m="${id}">${MODULES[id].name}</button>`).join('')}</small>${picks.includes(FALA_KEY) ? `<small class="fready">« ${READY_LINE} »</small>` : ''}` : ''}</div></div>
         <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
         <div class="act"><button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
     el.querySelectorAll('.pth').forEach(b => b.onclick = () => {
@@ -41,6 +47,7 @@ export function showStarters(onDone) {
       const i = picks.indexOf(k); if (i >= 0) picks.splice(i, 1); else { if (picks.length === 3) picks.shift(); picks.push(k); }
       draw();
     });
+    el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { saveProfile({ falaMod: b.dataset.m }); draw(); });
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
     const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { el.classList.remove('show'); onDone([...picks]); } };
   };
@@ -54,9 +61,10 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
       <div class="essl">Essence : <b>${game.essence}</b> &nbsp; Super Bonbons : <b>${game.bag.candy || 0}</b></div>
       <div class="lv">${game.team.map((t, i) => { const c = D.levelCost(t.lvl), ok = game.essence >= c && t.lvl < D.MAX_LEVEL;
         const nxtStage = t.stage < 2 && t.lvl + 1 >= D.EVOLVE_AT[t.stage] ? ` · <em>évolue en ${esc(D.NAMES_FR[t.line[t.stage + 1]])}</em>` : '';
-        return `<div class="row"><img src="${portrait(t.id)}" alt=""><div><b>${esc(t.def.name)}</b> <span>${t.def.typeName} · ${t.def.cls}</span><small>Niv. ${t.lvl}${t.lvl < D.MAX_LEVEL ? ` · PV ${t.maxhp}` : ' · max'}${nxtStage}</small></div><button data-up="${i}" ${ok ? '' : 'disabled'}>Monter · ${c}</button></div>`; }).join('')}</div>
+        return `<div class="row"><img src="${portrait(t.id)}" alt=""><div><b>${esc(t.def.name)}</b> <span>${t.def.typeName} · ${t.def.cls}</span><small>Niv. ${t.lvl}${t.lvl < D.MAX_LEVEL ? ` · PV ${t.maxhp}` : ' · max'}${nxtStage}</small>${t.key === FALA_KEY ? `<small class="pmods">Module : ${MOD_ORDER.map(id => `<button class="pmod ${t.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-mod="${i}:${id}">${MODULES[id].name}</button>`).join('')}</small>` : ''}</div><button data-up="${i}" ${ok ? '' : 'disabled'}>Monter · ${c}</button></div>`; }).join('')}</div>
       <div class="act"><button id="m-bag">Sac et équipe</button><button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
     m.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { game.levelUp(+b.dataset.up); render(); });
+    m.querySelectorAll('[data-mod]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.mod.split(':'); game.setModule(+k, id); render(); });
     $('#m-rest').onclick = () => { game.rest(); game.last = { map: game.mapIdx, id: bonfire.id }; game.save(); game.emit('toast', 'L’équipe se repose'); onClose(); };
     $('#m-close').onclick = onClose;
     $('#m-bag').onclick = () => extra.bag(() => render());
@@ -176,4 +184,24 @@ export function showCredits(onClose) {
     <h4>Mentions</h4><p class="sub">Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce fan game non commercial n'est ni affilié ni approuvé par eux. Code et effets sonores : ce dépôt.</p>
     <div class="act"><button id="m-close">Fermer</button></div></div>`);
   $('#m-close').onclick = onClose; void m;
+}
+
+// ---------- dialogues (quête de Fala) ----------
+// lines : [{ who, text, choices?: [{ label, key, then: [lignes], again? }], module?, system? }] ; done(clé du dernier choix) à la fin.
+export function showDialogue(lines, done) {
+  const q = lines.slice(); let result = null, cur = null;
+  const next = () => { if (!q.length) { done(result); return; } cur = q.shift(); draw(); };
+  const draw = () => {
+    const mod = cur.module ? MODULES[cur.module] : null;
+    const m = open(`<div class="panel dlg ${cur.system ? 'sys' : ''}"><div class="dwho">${cur.who === 'Fala' ? `<img src="${portrait(FALA_KEY)}" alt="">` : ''}<b>${esc(cur.who)}</b>${mod ? `<u style="background:${mod.color}">Module ${mod.name}</u>` : ''}</div>
+      <p>${esc(cur.text)}</p><div class="act">${cur.choices ? cur.choices.map((c, k) => `<button data-c="${k}">${esc(c.label)}</button>`).join('') : '<button id="d-next">Suite</button>'}</div></div>`);
+    m.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
+      const c = cur.choices[+b.dataset.c]; result = c.key;
+      const again = c.again ? [{ ...cur, choices: cur.choices.filter(x => x !== c) }] : [];
+      q.unshift(...c.then, ...again); next();
+    });
+    const n = $('#d-next'); if (n) n.onclick = next;
+    const first = m.querySelector('button'); if (first) first.focus();
+  };
+  next();
 }

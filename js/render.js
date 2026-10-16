@@ -80,6 +80,7 @@ export function collectDrawList(g, inView) {
   { const m = g.chief(); list.push({ x: m.x, y: m.y, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
   if (g.swapFx) for (const s of g.swapFx) list.push({ x: s.x, y: s.y + (s.k === 'ball' ? 1 : -1), f: c => drawSwap(c, g, s) });
   if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
+  list.push(...g.falaDraw(inView));   // Fala et ses Modules (carte 2)
   return list;
 }
 
@@ -344,6 +345,7 @@ export function buildLights(g) {
   for (const l of fxLights(g)) lights.push({ ...l, c: hexToRgb(l.c) });
   if (g.souvenir) lights.push({ x: g.souvenir.x, y: g.souvenir.y - 8, r: 40, c: [200, 160, 255], a: 0.8 });
   for (const it of g.items) lights.push({ x: it.x, y: it.y - 10, r: 70, c: it.kind === 'portal' ? [190, 150, 255] : [255, 220, 130], a: 0.9 });
+  for (const l of g.falaLights()) lights.push(l);
   if (pr.bossDead) { const a = g.world.arena; lights.push({ x: a.cx * TS, y: a.cy * TS, r: 160, c: [255, 220, 170], a: 0.7 }); }
   return { amb, lights };
 }
