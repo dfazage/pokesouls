@@ -1,5 +1,6 @@
 import { loadDb, loadPortraits, A } from './assets.js';
 import { loadProps } from './props.js';
+import { loadItemIcons, itemIconFile } from './items.js';
 import { Input } from './input.js';
 import { unlockAudio } from './audio.js';
 import { Game, W, H } from './game.js';
@@ -59,9 +60,9 @@ async function launch(g) {
   game = g; window.game = game;
   $('#title').classList.remove('show'); $('#loading').classList.add('show'); $('#load-t').textContent = 'Chargement de la carte…'; $('#load-bar').style.width = '60%';
   hud = createHud(game);
-  game.emit = (type, a, b) => {
-    if (type === 'banner') hud.banner(a, b);
-    else if (type === 'toast') hud.toast(a);
+  game.emit = (type, a, b, c) => {
+    if (type === 'banner') hud.banner(a, b, c ? itemIconFile(c) : null);
+    else if (type === 'toast') hud.toast(a, b ? itemIconFile(b) : null);
     else if (type === 'area') hud.area(a);
     else if (type === 'fade') hud.fade();
     else if (type === 'menu') openBonfire(a);
@@ -132,7 +133,7 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
 
 (async function boot() {
   const bar = $('#load-bar');
-  try { await loadDb(); await loadProps(); bar.style.width = '50%'; await loadPortraits(['fire', 'water', 'grass'].flatMap(t => STARTERS[t].map(l => l[0]))); bar.style.width = '100%'; }
+  try { await loadDb(); await loadProps(); await loadItemIcons(); bar.style.width = '50%'; await loadPortraits(['fire', 'water', 'grass'].flatMap(t => STARTERS[t].map(l => l[0]))); bar.style.width = '100%'; }
   catch (e) { $('#load-t').textContent = 'Erreur de chargement : ' + e.message; throw e; }
   $('#loading').classList.remove('show');
   const has = Game.exists();

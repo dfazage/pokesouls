@@ -8,7 +8,7 @@ const MEDIA = `pokesouls-media-${VERSION}`;
 const SHELL_FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/main.js', 'js/assets.js', 'js/audio.js', 'js/data.js', 'js/elements.js', 'js/extras.js', 'js/fx.js', 'js/game.js',
-  'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/input.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
+  'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/input.js', 'js/items.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
   'js/touch.js', 'js/ui.js', 'js/vendor/three.module.min.js',
   'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/audio/music_map.json',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png',

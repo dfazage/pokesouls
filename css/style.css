@@ -259,3 +259,11 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 #rotate .ri{font-size:72px;color:var(--pur);animation:rot 2.4s ease-in-out infinite}
 @keyframes rot{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
 @media (orientation:portrait){body.touch #rotate{display:flex}}
+
+/* icônes d'objets */
+.itemico{width:30px;height:30px;image-rendering:pixelated;vertical-align:middle;flex:none}
+.ico .itemico{width:30px;height:30px}
+.iconsum span .itemico{width:20px;height:20px;margin-right:5px;vertical-align:-5px}
+.tc .th .itemico{width:24px;height:24px}
+#toast .itemico{width:22px;height:22px;margin-right:8px;vertical-align:-6px}
+#banner .itemico{width:56px;height:56px;margin-right:20px}

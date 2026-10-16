@@ -923,6 +923,7 @@ export class Game {
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt; }
     this.parts = this.parts.filter(p => p.life > 0);
     for (const t of this.texts) { t.t += dt; t.y -= 14 * dt; }
+    if (this.pops) { for (const p of this.pops) p.t += dt; this.pops = this.pops.filter(p => p.t < 1.8); }
     this.texts = this.texts.filter(t => t.t < 0.9);
     for (const r of this.fxRings) r.t += dt; this.fxRings = this.fxRings.filter(r => r.t < 0.45);
   }
@@ -993,14 +994,18 @@ export class Game {
     }
     return item;
   }
+  // bulle d'objet : l'icône sort de la Poké Ball et monte en fondu (dessinée dans render.js)
+  popItem(x, y, key, delay = 0) { (this.pops ||= []).push({ x, y, key, t: -delay }); }
   openChest(ch) {
     const pr = this.prog[this.mapIdx]; pr.chests.push(ch.id); const n = this.give(ch.item); SFX.pick(); this.save();
-    this.emit('banner', n.toUpperCase().split(' (')[0], 'item'); this.emit('toast', 'Coffre : ' + n);
+    const cx = (ch.tx + 0.5) * TS, cy = (ch.ty + 0.55) * TS; this.popItem(cx, cy, ch.item); this.ringFx(cx, cy, 16, '#fff2a0');
+    this.emit('banner', n.toUpperCase().split(' (')[0], 'item', ch.item); this.emit('toast', 'Coffre : ' + n, ch.item);
   }
   takeReward() {
     const pr = this.prog[this.mapIdx]; if (pr.rewardTaken) return; pr.rewardTaken = true;
-    const got = this.world.def.reward.map(i => this.give(i)); this.items = this.items.filter(i => i.kind !== 'reward'); SFX.victory(); this.save();
-    this.emit('banner', 'RÉCOMPENSE', 'item'); this.emit('toast', got.join(' · '));
+    const got = this.world.def.reward.map(i => this.give(i)); const rw = this.items.find(i => i.kind === 'reward'); this.items = this.items.filter(i => i.kind !== 'reward'); SFX.victory(); this.save();
+    if (rw) this.world.def.reward.forEach((k, i, a) => this.popItem(rw.x + (i - (a.length - 1) / 2) * 20, rw.y - 6, k, i * 0.25));
+    this.emit('banner', 'RÉCOMPENSE', 'item', this.world.def.reward[0]); this.emit('toast', got.join(' · '), this.world.def.reward[0]);
   }
   usePortal() {
     if (this.mapIdx >= M.MAPS.length - 1) { this.emit('end'); return; }

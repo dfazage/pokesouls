@@ -12,6 +12,7 @@ import { collectDrawList, groundFx, buildLights, radial, setShadowSink } from '.
 import { drawFxs } from './fx.js';
 import * as S from './hd2d_shaders.js';
 import * as WD from './hd2d_world.js';
+import { itemImage } from './items.js';
 
 const { TS } = M;
 const SW = 1280, SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
@@ -384,6 +385,15 @@ export class HD2D {
       N.font = `bold ${Math.round(8.5 * q.s)}px monospace`;
       N.lineWidth = Math.max(2, q.s * 1.4); N.strokeStyle = '#000'; N.strokeText(t.s, Math.round(q.sx), Math.round(q.sy));
       N.fillStyle = t.c; N.fillText(t.s, Math.round(q.sx), Math.round(q.sy));
+    }
+    N.globalAlpha = 1;
+    // bulle d'objet qui sort du coffre (icône, ancrée par le bas)
+    for (const p of g.pops || []) {
+      if (p.t < 0) continue; const img = itemImage(p.key); if (!img) continue;
+      const k = Math.min(1, p.t / 0.45), e = 1 - (1 - k) * (1 - k), q = this.proj(p.x, p.y, 6 + 26 * e + (p.t > 0.45 ? Math.sin((p.t - 0.45) * 5) * 1.5 : 0)); if (!q) continue;
+      const sz = 30 * (0.5 + 0.4 * e) * q.s;
+      N.globalAlpha = p.t > 1.4 ? Math.max(0, (1.8 - p.t) / 0.4) : 1;
+      N.drawImage(img, Math.round(q.sx - sz / 2), Math.round(q.sy - sz), Math.round(sz), Math.round(sz));
     }
     N.globalAlpha = 1;
     // marqueur de verrouillage
