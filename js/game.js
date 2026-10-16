@@ -9,6 +9,7 @@ import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
+import { installBossCine } from './bosscine.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -39,7 +40,7 @@ export function speciesForMap(idx) {
   const b = D.BOSSES[d.boss]; set.add(b.sprite); if (b.summon) set.add(D.spriteOfEnemy(b.summon));
   return [...set];
 }
-const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, chests: [] });
+const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
@@ -173,7 +174,7 @@ export class Game {
       if (d.tier === 'big' && pr.bigDead) continue;
       this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
     }
-    this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null;
+    this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null;
     this.closeFog();
   }
   makeEnemy(type, x, y) {
@@ -198,7 +199,8 @@ export class Game {
     this.shake = Math.max(0, this.shake - dt * 14);
     this.buffT = Math.max(0, this.buffT - dt);
     if (this.state === 'dead') { this.deadT += dt; this.updateFx(dt); if (this.deadT > 3 && (Input.pressed('interact') || Input.pressed('light') || this.deadT > 6.5)) this.respawn(); return; }
-    this.updateChief(dt);
+    const cineLock = this.cine ? this.updateCine(dt) : false;
+    if (!cineLock) this.updateChief(dt);
     this.updateRespawn(dt);
     this.updateEnemies(dt);
     this.updateProjs(dt);
@@ -210,6 +212,7 @@ export class Game {
     this.updateFx(dt);
     this.updateWorld(dt);
     const c = this.chief();
+    if (this.cine) return;
     const tx = clamp(c.x - W / 2, 0, M.MW * TS - W), ty = clamp(c.y - H / 2 - 6, 0, M.MH * TS - H);
     const k = 1 - Math.exp(-9 * dt); this.cam.x += (tx - this.cam.x) * k; this.cam.y += (ty - this.cam.y) * k;
   }
@@ -738,14 +741,14 @@ export class Game {
   }
 
   // ---------- boss ----------
-  startBoss() {
+  startBoss(short) {
     const a = this.world.arena, dir = this.world.fog.dir;
-    this.bossActive = true; this.closeFog();
+    this.bossActive = true; if (short) this.closeFog();
     const b = this.makeEnemy('boss', (a.cx + dir.x * 4) * TS, (a.cy + dir.y * 4) * TS);
-    b.state = 'intro'; b.st = 2.9; b.invuln = 2.9; b.cd = 1.5; b.face = { x: -dir.x, y: -dir.y }; b.dir = dirFromVec(-dir.x, -dir.y);
+    b.state = 'intro'; b.st = 99; b.invuln = 99; b.cd = 1.5; b.face = { x: -dir.x, y: -dir.y }; b.dir = dirFromVec(-dir.x, -dir.y);
     this.enemies.push(b); this.boss = b; SFX.boom();
-    this.emit('bossStart', b);
-    if (BOSS_LORE[b.sprite]) setTimeout(() => this.emit('toast', BOSS_LORE[b.sprite]), 1800);
+    this.startCine(b, short);
+    this.emit('bossStart', b, short);
   }
   bossPhase(b, ph) {
     b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
@@ -762,7 +765,7 @@ export class Game {
     const def = b.def; const [tg, td] = this.nearestMember(b); if (!tg) return;
     const u = unit(tg.x - b.x, tg.y - b.y); const id = b.sprite;
     switch (b.state) {
-      case 'intro': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; if (b.st <= 0) { b.state = 'move'; b.invuln = 0; } break;
+      case 'intro': setAnim(b, this.cine && this.cine.t < 5.4 ? 'Idle' : pickAnim(id, ['Appeal', 'Charge', 'Idle']), this.cine && this.cine.t < 5.4); b.st -= dt; if (b.st <= 0) { b.state = 'move'; b.invuln = 0; } break;
       case 'phase': setAnim(b, pickAnim(id, ['Appeal', 'Charge', 'Idle']), false); b.st -= dt; this.shake = Math.max(this.shake, 1.5); if (b.st <= 0) { b.state = 'move'; b.invuln = 0; b.cd = 0.8; b.obsT = 0.9; } break;
       case 'move': {
         b.face = u; b.dir = dirFromVec(u.x, u.y);
@@ -985,10 +988,9 @@ export class Game {
   openDoor() { this.prog[this.mapIdx].doorOpen = true; for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; SFX.door(); this.save(); this.emit('toast', 'Raccourci ouvert'); }
   enterFog() {
     const a = this.world.arena, dir = this.world.fog.dir; SFX.door();
-    const sx = (a.cx - dir.x * (a.r - 1.5)) * TS, sy = (a.cy - dir.y * (a.r - 1.5)) * TS;
-    this.team.forEach(m => { m.x = sx; m.y = sy; m.atk = null; m.dodge = null; });
-    this.lock = null;
-    this.startBoss(); this.emit('fade');
+    this.lock = null; this.buf = null;
+    const short = !!this.prog[this.mapIdx].introSeen;   // revenu après une défaite : version courte
+    if (short) { this.startBoss(true); this.emit('fade'); } else this.startBoss(false);
   }
   give(item) {
     if (item === 'candy' || VIT_KEYS.includes(item)) { this.bag[item] = (this.bag[item] || 0) + 1; return D.ITEM_NAMES[item]; }
@@ -1058,6 +1060,7 @@ export class Game {
 installFx(Game, { D });
 installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
 installTutorial(Game, { M, D, TS, SFX, hyp });
+installBossCine(Game, { Input, TS, W, H, clamp, hyp, setAnim, SFX, M });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération

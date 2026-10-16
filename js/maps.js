@@ -1,5 +1,6 @@
 // Les six cartes du Chapitre Génération 1 : définition, génération des salles, collisions et rendu du décor.
 // Cartes 1, 2, 3, 4 et 6 : disposition générée (graine fixe). Carte 5 (Laboratoire oublié) : dessinée à la main.
+// Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
 export const TS = 24, MW = 124, MH = 64, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
@@ -17,22 +18,22 @@ export const THEMES = {
 // ---------- définitions des cartes ----------
 export const MAPS = [
   { id: 'm1', name: 'Îles Écume', sub: 'Grottes gelées', theme: 'ice', lv: 8, seed: 11, boss: 'articuno',
-    path: [[0, 2], [1, 2], [2, 2], [2, 1], [1, 1], [0, 1], [0, 0], [1, 0]],
+    path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
     areas: ['Rivage gelé', 'Grotte des phoques', 'Bassin glacé', 'Galerie de givre', 'Caverne de cristal', 'Lac souterrain', 'Antichambre du blizzard'], sanctuary: "Nid d'Artikodin",
     mobs: { mini: ['seel', 'shellder', 'krabby'], mid: ['dewgong', 'starmie', 'cloyster'], big: 'lapras' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_aquaring'], reward: ['ct_icebeam', 'candy'] },
   { id: 'm2', name: 'Centrale abandonnée', sub: 'Sous haute tension', theme: 'plant', lv: 15, seed: 23, boss: 'zapdos',
-    path: [[3, 2], [2, 2], [1, 2], [1, 1], [2, 1], [3, 1], [3, 0], [2, 0]],
+    path: [[3, 2], [2, 2], [1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [2, 0]],
     areas: ['Hall des turbines', 'Salle des câbles', 'Atelier rouillé', 'Salle des générateurs', 'Couloir des relais', 'Poste de commande', 'Antichambre du transformateur'], sanctuary: "Cœur de la Centrale",
     mobs: { mini: ['magnemite', 'voltorb', 'pikachu'], mid: ['magneton', 'electrode', 'raichu'], big: 'electabuzz' },
     loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'] },
   { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', lv: 22, seed: 37, boss: 'moltres',
-    path: [[0, 0], [1, 0], [2, 0], [2, 1], [1, 1], [0, 1], [0, 2], [1, 2]],
+    path: [[0, 0], [0, 1], [1, 1], [1, 2], [2, 2], [2, 1], [3, 1], [3, 0]],
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
     mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'magmar' },
     loot: ['candy', 'carbos', 'ct_hydro', 'berrypack', 'hpup', 'zinc', 'etherpack', 'revive'], reward: ['ct_fireblast', 'candy'] },
   { id: 'm4', name: 'Route Victoire', sub: 'Le chemin des rois', theme: 'rock', lv: 30, seed: 41, boss: 'dragonite',
-    path: [[1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [2, 2], [3, 2], [3, 1]],
+    path: [[3, 0], [3, 1], [2, 1], [2, 2], [1, 2], [1, 1], [0, 1], [0, 0]],
     areas: ['Pied de la route', 'Éboulis', 'Gorge des échos', 'Plateau des rochers', 'Arène des rois', 'Pont de pierre', 'Porte de la Ligue'], sanctuary: "Sommet des rois",
     mobs: { mini: ['machop', 'geodude', 'rhyhorn'], mid: ['machoke', 'graveler', 'dragonair', 'rhydon'], big: 'snorlax' },
     loot: ['candy', 'protein', 'ct_earthquake', 'berrypack', 'iron', 'maxberry', 'maxether', 'ct_healbell'], reward: ['ct_swords', 'candy', 'candy'] },
@@ -41,7 +42,7 @@ export const MAPS = [
     mobs: { mini: ['magnemite', 'koffing', 'voltorb'], mid: ['porygon', 'weezing'], big: 'electrodeA' },
     loot: ['candy', 'calcium', 'ct_psychic', 'etherpack', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy'] },
   { id: 'm6', name: 'Île Mystère', sub: 'Le refuge de Mew', theme: 'mystic', lv: 45, seed: 59, boss: 'mew',
-    path: [[3, 0], [2, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [2, 2]],
+    path: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [1, 1], [1, 0]],
     areas: ['Plage secrète', 'Bosquet lumineux', 'Clairière des rêves', 'Ruines couvertes de lierre', 'Jardin suspendu', 'Source scintillante', 'Antichambre du mythe'], sanctuary: 'Cœur de l’île',
     mobs: { mini: ['exeggcute', 'abra', 'haunter'], mid: ['kadabra', 'gengar', 'mrmime'], big: 'exeggutor' },
     loot: ['candy', 'protein', 'ct_softboiled', 'hpup', 'berrypack', 'maxberry', 'maxether', 'revive'], reward: ['ct_hyper', 'candy', 'candy'] },
@@ -60,22 +61,22 @@ const LAB = (() => {
     ['R0', 3, 38, 12, 9, 'Lisière', "Hall d'entrée"], ['C0', 15, 41, 9, 3, 'Lisière', null], ['R1', 24, 36, 11, 12, 'Lisière', "Salle d'observation"],
     ['C1', 28, 29, 3, 7, 'Cœur', null], ['R2', 20, 12, 30, 17, 'Cœur', 'Salle des cuves'], ['C2v', 9, 26, 3, 12, 'Cœur', null], ['C2h', 12, 26, 8, 3, 'Cœur', null],
     ['C3', 50, 19, 4, 3, 'Cœur', null], ['R3', 54, 15, 9, 10, 'Cœur', 'Salle de contrôle'], ['C5', 33, 8, 3, 4, 'Cœur', null], ['R4', 28, 0, 14, 8, 'Cœur', 'Chambre de clonage'],
-    ['C4', 63, 18, 8, 3, 'Approche', null], ['R5', 71, 10, 16, 18, 'Approche', 'Galerie des miroirs'], ['C6', 87, 17, 4, 3, 'Approche', null], ['R7', 91, 12, 9, 10, 'Approche', 'Antichambre'], ['C7', 100, 16, 3, 3, 'Sanctuaire', null],
+    ['C4', 63, 18, 8, 3, 'Approche', null], ['R5', 71, 10, 16, 18, 'Approche', 'Galerie des miroirs'], ['C6v', 80, 28, 3, 11, 'Approche', null], ['C6h', 80, 36, 30, 3, 'Approche', null], ['R7', 109, 30, 9, 10, 'Approche', 'Antichambre'], ['C7', 112, 24, 3, 7, 'Sanctuaire', null],
   ].map(r => ({ id: r[0], x: r[1], y: r[2] + DY, w: r[3], h: r[4], zone: r[5], name: r[6] }));
   const decor = [['tank', 26, 15], ['tank', 26, 23], ['tank', 32, 19], ['tank', 38, 15], ['tank', 38, 23], ['tank', 44, 19], ['pillar', 27, 39], ['pillar', 32, 39], ['pillar', 27, 45], ['pillar', 32, 45],
     ['pillar', 6, 40], ['pillar', 12, 40], ['pillar', 6, 45], ['pillar', 12, 45], ['mirror', 75, 14], ['mirror', 75, 22], ['mirror', 82, 14], ['mirror', 82, 22], ['mirror', 79, 18],
-    ['console', 57, 17], ['console', 59, 22], ['tankbroken', 31, 3], ['tankbroken', 37, 3], ['pillar', 29, 6], ['pillar', 40, 6], ['pillar', 93, 14], ['pillar', 98, 14], ['pillar', 93, 20], ['pillar', 98, 20]]
+    ['console', 57, 17], ['console', 59, 22], ['tankbroken', 31, 3], ['tankbroken', 37, 3], ['pillar', 29, 6], ['pillar', 40, 6], ['pillar', 111, 31], ['pillar', 116, 31], ['pillar', 111, 34], ['pillar', 116, 34]]
     .map(([kind, x, y]) => ({ kind, tx: x, ty: y + DY }));
   const spawns = [['magnemite', 28, 41], ['magnemite', 32, 44], ['koffing', 30, 38], ['koffing', 28, 18], ['koffing', 41, 21], ['koffing', 34, 27], ['voltorb', 24, 20], ['voltorb', 46, 25], ['voltorb', 31, 13], ['magnemite', 45, 14],
     ['koffing', 57, 21], ['koffing', 60, 17], ['electrodeA', 35, 4], ['porygon', 77, 18], ['porygon', 83, 19], ['weezing', 79, 12], ['magnemite', 84, 25], ['magnemite', 73, 25], ['koffing', 80, 22]]
     .map(([type, x, y]) => ({ type, tx: x, ty: y + DY }));
   return {
-    rooms: R, decor, spawns, arena: { cx: 113, cy: 17 + DY, r: 10 },
+    rooms: R, decor, spawns, arena: { cx: 113, cy: 14 + DY, r: 10 }, // l'arène est au nord de l'antichambre : on y entre par le sud
     door: { tiles: [[9, 31 + DY], [10, 31 + DY], [11, 31 + DY]], dir: { x: 0, y: 1 } }, // s'ouvre depuis le côté nord
-    fog: { tiles: [[101, 16 + DY], [101, 17 + DY], [101, 18 + DY]], dir: { x: 1, y: 0 } },
-    bonfires: [{ id: 'b1', name: "Hall d'entrée", tx: 8, ty: 42 + DY }, { id: 'b2', name: 'Salle de contrôle', tx: 58, ty: 20 + DY }, { id: 'b3', name: 'Antichambre', tx: 95, ty: 17 + DY }],
+    fog: { tiles: [[112, 26 + DY], [113, 26 + DY], [114, 26 + DY]], dir: { x: 0, y: -1 } },
+    bonfires: [{ id: 'b1', name: "Hall d'entrée", tx: 8, ty: 42 + DY }, { id: 'b2', name: 'Salle de contrôle', tx: 58, ty: 20 + DY }, { id: 'b3', name: 'Antichambre', tx: 113, ty: 34 + DY }],
     start: { tx: 8, ty: 44 + DY },
-    chests: [[5, 41], [40, 2], [61, 22], [84, 14], [96, 12], [22, 26]].map(([x, y]) => ({ tx: x, ty: y + DY })),
+    chests: [[5, 41], [40, 2], [61, 22], [84, 14], [114, 32], [22, 26]].map(([x, y]) => ({ tx: x, ty: y + DY })),
   };
 })();
 
@@ -89,7 +90,8 @@ function generate(def) {
     const [cx, cy] = path[i], ox = cx * cw, oy = cy * ch;
     let w = i === 0 ? ri(12, 15) : i === 6 ? ri(13, 17) : ri(14, 24), h = i === 0 ? ri(9, 11) : ri(10, 15);
     w = Math.min(w, cw - 4); h = Math.min(h, ch - 4);
-    const x = ox + 2 + ri(0, cw - 4 - w), y = oy + 2 + ri(0, ch - 4 - h);
+    let x = ox + 2 + ri(0, cw - 4 - w); const y = oy + 2 + ri(0, ch - 4 - h);
+    if (i === 6) x = ox + 15 - Math.floor(w / 2); // antichambre centrée sous l'arène : l'arrivée est frontale (vers le nord)
     const zone = i < 2 ? 'Lisière' : i < 6 ? 'Cœur' : 'Approche';
     rooms.push({ id: 'G' + i, x, y, w, h, zone, name: def.areas[i] });
   }

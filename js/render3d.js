@@ -80,6 +80,7 @@ export class HD2D {
     this.camera = new THREE.PerspectiveCamera(CFG.fov, SW / SH, 0.1, 160);
     this.scene = new THREE.Scene();
     this.pitch = CFG.pitch * Math.PI / 180;
+    this.curPitch = this.pitch; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
     this.sh = {
       uTime: { value: 0 }, uFog: { value: new THREE.Vector3(.05, .05, .1) }, uFogD: { value: .02 }, uMist: { value: .5 }, uCam: { value: new THREE.Vector3() },
       uLight: { value: null }, uOvN: { value: null }, uOvA: { value: null }, uReg: { value: new THREE.Vector4() }, uGain: { value: 1.12 },
@@ -111,9 +112,9 @@ export class HD2D {
     this.reg = { relX: (x0 - m) * TS, relY: (z0 - m) * TS, w: rw, h: rh, ox: 0, oy: 0 };
   }
   placeCamera(cx, cz, shx, shy) {
-    const c = this.camera, p = this.pitch;
-    c.position.set(cx + shx, CFG.look + CFG.dist * Math.sin(p), cz + shy + CFG.dist * Math.cos(p));
-    c.lookAt(cx + shx, CFG.look, cz + shy);
+    const c = this.camera, p = this.curPitch, L = this.curLook, D = this.curDist;
+    c.position.set(cx + shx, L + D * Math.sin(p), cz + shy + D * Math.cos(p));
+    c.lookAt(cx + shx, L, cz + shy);
     c.updateMatrixWorld(true);
   }
 
@@ -177,7 +178,7 @@ export class HD2D {
     this.scale = s; this.renderer.setSize(Math.round(SW * s), Math.round(SH * s), false); this.mFinal.uniforms.uRes.value.set(SW * s, SH * s); this.sh.uResS.value.set(SW * s, SH * s);
     this.canvas.style.width = SW + 'px'; this.canvas.style.height = SH + 'px';
     this.buildTargets();
-    this.sh.uPointScale.value = (SH * s) / (2 * Math.tan(CFG.fov * Math.PI / 360));
+    this.pointK = SH * s; this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
   }
   // qualité adaptative : si l'image dépasse durablement ~24 ms, on réduit la résolution de rendu (jamais l'inverse, pour éviter les oscillations)
   adapt(dtMs) {
@@ -264,7 +265,14 @@ export class HD2D {
     if (g.world !== this.world) this.setWorld(g);
     this.syncGates(g.world);
     const sh = this.sh, R = this.reg, t = g.t;
-    this.ppu = SH / (2 * Math.tan(CFG.fov * Math.PI / 360));
+    { // paramètres de caméra : par défaut ceux du jeu, sinon ceux de la cinématique en cours
+      const fx = g.camFx;
+      this.curPitch = (fx ? fx.pitch : CFG.pitch) * Math.PI / 180; this.curDist = fx ? fx.dist : CFG.dist; this.curLook = fx ? fx.look : CFG.look;
+      const fov = fx ? fx.fov : CFG.fov;
+      if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
+      if (this.pointK) this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
+    }
+    this.ppu = SH / (2 * Math.tan(this.curFov * Math.PI / 360));
     // caméra : centre de l'ancienne vue 2D (déjà lissée et bornée à la carte)
     const shx = g.shake ? (Math.random() - 0.5) * g.shake : 0, shy = g.shake ? (Math.random() - 0.5) * g.shake : 0;
     const cx = (Math.max(0, Math.min(M.MW * TS - W, g.cam.x)) + W / 2 + shx) / TS, cz = (Math.max(0, Math.min(M.MH * TS - H, g.cam.y)) + H / 2 + shy) / TS;
@@ -300,7 +308,7 @@ export class HD2D {
 
     tp = tk('lumiere', tp);
     // --- sprites ---
-    const cosP = Math.cos(this.pitch), sinP = Math.sin(this.pitch);
+    const cosP = Math.cos(this.curPitch), sinP = Math.sin(this.curPitch);
     const inView = (x, y, pad = 60) => {
       if (!(x > R.ox - pad && x < R.ox + R.w + pad && y > R.oy - pad && y < R.oy + R.h + pad)) return false;
       const p = this.proj(x, y, 0); return !!p && p.nx > -1.35 && p.nx < 1.35 && p.ny > -1.5 && p.ny < 1.5;

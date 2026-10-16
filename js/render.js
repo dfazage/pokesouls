@@ -274,12 +274,13 @@ function drawMember(ctx, g, m) {
 
 function drawEnemy(ctx, g, e) {
   const id = e.sprite, def = e.def, sc = def.scale || 1, sp = A.db[id];
-  const fly = def.fly || def.hover || e.clone; const z = fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0;
+  const fly = def.fly || def.hover || e.clone; const lift = e.lift || 0; const z = (fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
   let alpha = 1; if (e.dead && !e.boss) alpha = Math.max(0, 1 - e.deadT / 0.9);
-  shadow(ctx, e.x, e.y, (e.boss ? 12 : 7) * sc * (e.boss ? 1.3 : 1), 0.35 * alpha);
+  if (e.cineAlpha !== undefined && e.cineAlpha < 1) alpha *= e.cineAlpha;   // cinématique d'intro : apparition
+  shadow(ctx, e.x, e.y, (e.boss ? 12 : 7) * sc * (e.boss ? 1.3 : 1) * (1 + Math.min(lift, 200) / 400), 0.35 * alpha * (1 - Math.min(0.7, lift / 260)));
   let anim = e.anim; if (!sp.anims[anim]) anim = 'Idle';
   if (e.dead && e.boss) anim = 'Faint';
-  const tint = e.fx ? statusTint(g, e.fx) : e.invuln > 0 && e.boss ? 'brightness(1.5) hue-rotate(40deg)' : e.clone ? 'hue-rotate(150deg) saturate(1.6) brightness(.9)' : e.state === 'dormant' ? null : null;
+  const tint = e.boss && e.reveal !== undefined && e.reveal < 1 ? `brightness(${(e.reveal * 0.85).toFixed(2)})` : e.fx ? statusTint(g, e.fx) : e.invuln > 0 && e.boss && !g.cine ? 'brightness(1.5) hue-rotate(40deg)' : e.clone ? 'hue-rotate(150deg) saturate(1.6) brightness(.9)' : e.state === 'dormant' ? null : null;
   drawSprite(ctx, id, anim, e.at / TICK, e.loop && !(e.dead), e.dir, e.x, e.y, { scale: sc, z, alpha, flash: e.flash > 0, tint });
   if (e.dead) return;
   const top = e.y - z - sp.anchor.h * sc - 6;
@@ -335,7 +336,7 @@ export function buildLights(g) {
   for (const p of g.projs) lights.push({ x: p.x, y: p.y - 8, r: p.big ? 60 : 38, c: hexToRgb(p.color), a: 0.9 });
   for (const e of g.enemies) {
     if (e.dead) continue;
-    if (e.boss) lights.push({ x: e.x, y: e.y - 14, r: 90, c: e.def.glow, a: e.tele ? 1 : 0.7 });
+    if (e.boss) lights.push({ x: e.x, y: e.y - 14, r: 90, c: e.def.glow, a: (e.tele ? 1 : 0.7) * (e.reveal === undefined ? 1 : 0.1 + 0.9 * e.reveal) });
     else if (e.tele) lights.push({ x: e.x, y: e.y - 8, r: 44, c: [255, 60, 50], a: 0.9 });
     else if (e.def.color) lights.push({ x: e.x, y: e.y - 8, r: 30, c: hexToRgb(e.def.color), a: 0.5 });
   }

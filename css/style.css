@@ -221,17 +221,24 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 /* ---- entrée de boss ---- */
 #bossintro{position:absolute;inset:0;z-index:12;pointer-events:none;display:none;--bc:#e0b0ff}
 #bossintro.show{display:block}
-#bossintro .bar{position:absolute;left:0;right:0;height:0;background:#000;animation:bi-bar 2.8s ease both}#bossintro .bar.t{top:0}#bossintro .bar.b{bottom:0}
-#bossintro .veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,color-mix(in srgb,var(--bc) 28%,transparent),rgba(0,0,0,.72) 75%);animation:bi-veil 2.8s ease both}
-#bossintro .txt{position:absolute;left:0;right:0;top:46%;text-align:center}
-#bossintro .sub{font:italic 20px Georgia,serif;letter-spacing:.32em;color:var(--bc);animation:bi-sub 2.8s ease both;opacity:0}
-#bossintro .nm{font:800 84px/1.1 'Cinzel',Georgia,serif;margin:8px 0 0 .42em;color:#fff;text-shadow:0 0 28px var(--bc),0 0 60px var(--bc);animation:bi-name 2.8s cubic-bezier(.2,.8,.2,1) both}
-#bossintro .ln{margin:14px auto 0;width:640px;height:2px;background:linear-gradient(90deg,transparent,var(--bc),transparent);animation:bi-line 2.8s ease both}
-@keyframes bi-bar{0%{height:0}18%,82%{height:90px}100%{height:0}}
-@keyframes bi-veil{0%{opacity:0}20%,75%{opacity:1}100%{opacity:0}}
-@keyframes bi-sub{0%,22%{opacity:0;transform:translateY(8px)}38%,80%{opacity:1;transform:none}100%{opacity:0}}
-@keyframes bi-name{0%{opacity:0;letter-spacing:1.1em;filter:blur(14px);transform:scale(1.12)}30%{opacity:1;filter:blur(0);transform:scale(1)}78%{opacity:1;letter-spacing:.42em}100%{opacity:0;letter-spacing:.5em}}
-@keyframes bi-line{0%,15%{transform:scaleX(0);opacity:1}45%,80%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+#bossintro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height .9s cubic-bezier(.4,0,.2,1)}#bossintro .bar.t{top:0}#bossintro .bar.b{bottom:0}
+#bossintro.bars .bar{height:11%}
+#bossintro .veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 20%,rgba(0,0,0,.9) 90%);opacity:0}
+#bossintro .flash{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#fff,color-mix(in srgb,var(--bc) 70%,transparent) 60%,transparent);opacity:0;mix-blend-mode:screen}
+#bossintro .card{position:absolute;left:0;right:0;top:41%;text-align:center;transition:opacity .9s;opacity:1}
+#bossintro.out .card{opacity:0}
+#bossintro .tag,#bossintro .ep,#bossintro .lore{opacity:0;transition:opacity 1s,transform 1s;transform:translateY(8px)}
+#bossintro .tag{font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.5em;color:var(--bc);text-transform:uppercase;margin-bottom:10px}
+#bossintro .nm{font:800 84px/1.1 'Cinzel',Georgia,serif;margin:0 0 0 .5em;color:#fff;text-shadow:0 0 28px var(--bc),0 0 60px var(--bc);letter-spacing:.5em;opacity:0;filter:blur(14px);transition:opacity 1.2s,filter 1.4s,letter-spacing 2.4s cubic-bezier(.2,.8,.2,1)}
+#bossintro .ln{margin:12px auto 0;width:640px;max-width:80%;height:2px;background:linear-gradient(90deg,transparent,var(--bc),transparent);transform:scaleX(0);transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+#bossintro .ep{font:italic 20px Georgia,serif;letter-spacing:.3em;color:var(--bc);margin-top:14px}
+#bossintro .lore{font:italic 13px Georgia,serif;color:#cfc8bc;margin-top:8px;letter-spacing:.04em}
+#bossintro.c-tag .tag,#bossintro.c-ep .ep,#bossintro.c-lore .lore{opacity:1;transform:none}
+#bossintro.c-nm .nm{opacity:1;filter:none;letter-spacing:.14em}#bossintro.c-nm .ln{transform:scaleX(1)}
+#bossintro .skip{position:absolute;right:22px;bottom:calc(11% + 12px);pointer-events:auto;cursor:pointer;background:rgba(18,15,12,.7);border:1px solid rgba(255,255,255,.22);border-radius:10px;color:#e8e0d0;font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.12em;padding:6px 12px;display:flex;gap:10px;align-items:center;opacity:0;transition:opacity .6s}
+#bossintro.bars .skip{opacity:.85}#bossintro.out .skip{opacity:0}
+#bossintro .skip .lk{color:#9a927f;font-style:italic;font-weight:400;letter-spacing:.06em}
+#hud.cine :is(#tut,#chief,.slot,#quick,#linkbox,#combo,#skills,#essence,#prompt,#toast,#compass,#hints,#area,#banner){opacity:0!important}
 #boss.show .bbar .fill{animation:bi-hp 1.6s cubic-bezier(.3,.7,.2,1) both}
 @keyframes bi-hp{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
 
