@@ -76,7 +76,7 @@ export function createPadNav() {
       // onglets (sac) : L / R
       if (Input.padEdge(4) || Input.padEdge(5)) {   // L / R : onglet précédent / suivant (boucle)
         const tabs = [...r.querySelectorAll('.tabs button')];
-        if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; const t = tabs[(idx + dir + tabs.length) % tabs.length]; key = keyOf(t); [cx, cy] = center(t); t.click(); return; }
+        if (tabs.length > 1) { const idx = Math.max(0, tabs.findIndex(b => b.classList.contains("on"))), dir = Input.padEdge(5) ? 1 : -1; const t = tabs[(idx + dir + tabs.length) % tabs.length]; key = keyOf(t); [cx, cy] = center(t); t.click(); if (cur) cur.classList.remove('padfocus'); cur = null; return; }
       }
       // retour
       if (Input.padEdge(1)) {
