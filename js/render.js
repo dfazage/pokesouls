@@ -2,7 +2,7 @@
 import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
-import { pickProp, drawProp } from './props.js';
+import { PROPS, pickProp, drawProp } from './props.js';
 import { itemImage } from './items.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
@@ -142,6 +142,10 @@ function drawObsSolid(ctx, g, o) {
   else if (o.kind === 'pylon') { const h = 28 * h0; ctx.fillStyle = '#2a2c3a'; ctx.fillRect(x - 6, y - 4, 12, 4); ctx.fillStyle = '#4a4e66'; ctx.fillRect(x - 2, y - h, 4, h - 3); ctx.fillStyle = '#6a6f8c'; ctx.fillRect(x - 2, y - h, 1, h - 3);
     const pu = 0.6 + 0.4 * Math.sin(g.t * 12 + o.seed); ctx.strokeStyle = `rgba(255,232,74,${pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - h, 7, 3, 0, 0, 7); ctx.stroke(); ctx.fillStyle = '#fff6a8'; ctx.beginPath(); ctx.arc(x, y - h - 2, 2.4 + pu, 0, 7); ctx.fill();
     if (Math.random() < 0.25) g.parts.push({ x: x + (Math.random() - 0.5) * 8, y, z: h, vx: 0, vy: 0, vz: -10, life: 0.3, max: 0.3, c: '#fff58a', size: 1 }); }
+  else if (o.kind === 'basalt' && pickProp('obs_basalt')) {  // colonne de basalte : 6 stades de dégâts de la planche (props.json)
+    const r = Math.max(0, Math.min(0.999, o.hp / o.maxhp)), f = 5 - Math.floor(r * 6), p = PROPS.db.obs_basalt, sc = p.scale;
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 40, y - 120 * sc * h0 - 4, 80, 120 * sc * h0 + 6); ctx.clip();
+    drawProp(ctx, 'obs_basalt', x, y + 3 + (1 - h0) * 30, g.t, 0, 0, f); ctx.restore(); }
   else if (o.kind === 'rock' || o.kind === 'basalt') { const h = 18 * h0, lava = o.kind === 'basalt', c1 = lava ? '#3a2a2a' : '#8a7a6a', c2 = lava ? '#54403c' : '#b0a090', c3 = lava ? '#241a1a' : '#5e5246';
     poly(ctx, [x - 9, y, x - 8, y - h * 0.6, x - 3, y - h, x + 4, y - h * 0.9, x + 9, y - h * 0.5, x + 8, y], c1); poly(ctx, [x - 8, y - h * 0.6, x - 3, y - h, x + 1, y - h * 0.7, x - 4, y - h * 0.3], c2); poly(ctx, [x + 2, y, x + 4, y - h * 0.6, x + 8, y - h * 0.5, x + 8, y], c3);
     if (lava) { ctx.strokeStyle = `rgba(255,130,40,${0.7 + 0.3 * Math.sin(g.t * 5 + o.seed)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - 3, y - 2); ctx.lineTo(x - 1, y - h * 0.5); ctx.lineTo(x + 3, y - h * 0.7); ctx.stroke(); }
@@ -153,7 +157,7 @@ function drawObsSolid(ctx, g, o) {
     ctx.fillStyle = '#4ab85a'; ctx.beginPath(); ctx.ellipse(x, y - 4, 7, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#d8ffb0'; for (let i = 0; i < 4; i++) ctx.fillRect(x - 6 + i * 4, y - 7 - (i % 2) * 5 * h0, 1.5, 3); ctx.lineCap = 'butt'; }
   if (o.flash > 0) { ctx.globalAlpha = 0.55; ctx.fillStyle = '#fff'; ctx.fillRect(x - o.hw, y - 24 * h0, o.hw * 2, 24 * h0); }
   ctx.globalAlpha = 1;
-  if (o.hp < o.maxhp) { const w = 16; ctx.fillStyle = '#000'; ctx.fillRect(x - w / 2 - 1, y - 32, w + 2, 4); ctx.fillStyle = '#e8c860'; ctx.fillRect(x - w / 2, y - 31, w * Math.max(0, o.hp / o.maxhp), 2); }
+  if (o.hp < o.maxhp) { const w = 16, by = o.kind === 'basalt' && pickProp('obs_basalt') ? 46 : 32; ctx.fillStyle = '#000'; ctx.fillRect(x - w / 2 - 1, y - by, w + 2, 4); ctx.fillStyle = '#e8c860'; ctx.fillRect(x - w / 2, y - by + 1, w * Math.max(0, o.hp / o.maxhp), 2); }
 }
 
 export function drawGates(ctx, g) {
