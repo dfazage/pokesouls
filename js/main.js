@@ -97,7 +97,7 @@ function openTravel() { openMenu('travel', () => showTravel(game, closeMenu, goT
 function openPause() {
   mode = 'pause'; menuKind = 'pause'; Input.clear();
   const back = () => showPauseMenu(game, h);
-  const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), reset: () => { closeMenu(); newFromTitle(); } };
+  const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), title: () => { closeMenu(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }, reset: () => { closeMenu(); newFromTitle(); } };
   back();
 }
 function newFromTitle() { Game.wipe(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
