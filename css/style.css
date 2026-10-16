@@ -72,13 +72,23 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:
 #hud.linking::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:inset 0 0 90px 12px rgba(255,200,110,.3);animation:lk-vig 1.4s ease-in-out infinite}
 @keyframes lk-vig{0%,100%{opacity:.65}50%{opacity:1}}
 /* combo L-L-H */
-#combo{position:absolute;right:28px;bottom:128px;display:flex;align-items:center;gap:9px;padding:7px 14px;border-radius:99px;opacity:0;transition:opacity .15s}
+#combo{position:absolute;left:0;top:0;border:0!important;box-shadow:none!important;display:flex;align-items:flex-end;gap:5px;opacity:0;transition:opacity .12s;will-change:transform;background:none!important;backdrop-filter:none!important;padding:0;border-radius:0}
 #combo.on{opacity:1}
-#combo .cl{font-size:10px;font-weight:600;letter-spacing:.18em;color:rgba(255,255,255,.78)}
-#combo i,#combo b{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.55);font:700 11px ui-monospace,monospace;font-style:normal;display:flex;align-items:center;justify-content:center;transition:all .1s}
-#combo i::after{content:"L"}#combo b::after{content:"H"}
-#combo[data-n="1"] i:nth-of-type(1),#combo[data-n="2"] i{background:rgba(255,255,255,.92);border-color:#fff;color:#1a140d}
-#combo[data-n="2"] b{border:1.5px solid var(--acc);color:#fff;box-shadow:0 0 12px var(--acc)}
+/* boutons pixel : octogone à coins crantés (clip-path), liseré + fond superposés, 1 px d'enfoncement quand ils s'allument */
+#combo i,#combo b{position:relative;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font:700 10px ui-monospace,monospace;font-style:normal;color:#cdbb9c;background:#6b5a46;clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));transition:transform .06s,color .06s;image-rendering:pixelated}
+#combo i::before,#combo b::before{content:"";position:absolute;inset:2px;background:#241b13;clip-path:inherit;z-index:-1}
+#combo i::after,#combo b::after{content:"";position:absolute;left:5px;right:5px;bottom:3px;height:2px;background:rgba(0,0,0,.45);z-index:-1}
+#combo i,#combo b{text-shadow:1px 1px 0 #000}
+#combo i,#combo b{isolation:isolate}#combo b{background:#b8893a}
+#combo[data-n="0"] i:nth-of-type(1),#combo[data-n="1"] i:nth-of-type(2),#combo[data-n="2"] b{animation:cbpulse .5s steps(2) infinite}
+#combo[data-n="1"] i:nth-of-type(1),#combo[data-n="2"] i{background:#fff;color:#2a1b08;text-shadow:none;transform:translateY(2px)}
+#combo[data-n="1"] i:nth-of-type(1)::before,#combo[data-n="2"] i::before{background:#d9a441}
+#combo[data-n="2"] b{background:#fff;color:#2a1b08;text-shadow:none}
+#combo[data-n="2"] b::before{background:#ff8a2a}
+#combo em{position:absolute;left:0;right:0;bottom:-7px;height:4px;background:#000;box-shadow:0 0 0 1px #6b5a46}
+#combo em u{display:block;height:100%;background:#f2c14e;transition:width .05s steps(4)}
+#combo.low em u{background:#e8553a}
+@keyframes cbpulse{50%{filter:brightness(1.6)}}
 /* capacité spéciale */
 #skills{position:absolute;right:28px;bottom:28px}
 #skills .skill{position:relative;width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 10px}
@@ -349,7 +359,7 @@ body.touch #skills{right:auto;left:252px;bottom:auto;top:228px}
 body.touch #skills .skill{width:112px;height:58px;border-radius:18px}
 body.touch #skills .skill .cd{left:16px;right:16px;bottom:9px}
 body.touch #buff{bottom:auto;top:62px;right:auto;left:0}
-body.touch #combo{right:auto;left:200px;top:298px;bottom:auto}
+
 body.touch #linkbox{width:280px;margin-left:-140px;bottom:14px;height:44px}
 body.touch #boss,body.touch #boss.mini{left:405px;margin-left:0;width:290px;top:24px}
 body.touch #compass{left:540px}
