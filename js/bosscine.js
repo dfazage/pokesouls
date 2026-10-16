@@ -79,7 +79,7 @@ export function installBossCine(Game, d) {
   };
 
   // cri de fureur une fois l'éveil terminé, juste avant le carton-titre
-  P.cineCry = function (q, tt) { if (tt >= q.impact + 1.0 && !q.fired.has('cry')) { q.fired.add('cry'); this.bossCry(q.b, 7.5, 1.6); } };
+  P.cineCry = function (q, tt) { if (tt >= Math.max(q.impact + 1.0, q.short ? CINE_SHORT + 0.8 : 0) && !q.fired.has('cry')) { q.fired.add('cry'); this.bossCry(q.b, 7.5, 1.6); } };
   P.cineCam = function (snap) {
     const q = this.cine, b = q.b, c = this.chief(), [pitch, dist, fov, look, foc] = cineKey(q.t);
     this.camFx = { pitch, dist, fov, look };
