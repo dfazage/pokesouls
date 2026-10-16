@@ -54,7 +54,10 @@ void main(){
     vec2 sc = gl_FragCoord.xy/uResS*2. - 1.;
     vec2 dd = (sc - uPl.xy)*vec2(uResS.x/uResS.y, 1.);
     // fragment réellement entre la caméra et le chef (distance au point de vue), dans une ellipse autour de lui
-    if(length(vW - uCam) < length(uPlP - uCam) - .45){ float k = smoothstep(1., .5, length(dd/uCut)); if(k > bayer4(gl_FragCoord.xy)) discard; }
+    if(length(vW - uCam) < length(uPlP - uCam) - .45){
+      // l'ellipse est plus courte sous le chef : un mur situé juste devant ses pieds ne le masque pas, et ne doit pas se tramer en un petit rectangle pointillé
+      vec2 cu = vec2(uCut.x, dd.y < 0. ? uCut.y*.34 : uCut.y);
+      float k = smoothstep(1., .5, length(dd/cu)); if(k > bayer4(gl_FragCoord.xy)) discard; }
   }
   vec4 tex = sharpTex(uMap, vUv, uMapSize);
   vec3 col = tex.rgb;
