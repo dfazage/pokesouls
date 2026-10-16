@@ -53,7 +53,7 @@ export function installBossCine(Game, d) {
     // on place tout le monde dans l'état de fin d'éveil
     const e = q.pts[q.pts.length - 1]; this.team.forEach(m => { m.x = e.x; m.y = e.y; m.atk = null; m.dodge = null; });
     if (!q.fogClosed) { this.closeFog(); q.fogClosed = true; }
-    q.t = CINE_UNLOCK - 0.1; q.flash = 0; this.shake = 0; this.cineFire(q, q.impact);
+    q.t = CINE_UNLOCK - 0.1; q.flash = 0; this.shake = 0; this.cineFire(q, q.impact); q.fired.add('cry');
   };
 
   // état du boss aux instants donnés (fonctions pures de t, pour que la version courte retrouve le même état)
@@ -78,6 +78,8 @@ export function installBossCine(Game, d) {
     }
   };
 
+  // cri de fureur une fois l'éveil terminé, juste avant le carton-titre
+  P.cineCry = function (q, tt) { if (tt >= q.impact + 1.0 && !q.fired.has('cry')) { q.fired.add('cry'); this.bossCry(q.b, 7.5, 1.6); } };
   P.cineCam = function (snap) {
     const q = this.cine, b = q.b, c = this.chief(), [pitch, dist, fov, look, foc] = cineKey(q.t);
     this.camFx = { pitch, dist, fov, look };
@@ -112,7 +114,7 @@ export function installBossCine(Game, d) {
     else { setAnim(c, 'Idle'); c.at += dt; }
     if (locked) { for (const m of this.team) this.tickMember(m, dt); this.stamTick(dt, false); }
     // boss
-    this.cineApply(b); this.cineFire(q, t);
+    this.cineApply(b); this.cineFire(q, t); this.cineCry(q, t);
     q.flash = Math.max(0, q.flash - dt * 2.6);
     q.dim = cl((t - 2.4) / 0.8) * (1 - cl((t - 4.2) / 0.8)) * 0.55;
     b.st = 99; b.invuln = 99;

@@ -1,0 +1,1 @@
+Cris des boss (articuno, zapdos, moltres, dragonite, mewtwo, mew) : fichiers .ogg tires du depot PokeAPI/cries (https://github.com/PokeAPI/cries). Les cris appartiennent a Nintendo / Game Freak ; usage de fan non commercial.

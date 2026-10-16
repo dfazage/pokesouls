@@ -12,7 +12,21 @@ function noise(dur, vol = 0.08, lp = 2000) {
   const s = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp;
   s.buffer = b; g.gain.value = vol; s.connect(f).connect(g).connect(ac.destination); s.start();
 }
+// cris de boss : fichiers réels dans assets/audio/cries/<id>.ogg (dépôt PokeAPI/cries)
+const CRY_URL = id => ['assets/audio/cries/' + id + '.ogg'];
+const cryCache = {};
+function playCry(id) {
+  const urls = CRY_URL(id); let i = 0;
+  const go = () => {
+    if (i >= urls.length) return;
+    const a = cryCache[id + i] || (cryCache[id + i] = new Audio(urls[i])); a.volume = 0.85;
+    a.onerror = () => { i++; go(); };
+    try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => { if (!a.paused) return; i++; go(); }); } catch (e) { i++; go(); }
+  };
+  go();
+}
 export const SFX = {
+  cry(id) { playCry(id); },
   swing() { noise(0.12, 0.05, 3000); },
   hit() { noise(0.1, 0.12, 1500); tone(180, 60, 0.12, 'square', 0.06); },
   crit() { noise(0.14, 0.14, 2500); tone(420, 120, 0.2, 'sawtooth', 0.07); },
