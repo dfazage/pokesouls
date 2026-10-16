@@ -249,6 +249,7 @@ export class Game {
     if (Input.pressed('next')) this.cycleChief();
     for (let i = 0; i < 3; i++) if (Input.pressed('s' + (i + 1))) this.switchTo(i);
     if (Input.pressed('lock')) this.toggleLock();
+    if (this.lock && (Input.pressed('lockNext') || Input.pressed('lockPrev'))) this.cycleLock(Input.pressed('lockNext') ? 1 : -1);
     if (Input.pressed('berry')) this.useBerry();
     if (Input.pressed('ether')) this.useEther();
     if (Input.pressed('candy')) this.useCandy(this.team.indexOf(m));
@@ -333,6 +334,13 @@ export class Game {
       if (d < bd && (d < 14 || (dx * m.face.x + dy * m.face.y) / d > 0.2)) { bd = d; best = e; }
     }
     return best;
+  }
+  // coup de stick droit : passe à la cible voisine (triée de gauche à droite sur l'écran), en boucle
+  cycleLock(dir) {
+    const m = this.chief(), c = [];
+    for (const e of this.enemies) { if (e.dead || e.state === 'dormant') continue; if (hyp(e.x - m.x, e.y - m.y) < 200 && M.lineClear(this.world, m.x, m.y, e.x, e.y)) c.push(e); }
+    if (c.length < 2) return; c.sort((a, b) => a.x - b.x || a.y - b.y);
+    const i = Math.max(0, c.indexOf(this.lock)); this.lock = c[(i + dir + c.length) % c.length];
   }
   toggleLock() {
     if (this.lock) { this.lock = null; return; }
