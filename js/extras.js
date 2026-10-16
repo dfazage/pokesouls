@@ -72,7 +72,7 @@ export function installExtras(G, d) {
 
   P.initExtras = function () {
     this.link = 0; this.linkT = 0; this.linkMalus = 0; this.allies = [];
-    this.comboN = 0; this.comboAt = -9; this.later = [];
+    this.comboN = 0; this.comboAt = -9; this.comboWin = 0.65; this.later = [];
     this.obs = []; this.gust = null; this.terrain = { slow: 1, frost: false }; this.lastPD = -9; this.curElem = 'normal';
   };
 
@@ -146,12 +146,19 @@ export function installExtras(G, d) {
   // ======================= COMBOS : léger, léger, lourd =======================
   // renvoie true quand l'attaque signature est déclenchée
   P.comboStep = function (m, kind) {
-    const fresh = this.t - this.comboAt <= 0.5, n = fresh ? this.comboN : 0;
+    const fresh = this.t - this.comboAt <= this.comboWin, n = fresh ? this.comboN : 0;
     if (kind === 'light') { this.comboN = n >= 2 ? 1 : n + 1; this.comboAt = this.t + 99; return false; }
     if (n === 2 && this.stam >= 30) { this.comboN = 0; this.comboAt = -9; this.startSignature(m); return true; }
     this.comboN = 0; this.comboAt = this.t + 99; return false;
   };
   P.comboReset = function () { this.comboN = 0; this.comboAt = -9; };
+  // pause de la fenêtre pendant `d` secondes (esquive, recul léger) : elle ne commence à s'écouler qu'après
+  P.comboHold = function (d) { if (this.comboN > 0) this.comboAt = this.t + d; };
+  // coup reçu : seul un coup qui brise la poise (coup lourd, ou gros dégâts, plus tolérant pour un Rempart) remet le combo à zéro
+  P.comboHit = function (m, dmg, o) {
+    const big = (o && o.heavy) || dmg >= m.maxhp * (m.def && m.def.guard != null && m.def.guard <= 0.25 ? 0.2 : 0.13);
+    if (big) this.comboReset(); else this.comboHold(m.hurtT || 0.28);
+  };
   P.startSignature = function (m) {
     this.tutEvent('sig');
     const sg = sigsOf(m)[m.stage], df = m.def, tgt = this.aimTarget(m);
