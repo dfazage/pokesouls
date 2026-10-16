@@ -75,17 +75,17 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Capacité spéciale (CT) | L | L |
 | Garde (parade juste après l'appui) | H | ZR (maintenu) |
 | Interagir | E | A |
-| Baie de soin | R | R + X |
-| Super Bonbon (Pokémon actif) | C | R + Y |
-| Fiole d'endurance (Huile) | F | R + A |
-| Rappel (relève un Pokémon épuisé) | G | R + B |
+| Baie de soin | R | R maintenu + stick droit ↑ |
+| Super Bonbon (Pokémon actif) | C | R maintenu + stick droit ← |
+| Fiole d'endurance (Huile) | F | R maintenu + stick droit → |
+| Rappel (relève un Pokémon épuisé) | G | R maintenu + stick droit ↓ |
 | Lien (appeler les alliés) | V | clic stick gauche |
-| Verrouillage | T | clic stick droit |
+| Verrouillage / changer de cible | T | clic stick droit / stick droit gauche-droite |
 | Relève du Pokémon | Tab ou 1 à 3 | ZL |
 | Carte / Sac | M / B | − / croix haut |
 | Pause | Échap | + |
 
-Libellés de la disposition Nintendo Switch ; Xbox et PlayStation suivent les mêmes positions (A = bas, B = droite, X = gauche, Y = haut côté Xbox). Maintenir R active les objets rapides sur les boutons de face, ce qui libère la croix.
+Libellés de la disposition Nintendo Switch ; Xbox et PlayStation suivent les mêmes positions (A = bas, B = droite, X = gauche, Y = haut côté Xbox). Maintenir R ouvre une roue d'objets autour du Pokémon : on pousse le stick droit vers l'objet voulu et on relâche R pour l'utiliser. Un schéma de la manette est affiché dans l'écran Commandes.
 
 La manette n'a pas encore été testée.
 
