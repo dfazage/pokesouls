@@ -286,7 +286,7 @@ button.warn:hover:not(:disabled){background:linear-gradient(135deg,rgba(255,93,1
 .panel h2{font-size:20px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
 .panel h4{color:var(--acc-2);letter-spacing:.2em;font-size:11px;font-weight:600;text-transform:uppercase}
 .sub,.essl{color:rgba(255,255,255,.72)}.essl b{color:var(--acc-2)}
-.act{gap:10px}
+.act{gap:10px;flex-wrap:wrap}
 .row,.irow,.sprev{border-top:1px solid var(--line)}
 .row img,.sprev img,.mc img,.bt img{background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.2),rgba(255,255,255,.04));border-radius:14px}
 .row em,.ib em{color:var(--acc-2)}
