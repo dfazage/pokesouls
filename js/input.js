@@ -24,16 +24,18 @@ export function padLabel(a) {
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'dodge': return f[0]; case 'run': return f[0] + ' (maintenu)'; case 'interact': return f[1]; case 'light': return f[2]; case 'heavy': return f[3];
-    case 'guard': return f[7]; case 'ability': return f[4]; case 'ether': return f[5] + '+' + f[1]; case 'candy': return f[5] + '+' + f[2]; case 'revive': return f[5] + '+' + f[0]; case 'next': return f[6]; case 'link': return 'Clic G';
-    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return f[5] + '+' + f[3]; case 'bag': return '↑';
+    case 'guard': return f[7]; case 'ability': return f[4]; case 'ether': return f[5] + ' →'; case 'candy': return f[5] + ' ←'; case 'revive': return f[5] + ' ↓'; case 'next': return f[6]; case 'link': return 'Clic G';
+    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return f[5] + ' ↑'; case 'bag': return '↑';
     default: return '';
   }
 }
 export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
+// Noms des boutons selon le type de manette (positions : 0 bas, 1 droite, 2 gauche, 3 haut, 4 L1, 5 R1, 6 L2, 7 R2) pour le schéma de l'écran Commandes.
+export const padFace = () => ({ f: FACE[padKind], s: SYS[padKind] });
 export function padLabels() {
   const f = FACE[padKind];
   return [['Déplacement', 'Stick gauche'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
-    ['Garde / parade (maintenir)', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Objets : maintenir ' + f[5] + ' puis', 'bouton de face'], ['Baie', padLabel('berry')], ['Super Bonbon', padLabel('candy')], ['Fiole d’endurance', padLabel('ether')], ['Rappel', padLabel('revive')], ['Lien (alliés)', 'Clic stick gauche'],
+    ['Garde / parade (maintenir)', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Objets : roue', 'maintenir ' + f[5] + ' + stick droit, relâcher'], ['Changer de cible verrouillée', 'Stick droit gauche / droite'], ['Baie', padLabel('berry')], ['Super Bonbon', padLabel('candy')], ['Fiole d’endurance', padLabel('ether')], ['Rappel', padLabel('revive')], ['Lien (alliés)', 'Clic stick gauche'],
     ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix haut'], ['Pause', padLabel('pause')],
     ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
 }
@@ -109,9 +111,10 @@ addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard). Une Joy-Con fusionnée ou une Pro Controller est vue comme une manette standard par Chrome.
 // Disposition : B esquive, Y/X attaques, A interagir, ZL relève, ZR garde, L capacité, clic stick G lien, clic stick D verrouillage, croix haut sac.
-// R maintenu + bouton de face = objets rapides (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel : la même croix que dans le HUD).
+// R maintenu = roue d'objets : le stick droit choisit (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel), relâcher R utilise l'objet.
+// R relâché : un coup de stick droit à gauche / droite change de cible verrouillée ; le clic du stick droit verrouille.
 const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 7: 'guard', 4: 'ability', 6: 'next', 12: 'bag', 10: 'link', 11: 'lock', 9: 'pause', 8: 'map' };
-const PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' };
+let wheelSel = null, wheelPrev = false, flickPrev = 0;
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
 addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
@@ -132,11 +135,25 @@ function pollPad() {
     btnPrev[i] = on; if (on) any = true;
   }
   if (any) lastDev = 'pad';
-  const mod = !!btnPrev[5];   // R tenu : les boutons de face deviennent des objets
+  const mod = !!btnPrev[5];   // R tenu : roue d'objets
   for (const [b, act] of Object.entries(PAD)) {
-    const item = mod && PAD_ITEM[b];
-    if (padEdge.has(+b)) pressedNow.add(item || act);
-    if (btnPrev[b] && !item) padDown.add(act); else padDown.delete(act);
+    const ign = mod && +b === 11;   // le clic du stick droit ne verrouille pas pendant la roue
+    if (padEdge.has(+b) && !ign) pressedNow.add(act);
+    if (btnPrev[b] && !ign) padDown.add(act); else padDown.delete(act);
+  }
+  { // stick droit : roue d'objets (R tenu) ou changement de cible (R relâché)
+    const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);
+    if (mod) {
+      if (mag > 0.55) wheelSel = Math.abs(rx) > Math.abs(ry) ? (rx < 0 ? 'candy' : 'ether') : (ry < 0 ? 'berry' : 'revive');
+      flickPrev = 0;
+    } else {
+      if (wheelPrev && wheelSel) pressedNow.add(wheelSel);   // R relâché : on utilise l'objet choisi
+      wheelSel = null;
+      const f = mag > 0.7 && Math.abs(rx) > Math.abs(ry) * 1.3 ? Math.sign(rx) : 0;
+      if (f && f !== flickPrev) pressedNow.add(f < 0 ? 'lockPrev' : 'lockNext');
+      flickPrev = f;
+    }
+    wheelPrev = mod;
   }
   // La course se maintient avec le bouton d'esquive ; elle doit être retirée dès qu'il est relâché (sinon elle reste active en permanence).
   if (btnPrev[0] && !mod) padDown.add('run'); else padDown.delete('run');
@@ -149,6 +166,7 @@ export const Input = {
   padEdge: i => padEdge.has(i),
   padHeld: i => !!btnPrev[i],
   padStick: () => padAxes,
+  padWheel: () => (padOn && wheelPrev ? wheelSel || '' : null),   // null = roue fermée ; '' = ouverte sans choix
   eat: a => { pressedNow.delete(a); },
   // vrai quand une manette est branchée et que c'est elle qui a servi en dernier (hors mode tactile)
   usingPad: () => padOn && lastDev === 'pad' && !document.body.classList.contains('touch'),

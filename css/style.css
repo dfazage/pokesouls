@@ -542,3 +542,24 @@ button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-siz
 /* manette : R maintenu = objets rapides actifs */
 body.padmod #quick .qs:not(.empty){box-shadow:0 0 0 2px var(--acc),0 0 14px var(--acc);transform:scale(1.08)}
 #quick .qs{transition:transform .08s,box-shadow .08s}
+
+/* roue d'objets (manette) */
+#iwheel{position:absolute;left:0;top:0;width:150px;height:150px;opacity:0;pointer-events:none;transition:opacity .08s}
+#iwheel.on{opacity:1}
+#iwheel .iw{position:absolute;width:44px;height:44px;border-radius:12px;background:rgba(18,15,12,.88);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s}
+#iwheel .iw img{width:26px;height:26px;image-rendering:pixelated}
+#iwheel .iw b{position:absolute;right:2px;bottom:0;font:700 10px ui-monospace,monospace;color:#fff;text-shadow:1px 1px 0 #000}
+#iwheel .iw-up{left:53px;top:0}#iwheel .iw-down{left:53px;bottom:0}#iwheel .iw-left{left:0;top:53px}#iwheel .iw-right{right:0;top:53px}
+#iwheel .iw.sel{transform:scale(1.25);border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 0 16px var(--acc)}
+#iwheel .iw.empty{opacity:.4}
+
+/* schéma de manette (écran Commandes) */
+svg.pad{width:100%;height:auto;margin:2px 0 8px;display:block}
+.pd-body{fill:#1d1812;stroke:rgba(255,255,255,.32);stroke-width:1.5}
+.pd-t,.pd-b{fill:#3a3126;stroke:rgba(255,255,255,.5);stroke-width:1.2}.pd-b.in{fill:#241d15}
+.t-mv{fill:#2c4f86}.t-fi{fill:#8a4a1e}.t-eq{fill:#2f6e44}.t-it{fill:#7a3f86}.t-lk{fill:#8a7a2a}.t-mn{fill:#4a4036}
+.pd-f text{fill:#fff;font:700 10px ui-monospace,monospace;text-anchor:middle}
+.pd-l{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1;stroke-dasharray:2 2}
+.pd-n{fill:#fff;font:700 11.5px ui-monospace,monospace}.pd-a{fill:rgba(255,255,255,.75);font:11px ui-monospace,monospace}
+.padh{margin:14px 0 0}
+svg.pad{max-height:300px}

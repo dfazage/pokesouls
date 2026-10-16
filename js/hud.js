@@ -37,6 +37,7 @@ export function createHud(game) {
       <div class="qs q-down"><img src="${itemIconFile('revive')}" alt=""><b id="revive"></b><kbd id="k-revive"></kbd></div>
     </div>
     <div id="linkbox"><span class="ll">LIEN</span><div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b><kbd id="k-link"></kbd></div>
+    <div id="iwheel"><div class="iw iw-up" data-a="berry"><img src="${itemIconFile('berry')}" alt=""><b></b></div><div class="iw iw-left" data-a="candy"><img src="${itemIconFile('candy')}" alt=""><b></b></div><div class="iw iw-right" data-a="ether"><img src="${itemIconFile('ether')}" alt=""><b></b></div><div class="iw iw-down" data-a="revive"><img src="${itemIconFile('revive')}" alt=""><b></b></div></div>
     <div id="combo"><i id="cb1"></i><i id="cb2"></i><b id="cb3"></b><em><u id="cb-bar"></u></em></div>
     <div id="skills"><div class="skill" id="ability"><kbd id="k-ab"></kbd><span id="buff"></span><b id="ab-n"></b><div class="cd"><div class="fill" id="ab-cd"></div></div></div></div>
     <div id="right"><div id="essence"><span>ESSENCE</span> <b id="ess"></b></div></div><div id="hints"></div>
@@ -73,7 +74,18 @@ export function createHud(game) {
       E.buff.textContent = game.buffT > 0 ? '⚔ ' + Math.ceil(game.buffT) + ' s' : '';
       E.berries.textContent = game.berries + '/' + game.maxBerries; E.ess.textContent = game.essence;
       E.ethers.textContent = game.ethers + '/' + game.maxEthers;
-      document.body.classList.toggle('padmod', Input.usingPad() && Input.padHeld(5));   // R tenu : les objets rapides s'éclairent
+      { // roue d'objets (manette) : R tenu + stick droit, ancrée au Pokémon actif
+        const w = Input.usingPad() ? Input.padWheel() : null, wh = document.getElementById('iwheel');
+        document.body.classList.toggle('padmod', w !== null);
+        if (w !== null) {
+          const c1 = game.chief(), hh = window.hd2d; let wx, wy;
+          if (hh) { const q = hh.proj(c1.x, c1.y, 14); if (q) { wx = q.sx; wy = q.sy; } } else { const k = 1280 / GW; wx = (c1.x - game.cam.x) * k; wy = (c1.y - 14 - game.cam.y) * k; }
+          if (wx != null) wh.style.transform = `translate(${Math.round(wx)}px,${Math.round(wy)}px) translate(-50%,-50%)`;
+          const qty = { berry: game.berries, candy: game.bag.candy || 0, ether: game.ethers, revive: game.bag.revive || 0 };
+          for (const el of wh.children) { const a = el.dataset.a; el.classList.toggle('sel', a === w); el.classList.toggle('empty', !qty[a]); el.lastChild.textContent = '×' + qty[a]; }
+        }
+        wh.classList.toggle('on', w !== null);
+      }
       { const cn = game.bag.candy || 0; E.candy.textContent = '×' + cn; E.candy.parentNode.classList.toggle('empty', !cn); }
       { const rv = game.bag.revive || 0; E.revive.textContent = '×' + rv; E.revive.parentNode.classList.toggle('empty', !rv); }
       E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);

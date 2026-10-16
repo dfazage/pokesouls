@@ -3,7 +3,7 @@ import { A } from './assets.js';
 import { iconImg } from './items.js';
 import * as D from './data.js';
 import * as M from './maps.js';
-import { ACTIONS, padLabels, padKindName, Controls, keyLabel } from './input.js';
+import { ACTIONS, padLabels, padKindName, padFace, Controls, keyLabel } from './input.js';
 import { portrait } from './hud.js';
 import { relayInfo } from './relay.js';
 import { POOL, GABS, poolEntry, archOf } from './pool.js';
@@ -167,6 +167,36 @@ export function showTravel(game, onClose, onGo) {
   render();
 }
 
+// Schéma de la manette (style Switch Pro) avec l'action de chaque bouton ; les noms des boutons suivent le type détecté.
+function padDiagram() {
+  const { f, s } = padFace();
+  const t = (x, y, a, name, act, cls = '') => `<text x="${x}" y="${y}" text-anchor="${a}" class="pd-n ${cls}">${name}</text><text x="${x}" y="${y + 13}" text-anchor="${a}" class="pd-a">${act}</text>`;
+  const ln = d => `<polyline points="${d}" class="pd-l"/>`;
+  return `<svg class="pad" viewBox="0 66 900 268" role="img" aria-label="Schéma de la manette"><g transform="translate(110 0)">
+    <path class="pd-body" d="M150 128h260a62 62 0 0 1 62 62v10a56 56 0 0 1-98 36l-14-16H200l-14 16a56 56 0 0 1-98-36v-10a62 62 0 0 1 62-62z" transform="translate(-30 0)"/>
+    <rect class="pd-t t-eq" x="120" y="84" width="76" height="22" rx="9"/><rect class="pd-t t-fi" x="364" y="84" width="76" height="22" rx="9"/>
+    <rect class="pd-t t-fi" x="116" y="110" width="84" height="14" rx="6"/><rect class="pd-t t-it" x="360" y="110" width="84" height="14" rx="6"/>
+    <circle class="pd-b t-mv" cx="175" cy="166" r="22"/><circle class="pd-b t-mv in" cx="175" cy="166" r="10"/>
+    <path class="pd-b t-mn" d="M205 208h14v-14h14v14h14v14h-14v14h-14v-14h-14z" transform="translate(-14 4)"/>
+    <circle class="pd-b t-lk" cx="330" cy="222" r="19"/><circle class="pd-b t-lk in" cx="330" cy="222" r="9"/>
+    <circle class="pd-b t-fi" cx="385" cy="140" r="11"/><circle class="pd-b t-mv" cx="363" cy="162" r="11"/><circle class="pd-b t-mn" cx="407" cy="162" r="11"/><circle class="pd-b t-eq" cx="385" cy="184" r="11"/>
+    <g class="pd-f"><text x="385" y="144">${f[3]}</text><text x="363" y="166">${f[2]}</text><text x="407" y="166">${f[1]}</text><text x="385" y="188">${f[0]}</text></g>
+    <rect class="pd-b t-mn" x="245" y="140" width="16" height="6" rx="3"/><rect class="pd-b t-mn" x="300" y="140" width="16" height="6" rx="3"/>
+    ${ln('120,95 70,81')}${t(66, 78, 'end', f[6] + ' · Relève', 'Pokémon suivant')}
+    ${ln('116,117 70,119')}${t(66, 116, 'end', f[4] + ' · Capacité', 'Attaque spéciale')}
+    ${ln('245,143 70,157')}${t(66, 154, 'end', s[0] + ' · Carte', 'Téléportation')}
+    ${ln('153,166 70,195')}${t(66, 192, 'end', 'Stick gauche', 'Déplacement · clic : Lien')}
+    ${ln('190,224 70,243')}${t(66, 240, 'end', 'Croix haut', 'Sac (menu)')}
+    ${ln('440,95 470,81')}${t(476, 78, 'start', f[7] + ' · Garde', 'Maintenir · parade juste')}
+    ${ln('444,117 470,119')}${t(476, 116, 'start', f[5] + ' · Objets', 'Maintenir + stick droit')}
+    ${ln('316,143 470,157')}${t(476, 154, 'start', s[1] + ' · Pause', '')}
+    ${ln('420,166 470,200')}<text x="476" y="198" class="pd-n">Boutons de face</text>
+    <text x="476" y="214" class="pd-a">${f[3]} Attaque lourde</text><text x="476" y="228" class="pd-a">${f[2]} Attaque légère</text><text x="476" y="242" class="pd-a">${f[1]} Interagir</text><text x="476" y="256" class="pd-a">${f[0]} Esquive · maintenu : course</text>
+    ${ln('349,226 470,284')}${t(476, 281, 'start', 'Stick droit', 'Clic : verrouiller · gauche / droite : cible')}
+    <text x="270" y="322" text-anchor="middle" class="pd-a">Roue d’objets : maintenir ${f[5]}, pousser le stick droit (↑ baie · ← bonbon · → Éther · ↓ Rappel), relâcher ${f[5]}.</text>
+  </g></svg>`;
+}
+
 // ---------- commandes (lecture et modification) ----------
 export function showControls(onClose) {
   let waiting = null;
@@ -175,7 +205,7 @@ export function showControls(onClose) {
       const on = waiting && waiting[0] === a && waiting[1] === s;
       return `<button class="keybtn ${on ? 'wait' : ''}" data-a="${a}" data-s="${s}">${on ? 'Appuyez…' : keyLabel(Controls.get(a)[s])}</button>`; }).join('')}</div>`).join('')).join('');
     const m = open(`<div class="panel wide kp"><h2>Commandes</h2><p class="sub">Cliquez sur une case puis appuyez sur la touche (ou un bouton de souris) voulue. Échap annule, Retour arrière efface la case. Une touche ne peut servir qu’à une action : elle est retirée de l’ancienne. Les réglages sont enregistrés dans ce navigateur.</p>
-      ${volRow()}<div class="kcols"><div>${rows}</div><div><h4>Manette${padKindName() ? ' détectée : ' + padKindName() : ' (disposition standard, fixe)'}</h4>${padLabels().map(([a, b]) => `<div class="krow"><span>${a}</span><kbd>${b}</kbd></div>`).join('')}
+      ${volRow()}<h4 class="padh">Manette${padKindName() ? ' détectée : ' + padKindName() : ' (disposition Nintendo Switch)'}</h4>${padDiagram()}<div class="kcols"><div>${rows}</div><div><h4>Manette</h4><div class="krow"><span>Menus : naviguer</span><kbd>Croix ou stick gauche</kbd></div><div class="krow"><span>Valider / retour · onglets</span><kbd>${padFace().f[0]} / ${padFace().f[1]} · ${padFace().f[4]} / ${padFace().f[5]}</kbd></div>
       <h4>Pour info</h4><div class="krow"><span>Parade</span><kbd>Garde juste avant le coup</kbd></div><div class="krow"><span>Mode développeur</span><kbd>?dev dans l’adresse · F1–F6</kbd></div></div></div>
       <div class="act"><button id="k-reset" class="warn">Valeurs par défaut</button><button id="m-close">Fermer</button></div></div>`);
     bindVol();
