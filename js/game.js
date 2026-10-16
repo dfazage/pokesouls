@@ -987,7 +987,7 @@ export class Game {
     // objets du sanctuaire
     for (const it of this.items) if (hyp(it.x - c.x, it.y - c.y) < 30) {
       if (it.kind === 'reward') this.prompt = { text: 'Ouvrir le coffre du boss', act: () => this.takeReward() };
-      else this.prompt = { text: (this.world.def.final || this.world.def.secret) ? 'Franchir le portail final' : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
+      else this.prompt = { text: (this.world.def.final || this.world.def.secret) ? (M.MAPS[this.mapIdx + 1] && M.MAPS[this.mapIdx + 1].secret ? 'Franchir le portail vers l’Île Mystère' : 'Franchir le portail final') : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
     }
     // porte-raccourci
     const dr = this.world.door;
@@ -1051,6 +1051,8 @@ export class Game {
     this.emit('banner', 'RÉCOMPENSE', 'item', this.world.def.reward[0]); this.emit('toast', got.join(' · '), this.world.def.reward[0]);
   }
   usePortal() {
+    const nx = M.MAPS[this.mapIdx + 1];
+    if (nx && nx.secret && this.unlocked > this.mapIdx) { this.enterMap(this.mapIdx + 1, 'start'); return; }   // le portail du Laboratoire mène à l'Île Mystère (Mew) une fois Mewtwo vaincu
     if (this.world.def.final || this.world.def.secret || this.mapIdx >= M.MAPS.length - 1) { this.emit('end', !!this.world.def.secret); return; }
     this.enterMap(this.mapIdx + 1, 'start');
   }
