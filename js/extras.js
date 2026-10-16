@@ -89,7 +89,7 @@ export function installExtras(G, d) {
     if (this.link < 100) { this.emit('toast', 'Jauge de Lien : ' + Math.floor(this.link) + ' %'); return false; }
     const al = this.team.filter(q => q !== c && !q.exh);
     if (!al.length) { this.emit('toast', 'Aucun allié en état de combattre'); return false; }
-    this.link = 0; this.linkT = 8; this.allies = al; this.buf = null; this.linkBossDmg = 0;
+    this.link = 0; this.linkT = 8; this.allies = al; this.buf = null; this.linkBossDmg = 0; this.tutEvent('link');
     if (this.boss && this.boss.tel) this.boss.tel.links++;
     al.forEach((q, k) => {
       const side = k === 0 ? -1 : 1; let x = c.x + side * 22, y = c.y + 6;
@@ -153,6 +153,7 @@ export function installExtras(G, d) {
   };
   P.comboReset = function () { this.comboN = 0; this.comboAt = -9; };
   P.startSignature = function (m) {
+    this.tutEvent('sig');
     const sg = sigsOf(m)[m.stage], df = m.def, tgt = this.aimTarget(m);
     let aim = tgt ? unit(tgt.x - m.x, tgt.y - m.y) : { x: m.face.x, y: m.face.y };
     if (m.fx && m.fx.k === 'confuse') { const a = Math.atan2(aim.y, aim.x) + rand(-0.7, 0.7); aim = { x: Math.cos(a), y: Math.sin(a) }; }
