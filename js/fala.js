@@ -60,6 +60,7 @@ export const SCRIPTS = {
     L('Système', 'Fala est désormais sélectionnable aux prochaines parties.', { system: true }),
   ],
   done: () => [L('Fala', 'Va. Quand tu reviendras, je serai là.')],
+  together: () => [L('Fala', 'Je suis avec toi. Où que tu ailles, je reste.')],
 };
 export const READY_LINE = '...Prêt.';
 
@@ -76,7 +77,7 @@ function drawFala(ctx, g, x, y) {
   ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(x, y, 10, 4, 0, 0, 7); ctx.fill();
   if (A.db[FALA_KEY]) drawSprite(ctx, FALA_KEY, 'Idle', g.t / TICK, true, 0, x, y, {});
   // plaque : s'allume de la couleur des Modules déjà rapportés
-  const q = g.falaQ(), n = q.given.length; if (n) { const M = MODULES[q.given[(Math.floor(g.t * 0.8)) % n]]; ctx.fillStyle = M.color; ctx.globalAlpha = 0.6 + 0.3 * Math.sin(g.t * 4); ctx.fillRect(x - 2, y - 14, 4, 3); ctx.globalAlpha = 1; }
+  const q = g.falaQ(), n = q.given.length, M0 = n ? MODULES[q.given[(Math.floor(g.t * 0.8)) % n]] : falaUnlocked() ? MODULES[falaModule()] : null; if (M0) { const M = M0; ctx.fillStyle = M.color; ctx.globalAlpha = 0.6 + 0.3 * Math.sin(g.t * 4); ctx.fillRect(x - 2, y - 14, 4, 3); ctx.globalAlpha = 1; }
 }
 
 // repère de quête flottant : « ! » quête à prendre, « ? » mystère / quête à rendre
@@ -107,8 +108,10 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     return q;
   };
   P.hasFala = function () { return !!(this.world && this.world.def.fala); };
+  // quête réglée : terminée dans cette partie, ou Fala déjà débloqué au profil (une nouvelle partie ne la rejoue pas)
+  P.falaSettled = function () { return this.falaQ().done || falaUnlocked(); };
   // restaure l'état de la carte à l'entrée (salle secrète déjà ouverte)
-  P.falaEnter = function () { if (this.hasFala() && this.falaQ().wall) M.openSecret(this.world); this.falaHinted = new Set(); };
+  P.falaEnter = function () { if (this.hasFala() && (this.falaQ().wall || this.falaSettled())) M.openSecret(this.world); this.falaHinted = new Set(); };
 
   P.breakSecret = function () {
     if (!this.world.secret || !M.openSecret(this.world)) return;
@@ -136,7 +139,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     const np = this.falaNpcPos();
     if (np && hyp(np.x - c.x, np.y - c.y) < 44) this.prompt = { text: 'Parler à Fala', act: () => this.talkFala() };
     // Modules : visibles et ramassables une fois la quête acceptée
-    if (q.helped) for (const m of w.modules) {
+    if (q.helped && !this.falaSettled()) for (const m of w.modules) {
       if (q.mods.includes(m.id)) continue;
       const mx = (m.tx + 0.5) * TS, my = (m.ty + 0.5) * TS, d = hyp(mx - c.x, my - c.y);
       if (d < 150 && !this.falaHinted.has(m.id)) { this.falaHinted.add(m.id); this.emit('toast', 'La plaque de Fala chauffe...'); }
@@ -152,7 +155,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
   P.talkFala = function () {
     const q = this.falaQ();
     const open = (lines, done) => this.emit('dialogue', { lines, done });
-    if (q.done) return open(SCRIPTS.done());
+    if (this.falaSettled()) return open(this.team.some(m => m.key === FALA_KEY) ? SCRIPTS.together() : SCRIPTS.done());
     if (!q.helped) {
       const first = !q.met; q.met = true;
       return open(first ? SCRIPTS.meet() : SCRIPTS.ask(), res => { if (res === 'help') { q.helped = true; this.emit('toast', 'Nouvelle quête : Les Modules de Fala (0/4)'); } this.save(); });
@@ -187,7 +190,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     if (np && inView(np.x, np.y)) {
       out.push({ x: np.x, y: np.y, f: c => drawFala(c, this, np.x, np.y) });
       const carried = q.mods.some(id => !q.given.includes(id));
-      const ch = q.done ? null : !q.helped ? '!' : carried ? '?' : null;
+      const ch = this.falaSettled() ? null : !q.helped ? '!' : carried ? '?' : null;
       if (ch) out.push({ x: np.x, y: np.y + 1, f: c => drawMark(c, this, np.x, np.y - 22, ch, '#ffd23f') });
     }
     // faux mur : repère « ? » visible de loin
@@ -197,7 +200,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
       const fx = gx + n[0] * TS * 0.9, fy = gy + n[1] * TS * 0.9, c = this.chief();
       if (hyp(fx - c.x, fy - c.y) < 380 && inView(fx, fy, 120)) out.push({ x: fx, y: fy, f: ctx => drawMark(ctx, this, fx, fy, '?', '#7fe0c0') });
     }
-    if (q.helped) for (const m of this.world.modules) {
+    if (q.helped && !this.falaSettled()) for (const m of this.world.modules) {
       if (q.mods.includes(m.id)) continue;
       const x = (m.tx + 0.5) * TS, y = (m.ty + 0.5) * TS; if (inView(x, y)) out.push({ x, y, f: c => drawModule(c, this, m, x, y) });
     }
@@ -205,7 +208,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
   };
   // journal de quêtes (onglet Quêtes du menu Équipe)
   P.questLog = function () {
-    const q = this.falaQ(); if (!q.helped) return [];
+    const q = this.falaQ(); if (!q.helped || (!q.done && falaUnlocked())) return [];
     const steps = MOD_ORDER.map(id => ({ id, name: 'Module ' + MODULES[id].name, color: MODULES[id].color, state: q.given.includes(id) ? 'given' : q.mods.includes(id) ? 'carried' : 'missing', hint: HINTS[id] }));
     const carried = q.mods.filter(id => !q.given.includes(id)).length;
     return [{ id: 'fala', title: 'Les Modules de Fala', zone: 'Centrale abandonnée', status: q.done ? 'done' : 'active', progress: `${q.given.length}/4`, steps,
@@ -217,7 +220,7 @@ export function installFala(Game, { M, TS, SFX, hyp, Input }) {
     if (!this.hasFala()) return out;
     const q = this.falaQ(), np = this.falaNpcPos(), c = this.chief();
     if (np) out.push({ x: np.x, y: np.y - 10, r: 70, c: [127, 224, 192], a: 0.55 });
-    if (q.helped) for (const m of this.world.modules) {
+    if (q.helped && !this.falaSettled()) for (const m of this.world.modules) {
       if (q.mods.includes(m.id)) continue;
       const x = (m.tx + 0.5) * TS, y = (m.ty + 0.5) * TS, d = hyp(x - c.x, y - c.y), k = Math.max(0, 1 - d / 240);   // la lueur grandit quand on s'approche
       out.push({ x, y: y - 10, r: 28 + 40 * k + 4 * Math.sin(this.t * 6), c: hexRgb(MODULES[m.id].color), a: 0.3 + 0.6 * k });
