@@ -1,1 +1,4 @@
-{}
+{
+  "chest_closed": { "file": "props/pokeball.png", "fw": 16, "fh": 20, "frames": [0], "scale": 3 },
+  "chest_open":   { "file": "props/pokeball.png", "fw": 16, "fh": 20, "frames": [1], "scale": 3 }
+}
