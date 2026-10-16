@@ -6,6 +6,7 @@ import { unlockAudio } from './audio.js';
 import { Game, W, H } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
+import { createTutorialUi } from './tutorial.js';
 import { showStarters, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
@@ -60,6 +61,7 @@ async function launch(g) {
   game = g; window.game = game;
   $('#title').classList.remove('show'); $('#loading').classList.add('show'); $('#load-t').textContent = 'Chargement de la carte…'; $('#load-bar').style.width = '60%';
   hud = createHud(game);
+  game.tutUi = createTutorialUi($('#hud'), game);
   game.emit = (type, a, b, c) => {
     if (type === 'banner') hud.banner(a, b, c ? itemIconFile(c) : null);
     else if (type === 'toast') hud.toast(a, b ? itemIconFile(b) : null);

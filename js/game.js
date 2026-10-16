@@ -8,6 +8,7 @@ import { poolEntry, archOf, startTm } from './pool.js';
 import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
+import { installTutorial } from './tutorial.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -56,7 +57,7 @@ export class Game {
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
     this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
     this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
-    this.world = null; this.floor = null; this.initExtras(); this.initElements();
+    this.world = null; this.floor = null; this.initExtras(); this.initElements(); this.initTutorial();
     this.hasSave = this.load();
   }
 
@@ -78,14 +79,14 @@ export class Game {
     this.maxStam = 100 + 6 * this.team.reduce((s, m) => s + m.vit.zinc, 0); this.stam = Math.min(this.stam, this.maxStam);
   }
   newGame(picks) {
-    this.picks = picks.slice(0, 3);
+    this.picks = picks.slice(0, 3); this.tutState = 'pending';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 }; this.ethers = this.maxEthers = 3; this.applyLevels(true);
     this.save();
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -98,7 +99,7 @@ export class Game {
     this.picks = s.picks || ['fire', 'water', 'grass'].map(t => D.STARTERS[t][s.starters[t]][0]);
     this.team = this.picks.map((key, i) => { const t = poolEntry(key).type; const m = this.makeMember(key, i); m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
-    this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
+    this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
     this.applyLevels(true);
     return true;
@@ -108,6 +109,7 @@ export class Game {
     await loadSpecies(this.team.flatMap(m => m.line), null, true);
     const l = this.last;
     await this.enterMap(l ? l.map : 0, l ? l.id : 'start', true);
+    if (this.tutState === 'pending') { this.startTutorial(); }
   }
 
   // ---------- cartes ----------
@@ -204,6 +206,7 @@ export class Game {
     this.updateZones(dt);
     this.updateExtras(dt);
     this.updateElements(dt);
+    this.updateTutorial(dt);
     this.updateFx(dt);
     this.updateWorld(dt);
     const c = this.chief();
@@ -290,6 +293,7 @@ export class Game {
     const cost = kind === 'light' ? 12 : kind === 'heavy' ? 28 : ab.cost;
     this.stam = Math.max(0, this.stam - cost); this.stamPause = 0.8;
     this.startAttack(m, kind, this.aimTarget(m));
+    if (kind === 'ability') this.tutEvent('ct');
     return true;
   }
   // animation du sprite PMDCollab la mieux adaptée à l'attaque (les noms existent selon l'espèce)
@@ -312,11 +316,11 @@ export class Game {
     if (this.lock) { this.lock = null; return; }
     const m = this.chief(); let best = null, bd = 180;
     for (const e of this.enemies) { if (e.dead || e.state === 'dormant') continue; const d = hyp(e.x - m.x, e.y - m.y); if (d < bd && M.lineClear(this.world, m.x, m.y, e.x, e.y)) { bd = d; best = e; } }
-    this.lock = best;
+    this.lock = best; if (best) this.tutEvent('lock');
   }
   useBerry() {
     const m = this.chief(); if (m.exh || this.berries <= 0 || (m.hp >= m.maxhp && !m.fx) || m.atk || m.dodge || m.drink > 0 || (m.fx && m.fx.k === 'freeze')) return;
-    this.berries--; m.hp = Math.min(m.maxhp, m.hp + m.maxhp * 0.4); m.fx = null; m.drink = 0.55; SFX.heal(); this.healFx(m);
+    this.berries--; this.tutEvent('berry'); m.hp = Math.min(m.maxhp, m.hp + m.maxhp * 0.4); m.fx = null; m.drink = 0.55; SFX.heal(); this.healFx(m);
   }
   // fiole d'endurance (Huile) : endurance pleine et capacité spéciale rechargée
   useEther() {
@@ -516,6 +520,7 @@ export class Game {
   // ---------- dégâts ----------
   damageEnemy(e, dmg, src, o = {}) {
     if (e.dead || e.invuln > 0) return false;
+    if (e.tutDummy && src.def) this.tutEvent('hit', { heavy: !!o.heavy });
     const dmg0 = dmg; let back = false;
     if (!e.boss && src.def && (e.face.x * (src.x - e.x) + e.face.y * (src.y - e.y)) < -4 && e.state !== 'dormant') { dmg *= 1.15; back = true; }
     const crit = Math.random() < 0.08; if (crit) dmg *= 1.5;
@@ -576,13 +581,13 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t; this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); } return false; }
+    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t; this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     dmg *= this.elemDefMult(m, o, src);
     if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if (this.guardT < 0.22 && o.parry !== false) {
-        this.lastParry = this.t; SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
+        this.lastParry = this.t; this.tutEvent('parry'); SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
         m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.4;
         return 'parry';
       }
@@ -637,6 +642,7 @@ export class Game {
       this.tickEnemyFx(e, dt); if (e.dead) continue;
       if (hyp(e.x - ch.x, e.y - ch.y) > 320 && e.state === 'idle' && !e.boss) continue;
       if (Math.abs(e.kx) + Math.abs(e.ky) > 1) { move(this, e, e.kx * dt, e.ky * dt, Math.min(e.r, 6) * 0.8); e.kx *= 0.86; e.ky *= 0.86; }
+      if (e.tutDummy && !(this.tut && this.tut.aggro)) { setAnim(e, 'Idle'); e.state = 'idle'; e.tele = false; continue; }
       if (e.boss) { this.bossAI(e, dt); continue; }
       const def = e.def; const [tg, td] = this.nearestMember(e);
       if (!tg) continue;
@@ -1051,6 +1057,7 @@ export class Game {
 
 installFx(Game, { D });
 installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
+installTutorial(Game, { M, D, TS, SFX, hyp });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération

@@ -126,6 +126,8 @@ const TIER = {
 };
 const E = (tier, kind, o = {}) => ({ tier, kind, ...TIER[tier], ...o });
 export const ENEMIES = {
+  // mannequin du tutoriel (ne meurt pas, frappe faiblement et lentement)
+  dummy: E('mini', 'melee', { lunge: 90, range: 22, anim: 'Attack', sprite: 'seel', hp: 9000, dmg: 2, speed: 34, windup: 0.95 }),
   // Îles Écume
   seel: E('mini', 'melee', { lunge: 140, range: 22, anim: 'Attack' }),
   shellder: E('mini', 'ranged', { range: 100, proj: 100, anim: 'Shoot', color: '#9fe8ff', hp: 22, speed: 40 }),

@@ -197,7 +197,7 @@ export function installElements(G, d) {
 
   P.react = function (r, e, dmg, src, o) {
     const base = Math.max(1, dmg), x = e.x, y = e.y, col = r.color;
-    this.floatText(x, y - 38, r.name, col); this.ringFx(x, y, 22, col); this.burst(x, y - 8, col, 12); this.shake = Math.max(this.shake, 2.5);
+    this.tutEvent('react'); this.floatText(x, y - 38, r.name, col); this.ringFx(x, y, 22, col); this.burst(x, y - 8, col, 12); this.shake = Math.max(this.shake, 2.5);
     const chief = this.chief(); if (src === chief || (src && src.def)) this.addLink(5);
     const near = (rad, fn) => { for (const q of this.enemies) if (!q.dead && q !== e && hyp(q.x - x, q.y - y) < rad + q.r) fn(q); };
     switch (r.id) {
@@ -340,7 +340,7 @@ export function installElements(G, d) {
       if (R.cure) o.fx = null;
       this.healFx(o);
     }
-    this.lastPD = -9; this.lastParry = -9; this.addLink(8);
+    this.lastPD = -9; this.lastParry = -9; this.addLink(8); this.tutEvent('relay');
     return true;
   };
   P.focusEnemy = function () {

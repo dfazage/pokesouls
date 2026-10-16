@@ -2,12 +2,12 @@
 // - Code et données (HTML, JS, CSS, JSON) : réseau d'abord, copie locale si hors ligne ou réseau lent, donc les mises à jour arrivent tout de suite.
 // - Médias (assets/ : sprites, effets, musiques) : copie locale d'abord, remplie au fil du jeu. Ce qui a déjà été joué reste disponible hors ligne.
 // Changer VERSION invalide toutes les copies locales.
-const VERSION = 'v8';
+const VERSION = 'v9';
 const SHELL = `pokesouls-shell-${VERSION}`;
 const MEDIA = `pokesouls-media-${VERSION}`;
 const SHELL_FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/main.js', 'js/assets.js', 'js/audio.js', 'js/data.js', 'js/elements.js', 'js/relay.js', 'js/pool.js', 'js/extras.js', 'js/fx.js', 'js/game.js',
+  'js/main.js', 'js/assets.js', 'js/audio.js', 'js/data.js', 'js/elements.js', 'js/relay.js', 'js/pool.js', 'js/tutorial.js', 'js/extras.js', 'js/fx.js', 'js/game.js',
   'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/input.js', 'js/items.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
   'js/touch.js', 'js/ui.js', 'js/vendor/three.module.min.js',
   'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/audio/music_map.json',

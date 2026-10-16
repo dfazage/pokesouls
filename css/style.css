@@ -407,3 +407,24 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 .pslot.full{border-style:solid;border-color:#7b84d0;background:var(--card)}.pslot img{width:52px;height:52px;object-fit:cover;image-rendering:pixelated;border-radius:10px}
 @media (max-width:900px){.pcols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:520px){.pcols{grid-template-columns:1fr}#starters{padding:14px 12px}}
+
+/* tutoriel de combat */
+#tut{position:absolute;left:28px;top:96px;width:330px;padding:12px 14px;border-radius:16px;background:rgba(14,18,44,.88);border:1px solid rgba(255,255,255,.18);color:#fff;pointer-events:none;z-index:6;text-align:left;font-size:12px;line-height:1.5}
+#tut[hidden]{display:none}
+#tut .tt-h{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 8px;margin-bottom:6px}
+#tut .tt-h span{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:1px}
+#tut .tt-h b{font-size:14px;grid-column:1/-1;grid-row:2}
+#tut .tt-h button{grid-row:1;grid-column:2;pointer-events:auto;font-size:11px;padding:2px 10px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff}
+#tut p{margin:0 0 8px;color:rgba(255,255,255,.88)}
+#tut .tt-k{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+#tut .tk{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.75)}
+#tut .tk kbd{font-size:11px;padding:2px 7px}
+#tut .tt-g{font-size:12px;color:#ffe27a;font-weight:600}
+#tut .tt-g em{font-style:normal;color:#fff;margin-left:6px}
+#tut.ok{border-color:#6cd84c;box-shadow:0 0 18px rgba(108,216,76,.45)}
+#tut.ok .tt-g{color:#9cff8a}
+#tut .tt-d{display:flex;gap:4px;margin-top:8px}
+#tut .tt-d i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+#tut .tt-d i.d{background:#6cd84c}#tut .tt-d i.c{background:#ffe27a}
+#tut.done{border-color:#ffe27a}
+body.touch #tut{left:12px;top:70px;width:260px;font-size:11px}
