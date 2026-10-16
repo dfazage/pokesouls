@@ -2,6 +2,7 @@
 import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
+import { pickProp, drawProp } from './props.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
@@ -284,6 +285,11 @@ function drawEnemy(ctx, g, e) {
 
 function drawBonfire(ctx, g, b, x, y) {
   const lit = g.lit.has(b.id); shadow(ctx, x, y, 11, 0.4);
+  const pk = pickProp(lit ? 'bonfire_lit' : 'bonfire_unlit', 'bonfire');
+  if (pk && drawProp(ctx, pk, x, y + 2, g.t, b.tx * 0.31)) {
+    if (lit && Math.random() < 0.3) g.parts.push({ x: x + (Math.random() - 0.5) * 6, y: y - 6, z: 8, vx: 0, vy: 0, vz: 22, life: 0.8, max: 0.8, c: '#ffb34a', size: 1 });
+    return;
+  }
   ctx.fillStyle = '#4a5578'; ctx.beginPath(); ctx.ellipse(x, y - 1, 10, 5, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#2c3452'; ctx.beginPath(); ctx.ellipse(x, y - 3, 8, 3.5, 0, 0, 7); ctx.fill();
   ctx.fillStyle = '#6b4a30'; ctx.save(); ctx.translate(x, y - 5); ctx.rotate(0.5); ctx.fillRect(-7, -1, 14, 2); ctx.rotate(-1); ctx.fillRect(-7, -1, 14, 2); ctx.restore();
   // épée plantée
