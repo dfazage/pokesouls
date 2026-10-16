@@ -75,6 +75,7 @@ async function launch(g) {
     else if (type === 'jingle') Music.playJingle(a);
     else if (type === 'bossStart') hud.bossIntro(a);
     else if (type === 'bossPhase') hud.phaseScreen(a, b);
+    else if (type === 'bossLine') hud.bossLine(a, b);
     else if (type === 'end') setTimeout(() => { const p = $('#end p'); if (p) p.innerHTML = a ? 'Mew est apaisé.<br>Le chapitre est bouclé, les générations suivantes arrivent.' : 'Mewtwo est tombé.<br>Un lieu secret est apparu sur la carte. Les générations suivantes arrivent.'; $('#end').classList.add('show'); }, 1500);
   };
   await game.start(); ui.screen = 'game';
