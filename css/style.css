@@ -648,3 +648,14 @@ body.touch #tut .tt-h b{font-size:17px}body.touch #tut p{font-size:13px}
 #tut p{font-size:15px;margin:0 0 8px}
 #tut .tt-k{margin:2px 0 8px}
 #tut .tt-g{font-size:16px;padding:6px 12px}
+/* tutoriel et bandeau Riposte/Relève : même verre dépoli que le reste du HUD */
+#tut,#opp{clip-path:none;border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.05)),rgba(12,10,8,.5);
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid rgba(255,255,255,.22)!important;box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+#opp{border-radius:14px}
+#tut .tt-h button{border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3)}
+#tut .tt-g{border-radius:10px;border-left-width:3px}
+#tut .tt-d i{border-radius:3px}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){#tut,#opp{background:rgba(18,15,12,.88)}}
+#tut.hasseq .tt-k{display:none}
