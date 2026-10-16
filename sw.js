@@ -2,7 +2,7 @@
 // - Code et données (HTML, JS, CSS, JSON) : réseau d'abord, copie locale si hors ligne ou réseau lent, donc les mises à jour arrivent tout de suite.
 // - Médias (assets/ : sprites, effets, musiques) : copie locale d'abord, remplie au fil du jeu. Ce qui a déjà été joué reste disponible hors ligne.
 // Changer VERSION invalide toutes les copies locales.
-const VERSION = 'v27';
+const VERSION = 'v28';
 const SHELL = `pokesouls-shell-${VERSION}`;
 const MEDIA = `pokesouls-media-${VERSION}`;
 const SHELL_FILES = [
