@@ -1,13 +1,14 @@
 // Effets sonores synthétisés (aucun fichier audio). Activés au premier geste de l'utilisateur.
 let ac = null;
 export function unlockAudio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } } if (ac && ac.state === 'suspended') ac.resume(); }
+function live() { if (!ac || ac.state !== 'running') unlockAudio(); return !!ac; }   // relance le contexte s'il dort (manette seule : aucun clic ni touche)
 function tone(f0, f1, dur, type = 'square', vol = 0.06, delay = 0) {
-  if (!ac) return; const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+  if (!live()) return; const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
   o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
 }
 function noise(dur, vol = 0.08, lp = 2000) {
-  if (!ac) return; const n = ac.sampleRate * dur, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+  if (!live()) return; const n = ac.sampleRate * dur, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
   const s = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp;
   s.buffer = b; g.gain.value = vol; s.connect(f).connect(g).connect(ac.destination); s.start();
