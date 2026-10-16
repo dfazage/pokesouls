@@ -67,8 +67,8 @@ export function createHud(game) {
       if (bannerT > 0 && (bannerT -= dt) <= 0) E.banner.className = '';
       if (areaT > 0 && (areaT -= dt) <= 0) E.area.classList.remove('show');
     },
-    toast(t) { E.toast.textContent = t; E.toast.classList.add('show'); toastT = 2.6; },
-    banner(t, kind) { E.banner.textContent = t; E.banner.className = 'show ' + (kind || ''); void E.banner.offsetWidth; E.banner.style.animation = 'none'; void E.banner.offsetWidth; E.banner.style.animation = ''; bannerT = kind === 'death' ? 5 : 3.4; },
+    toast(t, icon) { E.toast.textContent = ''; if (icon) { const im = new Image(); im.className = 'itemico'; im.src = icon; E.toast.append(im); } E.toast.append(document.createTextNode(t)); E.toast.classList.add('show'); toastT = 2.6; },
+    banner(t, kind, icon) { E.banner.textContent = ''; if (icon) { const im = new Image(); im.className = 'itemico'; im.src = icon; E.banner.append(im); } E.banner.append(document.createTextNode(t)); E.banner.className = 'show ' + (kind || ''); void E.banner.offsetWidth; E.banner.style.animation = 'none'; void E.banner.offsetWidth; E.banner.style.animation = ''; bannerT = kind === 'death' ? 5 : 3.4; },
     area(z) { E.area.innerHTML = `<small>${z.zone}</small>${z.area}`; E.area.classList.add('show'); areaT = 3.2; },
     bossIntro(b) {
       const el = $('#bossintro', root); el.style.setProperty('--bc', b.def.color || '#e0b0ff'); $('.sub', el).textContent = b.def.sub; $('.nm', el).textContent = b.def.name;

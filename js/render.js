@@ -3,6 +3,7 @@ import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
 import { pickProp, drawProp } from './props.js';
+import { itemImage } from './items.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
@@ -47,6 +48,14 @@ export function render(g, ctx) {
   drawFxs(g, ctx, false);
   ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
   for (const t of g.texts) { ctx.globalAlpha = Math.min(1, (0.9 - t.t) * 3); ctx.fillStyle = '#000'; ctx.fillText(t.s, Math.round(t.x) + 1, Math.round(t.y) + 1); ctx.fillStyle = t.c; ctx.fillText(t.s, Math.round(t.x), Math.round(t.y)); }
+  ctx.globalAlpha = 1;
+  // bulle d'objet qui sort du coffre
+  if (g.pops) for (const p of g.pops) {
+    if (p.t < 0) continue; const img = itemImage(p.key); if (!img) continue;
+    const k = Math.min(1, p.t / 0.45), e = 1 - (1 - k) * (1 - k), y = p.y - 8 - 26 * e + (p.t > 0.45 ? Math.sin((p.t - 0.45) * 5) * 1.5 : 0), s = 0.5 + 0.4 * e;
+    ctx.save(); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = p.t > 1.4 ? Math.max(0, (1.8 - p.t) / 0.4) : 1;
+    ctx.drawImage(img, Math.round(p.x - 15 * s), Math.round(y - 30 * s), Math.round(30 * s), Math.round(30 * s)); ctx.restore();
+  }
   ctx.globalAlpha = 1;
   // verrouillage
   if (g.lock && !g.lock.dead) { const e = g.lock, y = e.y - (A.db[e.sprite].anchor.h * (e.def.scale || 1)) - 8 + Math.sin(g.t * 6) * 1.5; ctx.fillStyle = '#ff5a5a'; ctx.beginPath(); ctx.moveTo(e.x, y + 5); ctx.lineTo(e.x - 4, y); ctx.lineTo(e.x, y - 5); ctx.lineTo(e.x + 4, y); ctx.fill(); }
