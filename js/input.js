@@ -24,8 +24,8 @@ export function padLabel(a) {
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'dodge': return f[0]; case 'run': return f[0] + ' (maintenu)'; case 'interact': return f[1]; case 'light': return f[2]; case 'heavy': return f[3];
-    case 'guard': return f[4]; case 'ability': return f[5]; case 'ether': return '→'; case 'candy': return '←'; case 'revive': return '↓'; case 'next': return f[7]; case 'link': return f[4] + ' + ' + f[5];
-    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return '↑'; case 'bag': return f[6];
+    case 'guard': return f[7]; case 'ability': return f[4]; case 'ether': return f[5] + '+' + f[1]; case 'candy': return f[5] + '+' + f[2]; case 'revive': return f[5] + '+' + f[0]; case 'next': return f[6]; case 'link': return 'Clic G';
+    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return f[5] + '+' + f[3]; case 'bag': return '↑';
     default: return '';
   }
 }
@@ -33,8 +33,8 @@ export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
 export function padLabels() {
   const f = FACE[padKind];
   return [['Déplacement', 'Stick gauche'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
-    ['Garde / parade', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Fiole d’endurance', 'Croix droite'], ['Baie', 'Croix haut'], ['Super Bonbon', 'Croix gauche'], ['Rappel', 'Croix bas'], ['Lien (alliés)', padLabel('link') + ' ensemble'],
-    ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', padLabel('bag')], ['Pause', padLabel('pause')],
+    ['Garde / parade (maintenir)', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Objets : maintenir ' + f[5] + ' puis', 'bouton de face'], ['Baie', padLabel('berry')], ['Super Bonbon', padLabel('candy')], ['Fiole d’endurance', padLabel('ether')], ['Rappel', padLabel('revive')], ['Lien (alliés)', 'Clic stick gauche'],
+    ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix haut'], ['Pause', padLabel('pause')],
     ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
 }
 const STORE = 'pokesouls.controls.v1';
@@ -108,7 +108,10 @@ export const Touch = {
 addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard). Une Joy-Con fusionnée ou une Pro Controller est vue comme une manette standard par Chrome.
-const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'bag', 12: 'berry', 13: 'revive', 14: 'candy', 15: 'ether', 11: 'lock', 9: 'pause', 8: 'map' };
+// Disposition : B esquive, Y/X attaques, A interagir, ZL relève, ZR garde, L capacité, clic stick G lien, clic stick D verrouillage, croix haut sac.
+// R maintenu + bouton de face = objets rapides (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel : la même croix que dans le HUD).
+const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 7: 'guard', 4: 'ability', 6: 'next', 12: 'bag', 10: 'link', 11: 'lock', 9: 'pause', 8: 'map' };
+const PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' };
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
 addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
@@ -129,13 +132,14 @@ function pollPad() {
     btnPrev[i] = on; if (on) any = true;
   }
   if (any) lastDev = 'pad';
+  const mod = !!btnPrev[5];   // R tenu : les boutons de face deviennent des objets
   for (const [b, act] of Object.entries(PAD)) {
-    if (padEdge.has(+b)) pressedNow.add(act);
-    if (btnPrev[b]) padDown.add(act); else padDown.delete(act);
+    const item = mod && PAD_ITEM[b];
+    if (padEdge.has(+b)) pressedNow.add(item || act);
+    if (btnPrev[b] && !item) padDown.add(act); else padDown.delete(act);
   }
   // La course se maintient avec le bouton d'esquive ; elle doit être retirée dès qu'il est relâché (sinon elle reste active en permanence).
-  if (btnPrev[0]) padDown.add('run'); else padDown.delete('run');
-  { const both = !!(btnPrev[4] && btnPrev[5]); if (both && !padPrev.chord) pressedNow.add('link'); padPrev.chord = both; }
+  if (btnPrev[0] && !mod) padDown.add('run'); else padDown.delete('run');
 }
 export const Input = {
   poll() { pollPad(); },
