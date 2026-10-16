@@ -548,15 +548,7 @@ img.logo{display:block;margin:0 auto;height:auto;filter:drop-shadow(0 4px 22px r
 #loading img.logo{width:460px;margin-bottom:22px}
 #title .tt h1{background:none;filter:none;animation:tin 2.2s ease-out both;letter-spacing:0;margin-right:0;font-size:0;line-height:0}
 #title .tt img.logo{width:540px;max-width:90vw;margin:-6px auto 4px}
-/* roue d'objets (manette) */
-#iwheel{position:absolute;left:0;top:0;width:150px;height:150px;opacity:0;pointer-events:none;transition:opacity .08s}
-#iwheel.on{opacity:1}
-#iwheel .iw{position:absolute;width:44px;height:44px;border-radius:12px;background:rgba(18,15,12,.88);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s}
-#iwheel .iw img{width:26px;height:26px;image-rendering:pixelated}
-#iwheel .iw b{position:absolute;right:2px;bottom:0;font:700 10px ui-monospace,monospace;color:#fff;text-shadow:1px 1px 0 #000}
-#iwheel .iw-up{left:53px;top:0}#iwheel .iw-down{left:53px;bottom:0}#iwheel .iw-left{left:0;top:53px}#iwheel .iw-right{right:0;top:53px}
-#iwheel .iw.sel{transform:scale(1.25);border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 0 16px var(--acc)}
-#iwheel .iw.empty{opacity:.4}
+
 
 /* schéma de manette (écran Commandes) */
 svg.pad{width:100%;height:auto;margin:2px 0 8px;display:block}

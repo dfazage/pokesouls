@@ -75,17 +75,17 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Capacité spéciale (CT) | L | L |
 | Garde (parade juste après l'appui) | H | ZR (maintenu) |
 | Interagir | E | A |
-| Baie de soin | R | R maintenu + stick droit ↑ |
-| Super Bonbon (Pokémon actif) | C | R maintenu + stick droit ← |
-| Fiole d'endurance (Huile) | F | R maintenu + stick droit → |
-| Rappel (relève un Pokémon épuisé) | G | R maintenu + stick droit ↓ |
+| Baie de soin | R | R maintenu + X |
+| Super Bonbon (Pokémon actif) | C | R maintenu + Y |
+| Fiole d'endurance (Huile) | F | R maintenu + A |
+| Rappel (relève un Pokémon épuisé) | G | R maintenu + B |
 | Lien (appeler les alliés) | V | clic stick gauche |
 | Verrouillage / changer de cible | T | clic stick droit / stick droit gauche-droite |
 | Relève du Pokémon | Tab ou 1 à 3 | ZL |
 | Carte / Sac | M / B | − / croix haut |
 | Pause | Échap | + |
 
-Libellés de la disposition Nintendo Switch ; Xbox et PlayStation suivent les mêmes positions (A = bas, B = droite, X = gauche, Y = haut côté Xbox). Maintenir R ouvre une roue d'objets autour du Pokémon : on pousse le stick droit vers l'objet voulu et on relâche R pour l'utiliser. Un schéma de la manette est affiché dans l'écran Commandes.
+Libellés de la disposition Nintendo Switch ; Xbox et PlayStation suivent les mêmes positions (A = bas, B = droite, X = gauche, Y = haut côté Xbox). Maintenir R transforme les boutons de face en objets rapides (X baie, Y bonbon, A Éther, B Rappel) ; les emplacements du HUD s'éclairent pendant que R est tenu. Un schéma de la manette est affiché dans l'écran Commandes.
 
 La manette n'a pas encore été testée.
 

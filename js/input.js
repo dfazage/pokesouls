@@ -26,11 +26,11 @@ export function padBtnName(i) {
   if (i >= 12 && i <= 15) return ['↑', '↓', '←', '→'][i - 12]; return 'Bouton ' + i;
 }
 export function padLabel(a) {
-  const w = padBtnName(PADACT.wheel);
+  const w = padBtnName(PADACT.mod);
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'run': return padBtnName(PADACT.dodge) + ' (maintenu)';
-    case 'berry': return w + ' ↑'; case 'candy': return w + ' ←'; case 'ether': return w + ' →'; case 'revive': return w + ' ↓';
+    case 'berry': return w + '+' + padBtnName(3); case 'candy': return w + '+' + padBtnName(2); case 'ether': return w + '+' + padBtnName(1); case 'revive': return w + '+' + padBtnName(0);
     default: return a in PADACT ? padBtnName(PADACT[a]) : '';
   }
 }
@@ -116,17 +116,18 @@ addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard). Une Joy-Con fusionnée ou une Pro Controller est vue comme une manette standard par Chrome.
 // Disposition : B esquive, Y/X attaques, A interagir, ZL relève, ZR garde, L capacité, clic stick G lien, clic stick D verrouillage, croix haut sac.
-// R maintenu = roue d'objets : le stick droit choisit (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel), relâcher R utilise l'objet.
+// R maintenu + bouton de face = objets rapides (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel : la croix du HUD).
 // R relâché : un coup de stick droit à gauche / droite change de cible verrouillée ; le clic du stick droit verrouille.
-const PADDEF = { dodge: 0, interact: 1, light: 2, heavy: 3, guard: 7, ability: 4, next: 6, bag: 12, link: 10, lock: 11, pause: 9, map: 8, wheel: 5 };
+const PADDEF = { dodge: 0, interact: 1, light: 2, heavy: 3, guard: 7, ability: 4, next: 6, bag: 12, link: 10, lock: 11, pause: 9, map: 8, mod: 5 };
 const PADSTORE = 'pokesouls.padmap.v1';
 const PADACT = { ...PADDEF };   // action → indice de bouton (réassignable dans l'écran Commandes)
 try { const sv = JSON.parse(localStorage.getItem(PADSTORE) || 'null'); if (sv) for (const a of Object.keys(PADDEF)) if (Number.isInteger(sv[a]) && sv[a] >= 0 && sv[a] < 32) PADACT[a] = sv[a]; } catch (e) { /* défauts */ }
 const padPersist = () => { try { localStorage.setItem(PADSTORE, JSON.stringify(PADACT)); } catch (e) { /* rien */ } };
 let PAD = {}, padLearn = null, padInfo = { id: '', mapping: '' };
-const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'wheel') PAD[i] = a; };
+const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; };
 padRebuild();
-let wheelSel = null, wheelPrev = false, flickPrev = 0;
+const PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' };   // R tenu + bouton de face (haut, gauche, droite, bas)
+let modNow = false, flickPrev = 0;
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
 addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
@@ -149,30 +150,22 @@ function pollPad() {
   if (padLearn && padEdge.size) { const cb = padLearn, i = [...padEdge][0]; padLearn = null; padEdge.clear(); cb(i); return; }   // réassignation : le prochain bouton pressé
   if (padLearn) return;
   if (any) lastDev = 'pad';
-  const mod = !!btnPrev[PADACT.wheel];   // R tenu : roue d'objets
+  const mod = !!btnPrev[PADACT.mod];   // R tenu : les boutons de face deviennent des objets
   for (const [b, act] of Object.entries(PAD)) {
-    const ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant la roue
-    if (padEdge.has(+b) && !ign) pressedNow.add(act);
-    if (btnPrev[b] && !ign) padDown.add(act); else padDown.delete(act);
+    const item = mod && PAD_ITEM[b], ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant R
+    if (padEdge.has(+b) && !ign) pressedNow.add(item || act);
+    if (btnPrev[b] && !ign && !item) padDown.add(act); else padDown.delete(act);
   }
-  { // stick droit : roue d'objets (R tenu) ou changement de cible (R relâché)
+  { // stick droit, R relâché : un coup de stick à gauche / droite change de cible verrouillée
     const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);
-    if (mod) {
-      if (mag > 0.55) wheelSel = Math.abs(rx) > Math.abs(ry) ? (rx < 0 ? 'candy' : 'ether') : (ry < 0 ? 'berry' : 'revive');
-      flickPrev = 0;
-    } else {
-      if (wheelPrev && wheelSel) pressedNow.add(wheelSel);   // R relâché : on utilise l'objet choisi
-      wheelSel = null;
-      const f = mag > 0.7 && Math.abs(rx) > Math.abs(ry) * 1.3 ? Math.sign(rx) : 0;
-      if (f && f !== flickPrev) pressedNow.add(f < 0 ? 'lockPrev' : 'lockNext');
-      flickPrev = f;
-    }
-    wheelPrev = mod;
+    const f = !mod && mag > 0.7 && Math.abs(rx) > Math.abs(ry) * 1.3 ? Math.sign(rx) : 0;
+    if (f && f !== flickPrev) pressedNow.add(f < 0 ? 'lockPrev' : 'lockNext');
+    flickPrev = f; modNow = mod;
   }
   // La course se maintient avec le bouton d'esquive ; elle doit être retirée dès qu'il est relâché (sinon elle reste active en permanence).
   if (btnPrev[PADACT.dodge] && !mod) padDown.add('run'); else padDown.delete('run');
 }
-export const PAD_ACTIONS = [['dodge', 'Esquive / course'], ['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['interact', 'Interagir'], ['guard', 'Garde / parade'], ['ability', 'Capacité spéciale'], ['next', 'Relève (Pokémon suivant)'], ['wheel', 'Roue d’objets (maintenir)'], ['link', 'Lien'], ['lock', 'Verrouillage'], ['bag', 'Sac'], ['map', 'Carte'], ['pause', 'Pause']];
+export const PAD_ACTIONS = [['dodge', 'Esquive / course'], ['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['interact', 'Interagir'], ['guard', 'Garde / parade'], ['ability', 'Capacité spéciale'], ['next', 'Relève (Pokémon suivant)'], ['mod', 'Objets rapides (maintenir + bouton de face)'], ['link', 'Lien'], ['lock', 'Verrouillage'], ['bag', 'Sac'], ['map', 'Carte'], ['pause', 'Pause']];
 export const Input = {
   // réassignation des boutons de la manette (écran Commandes)
   padLearn(cb) { padLearn = cb; }, padStopLearn() { padLearn = null; }, padInfo: () => padInfo,
@@ -187,7 +180,7 @@ export const Input = {
   padEdge: i => padEdge.has(i),
   padHeld: i => !!btnPrev[i],
   padStick: () => padAxes,
-  padWheel: () => (padOn && wheelPrev ? wheelSel || '' : null),   // null = roue fermée ; '' = ouverte sans choix
+  padMod: () => padOn && modNow,   // R tenu (objets rapides)
   eat: a => { pressedNow.delete(a); },
   // vrai quand une manette est branchée et que c'est elle qui a servi en dernier (hors mode tactile)
   usingPad: () => padOn && lastDev === 'pad' && !document.body.classList.contains('touch'),

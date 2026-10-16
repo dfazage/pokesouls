@@ -193,12 +193,12 @@ function padDiagram() {
     ${ln(175, 340, L + 6, 168)}${tx(L, 164, 'end', 'Stick gauche', 'Déplacement · clic : Lien')}
     ${ln(300, 490, L + 6, 226)}${tx(L, 222, 'end', 'Croix haut', 'Sac (menu)')}
     ${ln(830, 170, R - 6, 34)}${tx(R, 30, 'start', f[7] + ' · Garde', 'Maintenir · parade juste')}
-    ${ln(830, 208, R - 6, 80)}${tx(R, 76, 'start', f[5] + ' · Objets', 'Maintenir + stick droit')}
+    ${ln(830, 208, R - 6, 80)}${tx(R, 76, 'start', f[5] + ' · Objets', 'Maintenir + bouton de face')}
     ${ln(616, 297, R - 6, 124)}${tx(R, 120, 'start', s[1] + ' · Pause', '')}
     ${ln(822, 363, R - 6, 170)}<text x="${R}" y="166" class="pd-n">Boutons de face</text>
     <text x="${R}" y="182" class="pd-a">${f[3]} Attaque lourde</text><text x="${R}" y="196" class="pd-a">${f[2]} Attaque légère</text><text x="${R}" y="210" class="pd-a">${f[1]} Interagir</text><text x="${R}" y="224" class="pd-a">${f[0]} Esquive · maintenu : course</text>
     ${ln(660, 520, R - 6, 266)}${tx(R, 262, 'start', 'Stick droit', 'Clic : verrouiller · ← / → : cible')}
-    <text x="500" y="306" text-anchor="middle" class="pd-a">Roue d’objets : maintenir ${f[5]}, pousser le stick droit (↑ baie · ← bonbon · → Éther · ↓ Rappel), relâcher ${f[5]}.</text>
+    <text x="500" y="306" text-anchor="middle" class="pd-a">Objets rapides : maintenir ${f[5]} puis ${f[3]} baie · ${f[2]} bonbon · ${f[1]} Éther · ${f[0]} Rappel.</text>
   </svg>`;
 }
 
