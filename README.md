@@ -2,7 +2,7 @@
 
 Fan game **non commercial** : action-RPG souls-like en temps réel, pixel art sur un monde HD-2D.
 
-**Chapitre 1 : Génération 1** · six cartes, trois compagnons, les oiseaux légendaires, un roi de Kanto, Mewtwo et Mew.
+**Chapitre 1 : Génération 1** · quatre cartes et une carte secrète, trois compagnons, les oiseaux légendaires, un roi de Kanto, Mewtwo et Mew.
 
 Jouer : https://dfazage.github.io/pokesouls/
 
@@ -15,16 +15,15 @@ Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), g
 
 ## Le chapitre
 
-Chaque chapitre correspond à une génération. Chaque chapitre compte six cartes, reliées par un portail (après le boss) et par un menu de téléportation.
+Chaque chapitre correspond à une génération. Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
 
 | # | Carte | Boss | Gros mob |
 |---|---|---|---|
 | 1 | Îles Écume | Artikodin | Lokhlass |
 | 2 | Centrale abandonnée | Électhor | Élektek |
-| 3 | Mont Braise | Sulfura | Magmar |
-| 4 | Route Victoire | Dracolosse (roi de Kanto) | Ronflex |
-| 5 | Laboratoire oublié | Mewtwo | Électrode Alpha |
-| 6 | Île Mystère | Mew | Noadkoko |
+| 3 | Mont Braise | Sulfura | Dracolosse (mini-boss, roi de Kanto) |
+| 4 | Laboratoire oublié | Mewtwo (boss final) | Électrode Alpha |
+| Secret | Île Mystère | Mew | Noadkoko |
 
 - **Équipe de trois, un seul Pokémon en jeu** : au départ, vous choisissez trois compagnons libres parmi 39 lignées, rangées en quatre gabarits (Assaut, Rempart, Distance, Soutien, `js/pool.js`). Le gabarit fixe le style de combat, le type fixe l'élément. Un seul est sur le terrain ; les deux autres attendent en réserve (ils ne combattent pas, ne subissent rien et ne se régénèrent pas). Relève avec Tab ou 1 à 3 : invulnérabilité brève, délai de 1,2 s avant la relève suivante, altérations d'état effacées. Si le Pokémon actif tombe K.O., le suivant entre automatiquement ; la partie est perdue quand les trois sont K.O. Ils évoluent aux niveaux 16 et 36.
 - **Tutoriel de combat** : à la première partie, une zone d'entraînement avec un mannequin (`js/tutorial.js`). Dix étapes, chacune validée par l'action du joueur : course, coups léger et lourd, esquive juste, parade, combo signature, CT, relais, Lien, baie, verrouillage. Le bouton « Passer » est toujours là ; l'état est enregistré dans la sauvegarde (`tut`). Les parties existantes ne le lancent pas.

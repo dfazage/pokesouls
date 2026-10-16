@@ -38,7 +38,7 @@ export const ENEMY_TYPES = {
   magnemite: ['electric', 'steel'], voltorb: ['electric'], pikachu: ['electric'], magneton: ['electric', 'steel'], electrode: ['electric'], raichu: ['electric'], electabuzz: ['electric'],
   vulpix: ['fire'], growlithe: ['fire'], ponyta: ['fire'], ninetales: ['fire'], rapidash: ['fire'], arcanine: ['fire'], magmar: ['fire'],
   machop: ['fighting'], geodude: ['rock', 'ground'], rhyhorn: ['ground', 'rock'], machoke: ['fighting'], graveler: ['rock', 'ground'], dragonair: ['dragon'], rhydon: ['ground', 'rock'], snorlax: ['normal'],
-  koffing: ['poison'], porygon: ['normal'], weezing: ['poison'], electrodeA: ['electric'],
+  koffing: ['poison'], porygon: ['normal'], weezing: ['poison'], electrodeA: ['electric'], dragoniteK: ['dragon', 'flying'],
   exeggcute: ['grass', 'psychic'], abra: ['psychic'], haunter: ['ghost', 'poison'], kadabra: ['psychic'], gengar: ['ghost', 'poison'], mrmime: ['psychic', 'fairy'], exeggutor: ['grass', 'psychic'],
   clone: ['psychic'], decoy: ['psychic', 'fairy'],
 };

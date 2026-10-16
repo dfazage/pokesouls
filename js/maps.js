@@ -1,4 +1,4 @@
-// Les six cartes du Chapitre Génération 1 : définition, génération des salles, collisions et rendu du décor.
+// Les cinq cartes du Chapitre Génération 1 (quatre cartes + une carte secrète) : définition, génération des salles, collisions et rendu du décor.
 // Cartes 1, 2, 3, 4 et 6 : disposition générée (graine fixe). Carte 5 (Laboratoire oublié) : dessinée à la main.
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
@@ -17,31 +17,26 @@ export const THEMES = {
 
 // ---------- définitions des cartes ----------
 export const MAPS = [
-  { id: 'm1', name: 'Îles Écume', sub: 'Grottes gelées', theme: 'ice', lv: 8, seed: 11, boss: 'articuno',
+  { id: 'm1', name: 'Îles Écume', sub: 'Grottes gelées', theme: 'ice', mus: 1, lv: 8, seed: 11, boss: 'articuno',
     path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
     areas: ['Rivage gelé', 'Grotte des phoques', 'Bassin glacé', 'Galerie de givre', 'Caverne de cristal', 'Lac souterrain', 'Antichambre du blizzard'], sanctuary: "Nid d'Artikodin",
     mobs: { mini: ['seel', 'shellder', 'krabby'], mid: ['dewgong', 'starmie', 'cloyster'], big: 'lapras' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_aquaring'], reward: ['ct_icebeam', 'candy'] },
-  { id: 'm2', name: 'Centrale abandonnée', sub: 'Sous haute tension', theme: 'plant', lv: 15, seed: 23, boss: 'zapdos',
+  { id: 'm2', name: 'Centrale abandonnée', sub: 'Sous haute tension', theme: 'plant', mus: 2, lv: 15, seed: 23, boss: 'zapdos',
     path: [[3, 2], [2, 2], [1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [2, 0]],
     areas: ['Hall des turbines', 'Salle des câbles', 'Atelier rouillé', 'Salle des générateurs', 'Couloir des relais', 'Poste de commande', 'Antichambre du transformateur'], sanctuary: "Cœur de la Centrale",
     mobs: { mini: ['magnemite', 'voltorb', 'pikachu'], mid: ['magneton', 'electrode', 'raichu'], big: 'electabuzz' },
     loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0] } },
-  { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', lv: 22, seed: 37, boss: 'moltres',
+  { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', mus: 3, lv: 22, seed: 37, boss: 'moltres',
     path: [[0, 0], [0, 1], [1, 1], [1, 2], [2, 2], [2, 1], [3, 1], [3, 0]],
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
-    mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'magmar' },
+    mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'dragoniteK' },
     loot: ['candy', 'carbos', 'ct_hydro', 'berrypack', 'hpup', 'zinc', 'etherpack', 'revive'], reward: ['ct_fireblast', 'candy'] },
-  { id: 'm4', name: 'Route Victoire', sub: 'Le chemin des rois', theme: 'rock', lv: 30, seed: 41, boss: 'dragonite',
-    path: [[3, 0], [3, 1], [2, 1], [2, 2], [1, 2], [1, 1], [0, 1], [0, 0]],
-    areas: ['Pied de la route', 'Éboulis', 'Gorge des échos', 'Plateau des rochers', 'Arène des rois', 'Pont de pierre', 'Porte de la Ligue'], sanctuary: "Sommet des rois",
-    mobs: { mini: ['machop', 'geodude', 'rhyhorn'], mid: ['machoke', 'graveler', 'dragonair', 'rhydon'], big: 'snorlax' },
-    loot: ['candy', 'protein', 'ct_earthquake', 'berrypack', 'iron', 'maxberry', 'maxether', 'ct_healbell'], reward: ['ct_swords', 'candy', 'candy'] },
-  { id: 'm5', name: 'Laboratoire oublié', sub: 'Là où Mewtwo est né', theme: 'lab', lv: 38, seed: 5, boss: 'mewtwo', manual: true,
+  { id: 'm5', name: 'Laboratoire oublié', sub: 'Là où Mewtwo est né', theme: 'lab', mus: 5, lv: 38, seed: 5, boss: 'mewtwo', manual: true, final: true,
     areas: [], sanctuary: 'Sanctuaire de Mewtwo',
     mobs: { mini: ['magnemite', 'koffing', 'voltorb'], mid: ['porygon', 'weezing'], big: 'electrodeA' },
     loot: ['candy', 'calcium', 'ct_psychic', 'etherpack', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy'] },
-  { id: 'm6', name: 'Île Mystère', sub: 'Le refuge de Mew', theme: 'mystic', lv: 45, seed: 59, boss: 'mew',
+  { id: 'm6', name: 'Île Mystère', sub: 'Le refuge de Mew', theme: 'mystic', mus: 6, lv: 45, seed: 59, boss: 'mew', secret: true,
     path: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [1, 1], [1, 0]],
     areas: ['Plage secrète', 'Bosquet lumineux', 'Clairière des rêves', 'Ruines couvertes de lierre', 'Jardin suspendu', 'Source scintillante', 'Antichambre du mythe'], sanctuary: 'Cœur de l’île',
     mobs: { mini: ['exeggcute', 'abra', 'haunter'], mid: ['kadabra', 'gengar', 'mrmime'], big: 'exeggutor' },
@@ -205,6 +200,15 @@ function generate(def) {
     if (k >= 2) { const nd = k === 6 ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(r, pick(tiers.mid), k); }
     if (k === 4) place(r, tiers.big, k);
   });
+  // le gros mob (mini-boss) doit exister : si la salle 4 n'a pas pu l'accueillir, balayage déterministe des autres salles (sans tirage aléatoire)
+  if (!spawns.some(sp => sp.type === tiers.big)) {
+    scan: for (const k of [4, 5, 3, 6, 2, 1]) {
+      const r = rooms[k]; if (!r) continue;
+      for (let y = r.y + 2; y < r.y + r.h - 2; y++) for (let x = r.x + 2; x < r.x + r.w - 2; x++) {
+        if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 0); spawns.push({ type: tiers.big, tx: x, ty: y, room: k }); break scan;
+      }
+    }
+  }
   // quête de Fala : salle secrète voisine de la Lisière et emplacement des Modules.
   // Calculé après tout le reste et sans toucher à la grille : la carte du reste du jeu est inchangée.
   let secret = null; const modules = [];
