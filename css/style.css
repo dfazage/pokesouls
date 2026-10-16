@@ -383,3 +383,4 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 .tbtn.on{background:rgba(217,164,65,.5);border-color:#fff}
 #tj-base{border:1px solid rgba(255,255,255,.25);background:radial-gradient(circle,rgba(255,255,255,.04),rgba(217,164,65,.16));backdrop-filter:blur(6px)}
 #tj-knob{background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,.14));border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.sprev .srel{margin-top:4px;color:#ffd98a}.sprev .srel b{display:inline;color:#ffe9b0}

@@ -26,3 +26,17 @@ export const RELAY = {
 // familles sans attaque propre (générations 6 à 9) : frappe circulaire de base
 export const RELAY_DEFAULT = { name: 'Frappe de relais', gab: 'A', shape: 'ring', mult: 1.0, range: 46, stagger: 0.7, knock: 90 };
 export const relayOf = n => (n.line && RELAY[n.line[0]]) || RELAY_DEFAULT;
+
+// Libellés pour l'écran de choix des starters
+const GAB = { A: 'Assaut', R: 'Rempart', D: 'Distance', S: 'Soutien' };
+const SHAPE = { arc: 'frappe devant', ring: 'onde autour', shot: 'tir explosif', fan: 'éventail de projectiles', leech: 'projectile qui soigne' };
+const STATUS_FR = { burn: 'brûle', para: 'paralyse', freeze: 'gèle', poison: 'empoisonne' };
+export function relayInfo(line) {
+  const R = relayOf({ line });
+  const bits = [SHAPE[R.shape] || 'frappe'];
+  if (R.status) bits.push((STATUS_FR[R.status[0]] || 'altère') + ' parfois');
+  if (R.healOut) bits.push('soigne le Pokémon sorti');
+  if (R.cure) bits.push('guérit ses altérations');
+  if (R.knock >= 120) bits.push('repousse fort');
+  return { name: R.name, gab: GAB[R.gab], text: bits.join(' · '), own: !!(line && RELAY[line[0]]) };
+}
