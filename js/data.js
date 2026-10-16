@@ -6,7 +6,10 @@ export const hpMult = lvl => 1 + 0.10 * (lvl - START_LEVEL);
 export const dmgMult = lvl => 1 + 0.06 * (lvl - START_LEVEL);
 export const levelCost = n => Math.round(60 * Math.pow(1.115, n - START_LEVEL));
 export const STAGE_HP = [1, 1.35, 1.8], STAGE_DMG = [1, 1.3, 1.7];
-export const essenceOf = (lv, k) => Math.round(1.4 * Math.pow(lv, 1.6) * k);
+// Essence lâchée : proportionnelle au coût d'un niveau au niveau de l'ennemi (ESS_RATE × coût × k). Une carte entière rapporte ~18 niveaux-équipe à la même cadence que les cartes d'avant,
+// ce qui garde l'équipe à peu près au niveau de la carte (±3) au lieu de la dépasser de 8-10 niveaux. Un seul réglage : ESS_RATE.
+export const ESS_RATE = 0.2;
+export const essenceOf = (lv, k) => Math.max(1, Math.round(ESS_RATE * levelCost(lv) * k));
 
 // ---------- starters (27 familles, 3 stades) ----------
 export const STARTERS = {
