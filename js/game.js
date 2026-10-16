@@ -300,7 +300,7 @@ export class Game {
 
   tryDodge(m, ax, ay) {
     let d = (ax || ay) ? unit(ax, ay) : { x: -m.face.x, y: -m.face.y };
-    this.stam = Math.max(0, this.stam - 20 * (this.linkMalus > 0 ? 1.5 : 1)); this.stamPause = 0.8; this.comboReset();
+    this.stam = Math.max(0, this.stam - 20 * (this.linkMalus > 0 ? 1.5 : 1)); this.stamPause = 0.8; this.comboHold(0.35);   // l'esquive garde le combo : la fenêtre ne s'écoule qu'après la roulade
     m.dodge = { t: 0, dur: 0.35, iframes: 0.28, dist: m.fx && m.fx.k === 'para' ? 44 : 64, dx: d.x, dy: d.y }; m.atk = null;
     if (!this.lock && (ax || ay)) m.face = d;
     SFX.dodge();
@@ -619,7 +619,7 @@ export class Game {
       if (this.stam <= 0) { this.guarding = false; this.guardT = 9; m.hurtT = 0.4; m.kx = -dx / dl * 90; m.ky = -dy / dl * 90; this.emit('toast', 'Garde brisée'); }
     } else {
       dmg = Math.round(dmg); m.hurtT = 0.28 + (o.heavy ? 0.15 : 0); m.kx = -dx / dl * (o.heavy ? 150 : 80); m.ky = -dy / dl * (o.heavy ? 150 : 80); m.atk = null; m.dash = null;
-      SFX.hurt(); if (chief) { this.comboReset(); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
+      SFX.hurt(); if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }
     m.hp -= dmg; m.flash = 0.12; m.inv = 0.45;
