@@ -72,7 +72,7 @@ export function installExtras(G, d) {
 
   P.initExtras = function () {
     this.link = 0; this.linkT = 0; this.linkMalus = 0; this.allies = [];
-    this.comboN = 0; this.comboAt = -9; this.comboWin = 0.65; this.later = [];
+    this.comboN = 0; this.comboAt = -9; this.comboWin = 0.8; this.relayWin = 1.3; this.later = [];
     this.obs = []; this.gust = null; this.terrain = { slow: 1, frost: false }; this.lastPD = -9; this.curElem = 'normal';
   };
 

@@ -37,6 +37,7 @@ export function createHud(game) {
       <div class="qs q-down"><img src="${itemIconFile('revive')}" alt=""><b id="revive"></b><kbd id="k-revive"></kbd></div>
     </div>
     <div id="linkbox"><span class="ll">LIEN</span><div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b><kbd id="k-link"></kbd></div>
+    <div id="opp"><i id="op1"></i><em>Riposte</em><i id="op2"></i><em>Relève</em><u id="op-bar"></u></div>
     <div id="combo"><i id="cb1"></i><i id="cb2"></i><b id="cb3"></b><em><u id="cb-bar"></u></em></div>
     <div id="skills"><div class="skill" id="ability"><kbd id="k-ab"></kbd><span id="buff"></span><b id="ab-n"></b><div class="cd"><div class="fill" id="ab-cd"></div></div></div></div>
     <div id="right"><div id="essence"><span>ESSENCE</span> <b id="ess"></b></div></div><div id="hints"></div>
@@ -47,7 +48,7 @@ export function createHud(game) {
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
     <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
-  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'cb1', 'cb2', 'cb3', 'cb-bar', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
+  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'cb1', 'cb2', 'cb3', 'cb-bar', 'opp', 'op1', 'op2', 'op-bar', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
   slots.forEach(s => s.addEventListener('click', () => game.switchTo(+s.dataset.i)));
   // carton-titre, barres et voile de la cinématique d'intro, pilotés par le temps de game.cine
@@ -78,6 +79,14 @@ export function createHud(game) {
       { const rv = game.bag.revive || 0; E.revive.textContent = '×' + rv; E.revive.parentNode.classList.toggle('empty', !rv); }
       E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);
       { const lk = game.linkT > 0; E['link-f'].style.width = (lk ? 100 * game.linkT / 8 : game.link) + '%'; E.linkbox.classList.toggle('ready', !lk && game.link >= 100); E.linkbox.classList.toggle('on', lk); E['link-t'].textContent = lk ? Math.ceil(game.linkT) + ' s' : game.link >= 100 ? 'PRÊT' : Math.floor(game.link) + ' %'; root.classList.toggle('linking', lk);
+        { const tp = game.t - game.lastParry, td = game.t - game.lastPD, W = game.relayWin, par = tp >= 0 && tp < W, dod = !par && td >= 0 && td < W;   // fenêtre après parade (riposte lourde + relève) ou esquive (relève)
+          E.opp.classList.toggle('on', par || dod); E.opp.classList.toggle('dod', dod);
+          if (par || dod) {
+            E.op1.textContent = kl('heavy'); E.op2.textContent = kl('next'); const c0 = game.chief(), h = window.hd2d; let sx, sy;
+            if (h) { const q = h.proj(c0.x, c0.y, 22); if (q) { sx = q.sx; sy = q.sy; } } else { const k = 1280 / GW; sx = (c0.x - game.cam.x) * k; sy = (c0.y - 24 - game.cam.y) * k; }
+            if (sx != null) E.opp.style.transform = `translate(${Math.round(sx)}px,${Math.round(sy) - 38}px) translate(-50%,-100%)`;
+            const left = 1 - (par ? tp : td) / W; E['op-bar'].style.width = Math.round(left * 16) / 16 * 100 + '%'; E.opp.classList.toggle('low', left < 0.3);
+          } }
         const cb = game.comboN > 0 && game.t - game.comboAt <= game.comboWin; E.combo.classList.toggle('on', cb || game.comboN > 0 && game.chief().atk); E.combo.dataset.n = game.comboN;
         if (E.combo.classList.contains('on')) {   // boutons pixel ancrés au-dessus du Pokémon actif
           const c0 = game.chief(), h = window.hd2d; let sx, sy;
