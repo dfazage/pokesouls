@@ -6,10 +6,12 @@ Fan game **non commercial** : action-RPG souls-like en temps réel, pixel art su
 
 Jouer : https://dfazage.github.io/pokesouls/
 
-## Quête secrète : Fala (Centrale abandonnée)
+## Quête secrète : Fala et la réserve du feu
 
-Un Genesect nommé **Fala** dort dans une salle cachée de la Lisière de la Centrale abandonnée (carte 2) : un coup porté près d'un mur qui scintille dissipe le faux mur. Il demande de retrouver ses quatre **Modules** (Aqua, Pyro, Cryo, Choc), éparpillés dans quatre salles de la carte (sans marqueur : sa plaque « chauffe » quand on s'en approche, la lueur du Module grandit). Les rapporter donne un petit objet par Module ; la quête terminée, **Fala est sélectionnable à l'écran de départ des prochaines parties** (profil permanent `pokesouls.profile.v1`). Le Module équipé (changeable gratuitement au feu de camp) donne l'élément de son attaque de relais.
-Code : `js/fala.js` (profil, dialogues, quête), génération de la salle dans `js/maps.js` (`generate`, `openSecret`).
+Un Genesect nommé **Fala** dort dans une salle cachée de la Lisière de la Centrale abandonnée (carte 2) : un « ? » flotte sur un mur qui scintille, un coup porté près de lui dissipe le faux mur. Fala demande de retrouver ses quatre **Modules** (Aqua, Pyro, Cryo, Choc), éparpillés dans quatre salles de la carte (sans marqueur : sa plaque « chauffe » à l'approche, la lueur du Module grandit). Chaque Module rapporté donne un petit objet. Le journal des quêtes est dans l'onglet **Quêtes** du menu Équipe.
+
+La quête terminée, **Fala rejoint la réserve du feu** : à chaque feu de camp, le bouton **Réserve** permet de l'échanger gratuitement contre l'un des trois compagnons. Celui qui sort garde niveau, vitamines et CT. Le Module équipé (Aqua, Pyro, Cryo ou Choc, changeable à la réserve ou au feu) donne l'élément de l'attaque de relais de Fala. Tout est dans la sauvegarde de la partie : une nouvelle partie recommence la quête. Les autres cartes pourront accueillir un Pokémon bonus (`EXTRA_BY_MAP` dans `js/reserve.js`).
+Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), génération de la salle dans `js/maps.js` (`generate`, `openSecret`).
 
 ## Le chapitre
 

@@ -8,7 +8,7 @@ import { Game, W, H } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
-import { showStarters, showDialogue, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
+import { showStarters, showDialogue, showReserve, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
@@ -93,10 +93,11 @@ function openMenu(kind, fn) { mode = 'menu'; menuKind = kind; ui.menuKind = kind
 function openBonfire(b) {
   openMenu('bonfire', () => showBonfireMenu(game, b, closeMenu, {
     bag: back => showBag(game, () => showBonfireMenu(game, b, closeMenu, ex(b))),
+    reserve: () => showReserve(game, () => showBonfireMenu(game, b, closeMenu, ex(b))),
     travel: () => showTravel(game, () => showBonfireMenu(game, b, closeMenu, ex(b)), goTravel),
   }));
 }
-const ex = b => ({ bag: () => showBag(game, () => showBonfireMenu(game, b, closeMenu, ex(b))), travel: () => showTravel(game, () => showBonfireMenu(game, b, closeMenu, ex(b)), goTravel) });
+const ex = b => ({ bag: () => showBag(game, () => showBonfireMenu(game, b, closeMenu, ex(b))), reserve: () => showReserve(game, () => showBonfireMenu(game, b, closeMenu, ex(b))), travel: () => showTravel(game, () => showBonfireMenu(game, b, closeMenu, ex(b)), goTravel) });
 function goTravel(i, id) { if (game.travel(i, id)) closeMenu(); else hud.toast('Voyage impossible pour le moment'); }
 function openBag() { openMenu('bag', () => showBag(game, closeMenu)); }
 function openTravel() { openMenu('travel', () => showTravel(game, closeMenu, goTravel)); }

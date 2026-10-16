@@ -10,7 +10,8 @@ import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
 import { installBossCine } from './bosscine.js';
-import { installFala, FALA_KEY, MODULES, falaModule } from './fala.js';
+import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
+import { installReserve } from './reserve.js';
 
 const { TS } = M;
 export const W = 400, H = 225;
@@ -52,7 +53,7 @@ export class Game {
     this.god = false;
     this.t = 0; this.state = 'loading'; this.hitstop = 0; this.shake = 0;
     this.cam = { x: 0, y: 0 };
-    this.team = []; this.picks = null;
+    this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
     this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
@@ -67,7 +68,7 @@ export class Game {
   // ---------- état ----------
   chief() { return this.team[this.chiefIdx]; }
   makeMember(key, i) {
-    const e0 = poolEntry(key), mod = key === FALA_KEY ? falaModule() : null, e = mod ? { ...e0, type: MODULES[mod].type } : e0;   // Fala : l'élément vient du Module équipé
+    const e0 = poolEntry(key), mod = key === FALA_KEY ? DEFAULT_MODULE : null, e = mod ? { ...e0, type: MODULES[mod].type } : e0;   // Fala : l'élément vient du Module équipé
     return { key, mod, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
       hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0, fx: null, regen: null, frzImm: 0 };
   }
@@ -78,7 +79,7 @@ export class Game {
       dmg: a.dmg * D.dmgMult(m.lvl) * D.STAGE_DMG[st] * (1 + 0.06 * v.protein), speed: a.speed * (1 + 0.03 * v.carbos), ability: D.TMS[m.tm] };
   }
   applyLevels(full) {
-    for (const m of this.team) { this.computeDef(m); const mx = m.def.hp; if (full) m.hp = mx; else if (mx > m.maxhp) m.hp += mx - m.maxhp; m.maxhp = mx; m.hp = Math.min(m.hp, mx); }
+    for (const m of [...this.team, ...this.bench]) { this.computeDef(m); const mx = m.def.hp; if (full) m.hp = mx; else if (mx > m.maxhp) m.hp += mx - m.maxhp; m.maxhp = mx; m.hp = Math.min(m.hp, mx); }
     this.maxStam = 100 + 6 * this.team.reduce((s, m) => s + m.vit.zinc, 0); this.stam = Math.min(this.stam, this.maxStam);
   }
   newGame(picks) {
@@ -89,7 +90,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.saveData())); } catch (e) { /* stockage indisponible */ } }
@@ -100,7 +101,15 @@ export class Game {
     if (!s || s.v !== 2 || !(s.picks || s.starters)) return false;
     // anciennes sauvegardes : { fire: n, water: n, grass: n } -> clés de lignées
     this.picks = s.picks || ['fire', 'water', 'grass'].map(t => D.STARTERS[t][s.starters[t]][0]);
-    this.team = this.picks.map((key, i) => { const m = this.makeMember(key, i); if (key === FALA_KEY && MODULES[(s.mods || [])[i]]) { m.mod = s.mods[i]; m.type = MODULES[m.mod].type; } const t = m.type; m.lvl = (s.lvls || [])[i] || D.START_LEVEL; if (s.vit && s.vit[i]) Object.assign(m.vit, s.vit[i]); if (s.tm && s.tm[i] && D.TMS[s.tm[i]]) { const st = stageOf(m.lvl); if (D.tmCompat(s.tm[i], t, m.line[st], st).ok) m.tm = s.tm[i]; } return m; });
+    const restore = (key, i, o) => {
+      const m = this.makeMember(key, i);
+      if (key === FALA_KEY && MODULES[o.mod]) { m.mod = o.mod; m.type = MODULES[o.mod].type; }
+      m.lvl = o.lvl || D.START_LEVEL; if (o.vit) Object.assign(m.vit, o.vit);
+      if (o.tm && D.TMS[o.tm]) { const st = stageOf(m.lvl); if (D.tmCompat(o.tm, m.type, m.line[st], st).ok) m.tm = o.tm; }
+      return m;
+    };
+    this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i] }));
+    this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
     this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
@@ -1065,6 +1074,7 @@ installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
 installTutorial(Game, { M, D, TS, SFX, hyp });
 installBossCine(Game, { Input, TS, W, H, clamp, hyp, setAnim, SFX, M });
 installFala(Game, { M, TS, SFX, hyp });
+installReserve(Game, { D, stageOf });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération
