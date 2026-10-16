@@ -11,7 +11,7 @@ const SHELL_FILES = [
   'js/bosscine.js', 'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/input.js', 'js/items.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
   'js/touch.js', 'js/padnav.js', 'js/ui.js', 'js/vendor/three.module.min.js',
   'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/audio/music_map.json',
-  'assets/logo.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
+  'assets/logo.png', 'assets/title_mewtwo.jpg', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 
 self.addEventListener('install', e => {

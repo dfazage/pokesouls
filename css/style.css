@@ -565,3 +565,13 @@ svg.pad{max-height:300px}
 .pd-f text{font-size:30px}
 svg.pad{max-height:330px}
 .wiz{padding:10px 12px;margin:6px 0 10px;border:1px solid var(--acc);border-radius:12px;background:rgba(255,255,255,.05)}.wiz p{margin:6px 0 8px}
+
+/* accueil : silhouette de Mewtwo en fond, feu de camp animé (sprite du jeu) */
+.tmew{position:absolute;left:50%;top:-30px;width:760px;height:760px;margin-left:-380px;background:url(../assets/title_mewtwo.jpg) center/cover;filter:brightness(.72) contrast(1.15) saturate(.8);opacity:.85;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(ellipse 52% 56% at 50% 46%,#000 38%,transparent 74%);mask-image:radial-gradient(ellipse 52% 56% at 50% 46%,#000 38%,transparent 74%);animation:tmewin 3s ease-out both,tmewb 7s ease-in-out 3s infinite}
+.tmew i{position:absolute;top:19%;width:7%;height:5%;border-radius:50%;background:radial-gradient(circle,#fff 0%,#caa0ff 35%,rgba(180,120,255,0) 75%);filter:blur(3px);animation:tmeye 4.5s ease-in-out infinite}
+.tmew i.e1{left:43%}.tmew i.e2{left:52%}
+@keyframes tmewin{from{opacity:0}to{opacity:.85}}@keyframes tmewb{50%{opacity:.68}}@keyframes tmeye{0%,100%{opacity:.35}45%{opacity:1}55%{opacity:.7}}
+.tbg .tfire{position:absolute;inset:auto auto 0 50%;width:144px;height:261px;margin-left:-72px;overflow:visible}
+.tfire .cf{position:absolute;left:0;bottom:12px;width:144px;height:261px;background:url(../assets/props/campfire.png) 0 0/1152px 261px no-repeat;image-rendering:pixelated;animation:cfire .8333s steps(1) infinite}
+.tfire .tsword{position:absolute;left:-16px;bottom:-8px;width:176px;height:208px;opacity:.95}
+@keyframes cfire{0%{background-position:-576px 0}20%{background-position:-720px 0}40%{background-position:-576px 0}60%{background-position:-864px 0}80%{background-position:-720px 0}}
