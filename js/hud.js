@@ -31,9 +31,9 @@ export function createHud(game) {
     <div id="party">${game.team.map((t, i) => `<div class="slot t-${t.type}" data-i="${i}"><img alt=""><em>${i + 1}</em><div class="sbar"><div class="fill"></div></div><b class="mu"></b></div>`).join('')}</div>
     <div id="quick">
       <div class="qs q-up"><img src="${itemIconFile('berry')}" alt=""><b id="berries"></b><kbd id="k-berry"></kbd></div>
-      <div class="qs q-left"><img src="${itemIconFile('candy')}" alt=""><b id="candy"></b></div>
+      <div class="qs q-left"><img src="${itemIconFile('candy')}" alt=""><b id="candy"></b><kbd id="k-candy"></kbd></div>
       <div class="qs q-right"><img src="${itemIconFile('ether')}" alt=""><b id="ethers"></b><kbd id="k-ether"></kbd></div>
-      <div class="qs q-down"><img src="${itemIconFile('revive')}" alt=""><b id="revive"></b></div>
+      <div class="qs q-down"><img src="${itemIconFile('revive')}" alt=""><b id="revive"></b><kbd id="k-revive"></kbd></div>
     </div>
     <div id="linkbox"><span class="ll">LIEN</span><div class="lbar"><div class="fill" id="link-f"></div></div><b id="link-t"></b><kbd id="k-link"></kbd></div>
     <div id="combo"><span class="cl">COMBO</span><i></i><i></i><b id="combo-t"></b></div>
@@ -46,7 +46,7 @@ export function createHud(game) {
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div></div><div class="bar t"></div><div class="bar b"></div></div>
     <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
-  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
+  for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
   slots.forEach(s => s.addEventListener('click', () => game.switchTo(+s.dataset.i)));
   // carton-titre, barres et voile de la cinématique d'intro, pilotés par le temps de game.cine
@@ -89,7 +89,7 @@ export function createHud(game) {
       const a = game.world.arena, dx = a.cx * M.TS - c.x, dy = a.cy * M.TS - c.y, near = Math.hypot(dx, dy) < 420;
       E.compass.classList.toggle('show', !near && game.lit.size > 0 && !game.prog[game.mapIdx].bossDead); E.arrow.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
       { const pm = Input.usingPad(); if (pm !== lastPad) { lastPad = pm; keyT = 0; root.classList.toggle('padmode', pm); } }
-      if ((keyT -= dt) <= 0) { keyT = 0.5; E['k-ab'].textContent = kl('ability'); E['k-berry'].textContent = kl('berry'); E['k-ether'].textContent = kl('ether'); E['k-link'].textContent = kl('link'); E['k-int'].textContent = kl('interact'); E.hints.textContent = `${khint('map')} Carte · ${khint('bag')} Sac · ${khint('pause')} Pause / Commandes`; const sk = $('.skip kbd', root); if (sk) sk.textContent = kl('interact'); }
+      if ((keyT -= dt) <= 0) { keyT = 0.5; E['k-ab'].textContent = kl('ability'); E['k-berry'].textContent = kl('berry'); E['k-ether'].textContent = kl('ether'); E['k-candy'].textContent = kl('candy'); E['k-revive'].textContent = kl('revive'); E['k-link'].textContent = kl('link'); E['k-int'].textContent = kl('interact'); E.hints.textContent = `${khint('map')} Carte · ${khint('bag')} Sac · ${khint('pause')} Pause / Commandes`; const sk = $('.skip kbd', root); if (sk) sk.textContent = kl('interact'); }
       if (toastT > 0 && (toastT -= dt) <= 0) E.toast.classList.remove('show');
       if (bannerT > 0 && (bannerT -= dt) <= 0) E.banner.className = '';
       if (areaT > 0 && (areaT -= dt) <= 0) E.area.classList.remove('show');

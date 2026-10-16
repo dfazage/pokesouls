@@ -1,7 +1,7 @@
 // Clavier (QWERTY/AZERTY) + souris + manette, avec commandes modifiables (stockées dans le navigateur).
 export const ACTIONS = [
   ['Déplacement', [['up', 'Haut'], ['down', 'Bas'], ['left', 'Gauche'], ['right', 'Droite'], ['run', 'Courir'], ['dodge', 'Esquive']]],
-  ['Combat', [['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['ability', 'Capacité spéciale (CT)'], ['guard', 'Garde / parade'], ['lock', 'Verrouillage'], ['berry', 'Baie de soin'], ['ether', 'Fiole d’endurance (Huile)'], ['link', 'Lien : appeler les deux alliés (jauge pleine)']]],
+  ['Combat', [['light', 'Attaque légère'], ['heavy', 'Attaque lourde'], ['ability', 'Capacité spéciale (CT)'], ['guard', 'Garde / parade'], ['lock', 'Verrouillage'], ['berry', 'Baie de soin'], ['candy', 'Super Bonbon (Pokémon actif)'], ['revive', 'Rappel (relève un Pokémon épuisé)'], ['ether', 'Fiole d’endurance (Huile)'], ['link', 'Lien : appeler les deux alliés (jauge pleine)']]],
   ['Équipe (un seul Pokémon sur le terrain)', [['next', 'Relève : Pokémon suivant'], ['s1', 'Appeler le Pokémon 1'], ['s2', 'Appeler le Pokémon 2'], ['s3', 'Appeler le Pokémon 3']]],
   ['Monde', [['interact', 'Interagir'], ['map', 'Carte / téléportation'], ['bag', 'Sac']]],
   ['Système', [['pause', 'Pause']]],
@@ -9,7 +9,7 @@ export const ACTIONS = [
 export const DEFAULTS = {
   up: ['KeyW', 'KeyZ', 'ArrowUp'], down: ['KeyS', 'ArrowDown', ''], left: ['KeyA', 'KeyQ', 'ArrowLeft'], right: ['KeyD', 'ArrowRight', ''],
   light: ['KeyJ', 'Mouse0', ''], heavy: ['KeyK', 'Mouse2', ''], ability: ['KeyL', '', ''], guard: ['KeyH', 'KeyU', ''], dodge: ['Space', '', ''], run: ['ShiftLeft', 'ShiftRight', ''],
-  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], link: ['KeyV', '', ''], pause: ['Escape', 'KeyP', ''],
+  interact: ['KeyE', '', ''], berry: ['KeyR', '', ''], candy: ['KeyC', '', ''], revive: ['KeyG', '', ''], lock: ['KeyT', '', ''], next: ['Tab', '', ''], ether: ['KeyF', '', ''], link: ['KeyV', '', ''], pause: ['Escape', 'KeyP', ''],
   s1: ['Digit1', 'Numpad1', ''], s2: ['Digit2', 'Numpad2', ''], s3: ['Digit3', 'Numpad3', ''], map: ['KeyM', '', ''], bag: ['KeyB', '', ''],
 };
 // ---- étiquettes de manette : elles suivent le type détecté (Xbox, Nintendo Switch / Joy-Con, PlayStation) ----
@@ -24,8 +24,8 @@ export function padLabel(a) {
   switch (a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'dodge': return f[0]; case 'run': return f[0] + ' (maintenu)'; case 'interact': return f[1]; case 'light': return f[2]; case 'heavy': return f[3];
-    case 'guard': return f[4]; case 'ability': return f[5]; case 'ether': return f[6]; case 'next': return f[7]; case 'link': return f[4] + ' + ' + f[5];
-    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return '↑'; case 'bag': return '↓';
+    case 'guard': return f[4]; case 'ability': return f[5]; case 'ether': return '→'; case 'candy': return '←'; case 'revive': return '↓'; case 'next': return f[7]; case 'link': return f[4] + ' + ' + f[5];
+    case 'map': return s[0]; case 'pause': return s[1]; case 'lock': return 'Clic stick D'; case 'berry': return '↑'; case 'bag': return f[6];
     default: return '';
   }
 }
@@ -33,8 +33,8 @@ export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
 export function padLabels() {
   const f = FACE[padKind];
   return [['Déplacement', 'Stick gauche'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
-    ['Garde / parade', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Fiole d’endurance', padLabel('ether')], ['Baie', 'Croix haut'], ['Lien (alliés)', padLabel('link') + ' ensemble'],
-    ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix bas'], ['Pause', padLabel('pause')],
+    ['Garde / parade', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Fiole d’endurance', 'Croix droite'], ['Baie', 'Croix haut'], ['Super Bonbon', 'Croix gauche'], ['Rappel', 'Croix bas'], ['Lien (alliés)', padLabel('link') + ' ensemble'],
+    ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', padLabel('bag')], ['Pause', padLabel('pause')],
     ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
 }
 const STORE = 'pokesouls.controls.v1';
@@ -108,7 +108,7 @@ export const Touch = {
 addEventListener('contextmenu', e => e.preventDefault());
 
 // Manette (disposition standard). Une Joy-Con fusionnée ou une Pro Controller est vue comme une manette standard par Chrome.
-const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'ether', 12: 'berry', 13: 'bag', 11: 'lock', 9: 'pause', 8: 'map' };
+const PAD = { 0: 'dodge', 1: 'interact', 2: 'light', 3: 'heavy', 4: 'guard', 5: 'ability', 7: 'next', 6: 'bag', 12: 'berry', 13: 'revive', 14: 'candy', 15: 'ether', 11: 'lock', 9: 'pause', 8: 'map' };
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
 addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
