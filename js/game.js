@@ -213,6 +213,7 @@ export class Game {
     if (this.state === 'loading' || !this.world) return;
     if (this.hitstop > 0) { this.hitstop -= dt; return; }
     this.t += dt;
+    if (this.furyT > 0) { this.furyT -= dt; this.shake = Math.max(this.shake, this.furyAmp * Math.min(1, this.furyT / 0.5) * (0.75 + 0.25 * Math.sin(this.t * 60))); }   // fureur : secousse tenue pendant le cri
     this.shake = Math.max(0, this.shake - dt * 14);
     this.buffT = Math.max(0, this.buffT - dt);
     if (this.state === 'dead') { this.deadT += dt; this.updateFx(dt); if (this.deadT > 3 && (Input.pressed('interact') || Input.pressed('light') || this.deadT > 6.5)) this.respawn(); return; }
@@ -778,7 +779,7 @@ export class Game {
     this.emit('bossStart', b, short);
   }
   bossPhase(b, ph) {
-    b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
+    this.bossCry(b, 6, 1.3); b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
     this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
     this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
@@ -890,6 +891,8 @@ export class Game {
       setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);
     }
   }
+  // cri de fureur : son propre au boss + secousse de caméra tenue `dur` secondes
+  bossCry(b, amp = 7, dur = 1.5) { SFX.cry(b.sprite); this.furyT = Math.max(this.furyT || 0, dur); this.furyAmp = amp; this.hitstop = Math.max(this.hitstop || 0, 0.06); }
   bossDefeated(b) {
     const pr = this.prog[this.mapIdx];
     this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));

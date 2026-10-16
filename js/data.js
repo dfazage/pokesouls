@@ -187,17 +187,17 @@ export const spriteOfEnemy = t => (ENEMIES[t] && ENEMIES[t].sprite) || t;
 // ---------- boss ----------
 // moves[phase-1] : liste [attaque, poids] ; attaques : ball, volley, nova, swing, pulse, dash, rain, beam, summon
 export const BOSSES = {
-  articuno: { sprite: 'articuno', phases: ['Le blizzard se lève', 'Zéro absolu'], status: ['freeze', 0.25], name: 'ARTIKODIN', sub: 'L’oiseau des glaces', hp: 380, dmg: 13, r: 12, speed: 56, color: '#9fe8ff', glow: [140, 220, 255], hover: true, rainColor: '#bfeaff',
+  articuno: { sprite: 'articuno', phases: ['Le blizzard se lève', 'Zéro absolu'], status: ['freeze', 0.25], name: 'ARTIKODIN', sub: 'L’oiseau des glaces', scale: 1.15, hp: 380, dmg: 13, r: 12, speed: 56, color: '#9fe8ff', glow: [140, 220, 255], hover: true, rainColor: '#bfeaff',
     moves: [[['ball', 3], ['volley', 2], ['rain', 2]], [['ball', 2], ['volley', 2], ['rain', 3], ['nova', 2], ['dash', 1]], [['volley', 2], ['rain', 3], ['nova', 3], ['dash', 2]]] },
-  zapdos: { sprite: 'zapdos', phases: ['L’orage gronde', 'Foudre déchaînée'], status: ['para', 0.3], name: 'ÉLECTHOR', sub: 'L’oiseau de la foudre', hp: 480, dmg: 14, r: 11, speed: 62, color: '#ffe84a', glow: [255, 235, 90], hover: true, rainColor: '#fff58a',
+  zapdos: { sprite: 'zapdos', phases: ['L’orage gronde', 'Foudre déchaînée'], status: ['para', 0.3], name: 'ÉLECTHOR', sub: 'L’oiseau de la foudre', scale: 1.15, hp: 480, dmg: 14, r: 11, speed: 62, color: '#ffe84a', glow: [255, 235, 90], hover: true, rainColor: '#fff58a',
     moves: [[['ball', 2], ['rain', 3], ['dash', 2]], [['volley', 2], ['rain', 3], ['dash', 2], ['nova', 2]], [['rain', 4], ['nova', 3], ['dash', 3], ['beam', 2]]] },
-  moltres: { sprite: 'moltres', phases: ['Les braises s’embrasent', 'Renaissance ardente'], status: ['burn', 0.3], name: 'SULFURA', sub: 'L’oiseau des flammes', hp: 600, dmg: 15, r: 12, speed: 58, color: '#ff8a30', glow: [255, 140, 60], hover: true, rainColor: '#ff9a50',
+  moltres: { sprite: 'moltres', phases: ['Les braises s’embrasent', 'Renaissance ardente'], status: ['burn', 0.3], name: 'SULFURA', sub: 'L’oiseau des flammes', scale: 1.15, hp: 600, dmg: 15, r: 12, speed: 58, color: '#ff8a30', glow: [255, 140, 60], hover: true, rainColor: '#ff9a50',
     moves: [[['ball', 3], ['volley', 2], ['swing', 2]], [['pulse', 3], ['volley', 2], ['dash', 2], ['ball', 2]], [['pulse', 3], ['nova', 3], ['rain', 3], ['dash', 2]]] },
-  dragonite: { sprite: 'dragonite', phases: ['Le roi s’éveille', 'Colère du dragon'], status: ['para', 0.2], name: 'DRACOLOSSE', sub: 'Roi de Kanto', hp: 760, dmg: 17, r: 12, speed: 60, color: '#ffb060', glow: [255, 180, 90], rainColor: '#ffc080',
+  dragonite: { sprite: 'dragonite', phases: ['Le roi s’éveille', 'Colère du dragon'], status: ['para', 0.2], name: 'DRACOLOSSE', sub: 'Roi de Kanto', scale: 1.15, hp: 760, dmg: 17, r: 12, speed: 60, color: '#ffb060', glow: [255, 180, 90], rainColor: '#ffc080',
     moves: [[['swing', 3], ['dash', 2], ['ball', 2]], [['swing', 2], ['beam', 3], ['volley', 2], ['dash', 2]], [['beam', 3], ['rain', 3], ['nova', 2], ['dash', 3], ['swing', 2]]] },
-  mewtwo: { sprite: 'mewtwo', phases: ['L’esprit s’ouvre', 'Clones psychiques'], status: ['confuse', 0.25], name: 'MEWTWO', sub: 'Le Cloné', hp: 950, dmg: 18, r: 9, speed: 54, color: '#d89aff', glow: [180, 100, 255], hover: true, rainColor: '#e0a0ff', summon: 'clone',
+  mewtwo: { sprite: 'mewtwo', phases: ['L’esprit s’ouvre', 'Clones psychiques'], status: ['confuse', 0.25], name: 'MEWTWO', sub: 'Le Cloné', scale: 1.15, hp: 950, dmg: 18, r: 9, speed: 54, color: '#d89aff', glow: [180, 100, 255], hover: true, rainColor: '#e0a0ff', summon: 'clone',
     moves: [[['ball', 3], ['swing', 3]], [['ball', 3], ['swing', 2], ['pulse', 3]], [['ball', 3], ['swing', 2], ['pulse', 3], ['summon', 2]]] },
-  mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
+  mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', scale: 1.15, hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
 };
 export const BOSS_THRESHOLDS = [0.6, 0.25];
