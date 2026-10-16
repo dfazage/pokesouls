@@ -481,3 +481,11 @@ body.padnav input[type=range].padfocus{accent-color:var(--acc-2)}
 
 /* Quêtes : cartes cliquables (boutons, pour la manette) */
 button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-size:12px;font-weight:400;padding:12px 14px;border-radius:14px;box-shadow:none}
+
+/* confirmation d'échange (Réserve) : petite carte en verre au centre du panneau */
+.panel.reserve{position:relative}
+.rconf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:inherit;background:rgba(8,6,4,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5}
+.rcbox{min-width:300px;max-width:420px;padding:20px 24px;border-radius:20px;background:var(--g-bg,rgba(30,25,20,.82));border:1px solid var(--g-bd,rgba(255,255,255,.18));box-shadow:var(--g-sh,0 18px 50px rgba(0,0,0,.5));backdrop-filter:blur(var(--g-blur,18px)) saturate(140%);-webkit-backdrop-filter:blur(var(--g-blur,18px)) saturate(140%);text-align:center}
+.rcbox p{margin:0 0 6px;font-size:15px;line-height:1.5}.rcbox p b{color:var(--acc-2,#ffe3a6)}
+.rcbox small{display:block;color:rgba(255,255,255,.72);margin-bottom:4px}
+.rcbox .act{justify-content:center;margin-top:14px}
