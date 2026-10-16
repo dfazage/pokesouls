@@ -77,11 +77,13 @@ Page **Commandes** (écran titre ou Pause) : toutes les touches, clavier et sour
 | Garde (parade juste après l'appui) | H | LB |
 | Interagir | E | B |
 | Baie de soin | R | croix haut |
-| Fiole d'endurance (Huile) | F | LT |
+| Fiole d'endurance (Huile) | F | croix droite |
+| Super Bonbon (Pokémon actif) | C | croix gauche |
+| Rappel (relève un Pokémon épuisé) | G | croix bas |
 | Lien (appeler les alliés) | V | LB + RB |
 | Verrouillage | T | clic stick droit |
 | Relève du Pokémon | Tab ou 1 à 3 | RT |
-| Carte / Sac | M / B | Select / croix bas |
+| Carte / Sac | M / B | Select / ZL |
 | Pause | Échap | Start |
 
 La manette n'a pas encore été testée.

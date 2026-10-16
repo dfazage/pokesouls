@@ -245,6 +245,8 @@ export class Game {
     if (Input.pressed('lock')) this.toggleLock();
     if (Input.pressed('berry')) this.useBerry();
     if (Input.pressed('ether')) this.useEther();
+    if (Input.pressed('candy')) this.useCandy(this.team.indexOf(m));
+    if (Input.pressed('revive')) { const i = this.team.findIndex(q => q.exh); if (i >= 0) this.useRevive(i); }
     for (const q of this.team) this.tickMember(q, dt);
     this.updateStatus(m, dt);
     if (this.state === 'dead') return;
