@@ -744,3 +744,10 @@ body.touch #tut{left:10px;top:10px;width:240px;font-size:11px}
 
 .pth.taken{opacity:.4;filter:grayscale(.6)}.pth.taken.foc{opacity:.8}
 #starters .act .pri:not(:disabled){border-color:#efe6d2}
+
+/* carte du chapitre : sélection uniquement à gauche (liste + foyers), la carte centrale est une illustration sans interaction */
+.wm-map{pointer-events:none}
+.wm-list .wspots{display:flex;flex-direction:column;gap:5px;margin:-2px 0 8px 14px;padding:8px;border-radius:12px;background:rgba(14,12,10,.55);border:var(--card-bd)}
+.wm-list .wspots h5{margin:0 0 2px;font-size:10px;letter-spacing:.14em;color:#ffe3a6;text-transform:uppercase}
+.wm-list .wspots .wspot{width:100%}
+.wm-list .wspots .wgo{margin-top:4px;width:100%}

@@ -186,11 +186,11 @@ export function showTravel(game, onClose, onGo) {
     const here = o.idx === game.mapIdx;
     const hid = k => M.MAPS[k].secret && !opts[k].open;   // la carte secrète reste cachée tant qu'elle n'est pas ouverte
     const roads = NODES.slice(1, opts.length).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.558}" x2="${n[0]}" y2="${n[1] * 0.558}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
-    const nodes = opts.map((x, k) => { if (hid(k)) return `<span class="wghost" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">?</span>`; const c = D.BOSSES[M.MAPS[k].boss].color; return `<button class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" data-n="${k}" title="${esc(x.name)}"><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</button><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
-    const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
+    const nodes = opts.map((x, k) => { if (hid(k)) return `<span class="wghost" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">?</span>`; const c = D.BOSSES[M.MAPS[k].boss].color; return `<span class="wn ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'} ${k === game.mapIdx ? 'here' : ''}" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%;--c:${c}" ><b>${ROMAN[k]}</b>${x.done ? '<i>✔</i>' : ''}</span><span class="wl" style="left:${NODES[k][0]}%;top:${NODES[k][1]}%">${esc(x.name)}</span>`; }).join('');
+    const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>${k === travelSel && x.open ? `<div class="wspots"><h5>Foyers</h5>${x.spots.map(sp => `<button class="wspot ${sp.id === travelSpot ? 'on' : ''}" data-spot="${esc(sp.id)}">${esc(sp.name)}</button>`).join('')}${travelSpot !== null ? '<button class="pri wgo" id="t-go">Voyager</button>' : ''}</div>` : ''}`).join('');
     const prev = opts[o.idx - 1];
     const body = o.open
-      ? `<p class="sub whint">${travelPop === o.idx ? 'Choisis un foyer dans la bulle, puis Voyager.' : 'Clique sur le cercle de ce lieu pour choisir où aller.'}</p>`
+      ? `<p class="sub whint">${travelPop === o.idx ? 'Choisis un foyer dans la liste, puis Voyager.' : 'Choisis un foyer dans la liste de gauche, puis Voyager.'}</p>`
       : `<p class="sub">Cette carte est scellée. Elle s’ouvre quand le boss de <b>${esc(prev ? prev.name : '')}</b> tombe.</p>`;
     const po = travelPop >= 0 && opts[travelPop].open ? opts[travelPop] : null;
     const pop = po ? `<div class="wpop ${NODES[po.idx][1] > 52 ? 'up' : ''}" style="left:clamp(104px,${NODES[po.idx][0]}%,calc(100% - 104px));top:${NODES[po.idx][1]}%"><h4>${esc(po.name)}</h4>${po.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${travelSpot !== null ? '<button class="pri wgo" id="t-go">Voyager</button>' : ''}</div>` : '';
@@ -198,7 +198,7 @@ export function showTravel(game, onClose, onGo) {
       <div class="wm-cols">
         <div class="wm-list"><h4>Chapitres</h4>${list}</div>
         <div class="wm-map ${game.chapter}" style="background-image:linear-gradient(rgba(6,8,14,.12),rgba(6,8,14,.28)),url(${info.world})"><svg viewBox="0 0 100 55.8" preserveAspectRatio="none" aria-hidden="true">
-          <g>${roads}</g></svg>${nodes}${pop}</div>
+          <g>${roads}</g></svg>${nodes}</div>
         <div class="wm-det" style="--c:${col}">
           <div class="wd-art ${o.open ? '' : 'sealed'}"><img src="assets/sprites/${bs.sprite}/portrait.png" alt="" onerror="this.style.display='none'"></div>
           <h3>${ROMAN[o.idx]} · ${esc(o.name)}</h3><p class="sub">${esc(o.sub)}${here ? ' · vous êtes ici' : ''}</p>
@@ -209,8 +209,7 @@ export function showTravel(game, onClose, onGo) {
     m.querySelectorAll('[data-n]').forEach(x => x.onclick = () => { travelSel = +x.dataset.n; travelPop = opts[travelSel].open ? travelSel : -1; travelSpot = null; render(); });
     m.querySelectorAll('[data-spot]').forEach(x => x.onclick = e => { e.stopPropagation(); travelSpot = x.dataset.spot; render(); const g = $('#t-go'); if (g) g.focus(); });
     const go = $('#t-go'); if (go) go.onclick = e => { e.stopPropagation(); const i = o.idx, s = travelSpot; travelSel = -1; onGo(travelPop >= 0 ? travelPop : i, s); };
-    const wm = m.querySelector('.wm-map'); if (wm) wm.onclick = e => { if (travelPop >= 0 && !e.target.closest('.wn,.wpop')) { travelPop = -1; travelSpot = null; render(); } };
-    $('#m-close').onclick = () => { travelSel = -1; onClose(); };
+        $('#m-close').onclick = () => { travelSel = -1; onClose(); };
   };
   render();
 }
