@@ -27,6 +27,7 @@ export function createPadNav() {
   // premier élément à sélectionner, ou retour sur l'élément qu'on vient de quitter après un redessin du menu
   function restore(r) {
     const items = list(r); if (!items.length) return null;
+    const first = items.find(e => e.hasAttribute('data-padfirst')); if (first) return first;   // l'écran impose l'endroit où replacer le curseur (prochain choix, bouton Commencer)
     const same = key && items.find(e => keyOf(e) === key);
     if (same) return same;
     if (key) { let best = null, bd = Infinity; for (const e of items) { const [x, y] = center(e), d = Math.hypot(x - cx, y - cy); if (d < bd) { bd = d; best = e; } } if (best) return best; }
