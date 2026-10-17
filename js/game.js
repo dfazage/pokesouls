@@ -69,7 +69,7 @@ export class Game {
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
     this.essence = 0; this.pity = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
-    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
+    this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.loot = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
     this.playT = 0; this.deaths = 0; this.outro = null; this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
     this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
@@ -174,7 +174,7 @@ export class Game {
     if (pr.doorOpen && this.world.door) for (const [x, y] of this.world.door.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR;
     if (pr.bossDead) this.openFog();
     this.chestObjs = this.world.chests.map(c => ({ ...c, kind: 'chest', w: 1, h: 1, seed: (c.tx * 7 + c.ty) % 31 }));
-    this.items = [];
+    this.items = []; this.loot = [];
     this.spawnAll(); this.buildItems();
     { const sv = this.souvenir; if (sv && sv.map === idx && !M.boxFree(this.world, sv.x, sv.y, 6, 4)) { const f = this.world.bonfires[0]; sv.x = (f.tx + 0.5) * TS; sv.y = (f.ty + 2.5) * TS; } }   // carte remaniée depuis la sauvegarde : le souvenir ne doit pas finir dans un mur
     const b = dest && dest !== 'start' ? this.world.bonfires.find(q => q.id === dest) : null;
@@ -274,7 +274,7 @@ export class Game {
     this.updateElements(dt);
     this.updateTutorial(dt);
     this.updateFx(dt);
-    this.updateWorld(dt);
+    this.updateWorld(dt); this.updateLoot(dt);
     const c = this.chief();
     if (this.cine || this.outro) return;
     const bc = this.bossCam, bs = this.boss, f = bc && bs ? bc.focus * this.bossCamK : 0;   // duel : la caméra se décale vers le boss
@@ -728,13 +728,29 @@ export class Game {
       let pool = D.DROP_RARE; if (e.def.tier === 'big') pool = pool.concat((this.world.def.loot || []).filter(k => D.TMS[k]));
       got.push(pool[(Math.random() * pool.length) | 0]); rare = true; if (!again) this.pity = 0;
     } else if (!again) this.pity = Math.min(D.DROP_PITY_MAX, this.pity + D.DROP_PITY_STEP);
-    if (!got.length) return;
-    got.forEach((k, i) => {
-      const n = this.give(k), isRare = rare && i === got.length - 1; this.popItem(e.x + (i - (got.length - 1) / 2) * 16, e.y - 8, k, 0.15 + i * 0.2);
-      this.floatText(e.x, e.y - 40 - i * 9, '+ ' + n.split(' (')[0], isRare ? '#ffe27a' : '#9fe8a8');
-      if (isRare) this.emit('toast', 'Drop rare : ' + n, k);
-    });
-    SFX.pick(); this.save();
+    if (got.length) got.forEach((k, i) => this.spawnLoot(e.x, e.y, k, rare && i === got.length - 1, i, got.length));
+    this.save();
+  }
+  // objet posé au sol : lueur verte (commun) ou dorée (rare), ramassé en s'approchant (aimantation à courte portée)
+  spawnLoot(x, y, key, rare, i = 0, n = 1) {
+    const a = (i / n) * 6.283 + Math.random() * 0.8;
+    let lx = x, ly = y;
+    for (let r = 14; r >= 0; r -= 7) { const px = x + Math.cos(a) * r * (n > 1 ? 1 : 0), py = y + Math.sin(a) * r * 0.6 * (n > 1 ? 1 : 0); if (M.boxFree(this.world, px, py, 5, 3)) { lx = px; ly = py; break; } }
+    this.loot.push({ x: lx, y: ly, key, rare: !!rare, age: 0, life: rare ? 180 : 75, ph: Math.random() * 6.28 });
+  }
+  updateLoot(dt) {
+    if (!this.loot.length) return; const c = this.chief(); let taken = false;
+    for (const l of this.loot) {
+      l.age += dt; l.life -= dt; if (l.age < 0.5) continue;   // petit délai : l'objet retombe avant de pouvoir être ramassé
+      const d = hyp(l.x - c.x, l.y - c.y);
+      if (d < 46 && d > 1) { const s = Math.min(d, (70 + (46 - d) * 6) * dt); l.x += (c.x - l.x) / d * s; l.y += (c.y - l.y) / d * s; }   // aimantation
+      if (d < 13) {
+        const n = this.give(l.key); l.life = 0; taken = true; SFX.pick();
+        this.popItem(c.x, c.y - 6, l.key); this.floatText(c.x, c.y - 34, '+ ' + n.split(' (')[0], l.rare ? '#ffe27a' : '#9fe8a8');
+        if (l.rare) this.emit('toast', 'Drop rare : ' + n, l.key);
+      }
+    }
+    this.loot = this.loot.filter(l => l.life > 0); if (taken) this.save();
   }
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
