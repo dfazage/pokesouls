@@ -11,7 +11,7 @@ import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
 import { bossAshState } from './bosscine.js';
 import { dodgeVisual } from './dodge.js';
-import { drawZoneGround, zoneLight, zoneLives } from './zonefx.js';
+import { drawZoneGround, zoneLight, zoneLives, bossTele } from './zonefx.js';
 
 const { TS } = M;
 let lightC = null;
@@ -218,6 +218,7 @@ export function groundFx(ctx, g, hook) {
   for (const e of g.enemies) {
     if (!e.tele || e.dead) continue; const k = e.held ? 1 : 0.5 + 0.5 * Math.sin(g.t * 24);   // coup retardé : lueur fixe, le coup va tomber
     const def = e.def;
+    if (e.boss && bossTele(ctx, g, e, k)) continue;
     if (def.kind === 'slam' && e.slamAt) { ctx.fillStyle = `rgba(255,90,40,${0.15 + 0.15 * k})`; ctx.beginPath(); ctx.arc(e.slamAt.x, e.slamAt.y, def.blast, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,60,.8)'; ctx.lineWidth = 1; ctx.stroke(); continue; }
     if (e.boss && (e.atkType === 'dash' || e.atkType === 'beam') && e.lockDir) { const L = e.atkType === 'beam' ? 260 : 150; ctx.strokeStyle = `rgba(255,70,70,${0.35 + 0.35 * k})`; ctx.lineWidth = e.atkType === 'beam' ? 8 : 12; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.lockDir.x * L, e.y + e.lockDir.y * L); ctx.stroke(); continue; }
     if (e.boss && e.atkType === 'nova') { ctx.strokeStyle = `rgba(255,255,255,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, 14 + 22 * (1 - e.st), 0, 7); ctx.stroke(); continue; }
