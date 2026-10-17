@@ -231,22 +231,22 @@ export class Game {
     for (const s of this.world.spawns) {
       const d = D.ENEMIES[s.type]; if (!d) continue;
       if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
-      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
+      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS, s.up || 0));
     }
     this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null; this.bossCam = null; this.bossCamK = 0;
     this.closeFog();
   }
-  makeEnemy(type, x, y) {
+  makeEnemy(type, x, y, up = 0) {   // up : niveaux en plus (mobs « haut niveau » des zones dangereuses)
     const lv0 = this.world.def.lv;
     let d, lv = lv0, hp, dmg, r, ess;
     if (type === 'boss') {
       const B = D.BOSSES[this.world.def.boss]; d = { ...B, boss: true, kind: 'boss', sight: 999, anim: 'Shoot', tier: 'boss' };
       hp = Math.round(B.hp * D.BOSS_HP_MULT * D.bossHpLv(lv0)); dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
     } else {
-      d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
+      d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0) + up;
       hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;
     }
-    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5), mood: d.tier === 'mini' && !d.clone && d.speed > 0 && Math.random() < 0.3 ? 'sleep' : 'stroll',
+    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, up, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5), mood: d.tier === 'mini' && !d.clone && d.speed > 0 && Math.random() < 0.3 ? 'sleep' : 'stroll',
       vx: 0, vy: 0, kx: 0, ky: 0, dead: false, deadT: 0, boss: !!d.boss, clone: !!d.clone, big: d.tier === 'big', phase: 1, invuln: 0, tele: false, hitDone: false, bob: rand(0, 6) };
   }
 
@@ -511,12 +511,12 @@ export class Game {
   }
 
   // ---------- les ennemis vaincus reviennent au bout d'un moment ----------
-  queueRespawn(e) { if (e.boss || e.clone || e.big || e.queued) return; e.queued = true; this.respawnQ.push({ type: e.type, x: e.hx, y: e.hy, t: 110 + Math.random() * 40 }); }
+  queueRespawn(e) { if (e.boss || e.clone || e.big || e.queued) return; e.queued = true; this.respawnQ.push({ type: e.type, x: e.hx, y: e.hy, up: e.up || 0, t: 110 + Math.random() * 40 }); }
   updateRespawn(dt) {
     if (!this.respawnQ.length || this.bossActive) return; const c = this.chief();
     for (const q of this.respawnQ) {
       q.t -= dt;
-      if (q.t <= 0 && hyp(q.x - c.x, q.y - c.y) > 240) { this.enemies.push(this.makeEnemy(q.type, q.x, q.y)); q.done = true; }
+      if (q.t <= 0 && hyp(q.x - c.x, q.y - c.y) > 240) { this.enemies.push(this.makeEnemy(q.type, q.x, q.y, q.up || 0)); q.done = true; }
     }
     this.respawnQ = this.respawnQ.filter(q => !q.done);
   }

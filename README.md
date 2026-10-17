@@ -49,6 +49,10 @@ Les 11 boss attaquent par séquences écrites (`BOSS_STYLES` dans `js/data.js`) 
 - `node tools/check_bosses.mjs` : valide les règles de lisibilité de chaque kit.
 - `node tools/sim_boss_combos.mjs` : simule chaque boss avec le vrai moteur (délais, ordre, bandes, ouvertures, parade, étourdissement).
 
+## Tiers de mobs par zone
+
+Chaque zone d'une carte reçoit un tier : **bas** (petites espèces), **moyen** (mélange) ou **haut** (espèces moyennes « élites », +3 niveaux). Le tier dépend de la profondeur dans le graphe de zones, des culs-de-sac (plus dangereux, mais ils gardent les coffres) et d'un aléa fixe par carte ; la zone qui mène à l'arène est toujours au moins moyenne. `node tools/check_mobs.mjs` affiche la répartition de chaque carte.
+
 ## Moteur d'éléments (branche `feature/moteur-elements`)
 
 Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à équilibrer) :
