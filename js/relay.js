@@ -31,7 +31,6 @@ export const RELAY = {
   zorua: { name: 'Leurre', gab: 'A', shape: 'ring', mult: 0.85, range: 56, stagger: 1.0, knock: 40, status: ['confuse', 0.5] },
   // Rempart
   munchlax: { name: 'Plaquage', gab: 'R', shape: 'ring', mult: 1.1, range: 52, stagger: 1.3, knock: 100, status: ['para', 0.25] },
-  onix: { name: 'Éboulement', gab: 'R', shape: 'ring', mult: 1.0, range: 60, stagger: 1.2, knock: 130 },
   beldum: { name: 'Tête de fer', gab: 'R', shape: 'arc', mult: 1.1, range: 44, cos: 0.1, stagger: 1.4, knock: 90 },
   hippopotas: { name: 'Piétinement', gab: 'R', shape: 'ring', mult: 1.0, range: 54, stagger: 0.9, knock: 110 },
   scyther: { name: 'Coupe-vent', gab: 'R', shape: 'arc', mult: 1.2, range: 52, cos: 0.0, stagger: 0.8, knock: 70 },
@@ -42,6 +41,7 @@ export const RELAY = {
   magnemite: { name: 'Éclair', gab: 'D', shape: 'shot', mult: 1.0, explode: 24, status: ['para', 0.4] },
   abra: { name: 'Téléportation', gab: 'D', shape: 'ring', mult: 0.6, range: 40, stagger: 0.4, knock: 20, status: ['confuse', 0.4] },
   pichu: { name: 'Étincelle', gab: 'D', shape: 'shot', mult: 0.9, explode: 22, speed: 280, status: ['para', 0.45] },
+  shinx: { name: 'Crocs éclair', gab: 'D', shape: 'shot', mult: 1.0, explode: 24, speed: 270, status: ['para', 0.4] },
   litwick: { name: 'Flammèche', gab: 'D', shape: 'shot', mult: 0.95, explode: 26, status: ['burn', 0.45] },
   gastly: { name: 'Léchouille', gab: 'D', shape: 'shot', mult: 1.0, explode: 24, status: ['para', 0.35] },
   // Secret : Fala (Genesect). Canon techno ; l'élément (et donc la marque posée) vient du Module équipé.

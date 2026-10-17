@@ -1,4 +1,4 @@
-// Pool de 39 lignées (GDD v3, section 6), rangées par gabarit : A = Assaut, R = Rempart, D = Distance, S = Soutien.
+// Pool de 39 lignées (Onix retiré, Lixy ajouté) (GDD v3, section 6), rangées par gabarit : A = Assaut, R = Rempart, D = Distance, S = Soutien.
 // key : stade 1 ; line : les trois stades (une lignée à 2 stades répète le dernier) ; gen : génération du stade 1.
 // types : types de chaque forme (le premier de la famille donne l'élément des attaques).
 import * as D from './data.js';
@@ -17,10 +17,10 @@ const ROWS = [
   ['A', 'machop', 'machoke', 'machamp', 1], ['A', 'bagon', 'shelgon', 'salamence', 3], ['A', 'riolu', 'lucario', 'lucario', 4], ['A', 'meowth', 'persian', 'persian', 1], ['A', 'sneasel', 'weavile', 'weavile', 2], ['A', 'zorua', 'zoroark', 'zoroark', 5],
   // Rempart
   ['R', 'squirtle', 'wartortle', 'blastoise', 1], ['R', 'turtwig', 'grotle', 'torterra', 4], ['R', 'mudkip', 'marshtomp', 'swampert', 3], ['R', 'totodile', 'croconaw', 'feraligatr', 2],
-  ['R', 'munchlax', 'snorlax', 'snorlax', 4], ['R', 'onix', 'steelix', 'steelix', 1], ['R', 'beldum', 'metang', 'metagross', 3], ['R', 'hippopotas', 'hippowdon', 'hippowdon', 4], ['R', 'scyther', 'scizor', 'scizor', 1],
+  ['R', 'munchlax', 'snorlax', 'snorlax', 4], ['R', 'beldum', 'metang', 'metagross', 3], ['R', 'hippopotas', 'hippowdon', 'hippowdon', 4], ['R', 'scyther', 'scizor', 'scizor', 1],
   // Distance
   ['D', 'charmander', 'charmeleon', 'charizard', 1], ['D', 'cyndaquil', 'quilava', 'typhlosion', 2], ['D', 'piplup', 'prinplup', 'empoleon', 4], ['D', 'oshawott', 'dewott', 'samurott', 5],
-  ['D', 'weedle', 'kakuna', 'beedrill', 1], ['D', 'remoraid', 'octillery', 'octillery', 2], ['D', 'starly', 'staravia', 'staraptor', 4], ['D', 'magnemite', 'magneton', 'magnezone', 1], ['D', 'abra', 'kadabra', 'alakazam', 1], ['D', 'pichu', 'pikachu', 'raichu', 2], ['D', 'litwick', 'lampent', 'chandelure', 5], ['D', 'gastly', 'haunter', 'gengar', 1],
+  ['D', 'weedle', 'kakuna', 'beedrill', 1], ['D', 'remoraid', 'octillery', 'octillery', 2], ['D', 'starly', 'staravia', 'staraptor', 4], ['D', 'magnemite', 'magneton', 'magnezone', 1], ['D', 'abra', 'kadabra', 'alakazam', 1], ['D', 'pichu', 'pikachu', 'raichu', 2], ['D', 'litwick', 'lampent', 'chandelure', 5], ['D', 'shinx', 'luxio', 'luxray', 4], ['D', 'gastly', 'haunter', 'gengar', 1],
   // Soutien
   ['S', 'bulbasaur', 'ivysaur', 'venusaur', 1], ['S', 'chikorita', 'bayleef', 'meganium', 2], ['S', 'eevee', 'eevee', 'eevee', 1], ['S', 'happiny', 'chansey', 'blissey', 4], ['S', 'ralts', 'kirlia', 'gardevoir', 3], ['S', 'togepi', 'togetic', 'togekiss', 2], ['S', 'budew', 'roselia', 'roserade', 4],
 ];
@@ -43,6 +43,8 @@ const LEGACY_GAB = { fire: 'D', water: 'R', grass: 'S' };
 for (const t of Object.keys(D.STARTERS)) for (const l of D.STARTERS[t]) {
   if (!byKey[l[0]]) byKey[l[0]] = { key: l[0], gab: LEGACY_GAB[t], line: l, gen: D.GEN_OF[l[0]], type: t, starter: true, legacy: true };
 }
+// lignées retirées du pool (anciennes sauvegardes)
+for (const [k, line, gen] of [['onix', ['onix', 'steelix', 'steelix'], 1]]) if (!byKey[k]) byKey[k] = { key: k, gab: 'R', line, gen, type: familyOf(k), starter: false, legacy: true };
 byKey[FALA.key] = FALA;
 export const poolEntry = key => byKey[key] || null;
 
@@ -54,8 +56,15 @@ export const TYPE_COLOR = {
 };
 const START_TM = { fire: 'ct_flamethrower', water: 'ct_surf', grass: 'ct_megadrain', electric: 'ct_thunder', psychic: 'ct_psychic', fighting: 'ct_bodyslam', ground: 'ct_earthquake', steel: 'ct_bodyslam', dark: 'ct_bodyslam' };
 const GAB_TM = { A: 'ct_bodyslam', R: 'ct_bodyslam', D: 'ct_swift', S: 'ct_softboiled' };
+// CT de départ propre à chaque lignée (variété : chaque CT disponible au stade 1 sert à 2-4 Pokémon, jamais à tout un type)
+const START_TM_BY = {
+  torchic: 'ct_fireblast', chimchar: 'ct_flamethrower', tepig: 'ct_bodyslam', treecko: 'ct_solar', snivy: 'ct_teleport', machop: 'ct_bodyslam', bagon: 'ct_swift', riolu: 'ct_bodyslam', meowth: 'ct_teleport', sneasel: 'ct_icebeam', zorua: 'ct_psychic',
+  squirtle: 'ct_surf', turtwig: 'ct_synthesis', mudkip: 'ct_aquaring', totodile: 'ct_hydro', munchlax: 'ct_swift', beldum: 'ct_swords', hippopotas: 'ct_swords', scyther: 'ct_swift',
+  charmander: 'ct_fireblast', cyndaquil: 'ct_flamethrower', piplup: 'ct_icebeam', oshawott: 'ct_hydro', weedle: 'ct_swords', remoraid: 'ct_surf', starly: 'ct_thunder', magnemite: 'ct_swords', abra: 'ct_psychic', pichu: 'ct_thunder', shinx: 'ct_thunder', litwick: 'ct_fireblast', gastly: 'ct_psychic',
+  bulbasaur: 'ct_megadrain', chikorita: 'ct_synthesis', eevee: 'ct_teleport', happiny: 'ct_teleport', ralts: 'ct_softboiled', togepi: 'ct_softboiled', budew: 'ct_megadrain',
+};
 export function startTm(entry) {
-  for (const k of [START_TM[entry.type], GAB_TM[entry.gab], 'ct_swift']) if (k && D.TMS[k] && D.tmCompat(k, entry.type, entry.key, 0).ok) return k;
+  for (const k of [START_TM_BY[entry.key], START_TM[entry.type], GAB_TM[entry.gab], 'ct_swift']) if (k && D.TMS[k] && D.tmCompat(k, entry.type, entry.key, 0).ok) return k;
   return 'ct_swift';
 }
 export function archOf(entry) {
