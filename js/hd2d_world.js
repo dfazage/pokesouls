@@ -2,6 +2,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import * as M from './maps.js';
 import * as S from './hd2d_shaders.js';
+import { FLOOR } from './props.js';
 
 const { TS, MW, MH, FACE, T } = M;
 export const DEPTH = 3.4, OPEN_DEPTH = 0.06, WATER_DEPTH = 0.42;
@@ -127,9 +128,17 @@ export function makeWallTextures(th, key) {
   const top = mkCanvas(TS * NV, TS), topE = mkCanvas(TS * NV, TS);
   const g = side.getContext('2d'), ge = sideE.getContext('2d'); ge.fillStyle = '#000'; ge.fillRect(0, 0, side.width, side.height);
   const sideBase = A.map((v, i) => (v * 0.62 + F[i] * 0.38));
+  const gt = top.getContext('2d'), gte = topE.getContext('2d'); gte.fillStyle = '#000'; gte.fillRect(0, 0, top.width, top.height);
+  // textures pixel art (assets/floor.json › walls : 4 faces, porte, 4 dessus par thème) ; sinon repli sur le dessin procédural ci-dessous
+  const WDB = FLOOR.db, WR = WDB && FLOOR.wimg && WDB.walls ? WDB.walls[key] : undefined;
+  if (WR !== undefined) {
+    const put = (img, c, dst, x0) => { if (!img) return; dst.imageSmoothingEnabled = false; dst.drawImage(img, c * TS, WR * TS, TS, TS, x0, 0, TS, TS); };
+    for (let vi = 0; vi < NV; vi++) { put(FLOOR.wimg, vi, g, vi * TS); put(FLOOR.weimg, vi, ge, vi * TS); put(FLOOR.wimg, NV + 1 + vi, gt, vi * TS); put(FLOOR.weimg, NV + 1 + vi, gte, vi * TS); }
+    put(FLOOR.wimg, NV, g, NV * TS); put(FLOOR.weimg, NV, ge, NV * TS);
+    return { side, sideE, top, topE };
+  }
   for (let vi = 0; vi < NV; vi++) { drawBricks(g, vi * TS, vi, sideBase, key); sideDetails(g, ge, vi * TS, vi, th, key); }
   drawDoorTile(g, ge, NV * TS, th);
-  const gt = top.getContext('2d'), gte = topE.getContext('2d'); gte.fillStyle = '#000'; gte.fillRect(0, 0, top.width, top.height);
   for (let vi = 0; vi < NV; vi++) {
     const x0 = vi * TS;
     gt.fillStyle = `rgb(${B[0]},${B[1]},${B[2]})`; gt.fillRect(x0, 0, TS, TS);

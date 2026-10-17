@@ -14,6 +14,7 @@ import * as S from './hd2d_shaders.js';
 import * as WD from './hd2d_world.js';
 import { itemImage } from './items.js';
 import { BOSS_CAM_MIN_PITCH, BOSS_CAM_DEFAULT } from './bosscine.js';
+import { PROPS } from './props.js';
 import { WORLD_SCALE, CHAR_K, BOSS_K } from './worldscale.js';
 
 const { TS } = M;
@@ -368,6 +369,7 @@ void main(){
       const lo = Math.max(0, Math.min(1, g.camLow || 0)), lp = (a, b) => a + (b - a) * lo;
       const basePitch = lp(Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0))), BOSS_CAM_DEFAULT.pitch), baseDist = lp(CFG.dist, BOSS_CAM_DEFAULT.dist);
       this.curPitch = (fx ? fx.pitch : mx(basePitch, bc ? bc.pitch : basePitch)) * Math.PI / 180; this.curYaw = fx ? 0 : (g.camYaw || 0) * Math.PI / 180;
+      PROPS.pitch = this.curPitch * 180 / Math.PI;   // les sprites de décor ont une version caméra basse (duels de boss) : fondu selon l'angle réel
       this.curDist = (fx ? fx.dist : mx(baseDist, bc ? bc.dist : baseDist)) / WORLD_SCALE;   // monde plus grand : caméra plus proche this.curLook = fx ? fx.look : mx(CFG.look, bc ? bc.look : CFG.look);
       const fov = fx ? fx.fov : mx(CFG.fov, bc ? bc.fov : CFG.fov);
       if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }

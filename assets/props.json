@@ -18,77 +18,141 @@
     "scale": 1.125
   },
   "bonfire_unlit": {
-    "file": "props/campfire.png",
-    "fw": 48,
-    "fh": 87,
+    "file": "props/decor.png",
+    "x0": 229,
+    "y0": 1794,
+    "fw": 38,
+    "fh": 33,
+    "cols": 1,
     "frames": [
-      7
+      0
     ],
-    "scale": 0.7
+    "lo": {
+      "x0": 268,
+      "y0": 1794
+    }
   },
   "bonfire_lit": {
-    "file": "props/campfire.png",
-    "fw": 48,
-    "fh": 87,
-    "frames": [
-      4,
-      5,
-      4,
-      6,
-      5
-    ],
-    "fps": 6,
-    "scale": 0.7
-  },
-  "pillar_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
+    "file": "props/decor.png",
+    "x0": 678,
+    "y0": 1665,
+    "fw": 38,
+    "fh": 44,
     "cols": 6,
-    "frames": [
-      0,
-      2,
-      3,
-      4
-    ],
-    "vary": true
-  },
-  "crystal_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
-    "cols": 6,
-    "frames": [
-      5,
-      6,
-      7
-    ],
-    "vary": true
-  },
-  "rock_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
-    "cols": 6,
-    "frames": [
-      8,
-      9
-    ],
-    "vary": true
-  },
-  "pillar_lava": {
-    "file": "props/lava_pillars.png",
-    "fw": 64,
-    "fh": 128,
     "frames": [
       0,
       1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1794
+    },
+    "per": 6,
+    "fps": 6
+  },
+  "pillar_ice": {
+    "file": "props/decor.png",
+    "x0": 257,
+    "y0": 1550,
+    "fw": 26,
+    "fh": 57,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
       4,
       5,
-      6
+      6,
+      7
     ],
-    "vary": true,
-    "scale": 0.4
+    "lo": {
+      "x0": 362,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "crystal_ice": {
+    "file": "props/decor.png",
+    "x0": 467,
+    "y0": 1550,
+    "fw": 28,
+    "fh": 45,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 580,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "rock_ice": {
+    "file": "props/decor.png",
+    "x0": 693,
+    "y0": 1550,
+    "fw": 32,
+    "fh": 22,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 822,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 2.5,
+    "vary": true
+  },
+  "pillar_lava": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 113,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
   },
   "obs_basalt": {
     "file": "props/lava_pillars.png",
@@ -114,37 +178,62 @@
     "scale": 0.36
   },
   "pillar_plant": {
-    "file": "props/plant_pillars.png",
-    "fw": 72,
-    "fh": 232,
-    "frames": [
-      0,
-      1,
-      2,
-      3
-    ],
-    "vary": true,
-    "scale": 0.24
-  },
-  "pillar_lab": {
-    "file": "props/lab_pillars.png",
-    "fw": 64,
-    "fh": 216,
+    "file": "props/decor.png",
+    "x0": 226,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 64,
+    "cols": 4,
     "frames": [
       0,
       1,
       2,
       3,
-      4
+      4,
+      5,
+      6,
+      7
     ],
-    "vary": true,
-    "scale": 0.26
+    "lo": {
+      "x0": 339,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "pillar_lab": {
+    "file": "props/decor.png",
+    "x0": 452,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 60,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 565,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
   },
   "tree_bell": {
-    "file": "props/edo_trees.png",
-    "fw": 56,
+    "file": "props/decor.png",
+    "x0": 277,
+    "y0": 1360,
+    "fw": 52,
     "fh": 63,
-    "cols": 6,
+    "cols": 4,
     "frames": [
       0,
       1,
@@ -156,20 +245,824 @@
       7,
       8,
       9,
-      10
+      10,
+      11
     ],
+    "lo": {
+      "x0": 486,
+      "y0": 1360
+    },
+    "per": 4,
+    "fps": 2.2,
     "vary": true
   },
   "torii_bell": {
-    "file": "props/edo_torii.png",
-    "fw": 66,
+    "file": "props/decor.png",
+    "x0": 695,
+    "y0": 1360,
+    "fw": 64,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "lantern_bell": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 0,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 145,
+      "y0": 0
+    },
+    "per": 6,
+    "fps": 8
+  },
+  "lantern_ember": {
+    "file": "props/decor.png",
+    "x0": 290,
+    "y0": 0,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 435,
+      "y0": 0
+    },
+    "per": 6,
+    "fps": 8
+  },
+  "lantern_mirror": {
+    "file": "props/decor.png",
+    "x0": 580,
+    "y0": 0,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 725,
+      "y0": 0
+    },
+    "per": 6,
+    "fps": 8
+  },
+  "lantern_ilex": {
+    "file": "props/decor.png",
+    "x0": 870,
+    "y0": 0,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 44
+    },
+    "per": 6,
+    "fps": 8
+  },
+  "bell_bell": {
+    "file": "props/decor.png",
+    "x0": 145,
+    "y0": 44,
+    "fw": 54,
+    "fh": 60,
+    "cols": 8,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 578,
+      "y0": 44
+    },
+    "per": 8,
+    "fps": 3
+  },
+  "bell_ember": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 105,
+    "fw": 54,
+    "fh": 60,
+    "cols": 8,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 433,
+      "y0": 105
+    },
+    "per": 8,
+    "fps": 3
+  },
+  "torii_ember": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 166,
+    "fw": 64,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 257,
+      "y0": 166
+    },
+    "per": 4,
+    "fps": 4
+  },
+  "torii_mirror": {
+    "file": "props/decor.png",
+    "x0": 514,
+    "y0": 166,
+    "fw": 64,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 225
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "torii_ilex": {
+    "file": "props/decor.png",
+    "x0": 257,
+    "y0": 225,
+    "fw": 64,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 514,
+      "y0": 225
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "tree_ember": {
+    "file": "props/decor.png",
+    "x0": 771,
+    "y0": 225,
+    "fw": 58,
+    "fh": 67,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 427
+    },
+    "per": 4,
+    "fps": 2.2,
+    "vary": true
+  },
+  "tree_mirror": {
+    "file": "props/decor.png",
+    "x0": 233,
+    "y0": 427,
+    "fw": 58,
+    "fh": 59,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "lo": {
+      "x0": 466,
+      "y0": 427
+    },
+    "per": 4,
+    "fps": 2.2,
+    "vary": true
+  },
+  "tree_ilex": {
+    "file": "props/decor.png",
+    "x0": 699,
+    "y0": 427,
+    "fw": 46,
+    "fh": 62,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 629
+    },
+    "per": 4,
+    "fps": 2.2,
+    "vary": true
+  },
+  "tree_mystic": {
+    "file": "props/decor.png",
+    "x0": 185,
+    "y0": 629,
+    "fw": 54,
+    "fh": 63,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "lo": {
+      "x0": 402,
+      "y0": 629
+    },
+    "per": 4,
+    "fps": 2.2,
+    "vary": true
+  },
+  "statue_ilex": {
+    "file": "props/decor.png",
+    "x0": 619,
+    "y0": 629,
+    "fw": 28,
     "fh": 49,
-    "cols": 2,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 732,
+      "y0": 629
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "statue_mystic": {
+    "file": "props/decor.png",
+    "x0": 845,
+    "y0": 629,
+    "fw": 28,
+    "fh": 49,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 819
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "statue_storm": {
+    "file": "props/decor.png",
+    "x0": 113,
+    "y0": 819,
+    "fw": 28,
+    "fh": 56,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lo": {
+      "x0": 226,
+      "y0": 819
+    },
+    "per": 4,
+    "fps": 3
+  },
+  "brazier_lava": {
+    "file": "props/decor.png",
+    "x0": 339,
+    "y0": 819,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 484,
+      "y0": 819
+    },
+    "per": 6,
+    "fps": 9
+  },
+  "brazier_stone": {
+    "file": "props/decor.png",
+    "x0": 629,
+    "y0": 819,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 774,
+      "y0": 819
+    },
+    "per": 6,
+    "fps": 9
+  },
+  "brazier_ember": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 876,
+    "fw": 24,
+    "fh": 43,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 145,
+      "y0": 876
+    },
+    "per": 6,
+    "fps": 9
+  },
+  "rock_lava": {
+    "file": "props/decor.png",
+    "x0": 290,
+    "y0": 876,
+    "fw": 32,
+    "fh": 22,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 419,
+      "y0": 876
+    },
+    "per": 4,
+    "fps": 2.5,
+    "vary": true
+  },
+  "rock_stone": {
+    "file": "props/decor.png",
+    "x0": 548,
+    "y0": 876,
+    "fw": 32,
+    "fh": 22,
+    "cols": 1,
     "frames": [
       0,
       1
     ],
-    "vary": true,
-    "scale": 1.25
+    "lo": {
+      "x0": 581,
+      "y0": 876
+    },
+    "vary": true
+  },
+  "rock_mirror": {
+    "file": "props/decor.png",
+    "x0": 614,
+    "y0": 876,
+    "fw": 32,
+    "fh": 22,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 743,
+      "y0": 876
+    },
+    "per": 4,
+    "fps": 2.5,
+    "vary": true
+  },
+  "rock_storm": {
+    "file": "props/decor.png",
+    "x0": 872,
+    "y0": 876,
+    "fw": 32,
+    "fh": 23,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 923
+    },
+    "per": 4,
+    "fps": 2.5,
+    "vary": true
+  },
+  "crystal_lava": {
+    "file": "props/decor.png",
+    "x0": 129,
+    "y0": 923,
+    "fw": 28,
+    "fh": 45,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 242,
+      "y0": 923
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "crystal_storm": {
+    "file": "props/decor.png",
+    "x0": 355,
+    "y0": 923,
+    "fw": 28,
+    "fh": 45,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 468,
+      "y0": 923
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "crystal_mystic": {
+    "file": "props/decor.png",
+    "x0": 581,
+    "y0": 923,
+    "fw": 28,
+    "fh": 45,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 694,
+      "y0": 923
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "pillar_stone": {
+    "file": "props/decor.png",
+    "x0": 807,
+    "y0": 923,
+    "fw": 28,
+    "fh": 62,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1048
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "pillar_storm": {
+    "file": "props/decor.png",
+    "x0": 113,
+    "y0": 1048,
+    "fw": 28,
+    "fh": 62,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 226,
+      "y0": 1048
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "tank": {
+    "file": "props/decor.png",
+    "x0": 339,
+    "y0": 1048,
+    "fw": 46,
+    "fh": 77,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 616,
+      "y0": 1048
+    },
+    "per": 6,
+    "fps": 6
+  },
+  "tankbroken": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 1173,
+    "fw": 46,
+    "fh": 78,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 277,
+      "y0": 1173
+    },
+    "per": 6,
+    "fps": 6
+  },
+  "console_lab": {
+    "file": "props/decor.png",
+    "x0": 554,
+    "y0": 1173,
+    "fw": 46,
+    "fh": 46,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1252
+    },
+    "per": 6,
+    "fps": 5
+  },
+  "console_plant": {
+    "file": "props/decor.png",
+    "x0": 277,
+    "y0": 1252,
+    "fw": 46,
+    "fh": 46,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 554,
+      "y0": 1252
+    },
+    "per": 6,
+    "fps": 5
+  },
+  "mirror": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 1299,
+    "fw": 30,
+    "fh": 60,
+    "cols": 8,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 241,
+      "y0": 1299
+    },
+    "per": 8,
+    "fps": 8
+  },
+  "generator": {
+    "file": "props/decor.png",
+    "x0": 482,
+    "y0": 1299,
+    "fw": 46,
+    "fh": 59,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1360
+    },
+    "per": 6,
+    "fps": 10
   }
 }
