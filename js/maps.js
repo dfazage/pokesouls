@@ -48,8 +48,17 @@ const KANTO = [
 // ---------- chapitres : chaque génération a ses cartes ; MAPS contient celles du chapitre actif (remplacées sur place, toutes les références la voient) ----------
 const JOHTO = [
   { id: 'j1', name: 'Tour Carillon', sub: 'Où gronde la foudre', theme: 'bell', mus: 'J1', lv: 8, seed: 71, boss: 'raikou',
-    path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
-    areas: ['Escalier des lanternes', 'Galerie des ex-voto', 'Cour des cloches', 'Salle des tatamis', 'Corridor de laque', 'Chambre du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
+    // zones libres : hub (0) ouvert vers l'est et le nord ; le carrefour (2) mène au parvis (5) par le chemin direct, ou par l'esplanade et l'allée (3, 4) en détour ; porte-raccourci de la cour (1) vers l'antichambre (6)
+    free: {
+      zones: [
+        { cell: [0, 2], name: 'Escalier des lanternes' }, { cell: [1, 2], name: 'Cour des cloches' }, { cell: [2, 2], name: 'Jardin des ex-voto' },
+        { cell: [3, 2], name: 'Esplanade des tatamis' }, { cell: [3, 1], name: 'Allée de laque' }, { cell: [2, 1], name: 'Parvis du carillon' },
+        { cell: [1, 1], name: 'Antichambre du tonnerre' }, { cell: [0, 1], name: 'Terrasse des ex-voto' },
+      ].map((z, i) => i === 7 ? { ...z, zone: 'Lisière' } : z),
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [2, 5], [5, 6], [0, 7]],
+      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, chests: [1, 2, 3, 4, 5, 7, 3],
+    },
+    areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
     mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_earthquake'], reward: ['ct_thunder', 'candy'] },
 ];
@@ -269,6 +278,155 @@ function generate(def) {
   return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret, modules };
 }
 
+// ---------- génération « zones libres » ----------
+// Au lieu de salles reliées par des couloirs : de grandes zones ouvertes (formes organiques) posées sur la grille de cellules,
+// reliées par de larges passages, avec un raccourci verrouillé (porte qui s'ouvre de l'autre côté) et un seul passage de brume (arène).
+// Le graphe est déclaré par la carte : def.free = { zones: [{ cell, name, zone?, rx?, ry? }], links: [[a, b]], door: [i, j], arena: { cell, from }, bonfires: [a, b, c], big, chests }
+function generateFree(def) {
+  const R = rng(def.seed), F = def.free, cw = 31, ch = 21, ri = (a, b) => a + Math.floor(R() * (b - a + 1));
+  const grid = new Uint8Array(MW * MH), roomOf = new Int16Array(MW * MH).fill(-1), zd = new Float32Array(MW * MH).fill(9);
+  const inMap = (x, y) => x > 1 && y > 1 && x < MW - 2 && y < MH - 2;
+  const sm = t => t * t * (3 - 2 * t);
+  const nz = (x, y, sc, s) => {   // bruit de valeur lissé, propre à la carte
+    const gx = x / sc, gy = y / sc, x0 = Math.floor(gx), y0 = Math.floor(gy), fx = gx - x0, fy = gy - y0, v = (i, j) => rnd(x0 + i, y0 + j, def.seed + s);
+    const a = v(0, 0) + (v(1, 0) - v(0, 0)) * sm(fx), b = v(0, 1) + (v(1, 1) - v(0, 1)) * sm(fx); return a + (b - a) * sm(fy);
+  };
+  const last = F.zones.length - 1;
+  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2), cy: z.cell[1] * ch + 10 + ri(-3, 2), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
+  // l'arène et la zone qui y mène, puis le raccourci : on écarte les zones pour garder du vide (3 cases au moins) où poser la brume et la porte
+  const AC = F.arena.cell, arena = { cx: AC[0] * cw + 15, cy: AC[1] * ch + 10, r: 9 };
+  const zf = zones[F.arena.from], vert = Math.abs(arena.cy - zf.cy) >= Math.abs(arena.cx - zf.cx);
+  const sx = Math.sign(arena.cx - zf.cx) || 1, sy = Math.sign(arena.cy - zf.cy) || 1;
+  if (vert) { zf.ry = Math.min(zf.ry, 7); const e = arena.cy - sy * (arena.r + 4 + zf.ry); if ((zf.cy - e) * -sy < 0) zf.cy = e; }
+  else { zf.rx = Math.min(zf.rx, 10); const e = arena.cx - sx * (arena.r + 4 + zf.rx); if ((zf.cx - e) * -sx < 0) zf.cx = e; }
+  if (F.door) {
+    const I = zones[F.door[0]], J = zones[F.door[1]], v2 = Math.abs(J.cy - I.cy) >= Math.abs(J.cx - I.cx), sg2 = v2 ? (Math.sign(J.cy - I.cy) || 1) : (Math.sign(J.cx - I.cx) || 1);
+    if (v2) { I.ry = Math.min(I.ry, 7); J.ry = Math.min(J.ry, 7); const gp = Math.abs(J.cy - I.cy) - I.ry - J.ry; if (gp < 5) I.cy -= sg2 * (5 - gp); }
+    else { I.rx = Math.min(I.rx, 10); J.rx = Math.min(J.rx, 10); const gp = Math.abs(J.cx - I.cx) - I.rx - J.rx; if (gp < 5) I.cx -= sg2 * (5 - gp); }
+  }
+  const zdist = (z, x, y) => { const dx = Math.abs(x + 0.5 - z.cx) / z.rx, dy = Math.abs(y + 0.5 - z.cy) / z.ry; return dx ** 2.8 + dy ** 2.8 + (nz(x, y, 5, z.k + 1) - 0.5) * 0.55; };
+  const inZone = (x, y) => zones.some(z => zdist(z, x, y) <= 1);
+  // 1. zones : formes organiques (super-ellipse + bruit)
+  for (const z of zones) for (let y = z.cy - z.ry - 2; y <= z.cy + z.ry + 2; y++) for (let x = z.cx - z.rx - 2; x <= z.cx + z.rx + 2; x++) {
+    if (!inMap(x, y)) continue; const d = zdist(z, x, y);
+    if (d <= 1) { grid[y * MW + x] = T.FLOOR; if (d < zd[y * MW + x]) { zd[y * MW + x] = d; roomOf[y * MW + x] = z.k; } }
+  }
+  // 2. passages larges entre zones voisines
+  const segs = [], segD = (px, py, s_) => { const [ax, ay, bx, by] = s_, vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2)); return Math.hypot(px - (ax + vx * t), py - (ay + vy * t)); };
+  const passW = F.passW || 8;
+  for (const [a, b] of F.links) {
+    const A = zones[a], B = zones[b], sg = [A.cx, A.cy, B.cx, B.cy, passW / 2]; segs.push(sg);
+    for (let y = Math.min(A.cy, B.cy) - 7; y <= Math.max(A.cy, B.cy) + 7; y++) for (let x = Math.min(A.cx, B.cx) - 7; x <= Math.max(A.cx, B.cx) + 7; x++) {
+      if (!inMap(x, y)) continue;
+      const hw = passW / 2 + (nz(x, y, 6, 50 + a * 7 + b) - 0.5) * 2.2;
+      if (segD(x + 0.5, y + 0.5, sg) <= hw) { if (grid[y * MW + x] === T.VOID) { grid[y * MW + x] = T.FLOOR; roomOf[y * MW + x] = Math.hypot(x - A.cx, y - A.cy) < Math.hypot(x - B.cx, y - B.cy) ? a : b; } }
+    }
+  }
+  // 3. arène + court couloir de 3 cases fermé par la brume
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const dx = x + 0.5 - arena.cx, dy = y + 0.5 - arena.cy; if (dx * dx + dy * dy <= arena.r * arena.r) grid[y * MW + x] = T.FLOOR; }
+  const fpts = [];
+  if (vert) for (let y = zf.cy; y !== arena.cy; y += sy) fpts.push({ x: arena.cx, y, dx: 0, dy: sy });
+  else for (let x = zf.cx; x !== arena.cx; x += sx) fpts.push({ x, y: arena.cy, dx: sx, dy: 0 });
+  for (const q of fpts) for (let o = -1; o <= 1; o++) { const x = q.x + (vert ? o : 0), y = q.y + (vert ? 0 : o); if (inMap(x, y) && grid[y * MW + x] === T.VOID) grid[y * MW + x] = T.FLOOR; }
+  let fi = fpts.findIndex(q => !inZone(q.x, q.y) && (q.x + 0.5 - arena.cx) ** 2 + (q.y + 0.5 - arena.cy) ** 2 > arena.r * arena.r); if (fi < 0) fi = fpts.length - 1;
+  fi = Math.min(fpts.length - 1, fi + 1);
+  const fp = fpts[fi], fogTiles = [-1, 0, 1].map(o => vert ? [fp.x + o, fp.y] : [fp.x, fp.y + o]), fog = { tiles: fogTiles, dir: { x: fp.dx, y: fp.dy } };
+  // 4. raccourci : couloir de 3 cases entre deux zones voisines, porte au milieu du vide qui les sépare ; elle s'ouvre depuis la zone la plus tardive (j)
+  let door = null;
+  if (F.door) {
+    const I = zones[F.door[0]], J = zones[F.door[1]], v2 = Math.abs(J.cy - I.cy) >= Math.abs(J.cx - I.cx), sgn = v2 ? (Math.sign(J.cy - I.cy) || 1) : (Math.sign(J.cx - I.cx) || 1);
+    const mx = Math.round((I.cx + J.cx) / 2), my = Math.round((I.cy + J.cy) / 2), pts = [];
+    if (v2) for (let y = I.cy; y !== J.cy; y += sgn) pts.push({ x: mx, y }); else for (let x = I.cx; x !== J.cx; x += sgn) pts.push({ x, y: my });
+    for (const q of pts) for (let o = -1; o <= 1; o++) { const x = q.x + (v2 ? o : 0), y = q.y + (v2 ? 0 : o); if (inMap(x, y) && grid[y * MW + x] === T.VOID) grid[y * MW + x] = T.FLOOR; }
+    const gap = pts.filter(q => !inZone(q.x, q.y)), g0 = gap[Math.floor(gap.length / 2)] || pts[Math.floor(pts.length / 2)];
+    const tiles = [-1, 0, 1].map(o => v2 ? [g0.x + o, g0.y] : [g0.x, g0.y + o]);
+    door = { tiles, dir: v2 ? { x: 0, y: -sgn } : { x: -sgn, y: 0 } };
+    tiles.forEach(([x, y]) => { grid[y * MW + x] = T.DOOR; });
+  }
+  {   // l'arène ne communique qu'avec son couloir : on dégage une couronne de vide autour d'elle
+    const corr = new Set(); for (const q of fpts) for (let o = -1; o <= 1; o++) corr.add((vert ? q.y : q.y + o) * MW + (vert ? q.x + o : q.x));
+    for (let y = Math.floor(arena.cy - arena.r - 4); y <= Math.ceil(arena.cy + arena.r + 4); y++) for (let x = Math.floor(arena.cx - arena.r - 4); x <= Math.ceil(arena.cx + arena.r + 4); x++) {
+      if (!inMap(x, y)) continue; const d2 = (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2;
+      if (d2 > arena.r * arena.r && d2 <= (arena.r + 2.5) ** 2 && !corr.has(y * MW + x) && grid[y * MW + x] !== T.VOID && grid[y * MW + x] !== T.DOOR) { grid[y * MW + x] = T.VOID; roomOf[y * MW + x] = -1; }
+    }
+  }
+  for (const [x, y] of fogTiles) grid[y * MW + x] = T.FOG;
+  // 5. fosses : trous dans les grandes zones (jamais sur un passage ni près du centre)
+  const pits = [];
+  if (F.pits !== 0) for (const z of zones) {
+    if (z.k === 0 || z.k === last || z.nopit) continue;
+    for (let n = 0, made = 0; n < 60 && made < (z.pits ?? 3); n++) {
+      const px = z.cx + ri(-z.rx + 4, z.rx - 4), py = z.cy + ri(-z.ry + 3, z.ry - 3), pr = 2.2 + R() * 2.2;
+      if (zdist(z, px, py) > 0.55) continue;
+      if (segs.some(sg => segD(px + 0.5, py + 0.5, sg) < sg[4] * 0.6 + pr + 0.5) || pits.some(q => Math.hypot(q[0] - px, q[1] - py) < q[2] + pr + 4)) continue;
+      if (door && door.tiles.some(([x, y]) => Math.hypot(x - px, y - py) < pr + 5)) continue;
+      for (let y = Math.floor(py - pr - 1); y <= Math.ceil(py + pr + 1); y++) for (let x = Math.floor(px - pr - 1); x <= Math.ceil(px + pr + 1); x++) {
+        if (inMap(x, y) && grid[y * MW + x] === T.FLOOR && Math.hypot(x - px, y - py) + (nz(x, y, 3, 90) - 0.5) * 1.2 <= pr) grid[y * MW + x] = T.VOID;
+      }
+      pits.push([px, py, pr]); made++;
+    }
+  }
+  // 6. élagage : toute tuile de sol non reliée au départ (poches, îlots isolés) redevient vide
+  {
+    const st = zones[F.bonfires[0]], q = [[st.cx, st.cy + 2]], seen = new Uint8Array(MW * MH); let sx0 = st.cx, sy0 = st.cy + 2;
+    for (let t = 0; t < 40 && grid[sy0 * MW + sx0] === T.VOID; t++) { sy0 = st.cy + 2 + (t % 7) - 3; sx0 = st.cx + ((t * 3) % 9) - 4; } q[0] = [sx0, sy0];
+    seen[sy0 * MW + sx0] = 1;
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = ny * MW + nx; if (nx > 0 && ny > 0 && nx < MW - 1 && ny < MH - 1 && !seen[k] && grid[k] !== T.VOID) { seen[k] = 1; q.push([nx, ny]); } } }
+    for (let i = 0; i < grid.length; i++) if (grid[i] !== T.VOID && !seen[i]) { grid[i] = T.VOID; roomOf[i] = -1; }
+  }
+  // 7. décors, coffres, feux, ennemis (voies de passage réservées)
+  const occ = new Uint8Array(MW * MH);
+  const reserve = (x, y, w, h, pad = 0) => { for (let j = -pad; j < h + pad; j++) for (let i = -pad; i < w + pad; i++) { const k = (y + j) * MW + x + i; if (k >= 0 && k < occ.length) occ[k] = 1; } };
+  for (const sg of segs) for (let y = Math.min(sg[1], sg[3]) - 6; y <= Math.max(sg[1], sg[3]) + 6; y++) for (let x = Math.min(sg[0], sg[2]) - 6; x <= Math.max(sg[0], sg[2]) + 6; x++) if (inMap(x, y) && segD(x + 0.5, y + 0.5, sg) <= sg[4] + 1) occ[y * MW + x] = 1;
+  for (const q of fpts) reserve(q.x - 2, q.y - 2, 5, 5, 0);
+  if (door) for (const [x, y] of door.tiles) reserve(x - 3, y - 3, 7, 7, 0);
+  const free = (x, y, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = (y + j) * MW + x + i; if (occ[k] || grid[k] !== T.FLOOR) return false; } return true; };
+  const inZ = (k, x, y) => roomOf[y * MW + x] === k;
+  let reach = null;   // tuiles atteignables depuis le départ une fois le décor posé : coffres et ennemis n'y échouent jamais dans une poche fermée
+  const spot = (k, tries, ok) => { const z = zones[k]; for (let t = 0; t < tries; t++) { const x = z.cx + ri(-z.rx + 2, z.rx - 2), y = z.cy + ri(-z.ry + 2, z.ry - 2); if (inMap(x, y) && inZ(k, x, y) && free(x, y, 1, 1) && (!reach || reach[y * MW + x]) && (!ok || ok(x, y))) return [x, y]; } return null; };
+  const bonfires = [];
+  F.bonfires.forEach((k, bi) => {
+    const z = zones[k]; let bx = z.cx, by = bi === 0 ? z.cy - 2 : z.cy - 3;
+    if (!free(bx, by, 1, 1)) { const p = spot(k, 80, (x, y) => free(x - 1, y - 1, 3, 3)); if (p) [bx, by] = p; }
+    reserve(bx, by, 1, 1, 2); bonfires.push({ id: 'b' + (bi + 1), name: z.name, tx: bx, ty: by });
+  });
+  const b0 = bonfires[0]; let start = { tx: b0.tx, ty: b0.ty + 2 };
+  for (const [ox, oy] of [[0, 2], [0, -2], [2, 0], [-2, 0], [0, 3], [3, 0], [-3, 0], [0, -3], [1, 1], [-1, 1], [2, 2], [-2, 2]]) if (grid[(b0.ty + oy) * MW + b0.tx + ox] === T.FLOOR) { start = { tx: b0.tx + ox, ty: b0.ty + oy }; break; }
+  reserve(start.tx, start.ty, 1, 1, 1);
+  const farFromFire = (x, y) => bonfires.every(b => Math.hypot(b.tx - x, b.ty - y) > 7);
+  const decor = [], chests = [], spawns = [];
+  zones.forEach(z => {
+    const n = Math.floor(Math.PI * z.rx * z.ry / 24);
+    for (let t = 0; t < n * 5 && decor.filter(d => d.room === z.k).length < n; t++) {
+      const kind = def.decorKinds[Math.floor(R() * def.decorKinds.length)], [w, h] = FOOT[kind];
+      const x = z.cx + ri(-z.rx + 1, z.rx - 2), y = z.cy + ri(-z.ry + 1, z.ry - 2);
+      if (!inMap(x, y) || !inZ(z.k, x, y) || !free(x, y, w, h) || !inZ(z.k, x + w - 1, y + h - 1)) continue; reserve(x, y, w, h, 1); decor.push({ kind, tx: x, ty: y, room: z.k });
+    }
+  });
+  const computeReach = () => {   // atteignabilité depuis le départ, décor et coffres solides exclus
+    const blocked = new Uint8Array(MW * MH); for (const d of decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) blocked[(d.ty + j) * MW + d.tx + i] = 1; }
+    for (const c of chests) blocked[c.ty * MW + c.tx] = 1;
+    reach = new Uint8Array(MW * MH); const q = [[start.tx, start.ty]]; reach[start.ty * MW + start.tx] = 1;
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = ny * MW + nx; if (!reach[k] && grid[k] === T.FLOOR && !blocked[k]) { reach[k] = 1; q.push([nx, ny]); } } }
+  };
+  computeReach();
+  const chestZ = F.chests || zones.map((_, k) => k).filter(k => k > 0);
+  def.loot.forEach((item, ci) => { let p = spot(chestZ[ci % chestZ.length], 120); for (let k = 1; !p && k < zones.length; k++) p = spot(k, 200); if (p) { reserve(p[0], p[1], 1, 1, 1); chests.push({ tx: p[0], ty: p[1], item }); } });
+  computeReach();
+  const tiers = def.mobs, pick = a => a[Math.floor(R() * a.length)];
+  const place = (k, type) => { const p = spot(k, 120, farFromFire); if (p) { reserve(p[0], p[1], 1, 1, 1); spawns.push({ type, tx: p[0], ty: p[1], room: k }); } };
+  const bigZ = F.big ?? 4;
+  zones.forEach(z => {
+    const k = z.k; if (k === 0) return;
+    const nm = k === last ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
+    if (k >= 2) { const nd = k === last ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
+    if (k === bigZ) place(k, tiers.big);
+  });
+  if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
+  const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
+  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret: null, modules: [] };
+}
+
 // ---------- monde ----------
 export function buildWorld(idx) {
   const def = MAPS[idx], th = THEMES[def.theme];
@@ -283,7 +441,7 @@ export function buildWorld(idx) {
     for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
     LAB.door.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.DOOR; }); LAB.fog.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.FOG; });
   } else {
-    const g = generate({ ...def, decorKinds: th.decor });
+    const g = (def.free ? generateFree : generate)({ ...def, decorKinds: th.decor });
     L = g;
     for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
   }
