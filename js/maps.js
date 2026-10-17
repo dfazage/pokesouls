@@ -602,6 +602,29 @@ export function bakeFloor(world) {
     if (rt) { const gr = g.createLinearGradient(x + TS, 0, x + TS - 8, 0); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x + TS - 8, y, 8, TS); }
     if (dn) { const gr = g.createLinearGradient(0, y + TS, 0, y + TS - 8); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x, y + TS - 8, TS, 8); }
   }
+  // feuilles de momiji tombées au sol (quartier d'Edo) : par tas, surtout au pied des murs et des arbres ; les emplacements servent aussi aux rafales de vent
+  if (th.fx === 'garden') {
+    const LEAF = ['..#..', '#####', '.###.', '..#..', '..#..'], LC = ['#9e1019', '#b3121f', '#bf2a22', '#cc4a24', '#d9792a', '#d9a636'];
+    const spots = []; world.leafSpots = spots;
+    const near = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const v = world.grid[(ty + dy) * MW + tx + dx]; return v === T.VOID || v === T.SOLID; });
+    for (let ty = 1; ty < MH - 1; ty++) for (let tx = 1; tx < MW - 1; tx++) {
+      if (world.grid[ty * MW + tx] !== T.FLOOR) continue;
+      if (rnd(tx, ty, 811) > (near(tx, ty) ? 0.1 : 0.022)) continue;
+      const cx = tx * TS + 4 + rnd(tx, ty, 812) * (TS - 8), cy = ty * TS + 4 + rnd(tx, ty, 813) * (TS - 8), n = 3 + Math.floor(rnd(tx, ty, 814) * 5);
+      spots.push({ x: cx, y: cy });
+      for (let i = 0; i < n; i++) {
+        const lx = Math.round(cx + (rnd(tx, ty, 820 + i) - 0.5) * 22), ly = Math.round(cy + (rnd(tx, ty, 840 + i) - 0.5) * 14), col = LC[Math.floor(rnd(tx, ty, 860 + i) * LC.length)], fl = rnd(tx, ty, 880 + i);
+        const small = rnd(tx, ty, 900 + i) < 0.35, rot = Math.floor(rnd(tx, ty, 920 + i) * 4);
+        g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(lx + 1, ly + 3, small ? 3 : 4, 1);
+        g.fillStyle = col; g.globalAlpha = 0.92;
+        for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 5; xx++) if (LEAF[yy][xx] === '#' && !(small && (xx === 0 || xx === 4 || yy === 4))) {
+          const ax = rot & 1 ? 4 - xx : xx, ay = rot & 2 ? 4 - yy : yy;
+          g.fillRect(lx + (fl < 0.5 ? ax : ay), ly + (fl < 0.5 ? ay : ax), 1, 1);
+        }
+        g.globalAlpha = 1;
+      }
+    }
+  }
   return c;
 }
 

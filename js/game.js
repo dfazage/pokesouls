@@ -1,4 +1,5 @@
 // Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
+import { windNow, LEAF_COLS } from './wind.js';
 import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
@@ -1013,7 +1014,12 @@ export class Game {
   floatText(x, y, s, c) { this.texts.push({ x: x + rand(-4, 4), y, s, c, t: 0 }); }
   updateFx(dt) {
     this.updateFxs(dt);
-    for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt; }
+    const wn = this.parts.some(p => p.wind) ? windNow() : 0;
+    for (const p of this.parts) {
+      p.life -= dt;
+      if (p.wind) { p.vx += (wn * 0.85 * p.k - p.vx) * Math.min(1, dt * 1.6); p.x += Math.sin(p.ph + p.life * 8) * 9 * dt; p.vz += Math.cos(p.ph + p.life * 8) * 40 * dt; if (p.z < 0) { p.z = 0; p.vz = 0; p.vx *= 0.5; p.life = Math.min(p.life, 0.3); } }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt;
+    }
     this.parts = this.parts.filter(p => p.life > 0);
     for (const t of this.texts) { t.t += dt; t.y -= 14 * dt; }
     if (this.pops) { for (const p of this.pops) p.t += dt; this.pops = this.pops.filter(p => p.t < 1.8); }
@@ -1022,8 +1028,21 @@ export class Game {
   }
 
   // ---------- monde : zones, feux, portes, brume, coffres ----------
+  // feuilles du sol soulevées par les rafales, ou par les pas du chef (Tour Carillon)
+  windLeaves(dt) {
+    const c = this.chief(), sp = this.world.leafSpots; if (!c || !sp || !sp.length) return;
+    const lift = (s, n, burst) => { for (let i = 0; i < n; i++) { const life = rand(1.4, 2.6); this.parts.push({ x: s.x + rand(-8, 8), y: s.y + rand(-5, 5), z: 1, vx: burst ? rand(-30, 30) : 0, vy: rand(-14, 14), vz: rand(burst ? 26 : 14, burst ? 52 : 34), g: 34, life, max: life, c: LEAF_COLS[(Math.random() * LEAF_COLS.length) | 0], size: Math.random() < 0.3 ? 3 : 2, wind: 1, k: rand(0.6, 1.2), ph: rand(0, 6.28) }); } };
+    const gust = windNow(), st = Math.max(0, (gust - 38) / 60);
+    if (st > 0 && Math.random() < dt * st * 7) { for (let t = 0; t < 12; t++) { const s = sp[(Math.random() * sp.length) | 0]; if (Math.hypot(s.x - c.x, s.y - c.y) < 320) { lift(s, 1 + ((Math.random() * 3) | 0), false); break; } } }
+    this.stirT = (this.stirT || 0) - dt;
+    const moved = Math.hypot(c.x - (this._lx ?? c.x), c.y - (this._ly ?? c.y)) > 0.3; this._lx = c.x; this._ly = c.y;
+    if (this.stirT <= 0 && moved) {
+      for (const s of sp) if (Math.abs(s.x - c.x) < 14 && Math.abs(s.y - c.y) < 12 && !s.cd) { s.cd = 1; lift(s, 3, true); setTimeout(() => { s.cd = 0; }, 2500); }
+      this.stirT = 0.12;
+    }
+  }
   updateWorld(dt) {
-    const c = this.chief(); this.prompt = null; const pr = this.prog[this.mapIdx];
+    const c = this.chief(); this.prompt = null; if (this.world.leafSpots) this.windLeaves(dt); const pr = this.prog[this.mapIdx];
     const z = M.zoneAt(this.world, c.x, c.y);
     if (z && z.area && z.area !== this.lastArea) { this.lastArea = z.area; this.emit('area', z); }
     const s = this.souvenir;
