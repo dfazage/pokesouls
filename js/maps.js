@@ -525,6 +525,15 @@ export function bakeFloor(world) {
     const lab = th.floorLab && ri >= 0 && world.rooms[ri] && (world.rooms[ri].id === 'R2' || world.rooms[ri].id === 'R4');
     const base = inA ? th.arena : lab ? th.floorLab : th.floor;
     const k = ((tx + ty) & 1) ? 6 : 0;
+    const vn = (px, py) => { const ix = Math.floor(px), iy = Math.floor(py), fx0 = px - ix, fy0 = py - iy, sm = t => t * t * (3 - 2 * t), a0 = rnd(ix, iy), b0 = rnd(ix + 1, iy), c0 = rnd(ix, iy + 1), d0 = rnd(ix + 1, iy + 1), top = a0 + (b0 - a0) * sm(fx0), bot = c0 + (d0 - c0) * sm(fx0); return top + (bot - top) * sm(fy0); };
+    // plein air : prairie par défaut, avec des plaques de dalles et de terre battue
+    const grass = th.fx === 'garden' && !inA && (vn(tx / 5.5 + 3, ty / 5.5) * 0.7 + vn(tx / 2.2, ty / 2.2 + 5) * 0.3) < 0.6;
+    if (grass) {
+      const pv = vn(tx / 3.2 + 11, ty / 3.2) * 22 + r * 5; g.fillStyle = `rgb(${68 + pv * 0.7 | 0},${104 + pv | 0},${52 + pv * 0.4 | 0})`; g.fillRect(x, y, TS, TS);
+      for (let n = 0; n < 7; n++) { const q = rnd(tx * 7 + n, ty * 3 + n * 5); g.fillStyle = q < 0.5 ? 'rgba(40,78,36,.5)' : 'rgba(150,190,96,.4)'; g.fillRect(x + (q * 977 % 1) * (TS - 2), y + (q * 313 % 1) * (TS - 4), 1, 2 + (q * 51 % 2) | 0); }
+      if (r > 0.955) { g.fillStyle = r > 0.98 ? '#f4eadc' : '#f2c860'; g.fillRect(x + 6 + r * 90 % 12, y + 6 + r * 70 % 12, 2, 2); }
+      continue;
+    }
     g.fillStyle = `rgb(${base[0] + k + r * 6 | 0},${base[1] + k + r * 6 | 0},${base[2] + k + r * 8 | 0})`;
     g.fillRect(x, y, TS, TS);
     g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x, y + TS - 1, TS, 1); g.fillRect(x + TS - 1, y, 1, TS);

@@ -4,7 +4,7 @@ import * as M from './maps.js';
 import * as S from './hd2d_shaders.js';
 
 const { TS, MW, MH, FACE, T } = M;
-export const DEPTH = 3.4, OPEN_DEPTH = 0.45;           // profondeur de l'abîme sous le sol (en tuiles)
+export const DEPTH = 3.4, OPEN_DEPTH = 0.06;           // profondeur de l'abîme sous le sol (en tuiles)
 export const WALL_TALL = 1.8, WALL_LOW = 0.28, WALL_SIDE = 1.3, WALL_MID = 1.0;
 
 // ---------- réglages par thème ----------
@@ -25,7 +25,7 @@ export const HD = {
   rock: { type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },
-  bell: { type: 5, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.1, .13, .1], [.27, .32, .24], [1., .8, .42]], prop: 'tree', propCol: [.05, .14, .09], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
+  bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .34, .16], [.3, .46, .21], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .42 } },
   mystic: { type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
@@ -264,11 +264,39 @@ export function buildProps(w, key, seed, shared) {
   const MG = 24;
   // distance (Tchebychev) au sol : on n'implante rien contre les murs
   const W2 = MW + 2 * MG, H2 = MH + 2 * MG, near = new Uint8Array(W2 * H2);
-  const R_ = cfg.prop === 'tower' ? 7 : 4;   // les tours restent loin de la zone jouable
+  const R_ = cfg.prop === 'tower' ? 7 : cfg.open ? 6 : 4;   // les tours restent loin de la zone jouable
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (w.grid[ty * MW + tx] !== T.VOID) {
     for (let j = -R_; j <= R_; j++) for (let i = -R_; i <= R_; i++) near[(ty + MG + j) * W2 + (tx + MG + i)] = 1;
   }
   const items = [], target = Math.round(W2 * H2 / 34);
+  if (cfg.open) {   // plein air : plus de murs, les limites sont des haies et des arbres (la collision reste celle de la grille)
+    const dist = new Uint8Array(MW * MH).fill(99);
+    for (let i = 0; i < MW * MH; i++) if (w.grid[i] !== T.VOID) dist[i] = 0;
+    for (let d = 1; d <= 6; d++) for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      if (dist[ty * MW + tx] !== 99) continue;
+      let hit = false;
+      for (let j = -1; j <= 1 && !hit; j++) for (let i = -1; i <= 1; i++) { const x = tx + i, y = ty + j; if (inB(x, y) && dist[y * MW + x] === d - 1) { hit = true; break; } }
+      if (hit) dist[ty * MW + tx] = d;
+    }
+    const floorAbove = (tx, ty) => { for (let j = 1; j <= 3; j++) for (let i = -1; i <= 1; i++) if (inB(tx + i, ty - j) && w.grid[(ty - j) * MW + tx + i] !== T.VOID) return true; return false; };
+    const V = (tx, ty, k) => rndI(tx, ty, k + 11);
+    for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      const d = dist[ty * MW + tx]; if (d === 0 || d > 6) continue;
+      const low = floorAbove(tx, ty);   // côté sud d'une zone : haies basses, pour ne jamais cacher le joueur
+      const put = (k, kind, px, pz) => {
+        const a = V(tx, ty, k * 5 + 1), b = V(tx, ty, k * 5 + 2), c = V(tx, ty, k * 5 + 3), e = V(tx, ty, k * 5 + 4);
+        let sx, sy;
+        if (kind === 0) { sx = 1.5 + a * 0.7; sy = low ? 0.55 + b * 0.35 : 1.1 + b * 0.7; }              // haie / buisson taillé
+        else if (kind === 1) { sx = 1.4 + a * 0.9; sy = low ? 1.3 + b * 0.9 : 2.4 + b * 1.8; }        // arbre moyen
+        else { sx = 1.6 + a * 1.0; sy = low ? 2.4 + b * 1.4 : 3.4 + b * 2.4; }                         // grand arbre
+        items.push([tx + px, ty + pz, a, b, c, kind, sx, sy, e]);
+      };
+      if (d === 1) for (let k = 0; k < 3; k++) put(k, 0, 0.15 + V(tx, ty, 40 + k) * 0.7, 0.15 + V(tx, ty, 50 + k) * 0.7);
+      else if (d === 2) { put(0, low ? 0 : 1, 0.2 + V(tx, ty, 60) * 0.6, 0.2 + V(tx, ty, 61) * 0.6); if (V(tx, ty, 62) < 0.5) put(1, 0, 0.5 + V(tx, ty, 63) * 0.4, 0.5 + V(tx, ty, 64) * 0.4); }
+      else if (d <= 4) { if (V(tx, ty, 65) < 0.78) put(0, low && d === 3 ? 1 : 2, 0.2 + V(tx, ty, 66) * 0.6, 0.2 + V(tx, ty, 67) * 0.6); }
+      else if (V(tx, ty, 68) < 0.5) put(0, 2, V(tx, ty, 69), V(tx, ty, 70));
+    }
+  }
   for (let k = 0; k < target * 3 && items.length < target; k++) {
     const x = R() * W2, z = R() * H2, ix = Math.floor(x), iz = Math.floor(z);
     if (near[iz * W2 + ix]) continue;
@@ -280,7 +308,7 @@ export function buildProps(w, key, seed, shared) {
     vertexShader: S.PROP_VERT, fragmentShader: S.PROP_FRAG,
     uniforms: {
       uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam,
-      uType: { value: { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
+      uType: { value: cfg.open ? 6 : { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
       uEmisCol: { value: new THREE.Vector3(...cfg.emis) }, uLightCol: { value: new THREE.Vector3(...cfg.light) }, uBob: { value: cfg.bob },
     },
   });
@@ -288,7 +316,8 @@ export function buildProps(w, key, seed, shared) {
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   items.forEach(([x, z, a, b2, c], i) => {
     let sx, sy, sz, y = -(cfg.open ? OPEN_DEPTH : DEPTH);
-    if (cfg.prop === 'mono') { sx = 0.5 + a * 0.8; sy = 1.5 + b2 * 4.5; sz = 0.5 + c * 0.8; y = -2 + a * 5.5; }
+    if (items[i].length > 5) { sx = sz = items[i][6]; sy = items[i][7]; }
+    else if (cfg.prop === 'mono') { sx = 0.5 + a * 0.8; sy = 1.5 + b2 * 4.5; sz = 0.5 + c * 0.8; y = -2 + a * 5.5; }
     else if (cfg.prop === 'tower') { sx = 0.9 + a * 1.4; sz = 0.9 + c * 1.4; sy = DEPTH + 0.2 + b2 * 1.3; }   // sommets entre le sol et ~1,5 tuile au-dessus : les tours ne cachent plus le jeu
     else if (cfg.prop === 'spire') { sx = sz = 0.5 + a * 0.9; sy = 5.5 + b2 * 7; }
     else if (cfg.prop === 'column') { sx = sz = 0.7 + a * 0.8; sy = 3.8 + b2 * 4.5; }
@@ -299,7 +328,9 @@ export function buildProps(w, key, seed, shared) {
     m4.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(sx, sy, sz));
     mesh.setMatrixAt(i, m4);
     const k = 0.75 + b2 * 0.5;
-    col.setRGB(cfg.propCol[0] * k, cfg.propCol[1] * k, cfg.propCol[2] * k); mesh.setColorAt(i, col);
+    let pc = cfg.propCol;
+    if (cfg.open) { const q = items[i][8]; if (items[i].length > 5 && items[i][5] > 0) pc = q < 0.14 ? [.62, .3, .4] : q < 0.24 ? [.5, .15, .08] : pc; }   // cerisiers et érables parmi les cèdres
+    col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); mesh.setColorAt(i, col);
   });
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   mesh.frustumCulled = false;

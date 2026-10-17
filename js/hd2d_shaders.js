@@ -193,6 +193,12 @@ void main(){
     col = mix(uCol1, uCol2, n);
     float d = fbm(p*.4 - vec2(t*.05, 0.));
     em += uCol3*smoothstep(.62, .9, d)*.12;
+  } else if(uType > 5.5){     // plein air : pelouse continue, fleurs et lucioles
+    float n = fbm(p*.11), m = fbm(p*.85 + 3.);
+    col = mix(uCol1, uCol2, n*.65 + m*.35);
+    col *= .9 + .2*hash21(floor(p*4.));
+    vec2 gf = p*2.2; float hf = hash21(floor(gf));
+    em += mix(uCol3, vec3(1.,.55,.65), step(.5, hash21(floor(gf)+7.)))*step(.992, hf)*smoothstep(.22, .0, length(fract(gf)-.5))*.55;
   } else {                    // mystique : brume bioluminescente
     float n = fbm(p*.09 + vec2(t*.015, -t*.01));
     col = mix(uCol1, uCol2, n);
@@ -246,6 +252,8 @@ void main(){
     em += uEmisCol*base*1.4*(.7 + .3*sin(uTime*2. + vW.x*3.)) + uEmisCol*smoothstep(.85, 1., vH)*.3;
   } else if(uType < 4.5){    // stalagmites : reflets chauds
     em += uEmisCol*smoothstep(.75, 1., vH)*.18;
+  } else if(uType > 5.5){     // arbres de plein air : aucune émission
+    em += uEmisCol*step(.985, hash21(floor(vW.xz*3.1) + floor(vW.y*3.1)*5.))*.35*step(.6, vH);
   } else {                    // arbres mystiques : spores lumineuses
     float s = step(.93, hash21(floor(vW.xz*3.1) + floor(vW.y*3.1)*5.));
     em += uEmisCol*s*(.5 + .5*sin(uTime*2. + vW.x*5.))*1.4;
