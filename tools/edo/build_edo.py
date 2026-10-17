@@ -104,13 +104,20 @@ add('ruin_pillar_b', crop('c4', (864, 960, 897, 1026)), 'pilier brisé haut')
 add('bridge_red',   crop('c4', (10, 1170, 530, 1350)), 'pont rouge en arc')
 
 
-# ---------- sanctuaire shinto (planche d'Unusable) : toits olive -> vin, piliers vermillon conservés ----------
-def wine(a): return recolor(a, 30, 95, 352, keep=0.35, sat=0.95, val=0.82, smin=0.12)
-add('torii_vermilion', wine(crop('sh', (835, 83, 1049, 248), True)), 'torii vermillon, toit vin')
-add('pagoda_shinto',   wine(crop('sh', (512, 63, 769, 510), True)), 'pagode shinto 3 étages, toits vin')
-add('shrine_hall',     wine(crop('sh', (81, 190, 452, 511), True)), 'grand sanctuaire, toits vin')
-add('shrine_small',    wine(crop('sh', (858, 284, 1044, 510), True)), 'petit sanctuaire, toits vin')
-add('pagoda_shinto_o', crop('sh', (512, 63, 769, 510), True), 'pagode shinto, toits d\'origine (olive)')
+# ---------- sanctuaire shinto (planche d'Unusable) : une seule famille de bâtiments, palette crépusculaire ----------
+def dusk(a, sat=0.7, val=0.8, mix=0.14, tint=(70, 44, 78)):
+    """Assombrit et désature, puis fond vers une teinte de crépuscule : les bâtiments rejoignent la lumière sombre de la carte."""
+    h, s, v = rgb2hsv(a); o = a.copy(); rgb = hsv2rgb(h, np.clip(s * sat, 0, 1), np.clip(v * val, 0, 1)) * 255
+    rgb = rgb * (1 - mix) + np.array(tint, np.float32) * mix; o[..., :3] = np.clip(rgb + .5, 0, 255).astype(np.uint8); return o
+def wine(a): return dusk(recolor(a, 30, 95, 352, keep=0.3, sat=0.8, val=0.62, smin=0.12), sat=0.78, val=0.9)       # toits vin sombre
+def slate(a): return dusk(recolor(a, 30, 95, 262, keep=0.25, sat=0.45, val=0.6, smin=0.12), sat=0.8, val=0.92)     # toits ardoise violacée
+def both(name, box, note):
+    c = crop('sh', box, True); add(name + '_wine', wine(c), note + ', toits vin'); add(name + '_slate', slate(c), note + ', toits ardoise')
+both('torii',  (835, 83, 1049, 248), 'torii')
+both('pagoda', (512, 63, 769, 510), 'pagode à 3 étages')
+both('hall',   (81, 190, 452, 511), 'grand sanctuaire')
+both('chapel', (858, 284, 1044, 510), 'petit sanctuaire')
+for n in ('ruin_pillar_a', 'ruin_pillar_b'): S[n] = (dusk(S[n][0], sat=0.6, val=0.78), S[n][1])
 
 # ---------- planche de contrôle ----------
 names = list(S); cols = 6; sc = 2; pad = 10
@@ -139,20 +146,22 @@ print(len(S), 'sprites', sheet.size)
 PACKS = {
   'trees':  ('tree_bell',   6, [('momiji_gold', 1), ('momiji_vermilion', 1), ('momiji_red', 1), ('momiji_carmine', 1), ('tree_autumn0', 1), ('tree_autumn1', 1),
                                 ('tree_red_a', .5), ('tree_red_b', .5), ('momiji_big', .5), ('momiji_big2', .5), ('tree_cypress', 1)]),
-  'torii':  ('torii_bell',  1, [('torii_vermilion', .28)]),
-  'pagoda': ('pagoda_bell', 3, [('pagoda_shinto', .27), ('pagoda_purple', .5), ('pagoda_blue', .55)]),
-  'shrine': ('shrine_bell', 2, [('shrine_hall', .26), ('temple_purple', .68)]),
-  'chapel': ('chapel_bell', 3, [('shrine_small', .31), ('house_purple', 1), ('hut_thatch', 1), ('shrine_red', .75)]),
+  'torii':  ('torii_bell',  2, [('torii_wine', .30, 2), ('torii_slate', .30, 2)]),
+  'pagoda': ('pagoda_bell', 2, [('pagoda_wine', .36, 2), ('pagoda_slate', .36, 2)]),
+  'shrine': ('shrine_bell', 2, [('hall_wine', .34, 2), ('hall_slate', .34, 2)]),
+  'chapel': ('chapel_bell', 2, [('chapel_wine', .40, 2), ('chapel_slate', .40, 2)]),
   'ruin':   ('ruin_bell',   2, [('ruin_pillar_a', .6), ('ruin_pillar_b', .6)]),
 }
-def scaled(n, k):
-    im = Image.fromarray(S[n][0])
-    if k != 1: im = im.convert('RGBa').resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS).convert('RGBA')
+def scaled(n, k, block=1):
+    im = Image.fromarray(S[n][0]); b = block
+    W_, H_ = max(1, round(im.width * k / b)), max(1, round(im.height * k / b))
+    if (k != 1 or b != 1): im = im.convert('RGBa').resize((W_, H_), Image.LANCZOS).convert('RGBA')
+    if b != 1: im = im.resize((W_ * b, H_ * b), Image.NEAREST)   # pixels plus gros : même grain que les sprites Pokémon
     return im
 if len(sys.argv) > 3:
     ASSET = sys.argv[3]; db = {}
     for name, (key, cols, items) in PACKS.items():
-        ims = [scaled(n, k) for n, k in items]; cw = max(i.width for i in ims) + 2; ch = max(i.height for i in ims) + 1
+        ims = [scaled(*it) for it in items]; cw = max(i.width for i in ims) + 2; ch = max(i.height for i in ims) + 1
         cols = min(cols, len(ims)); rows_n = (len(ims) + cols - 1) // cols
         sheet2 = Image.new('RGBA', (cw * cols, ch * rows_n), (0, 0, 0, 0))
         for i, im in enumerate(ims): sheet2.alpha_composite(im, ((i % cols) * cw + (cw - im.width) // 2, (i // cols) * ch + ch - im.height))

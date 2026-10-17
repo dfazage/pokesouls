@@ -162,30 +162,30 @@
   },
   "torii_bell": {
     "file": "props/edo_torii.png",
-    "fw": 61,
-    "fh": 46,
-    "cols": 1,
+    "fw": 66,
+    "fh": 49,
+    "cols": 2,
     "frames": [
-      0
+      0,
+      1
     ],
     "vary": true
   },
   "pagoda_bell": {
     "file": "props/edo_pagoda.png",
-    "fw": 70,
-    "fh": 121,
-    "cols": 3,
+    "fw": 94,
+    "fh": 161,
+    "cols": 2,
     "frames": [
       0,
-      1,
-      2
+      1
     ],
     "vary": true
   },
   "shrine_bell": {
     "file": "props/edo_shrine.png",
-    "fw": 99,
-    "fh": 83,
+    "fw": 126,
+    "fh": 109,
     "cols": 2,
     "frames": [
       0,
@@ -196,13 +196,11 @@
   "chapel_bell": {
     "file": "props/edo_chapel.png",
     "fw": 74,
-    "fh": 73,
-    "cols": 3,
+    "fh": 89,
+    "cols": 2,
     "frames": [
       0,
-      1,
-      2,
-      3
+      1
     ],
     "vary": true
   },
