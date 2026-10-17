@@ -548,15 +548,14 @@ function muretRuns(w, ruin) {
     }
   }
   const hash = (x, z, k) => rndI(Math.round(x * 4), Math.round(z * 4), k);
-  const seg = (p, q, low, on) => {
-    if (!on) return;
+  const LOW_H = 0.84;   // côté caméra (sud) : bas, pour ne jamais cacher le joueur
+  // pose d'un segment ; e0, e1 : rallonge à chaque bout selon l'angle avec le voisin (raccord sans trou ni chapeau doublé)
+  const seg = (p, q, h, e0, e1) => {
     const dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1e-3) return;
-    const mx = (p[0] + q[0]) / 2, mz = (p[1] + q[1]) / 2, a = hash(mx, mz, 1), b = hash(mx, mz, 2), c = hash(mx, mz, 3);
-    if (ruin && !low && hash(mx, mz, 4) < 0.1) return;   // brèche
-    let h = low ? 0.78 + b * 0.12 : 1.0 + b * 0.45;
-    if (ruin) h = low ? 0.62 + b * 0.25 : (b < 0.25 ? 0.55 + b : 0.9 + b * 0.7);
-    out.push([mx, mz, a, b, c, -Math.atan2(dz, dx), L + TH * 0.45, h, TH]);   // allongé pour couvrir les raccords
+    const ux = dx / L, uz = dz / L, sh = (e1 - e0) / 2, mx = (p[0] + q[0]) / 2 + ux * sh, mz = (p[1] + q[1]) / 2 + uz * sh;
+    out.push([mx, mz, hash(mx, mz, 1), hash(mx, mz, 2), hash(mx, mz, 3), -Math.atan2(dz, dx), L + e0 + e1, h, TH]);
   };
+  const ext = (a, b) => { if (a == null || b == null) return 0; let d = Math.abs(a - b) % (Math.PI * 2); if (d > Math.PI) d = Math.PI * 2 - d; return Math.min(0.5, TH / 2 * Math.tan(d / 2)) + 0.02; };
   for (const e0 of edges) {
     if (e0.used) continue;
     const loop = []; let e = e0;
@@ -565,27 +564,38 @@ function muretRuns(w, ruin) {
       const nxt = byStart.get(key(e.bx, e.bz)) || [];
       e = nxt.find(q => !q.used) || null;
     }
-    // milieux des arêtes décalés vers le vide : tracé à pans coupés
+    // milieux des arêtes décalés vers le vide : tracé à pans coupés ; les segments alignés sont fusionnés sur toute leur longueur
     const P = loop.map(q => [q.mx + q.nx * OFF, q.mz + q.nz * OFF]), n = loop.length, closed = n > 2;
-    let run = null;   // regroupe les segments alignés (murets longs) ; ruines : segments séparés
-    const flush = () => { if (run) { seg(run.p, run.q, run.low, true); run = null; } };
+    const chainH = 1.0 + hash(P[0][0], P[0][1], 7) * 0.4;   // une hauteur par mur continu
+    const runs = []; let run = null;
     for (let i = 0; i < (closed ? n : n - 1); i++) {
       const A = loop[i], B = loop[(i + 1) % n], p = P[i], q = P[(i + 1) % n];
-      const on = A.on && B.on, low = A.low && B.low, dir = Math.round(Math.atan2(q[1] - p[1], q[0] - p[0]) * 4 / Math.PI);
-      if (!on) { flush(); continue; }
-      if (!ruin && run && run.dir === dir && run.low === low && run.len < 4) { run.q = q; run.len += Math.hypot(q[0] - p[0], q[1] - p[1]); continue; }
-      flush(); run = { p, q, dir, low, len: Math.hypot(q[0] - p[0], q[1] - p[1]) };
-      if (ruin) flush();
+      if (!(A.on && B.on)) { run = null; runs.push(null); continue; }
+      const ang = Math.atan2(q[1] - p[1], q[0] - p[0]), dir = Math.round(ang * 4 / Math.PI), nzs = -Math.cos(ang);   // normale vers le vide : (dz, -dx)
+      const low = nzs > 0.3;
+      if (!ruin && run && run.dir === dir) { run.q = q; continue; }
+      run = { p, q, dir, ang, low }; runs.push(run);
+      if (ruin) run = null;
     }
-    flush();
+    // un tracé fermé sans trou peut commencer au milieu d'un segment : on recolle le premier et le dernier s'ils sont alignés
+    if (closed && runs.length > 1 && runs[0] && runs[runs.length - 1] && !ruin && runs[0].dir === runs[runs.length - 1].dir) { runs[0].p = runs[runs.length - 1].p; runs.pop(); }
+    const R = runs.length;
+    runs.forEach((r, i) => {
+      if (!r) return;
+      const prev = closed || i > 0 ? runs[(i - 1 + R) % R] : null, next = closed || i < R - 1 ? runs[(i + 1) % R] : null;
+      let h = r.low ? LOW_H : chainH;
+      if (ruin) { const mx = (r.p[0] + r.q[0]) / 2, mz = (r.p[1] + r.q[1]) / 2, b = hash(mx, mz, 2); if (!r.low && hash(mx, mz, 4) < 0.1) return; h = r.low ? 0.62 + b * 0.25 : (b < 0.25 ? 0.55 + b : 0.9 + b * 0.7); }
+      seg(r.p, r.q, h, ext(prev && prev.ang, r.ang), ext(r.ang, next && next.ang));
+    });
   }
   // arène : couronne de murets sur le cercle (au milieu de l'anneau vide), ouverte à l'entrée
   if (w.arenaRing) {
     const a = w.arena, R = w.arenaRing.rc + OFF, segs = arenaSegs(w), P = ang => [a.cx + Math.cos(ang) * R, a.cy + Math.sin(ang) * R];
+    const hA = 1.0 + rndI(Math.round(a.cx), Math.round(a.cy), 7) * 0.4, e = Math.min(0.5, TH / 2 * Math.tan(Math.PI * 2 / segs.length)) + 0.02;
     for (let i = 0; i < segs.length; i += 2) {
-      const s0 = segs[i], s1 = segs[(i + 1) % segs.length];
-      if (!s0.ring || !s1.ring) { if (s0.ring) seg(P(s0.a0), P(s0.a1), Math.sin((s0.a0 + s0.a1) / 2) > 0.45, true); continue; }
-      seg(P(s0.a0), P(s1.a1), Math.sin(s0.a1) > 0.45, true);
+      const s0 = segs[i], s1 = segs[(i + 1) % segs.length], hOf = m => (Math.sin(m) > 0.45 ? LOW_H : hA);
+      if (!s0.ring || !s1.ring) { if (s0.ring) seg(P(s0.a0), P(s0.a1), hOf((s0.a0 + s0.a1) / 2), e, e); continue; }
+      seg(P(s0.a0), P(s1.a1), hOf(s0.a1), e, e);
     }
   }
   return out;
