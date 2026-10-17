@@ -8,6 +8,8 @@ import { dodgeInvuln } from './dodge.js';
 // Couleur des anneaux du Lien (planches PMD) selon le type du Pokémon.
 export const LINKC = { fire: 'red', water: 'blue', grass: 'green', electric: 'yellow', psychic: 'pink', fairy: 'pink', ghost: 'purple', poison: 'purple', dark: 'purple', dragon: 'blue', ice: 'blue', flying: 'blue', fighting: 'red', rock: 'yellow', ground: 'yellow', steel: 'blue', bug: 'green', normal: 'yellow' };
 
+// Équilibrage : le total infligé à UNE cible par une signature reste entre ~2,5 et ~4,5 coups légers (avant : jusqu'à 18 sur une grande cible comme Onix, car chaque projectile d'éventail,
+// de feuilles ou de boule explosive touchait à plein). Les attaques multi-projectiles ont donc un coefficient par projectile bien plus bas.
 // Attaques signature : une par type (feu / eau / plante) et par stade d'évolution (0, 1, 2).
 // kinds : cross (deux entailles), whirl (tourbillon), blast (3 boules explosives), rush (charge perforante), storm (pluie d'impacts), fan (éventail), leaves (nova de feuilles), sun (rayon + soin)
 export const SIGS = {
@@ -202,7 +204,7 @@ export function installExtras(G, d) {
         SFX.boom(); this.shake = Math.max(this.shake, 4); break;
       }
       case 'blast': {
-        for (let i = -1; i <= 1; i++) proj(ang + i * 0.26, 175, 0.75, { explode: 32, r: 5, life: 1.2 });
+        for (let i = -1; i <= 1; i++) proj(ang + i * 0.26, 175, 0.45, { explode: 32, r: 5, life: 1.2 });
         for (let i = 0; i < 24; i++) { const aa = ang + rand(-0.4, 0.4), s = rand(60, 190); this.parts.push({ x: m.x, y: m.y, z: 8, vx: Math.cos(aa) * s, vy: Math.sin(aa) * s * 0.7, vz: rand(-5, 15), life: rand(0.25, 0.5), max: 0.5, c: Math.random() < 0.5 ? col : '#ffd36a', size: 3 }); }
         SFX.shoot(); SFX.boom(); break;
       }
@@ -221,19 +223,19 @@ export function installExtras(G, d) {
           this.ringFx(p.x, p.y, 10, col);
           this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.3 + i * 0.11, fn: () => {
             this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); SFX.boom(); this.fx('whirlpool', p.x, p.y, { scale: 0.7, z: 0, ground: true, dur: 0.5, add: true }); this.fx('brine', p.x, p.y, { scale: 0.9, z: 10, dur: 0.45, add: true, glow: col });
-            for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 26 + e.r) this.damageEnemy(e, dmg * 0.5, m, { ...o, stagger: 0.5, knock: 50 });
-            this.hitObs(p.x, p.y, 26, dmg * 0.5, 'water');
+            for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 26 + e.r) this.damageEnemy(e, dmg * 0.22, m, { ...o, stagger: 0.5, knock: 50 });
+            this.hitObs(p.x, p.y, 26, dmg * 0.4, 'water');
           } });
         }
         break;
       }
       case 'fan': {
-        for (let i = -2; i <= 2; i++) proj(ang + i * 0.2, 235, 0.55, { r: 3.5 });
-        SFX.shoot(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.5, { r: 3.5 }); SFX.shoot(); } }); break;
+        for (let i = -2; i <= 2; i++) proj(ang + i * 0.2, 235, 0.2, { r: 3.5 });
+        SFX.shoot(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.17, { r: 3.5 }); SFX.shoot(); } }); break;
       }
       case 'leaves': {
         const off = rand(0, 6.28);
-        for (let i = 0; i < 12; i++) proj(off + i * 6.283 / 12, 150, 0.55, { r: 3.5, life: 0.95 });
+        for (let i = 0; i < 12; i++) proj(off + i * 6.283 / 12, 150, 0.14, { r: 3.5, life: 0.95 });
         this.ringFx(m.x, m.y, 30, col); SFX.shoot(); SFX.boom(); break;
       }
       case 'sun': {
