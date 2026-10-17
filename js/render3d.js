@@ -16,7 +16,7 @@ import { itemImage } from './items.js';
 
 const { TS } = M;
 let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
-export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 20, camPitchMax: 75 };   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
+export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 40, camPitchMax: 40 };   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
 const CAM_YAW_MAX = 45;   // pivot maximal à gauche / droite (degrés) ; garder aligné sur CAM_YAW de game.js
 // Tilt-shift : rayon de flou maximal (px) à 100 %. Réglage joueur 0 à 150 % (0 = désactivé, saute aussi la boucle de flou du shader).
 const TILT_BASE = 4.2, OPT_KEY = 'pokesouls.options.v1';

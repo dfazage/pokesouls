@@ -47,7 +47,7 @@ export function speciesForMap(idx) {
   if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
-const CAM_YAW = 45, CAM_TILT = 45;   // amplitude du pivot de caméra (degrés) ; l'inclinaison finale est bornée par CFG.camPitchMin / camPitchMax (render3d.js)
+const CAM_YAW = 45, CAM_TILT = 0;   // pivot latéral seulement : l'inclinaison haut/bas a été testée et écartée (inconfortable)
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
