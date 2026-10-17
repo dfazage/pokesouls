@@ -102,16 +102,16 @@ export class Game {
   }
   // état de test (?dev) : Laggron, Alakazam et Ectoplasma au niveau 36 (stade final), assis au dernier feu du Laboratoire, devant la brume de Mewtwo.
   // Il n'écrit jamais dans la sauvegarde : la vraie partie du joueur reste intacte (save() est neutralisé par noSave).
-  devPreset() {
+  devPreset(boss = 'mewtwo') {
     this.noSave = true;
-    this.picks = ['mudkip', 'abra', 'gastly'];   // clés de lignée du pool : Laggron, Alakazam, Ectoplasma
+    this.picks = boss === 'lugia' ? ['charmander', 'bulbasaur', 'squirtle'] : ['mudkip', 'abra', 'gastly'];   // clés de lignée du pool : Dracaufeu, Florizarre, Tortank (Lugia) ; Laggron, Alakazam, Ectoplasma (Mewtwo)
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     for (const m of this.team) m.lvl = D.EVOLVE_AT[1];
     this.bench = []; this.chiefIdx = 0; this.essence = 0; this.link = 0; this.souvenir = null;
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 };
     this.berries = this.maxBerries = 5; this.ethers = this.maxEthers = 3;
-    const lab = M.MAPS.findIndex(d => d.boss === 'mewtwo');   // le Laboratoire oublié : carte 4 de Kanto (index 3)
+    const lab = M.MAPS.findIndex(d => d.boss === boss);   // le Laboratoire oublié : carte 4 de Kanto (index 3)
     this.prog = M.MAPS.map(newProg);
     for (let i = 0; i < lab; i++) Object.assign(this.prog[i], { bigDead: true, pseudoDead: true, bossDead: true, rewardTaken: true, introSeen: true, doorOpen: true });
     const fires = M.buildWorld(lab).bonfires.map(b => b.id), dest = fires[fires.length - 1];   // dernier feu = Antichambre, juste avant la brume
