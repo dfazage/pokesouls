@@ -751,3 +751,5 @@ body.touch #tut{left:10px;top:10px;width:240px;font-size:11px}
 .wm-list .wspots h5{margin:0 0 2px;font-size:10px;letter-spacing:.14em;color:#ffe3a6;text-transform:uppercase}
 .wm-list .wspots .wspot{width:100%}
 .wm-list .wspots .wgo{margin-top:4px;width:100%}
+/* lignes de chapitre = vrais boutons (navigation clavier / manette) */
+button.wr{width:100%;text-align:left;color:inherit;font:inherit;font-size:13px;letter-spacing:normal}
