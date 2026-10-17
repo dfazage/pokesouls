@@ -54,33 +54,38 @@ export function showWorlds(onPick, onBack) {
 
 export function showStarters(onDone, onBack) {
   const el = $('#starters'); el.classList.add('show');
-  const picks = []; let focus = POOL[0].key, padTo = null;   // padTo : vignette où replacer le curseur manette au prochain dessin
+  const picks = []; let focus = null, padTo = null;   // focus : Pokémon dont la bulle « Choisir » est ouverte ; padTo : élément où replacer le curseur manette au prochain dessin
   const draw = () => {
-    const f = poolEntry(focus), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
+    const shown = focus || picks[picks.length - 1] || POOL[0].key;
+    const f = poolEntry(shown), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
     const types = D.typesOf(f.type, f.key);
     const step = picks.length, done = step === 3;
+    const bubble = k => { const q = poolEntry(k), a2 = archOf(q), ty = D.typesOf(q.type, q.key);
+      return `<div class="pbub" style="--c:${GAB_COL[q.gab]}"><div class="pbn"><b>${esc(D.NAMES_FR[k])}</b><span>Gén. ${q.gen}</span></div>
+        <div class="pbc">${ty.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')}<u>${a2.mode === 'ranged' ? 'À distance' : 'Corps à corps'}</u></div>
+        <button id="st-ok" class="pri" data-padfirst>Choisir</button></div>`; };
     el.innerHTML = `<h2>${done ? 'Votre équipe est prête' : `Compagnon ${step + 1} sur 3`}</h2>
-      <p class="sub">${done ? 'Vérifiez vos trois compagnons, puis lancez l’aventure. « Précédent » retire le dernier choisi.' : 'Touchez un Pokémon pour voir sa fiche, touchez-le une seconde fois pour le choisir. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais ; deux Pokémon du même type en résonance frappent plus fort.'}</p>
+      <p class="sub">${done ? 'Vérifiez vos trois compagnons, ou revenez en arrière pour retirer le dernier.' : 'Touchez un Pokémon : une bulle « Choisir » apparaît à côté de son icône.'}</p>
+      <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span><em>Compagnon ${i + 1}</em>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot ${i === step ? 'next' : ''}"><div class="pph">${i + 1}</div><span><em>Compagnon ${i + 1}</em>${i === step ? 'À choisir…' : 'Libre'}</span></div>`; }).join('')}</div>
       <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
-        <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on taken' : ''} ${p.key === focus ? 'foc' : ''}" ${p.key === padTo ? 'data-padfirst' : ''} data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
+        <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<div class="pcell"><button class="pth ${picks.includes(p.key) ? 'on taken' : ''} ${p.key === focus ? 'foc' : ''}" ${p.key === padTo ? 'data-padfirst' : ''} data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>${p.key === focus && !done ? bubble(p.key) : ''}</div>`).join('')}</div></div>`).join('')}</div>
       <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
         <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
         <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
-        <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
-        <div class="act"><button id="st-back">${step > 0 ? '← Précédent' : '← Retour'}</button>${done ? '<button id="st-go" class="pri" data-padfirst>Commencer l’aventure</button>' : `<button id="st-ok" class="pri" ${picks.includes(focus) ? 'disabled' : ''}>${picks.includes(focus) ? 'Déjà choisi' : `Choisir ${esc(D.NAMES_FR[focus])} · compagnon ${step + 1}`}</button>`}</div></div>`;
+        <div class="act"><button id="st-back">${step > 0 ? '← Retirer le dernier' : '← Retour au menu'}</button>${done ? '<button id="st-go" class="pri" data-padfirst>Commencer l’aventure</button>' : `<span class="pcount">Équipe : ${step} / 3</span>`}</div></div>`;
     padTo = null;
-    const confirm = () => { if (picks.length >= 3 || picks.includes(focus)) return; picks.push(focus); if (picks.length < 3) { focus = (POOL.find(q => !picks.includes(q.key)) || POOL[0]).key; } draw(); };
-    // un appui sur un Pokémon affiche sa fiche, un second appui sur le même le choisit (souris, tactile et manette)
-    el.querySelectorAll('.pth').forEach(b => b.onclick = () => { const k = b.dataset.k; if (k === focus && !picks.includes(k) && picks.length < 3) confirm(); else { focus = k; draw(); } });
-    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
+    const confirm = () => { if (!focus || picks.length >= 3 || picks.includes(focus)) return; picks.push(focus); focus = null; if (picks.length < 3) padTo = (POOL.find(q => !picks.includes(q.key)) || POOL[0]).key; draw(); };
+    // un appui sur un Pokémon ouvre la bulle « Choisir » à côté de son icône ; la manette place le curseur sur le bouton
+    el.querySelectorAll('.pth').forEach(b => b.onclick = () => { const k = b.dataset.k; if (picks.includes(k) || picks.length >= 3) return; focus = focus === k ? null : k; if (!focus) padTo = k; draw(); });
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); focus = null; draw(); });
     const ok = $('#st-ok'); if (ok) ok.onclick = confirm;
     $('#st-back').onclick = goBack;
     const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { leave(); onDone([...picks]); } };
   };
   // Précédent : retire le dernier compagnon ; ne quitte vers le menu qu'au premier choix
   const leave = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); };
-  const goBack = () => { if (picks.length) { focus = padTo = picks.pop(); draw(); } else if (onBack) { leave(); onBack(); } };
+  const goBack = () => { if (focus) { padTo = focus; focus = null; draw(); } else if (picks.length) { padTo = picks.pop(); draw(); } else if (onBack) { leave(); onBack(); } };   // bulle ouverte : on la ferme ; sinon on retire le dernier choix ; à zéro : menu précédent
   const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); goBack(); } };
   window.addEventListener('keydown', onKey, true);
   draw();
