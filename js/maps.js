@@ -483,6 +483,20 @@ function generateFree(def) {
   reserve(start.tx, start.ty, 1, 1, 1);
   const farFromFire = (x, y) => bonfires.every(b => Math.hypot(b.tx - x, b.ty - y) > 7);
   const decor = [], chests = [], spawns = [];
+  // mini-boss (pseudo-légendaire) : il apparaît au centre de sa zone, dans une clairière dégagée de 7×7 cases (sol plein, ni gouffre, ni décor, ni feu),
+  // posée AVANT le décor : un point tiré au hasard le coinçait contre un mur, une fosse ou un décor
+  if (def.mobs.pseudo) {
+    const pk = F.pseudo ?? 9, pz = zones[pk];
+    if (pz) {
+      const clear = (x, y) => { for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) if (!inMap(x + i, y + j) || grid[(y + j) * MW + x + i] !== T.FLOOR) return false; return bonfires.every(b => Math.hypot(b.tx - x, b.ty - y) > 7); };
+      let at = null;
+      for (let r = 0; r <= 14 && !at; r++) for (let dy = -r; dy <= r && !at; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const x = pz.cx + dx, y = pz.cy + dy; if (inZ(pk, x, y) && clear(x, y)) { at = [x, y]; break; }
+      }
+      if (at) { reserve(at[0] - 3, at[1] - 3, 7, 7, 0); spawns.push({ type: def.mobs.pseudo, tx: at[0], ty: at[1], room: pk }); }
+    }
+  }
   zones.forEach(z => {
     const n = Math.floor(Math.PI * z.rx * z.ry / 24);
     for (let t = 0; t < n * 5 && decor.filter(d => d.room === z.k).length < n; t++) {
@@ -509,7 +523,6 @@ function generateFree(def) {
     const nm = k === last ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
     if (k >= 2) { const nd = k === last ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
     if (k === bigZ) place(k, tiers.big);
-    if (tiers.pseudo && k === (F.pseudo ?? 9)) place(k, tiers.pseudo);
   });
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
   if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
