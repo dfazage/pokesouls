@@ -193,6 +193,10 @@ void main(){
     col = mix(uCol1, uCol2, n);
     float d = fbm(p*.4 - vec2(t*.05, 0.));
     em += uCol3*smoothstep(.62, .9, d)*.12;
+  } else if(uType > 5.5){     // plein air : terre battue d'une ville d'Edo
+    float n = fbm(p*.13), m = fbm(p*.9 + 3.);
+    col = mix(uCol1, uCol2, n*.65 + m*.35);
+    col *= .9 + .2*hash21(floor(p*4.));
   } else {                    // mystique : brume bioluminescente
     float n = fbm(p*.09 + vec2(t*.015, -t*.01));
     col = mix(uCol1, uCol2, n);
@@ -231,6 +235,35 @@ void main(){
   vec3 col = vCol*(.32 + .75*dif)*uLightCol;
   vec3 em = vec3(0.);
   float up = smoothstep(-3.2, 4., vW.y);
+  if(uType > 5.5){
+    float q = vW.x + vW.z;
+    if(uType < 6.5){          // maison de ville (corps y<.5, toit au-dessus)
+      if(vH > .505){          // toit de tuiles : rangées sombres, faîtage clair
+        float row = smoothstep(.1, .55, abs(fract(vW.y*5.) - .5)*2.);
+        vec3 roof = mix(vec3(.1, .12, .16), vec3(.24, .27, .33), row);
+        roof = mix(roof, vec3(.34, .36, .4), smoothstep(.93, 1., vH));
+        col = roof*(.32 + .85*dif)*uLightCol;
+      } else {
+        vec3 base = vCol;
+        float post = step(.9, fract(q*1.3)), beam = step(abs(vH - .27), .018) + step(abs(vH - .47), .02);
+        base = mix(base, vec3(.12, .08, .06), clamp(post + beam, 0., 1.)*step(.1, vH));
+        base = mix(base, vec3(.13, .12, .11), step(vH, .1));                  // soubassement de pierre
+        col = base*(.32 + .75*dif)*uLightCol;
+        vec2 wc = floor(vec2(q*1.3, vW.y*3.4));
+        float win = step(.7, hash21(wc))*step(abs(n.y), .5)*step(.14, vH)*step(vH, .46)*(1. - post)*(1. - beam);
+        em += uEmisCol*win*(.7 + .3*sin(uTime*.9 + hash21(wc)*20.))*.9;
+      }
+    } else {                  // muret de torchis : namako (losanges blancs sur noir) et chapeau de tuiles
+      if(vH > .82){ col = vec3(.12, .14, .18)*(.32 + .85*dif)*uLightCol*(.8 + .5*step(.5, fract(q*3.))); }
+      else {
+        vec2 g2 = vec2(q*2.2, vW.y*2.6);
+        float lat = step(.84, max(fract(g2.x + g2.y), fract(g2.x - g2.y)));
+        vec3 base = mix(vCol, vec3(.08, .08, .09), step(vH, .55));            // moitié basse noire
+        base = mix(base, vec3(.88, .86, .8), lat*step(vH, .55)*step(.08, vH));
+        col = base*(.32 + .75*dif)*uLightCol;
+      }
+    }
+  } else
   if(uType < .5){            // monolithes flottants
     float stripe = smoothstep(.45, .5, abs(fract(vW.y*1.3 + vW.x*.1) - .5));
     em += uEmisCol*stripe*.9*(.6 + .4*sin(uTime*1.5 + vW.x));
@@ -246,6 +279,8 @@ void main(){
     em += uEmisCol*base*1.4*(.7 + .3*sin(uTime*2. + vW.x*3.)) + uEmisCol*smoothstep(.85, 1., vH)*.3;
   } else if(uType < 4.5){    // stalagmites : reflets chauds
     em += uEmisCol*smoothstep(.75, 1., vH)*.18;
+  } else if(uType > 5.5){     // arbres de plein air : aucune émission
+    em += uEmisCol*step(.985, hash21(floor(vW.xz*3.1) + floor(vW.y*3.1)*5.))*.35*step(.6, vH);
   } else {                    // arbres mystiques : spores lumineuses
     float s = step(.93, hash21(floor(vW.xz*3.1) + floor(vW.y*3.1)*5.));
     em += uEmisCol*s*(.5 + .5*sin(uTime*2. + vW.x*5.))*1.4;
