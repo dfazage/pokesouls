@@ -106,7 +106,7 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
 }
 
 // ---------- sac et équipe ----------
-let bagSel = 0, bagTab = 'items', questSel = null;
+let bagSel = 0, bagTab = 'cons', questSel = null;
 export function showBag(game, onClose) {
   const names = D.VITAMINS;
   const render = () => {
@@ -115,13 +115,13 @@ export function showBag(game, onClose) {
     const team = game.team.map((m, i) => {
       const fx = m.fx ? D.STATUS[m.fx.k] : null;
       return `<button class="bt t-${m.type} ${i === bagSel ? 'sel' : ''} ${m.exh ? 'ko' : ''}" data-sel="${i}">
-        <img src="${portrait(m.id)}" alt=""><div class="bi"><div class="bn"><b>${esc(m.def.name)}</b><span>Niv. ${m.lvl}</span>${i === game.chiefIdx ? '<i class="act">EN JEU</i>' : m.exh ? '<i class="ko">K.O.</i>' : '<i>RÉSERVE</i>'}</div>
+        <img src="${portrait(m.id)}" alt=""><div class="bi"><div class="bn"><b>${esc(m.def.name)}</b><span>Niv. ${m.lvl}</span>${m.held ? iconImg(m.held, 'itemico hold') : ''}${i === game.chiefIdx ? '<i class="act">EN JEU</i>' : m.exh ? '<i class="ko">K.O.</i>' : '<i>RÉSERVE</i>'}</div>
         <div class="tchips">${D.typesOf(m.type, m.id).map(t => `<u class="ty-${t}">${D.TYPE_FR[t]}</u>`).join('')}${fx ? `<u style="background:${fx.color};color:#000">⚠ ${fx.name}</u>` : ''}</div>
         <div class="hpb"><div style="width:${100 * m.hp / m.maxhp}%"></div><span>${Math.ceil(m.hp)} / ${m.maxhp}</span></div>
         <small>Dégâts ${m.def.dmg.toFixed(1)} · Vitesse ${Math.round(m.def.speed)} · CT <b style="color:${m.def.ability.color}">${esc(m.def.ability.name)}</b></small></div></button>`;
     }).join('');
     let body = '';
-    if (bagTab === 'items') {
+    if (bagTab === 'cons') {
       const cards = [];
       const card = (cls, icon, name, qty, desc, btn) => `<div class="ic ${cls}"><div class="ico">${icon}</div><div class="ib"><b>${name}</b>${qty != null ? `<em>×${qty}</em>` : ''}<small>${desc}</small></div>${btn || ''}</div>`;
       cards.push(card('c-candy', iconImg('candy'), 'Super Bonbon', game.bag.candy || 0, '+1 niveau sans dépenser d’essence.', `<button data-use="candy:candy" ${(game.bag.candy > 0 && sel.lvl < D.MAX_LEVEL) ? '' : 'disabled'}>Donner</button>`));
@@ -130,6 +130,16 @@ export function showBag(game, onClose) {
       body = `<div class="iconsum"><div><span>${iconImg('berry')}Baies</span><b>${game.berries} / ${game.maxBerries}</b><small>soigne 40 % et guérit les altérations</small></div>
         <div><span>${iconImg('ether')}Huile</span><b>${game.ethers} / ${game.maxEthers}</b><small>endurance pleine, CT rechargée</small></div>
         <div><span>Essence</span><b>${game.essence}</b><small>à dépenser au feu de camp</small></div></div><div class="igrid">${cards.join('')}</div>`;
+    } else if (bagTab === 'items') {
+      const can = game.canSwapHeld(), slotFree = game.canHold(sel), hold = sel.held && D.HELD[sel.held];
+      const cards = game.helds.map(k => {
+        const H = D.HELD[k], who = game.holderOf(k), mine = who === sel;
+        const tag = who ? `<span class="tg">Porté par ${esc(who.def.name)}</span>` : '<span class="tg free">Disponible</span>';
+        const btn = mine ? `<button data-use="unequip:${k}" ${can ? '' : 'disabled'}>Retirer</button>` : `<button data-use="equip:${k}" ${(can && slotFree) ? '' : 'disabled'}>${who ? 'Prendre' : 'Équiper'}</button>`;
+        return `<div class="ic c-held ${mine ? 'eq' : ''}"><div class="ico">${iconImg(k)}</div><div class="ib"><b>${esc(H.name)}</b>${tag}<small>${esc(H.desc)}</small></div>${btn}</div>`;
+      }).join('');
+      const note = !slotFree ? 'Son emplacement est occupé par son Module.' : !can ? 'Impossible en plein combat : change d’objet au feu de camp ou une fois les ennemis loin.' : 'Un seul objet par Pokémon ; chaque objet n’existe qu’en un exemplaire.';
+      body = `<p class="sub">Objet tenu de <b>${esc(sel.def.name)}</b> : ${hold ? `<b>${esc(hold.name)}</b>` : 'aucun'}.</p><p class="sub">${note}</p><div class="igrid">${cards || '<p class="sub">Aucun objet tenu pour l’instant. Les boss, les gros mobs et les coffres en cachent.</p>'}</div>`;
     } else if (bagTab === 'quest') {
       const qs = game.questLog();
       body = qs.length ? `<div class="qlist">${qs.map(q => `<button class="qc ${q.status} ${questSel === q.id ? 'open' : ''}" data-q="${q.id}"><div class="qh"><b>${esc(q.title)}</b><span>${q.status === 'done' ? 'Terminée' : q.progress}</span></div><small>${esc(q.zone)} · ${esc(q.summary)}</small>${questSel === q.id ? `<div class="qd">${q.steps.map(s => `<div class="qs ${s.state}"><i style="background:${s.color}"></i><div><b>${esc(s.name)}</b><small>${esc(s.state === 'given' ? 'Rapporté à Fala' : s.state === 'carried' ? 'Récupéré · à rapporter à Fala' : s.hint)}</small></div></div>`).join('')}<small class="qr">Récompense : ${esc(q.reward)}</small></div>` : '<em class="qm">Détails ▾</em>'}</button>`).join('')}</div>` : '<p class="sub">Aucune quête pour le moment. Certains habitants de ces lieux ont peut-être besoin d’aide...</p>';
@@ -143,7 +153,7 @@ export function showBag(game, onClose) {
       }).join('');
       body = `<p class="sub">Compatibilité affichée pour <b>${esc(sel.def.name)}</b> (${D.typesOf(sel.type, sel.id).map(t => D.TYPE_FR[t]).join(' / ')}, stade ${sel.stage + 1}).</p><div class="tgrid">${cards || '<p class="sub">Aucune CT.</p>'}</div>`;
     }
-    const m = open(`<div class="panel bag"><div class="bhead"><h2>Équipe</h2><div class="tabs"><button class="${bagTab === 'items' ? 'on' : ''}" data-tab="items">Objets</button><button class="${bagTab === 'tms' ? 'on' : ''}" data-tab="tms">Capsules techniques (${game.tms.length})</button><button class="${bagTab === 'quest' ? 'on' : ''}" data-tab="quest">Quêtes${game.questLog().some(q => q.status === 'active') ? ' •' : ''}</button></div></div>
+    const m = open(`<div class="panel bag"><div class="bhead"><h2>Équipe</h2><div class="tabs"><button class="${bagTab === 'cons' ? 'on' : ''}" data-tab="cons">Consommables</button><button class="${bagTab === 'items' ? 'on' : ''}" data-tab="items">Objets${game.helds.length ? ' (' + game.helds.length + ')' : ''}</button><button class="${bagTab === 'tms' ? 'on' : ''}" data-tab="tms">Capsules techniques (${game.tms.length})</button><button class="${bagTab === 'quest' ? 'on' : ''}" data-tab="quest">Quêtes${game.questLog().some(q => q.status === 'active') ? ' •' : ''}</button></div></div>
       <div class="bcols"><div class="bteam"><h4>Équipe — un seul Pokémon en jeu</h4>${team}</div><div class="bbody">${body}</div></div>
       <div class="act"><button id="m-close">Fermer</button></div></div>`);
     m.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { bagSel = +b.dataset.sel; render(); });
@@ -151,7 +161,7 @@ export function showBag(game, onClose) {
     m.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { questSel = questSel === b.dataset.q ? null : b.dataset.q; render(); });
     m.querySelectorAll('[data-use]').forEach(b => b.onclick = () => {
       const [kind, key] = b.dataset.use.split(':');
-      if (kind === 'candy') game.useCandy(bagSel); else if (kind === 'vit') game.useVitamin(bagSel, key); else if (kind === 'revive') game.useRevive(bagSel); else game.teach(bagSel, key);
+      if (kind === 'equip') game.equipHeld(bagSel, key); else if (kind === 'unequip') game.unequipHeld(bagSel); else if (kind === 'candy') game.useCandy(bagSel); else if (kind === 'vit') game.useVitamin(bagSel, key); else if (kind === 'revive') game.useRevive(bagSel); else game.teach(bagSel, key);
       render();
     });
     $('#m-close').onclick = onClose;
