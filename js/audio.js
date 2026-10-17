@@ -116,6 +116,9 @@ function playCry(id) {
 }
 // effets en fichier : assets/audio/sfx/<nom>.ogg (ou .mp3 / .wav) ; absent = on retombe sur la version synthétisée, sans erreur
 const sfxFiles = {};
+// anti-spam des sons fichiers : cooldown par catégorie, 4 sons simultanés au plus, les sons importants coupent les coups normaux
+const SFX_CD = [[/^hit$/, 120, 0], [/^(super_effective|resisted)$/, 250, 2], [/^status_/, 400, 1], [/^(sig_|ct_)/, 150, 2], [/^(faint|heal)$/, 300, 2]];
+const sfxLast = {}, sfxLive = [];
 function playSfxFile(name, vol = 0.55) {
   let f = sfxFiles[name];
   if (f === undefined) {
@@ -124,7 +127,14 @@ function playSfxFile(name, vol = 0.55) {
     tryNext();
   }
   if (!f) return false;
-  try { const c = f.cloneNode(); c.volume = vol; const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
+  const rule = SFX_CD.find(r => r[0].test(name)) || [0, 0, 1], now = performance.now(), pr = rule[2];
+  if (now - (sfxLast[name] ?? -1e9) < rule[1]) return true;   // en cooldown : le son est géré (on ne joue pas la version synthétisée)
+  for (let i = sfxLive.length - 1; i >= 0; i--) if (sfxLive[i].a.ended || sfxLive[i].a.paused) sfxLive.splice(i, 1);
+  if (pr === 2) for (const s of sfxLive) if (s.pr === 0) s.a.pause();   // un son important coupe les coups normaux en cours
+  for (let i = sfxLive.length - 1; i >= 0; i--) if (sfxLive[i].a.paused) sfxLive.splice(i, 1);
+  if (sfxLive.length >= 4 && pr < 2) return true;
+  sfxLast[name] = now;
+  try { const c = f.cloneNode(); c.volume = vol; sfxLive.push({ a: c, pr }); const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
 }
 export const SFX = {
   // son de CT (assets/audio/sfx/<id>.ogg) ; renvoie true s'il existe, sinon la version synthétisée reste active
