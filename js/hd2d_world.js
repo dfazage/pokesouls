@@ -11,39 +11,39 @@ export const WALL_TALL = 1.8, WALL_LOW = 0.28, WALL_SIDE = 1.3, WALL_MID = 1.0;
 // ---------- réglages par thème ----------
 // type : variante du shader d'abîme ; fog : couleur de brume ; grade : étalonnage de l'image finale
 export const HD = {
-  lab: { type: 0, fog: [.045, .04, .09], fogD: .021, mist: .5, abyss: [[.015, .015, .05], [.11, .05, .22], [.55, .72, 1.]], prop: 'mono', propCol: [.22, .24, .38], emis: [.45, .85, 1.], light: [.95, .98, 1.1], bob: 1,
+  lab: { curve: { walls: 1 }, type: 0, fog: [.045, .04, .09], fogD: .021, mist: .5, abyss: [[.015, .015, .05], [.11, .05, .22], [.55, .72, 1.]], prop: 'mono', propCol: [.22, .24, .38], emis: [.45, .85, 1.], light: [.95, .98, 1.1], bob: 1,
     part: { n: 240, size: 40, color: [.55, .8, 1.], vel: [0, .06, 0], sway: .6, box: [44, 12, 40] }, emisTint: [.6, .95, 1.2], emisK: 1.3,
     grade: { ts: [.93, .96, 1.07], th: [1.04, 1.02, 1.], sat: 1.1, con: 1.07, bloom: .5, vig: .42 } },
-  ice: { type: 1, fog: [.07, .12, .22], fogD: .02, mist: .55, abyss: [[.02, .04, .11], [.07, .15, .3], [.35, .95, .85]], prop: 'spire', propCol: [.42, .6, .82], emis: [.5, .95, 1.], light: [.92, 1., 1.15], bob: 0,
+  ice: { curve: { walls: 1 }, type: 1, fog: [.07, .12, .22], fogD: .02, mist: .55, abyss: [[.02, .04, .11], [.07, .15, .3], [.35, .95, .85]], prop: 'spire', propCol: [.42, .6, .82], emis: [.5, .95, 1.], light: [.92, 1., 1.15], bob: 0,
     part: { n: 420, size: 34, color: [.9, .96, 1.], vel: [-.25, -.9, .1], sway: 1.4, box: [46, 14, 42] }, emisTint: [.8, 1., 1.2], emisK: 1.2,
     grade: { ts: [.92, .98, 1.1], th: [1.03, 1.02, 1.], sat: 1.08, con: 1.06, bloom: .5, vig: .4 } },
-  plant: { type: 2, fog: [.05, .05, .08], fogD: .022, mist: .5, abyss: [[.03, .035, .05], [.1, .1, .14], [.25, .95, .95]], prop: 'tower', propCol: [.2, .2, .27], emis: [.35, .95, .95], light: [1., 1., 1.05], bob: 0,
+  plant: { curve: { walls: 1 }, type: 2, fog: [.05, .05, .08], fogD: .022, mist: .5, abyss: [[.03, .035, .05], [.1, .1, .14], [.25, .95, .95]], prop: 'tower', propCol: [.2, .2, .27], emis: [.35, .95, .95], light: [1., 1., 1.05], bob: 0,
     part: { n: 200, size: 30, color: [1., .9, .35], vel: [0, .15, 0], sway: 1.8, box: [44, 10, 40] }, emisTint: [1., .95, .55], emisK: 1.25,
     grade: { ts: [.97, .97, 1.02], th: [1.04, 1.03, .98], sat: 1.06, con: 1.07, bloom: .5, vig: .4 } },
-  lava: { type: 3, fog: [.17, .045, .025], fogD: .02, mist: .65, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'column', propCol: [.16, .1, .1], emis: [1., .45, .1], light: [1.1, .98, .9], bob: 0,
+  lava: { curve: { walls: 1 }, type: 3, fog: [.17, .045, .025], fogD: .02, mist: .65, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'column', propCol: [.16, .1, .1], emis: [1., .45, .1], light: [1.1, .98, .9], bob: 0,
     part: { n: 340, size: 36, color: [1., .55, .15], vel: [.15, .95, 0], sway: 1.3, box: [44, 14, 40] }, emisTint: [1.2, .8, .5], emisK: 1.6,
     grade: { ts: [1.02, .94, .9], th: [1.08, 1.02, .94], sat: 1.12, con: 1.08, bloom: .65, vig: .44 } },
-  rock: { type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
+  rock: { curve: { walls: 1 }, type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },
   bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .5 } },
-  ember: { type: 3, open: true, banks: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
+  ember: { curve: { ground: 0.6 }, type: 3, open: true, banks: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
     roof: [[.07, .06, .06], [.17, .14, .13]], win: .9, walls: [[.2, .17, .15], [.28, .2, .15], [.15, .12, .1], [.3, .26, .22], [.24, .16, .12], [.34, .28, .24], [.18, .15, .14], [.12, .1, .09]],
     part: { n: 280, size: 30, color: [1., .55, .2], vel: [0, .5, 0], sway: 1.5, box: [44, 12, 40] }, emisTint: [1.25, .85, .5], emisK: 1.5,
     grade: { ts: [1.02, .95, .92], th: [1.1, 1.02, .92], sat: 1.12, con: 1.1, bloom: .62, vig: .45 } },
-  mirror: { type: 7, open: true, water: true, edge: 'water', fog: [.42, .6, .72], fogD: .012, mist: .4, abyss: [[.06, .26, .38], [.2, .58, .7], [1., .85, .95]], prop: 'tree', propCol: [.1, .26, .12], emis: [.7, .95, 1.], light: [1.04, 1.03, 1.04], bob: 0,
+  mirror: { curve: { ground: 1 }, type: 7, open: true, water: true, edge: 'water', fog: [.42, .6, .72], fogD: .012, mist: .4, abyss: [[.06, .26, .38], [.2, .58, .7], [1., .85, .95]], prop: 'tree', propCol: [.1, .26, .12], emis: [.7, .95, 1.], light: [1.04, 1.03, 1.04], bob: 0,
     part: { n: 420, size: 40, color: [.85, .95, 1.], vel: [.2, .12, 0], sway: 2.1, box: [44, 12, 40] }, emisTint: [.85, 1.1, 1.2], emisK: .9,
     grade: { ts: [.9, 1., 1.1], th: [1.1, 1.02, .98], sat: 1.2, con: 1.2, bloom: .42, vig: .5 } },
-  storm: { type: 8, open: true, water: true, edge: 'water', fog: [.04, .14, .24], fogD: .02, mist: .55, abyss: [[.01, .05, .1], [.04, .2, .3], [.3, .85, .95]], prop: 'tree', propCol: [.1, .26, .12], emis: [.5, .9, 1.], light: [.9, 1.0, 1.1], bob: 0,
+  storm: { curve: { ground: 1 }, type: 8, open: true, water: true, edge: 'water', fog: [.04, .14, .24], fogD: .02, mist: .55, abyss: [[.01, .05, .1], [.04, .2, .3], [.3, .85, .95]], prop: 'tree', propCol: [.1, .26, .12], emis: [.5, .9, 1.], light: [.9, 1.0, 1.1], bob: 0,
     part: { n: 340, size: 22, color: [.7, .95, 1.], vel: [.04, .55, 0], sway: 1.1, box: [44, 14, 40] }, emisTint: [.8, 1.05, 1.2], emisK: .8,
     grade: { ts: [.82, .98, 1.12], th: [1.02, 1.02, 1.0], sat: 1.12, con: 1.16, bloom: .3, vig: .52 } },
   ilex: { type: 9, open: true, edge: 'forest', fog: [.1, .18, .12], fogD: .016, mist: .45, abyss: [[.1, .22, .1], [.18, .34, .14], [1., .85, .45]], prop: 'tree', propCol: [.1, .3, .14], emis: [1., .9, .5], light: [1.02, 1.04, .96], bob: 0,
     trees: [[.1, .3, .14], [.08, .26, .13], [.12, .34, .15], [.5, .42, .12]],
     part: { n: 320, size: 34, color: [1., .9, .5], vel: [0, .22, 0], sway: 1.7, box: [44, 12, 40] }, emisTint: [1.1, 1.05, .8], emisK: 1.2,
     grade: { ts: [.95, 1.02, .98], th: [1.07, 1.04, .94], sat: 1.14, con: 1.07, bloom: .58, vig: .4 } },
-  mystic: { type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
+  mystic: { curve: { walls: 1 }, type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
     part: { n: 360, size: 38, color: [.7, 1., .75], vel: [0, .22, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.1, 1., .9], emisK: .85,
     grade: { ts: [.92, 1.02, 1.], th: [1.02, 1.04, 1.], sat: 1.12, con: 1.07, bloom: .55, vig: .42 } },
 };
@@ -158,6 +158,12 @@ class GeoB {
     this.u.push(ua[0], ua[1], ub[0], ub[1], uc[0], uc[1], ud[0], ud[1]);
     this.i.push(base, base + 1, base + 2, base, base + 2, base + 3);
   }
+  tri(a, b, c, n, ua, ub, uc) {
+    const base = this.p.length / 3;
+    for (const v of [a, b, c]) { this.p.push(v[0], v[1], v[2]); this.n.push(n[0], n[1], n[2]); }
+    this.u.push(ua[0], ua[1], ub[0], ub[1], uc[0], uc[1]);
+    this.i.push(base, base + 1, base + 2);
+  }
   build() {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
@@ -179,27 +185,155 @@ export function wallHeight(w, tx, ty) {
   return S ? WALL_TALL : N ? WALL_LOW : (E || Wd) ? WALL_SIDE : WALL_MID;
 }
 
-export function buildGround(w) {
-  const b = new GeoB();
+// ---------- contours arrondis (murs de Kanto, berges de Johto) ----------
+// La simulation reste sur la grille : seuls les coins visibles sont arrondis. Un coin saillant est coupé par un quart de cercle
+// (on ne voit jamais le mur plus près que sa vraie limite) ; un coin rentrant reçoit un petit congé (rayon court, hors de portée du joueur).
+// Réglage par thème : HD[key].curve = { walls, ground } de 0 (blocs) à 1. ?curve=0 (ou une valeur) dans l'URL force le réglage pour comparer.
+const CURVE_Q = 4;   // facettes par quart de cercle : arrondi « low-poly », cohérent avec le pixel art
+const CURVE_URL = (() => { try { const v = new URLSearchParams(location.search).get('curve'); return v == null ? null : Math.max(0, Math.min(1, parseFloat(v) || 0)); } catch (e) { return null; } })();
+export function curveOf(key) {
+  const cfg = HD[key] || {}, c = cfg.curve || {};
+  if (CURVE_URL == null) return { walls: c.walls || 0, ground: c.ground || 0 };
+  return { walls: cfg.open ? 0 : CURVE_URL, ground: cfg.water || cfg.banks ? CURVE_URL : 0 };
+}
+// rayons (en tuiles) : saillant 0,5 + rentrant 0,45 donnent une courbe continue sur les escaliers à 45° ; le joueur (4 × 3 px) ne touche jamais un congé
+const R_WALL = 0.5, R_WALL_IN = 0.45, R_GROUND = 0.45, R_GROUND_IN = 0.5;
+const CORNERS = [[-1, -1, false, 'N'], [1, -1, true, 'E'], [1, 1, false, 'S'], [-1, 1, true, 'W']];   // NO, NE, SE, SO : dx, dz, sens de l'arc, bord qui suit
+// quart de cercle du coin P (direction dx, dz) de rayon r : de T1 (sur le bord vertical) à T2 (sur le bord horizontal), ou l'inverse
+function arcPts(P, dx, dz, r, rev) {
+  const cx = P[0] - dx * r, cz = P[1] - dz * r, out = [];
+  for (let i = 0; i <= CURVE_Q; i++) { const a = (rev ? CURVE_Q - i : i) / CURVE_Q * Math.PI / 2; out.push([cx + dx * r * Math.cos(a), cz + dz * r * Math.sin(a)]); }
+  return out;
+}
+// contour d'un rectangle aux coins éventuellement arrondis, parcouru NO → NE → SE → SO ; tag = nature du segment qui part de ce point
+function roundRect(x0, z0, x1, z1, rad) {
+  const P = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], pts = [];
+  CORNERS.forEach(([dx, dz, rev, edge], k) => {
+    const r = rad[k];
+    if (r > 0) { const a = arcPts(P[k], dx, dz, r, rev); a.forEach((q, i) => pts.push({ x: q[0], z: q[1], tag: i < a.length - 1 ? 'arc' : edge, f: i / CURVE_Q })); }
+    else pts.push({ x: P[k][0], z: P[k][1], tag: edge, f: 0 });
+  });
+  return pts;
+}
+const EDGE_N = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+const solidFloor = (w, tx, ty) => { const v = gridAt(w, tx, ty); return v !== T.VOID && v !== T.DOOR; };
+const isWallTile = (w, tx, ty) => inB(tx, ty) && !!w.wall[ty * MW + tx] && w.grid[ty * MW + tx] === T.VOID;
+
+// plan des arrondis d'une carte (mis en cache sur le monde)
+function curvePlan(w, cv) {
+  const sig = cv.walls + ':' + cv.ground;
+  if (w._curve && w._curve.sig === sig) return w._curve;
+  const plan = { sig, wallR: new Map(), wallFill: [], wallPatch: [], floorR: new Map(), groundFill: [] }, fz = FACE / TS;
+  if (cv.walls > 0) {
+    const r = R_WALL * cv.walls, ri = R_WALL_IN * cv.walls;
+    for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      if (!isWallTile(w, tx, ty)) continue;
+      const S = floorLike(w, tx, ty + 1), z1 = ty + 1 + (S ? fz : 0), P = [[tx, ty], [tx + 1, ty], [tx + 1, z1], [tx, z1]];
+      const rad = CORNERS.map(([dx, dz]) => solidFloor(w, tx + dx, ty) && solidFloor(w, tx, ty + dz) && solidFloor(w, tx + dx, ty + dz) ? r : 0);
+      if (rad.some(v => v > 0)) {
+        plan.wallR.set(ty * MW + tx, rad);
+        rad.forEach((rr, k) => { if (rr > 0) plan.wallPatch.push({ P: P[k], dx: CORNERS[k][0], dz: CORNERS[k][1], r: rr, zmax: CORNERS[k][1] > 0 ? ty + 1 : null }); });
+      }
+    }
+    // congés des coins rentrants : dans une case de sol bordée de deux murs
+    for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      if (!solidFloor(w, tx, ty)) continue;
+      for (const [dx, dz] of CORNERS) {
+        if (!isWallTile(w, tx + dx, ty) || !isWallTile(w, tx, ty + dz)) continue;
+        const h = Math.min(wallHeight(w, tx + dx, ty), wallHeight(w, tx, ty + dz));
+        const P = [tx + (dx > 0 ? 1 : 0), ty + (dz > 0 ? 1 : 0) + (dz < 0 ? fz : 0)];   // sous la face sud du mur du dessus
+        plan.wallFill.push({ P, dx, dz, r: ri, h });
+      }
+    }
+  }
+  if (cv.ground > 0) {
+    const r = R_GROUND * cv.ground, ri = R_GROUND_IN * cv.ground, water = (tx, ty) => gridAt(w, tx, ty) === T.VOID;
+    for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      if (!solidFloor(w, tx, ty)) continue;
+      const rad = CORNERS.map(([dx, dz]) => water(tx + dx, ty) && water(tx, ty + dz) && water(tx + dx, ty + dz) ? r : 0);
+      if (rad.some(v => v > 0)) plan.floorR.set(ty * MW + tx, rad);
+    }
+    for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+      if (!water(tx, ty)) continue;   // thèmes de plein air : les murs de bordure ne sont pas dessinés, l'eau va jusqu'au sol
+      for (const [dx, dz] of CORNERS) {
+        if (!solidFloor(w, tx + dx, ty) || !solidFloor(w, tx, ty + dz)) continue;
+        plan.groundFill.push({ P: [tx + (dx > 0 ? 1 : 0), ty + (dz > 0 ? 1 : 0)], dx, dz, r: ri });
+      }
+    }
+  }
+  w._curve = plan;
+  return plan;
+}
+// morceau compris entre le coin P et le quart de cercle (congé, ou sol découvert sous un coin de mur coupé) : éventail depuis P
+function cornerFan(b, P, dx, dz, r, y, uvOf, zmax = null) {
+  const cl = q => [q[0], zmax != null ? Math.min(q[1], zmax) : q[1]];
+  const a = arcPts(P, dx, dz, r, false).map(cl), p0 = cl(P);
+  for (let i = 0; i < a.length - 1; i++) b.tri([p0[0], y, p0[1]], [a[i][0], y, a[i][1]], [a[i + 1][0], y, a[i + 1][1]], [0, 1, 0], uvOf(p0), uvOf(a[i]), uvOf(a[i + 1]));
+}
+// faces verticales le long d'un quart de cercle ; inward : normale vers le centre de l'arc (congé)
+function arcWall(b, P, dx, dz, r, y0, y1, u, inward) {
+  const a = arcPts(P, dx, dz, r, false), cx = P[0] - dx * r, cz = P[1] - dz * r;
+  for (let i = 0; i < a.length - 1; i++) {
+    const A = a[i], B2 = a[i + 1], mx = (A[0] + B2[0]) / 2 - cx, mz = (A[1] + B2[1]) / 2 - cz, l = Math.hypot(mx, mz) || 1, s = inward ? -1 : 1;
+    const ua = u(i / CURVE_Q), ub = u((i + 1) / CURVE_Q);
+    b.quad([A[0], y0, A[1]], [B2[0], y0, B2[1]], [B2[0], y1, B2[1]], [A[0], y1, A[1]], [s * mx / l, 0, s * mz / l], [ua, -y0], [ub, -y0], [ub, -y1], [ua, -y1]);
+  }
+}
+
+export function buildGround(w, cv = { walls: 0, ground: 0 }) {
+  const b = new GeoB(), plan = cv.walls > 0 || cv.ground > 0 ? curvePlan(w, cv) : null;
+  const uvW = q => [q[0] / MW, q[1] / MH];
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (w.grid[ty * MW + tx] === T.VOID) continue;
+    const rad = plan && plan.floorR.get(ty * MW + tx);
+    if (rad) {   // berge arrondie : éventail depuis le centre de la case
+      const pts = roundRect(tx, ty, tx + 1, ty + 1, rad), c = [tx + 0.5, ty + 0.5];
+      for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; b.tri([c[0], 0, c[1]], [q.x, 0, q.z], [p.x, 0, p.z], [0, 1, 0], uvW(c), uvW([q.x, q.z]), uvW([p.x, p.z])); }
+      continue;
+    }
     const u0 = tx / MW, u1 = (tx + 1) / MW, v0 = ty / MH, v1 = (ty + 1) / MH;
     b.quad([tx, 0, ty], [tx, 0, ty + 1], [tx + 1, 0, ty + 1], [tx + 1, 0, ty], [0, 1, 0], [u0, v0], [u0, v1], [u1, v1], [u1, v0]);
+  }
+  if (plan) {
+    // sol découvert sous un coin de mur coupé : texture de la case de sol en diagonale, en miroir par rapport au coin
+    for (const c of plan.wallPatch) cornerFan(b, c.P, c.dx, c.dz, c.r, 0, q => uvW([2 * c.P[0] - q[0], 2 * c.P[1] - q[1]]), c.zmax);
+    // congé de berge : sol ajouté dans le coin d'eau, texture de la case de sol voisine en miroir
+    for (const c of plan.groundFill) cornerFan(b, c.P, c.dx, c.dz, c.r, 0, q => uvW([2 * c.P[0] - q[0], q[1]]));
   }
   return b.build();
 }
 
 // murs : une boîte par tuile de mur (hauteur selon la position par rapport au sol), faces cachées omises.
 // Retourne deux géométries : dessus (atlas « top ») et parois (atlas « side »).
-export function buildWalls(w) {
-  const bt = new GeoB(), bs = new GeoB(), fz = FACE / TS;
+export function buildWalls(w, cv = { walls: 0, ground: 0 }) {
+  const bt = new GeoB(), bs = new GeoB(), fz = FACE / TS, plan = cv.walls > 0 ? curvePlan(w, cv) : null;
   const wallH = (tx, ty) => (inB(tx, ty) && w.wall[ty * MW + tx] && w.grid[ty * MW + tx] === T.VOID) ? wallHeight(w, tx, ty) : null;
+  const baseOf = (nx, ny, h) => { const wh = wallH(nx, ny); if (wh !== null) return wh >= h ? null : wh; if (floorLike(w, nx, ny)) return 0; return -(w.theme && w.theme.open ? OPEN_DEPTH : DEPTH); };
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (!w.wall[ty * MW + tx] || w.grid[ty * MW + tx] !== T.VOID) continue;
     const h = wallHeight(w, tx, ty), vi = Math.floor(rndI(tx, ty, 3) * NV);
     const S = floorLike(w, tx, ty + 1);
     const x0 = tx, x1 = tx + 1, z0 = ty, z1 = ty + 1 + (S ? fz : 0);
     const tu = k => (vi + k) / NV;
+    const rad = plan && plan.wallR.get(ty * MW + tx);
+    if (rad) {   // bloc aux coins saillants arrondis : dessus en éventail, parois droites raccourcies, facettes le long des arcs
+      const pts = roundRect(x0, z0, x1, z1, rad), c = [(x0 + x1) / 2, (z0 + z1) / 2], tuv = q => [(vi + (q[0] - x0)) / NV, q[1] - z0];
+      const su = f => (vi + 0.02 + 0.96 * Math.max(0, Math.min(1, f))) / (NV + 1);
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i], q = pts[(i + 1) % pts.length];
+        bt.tri([c[0], h, c[1]], [q.x, h, q.z], [p.x, h, p.z], [0, 1, 0], tuv(c), tuv([q.x, q.z]), tuv([p.x, p.z]));
+        let n, base, fa;
+        if (p.tag === 'arc') {   // normale : du centre du bloc vers la facette
+          const ox = (p.x + q.x) / 2 - c[0], oz = (p.z + q.z) / 2 - c[1], l = Math.hypot(ox, oz) || 1;
+          n = [ox / l, 0, oz / l]; base = 0; fa = [q.f, p.f];
+        } else {
+          const [nx, nz] = EDGE_N[p.tag]; base = baseOf(tx + nx, ty + nz, h); if (base === null) continue;
+          n = [nx, 0, nz]; fa = (p.tag === 'N' || p.tag === 'S') ? [q.x - x0, p.x - x0] : [(q.z - z0) / (z1 - z0), (p.z - z0) / (z1 - z0)];
+        }
+        bs.quad([q.x, base, q.z], [p.x, base, p.z], [p.x, h, p.z], [q.x, h, q.z], n, [su(fa[0]), -base], [su(fa[1]), -base], [su(fa[1]), -h], [su(fa[0]), -h]);
+      }
+      continue;
+    }
     bt.quad([x0, h, z0], [x0, h, z1], [x1, h, z1], [x1, h, z0], [0, 1, 0], [tu(0), 0], [tu(0), z1 - z0], [tu(1), z1 - z0], [tu(1), 0]);
     const sideFace = (nx, nz, A, B2) => {
       const tn = [tx + nx, ty + nz], wh = wallH(tn[0], tn[1]);
@@ -215,16 +349,35 @@ export function buildWalls(w) {
     sideFace(1, 0, [x1, z1], [x1, z0]);       // est
     sideFace(-1, 0, [x0, z0], [x0, z1]);      // ouest
   }
+  if (plan) for (const f of plan.wallFill) {   // congés des coins rentrants
+    const vi = Math.floor(rndI(Math.round(f.P[0] * 3), Math.round(f.P[1] * 3), 7) * NV), fl = Math.floor;
+    cornerFan(bt, f.P, f.dx, f.dz, f.r, f.h, q => [(vi + (q[0] - fl(q[0]))) / NV, q[1] - fl(q[1])]);
+    arcWall(bs, f.P, f.dx, f.dz, f.r, 0, f.h, k => (vi + 0.02 + 0.96 * k) / (NV + 1), true);
+  }
   return { top: bt.build(), side: bs.build() };
 }
 
-// rives des îles : parois verticales sous chaque bord de sol qui donne sur l'eau
-export function buildBanks(w, depth) {
-  const b = new GeoB();
+// rives des îles : parois verticales sous chaque bord de sol qui donne sur l'eau (coins arrondis si le thème le demande)
+export function buildBanks(w, depth, cv = { walls: 0, ground: 0 }) {
+  const b = new GeoB(), plan = cv.ground > 0 ? curvePlan(w, cv) : null;
   const u0 = (k) => (k + 0.02) / (NV + 1), u1 = (k) => (k + 0.98) / (NV + 1);
+  if (plan) for (const f of plan.groundFill) { const vi = Math.floor(rndI(f.P[0], f.P[1], 9) * NV); arcWall(b, f.P, f.dx, f.dz, f.r, -depth, 0, k => (vi + 0.02 + 0.96 * k) / (NV + 1), true); }
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     const g0 = w.grid[ty * MW + tx]; if (g0 === T.VOID || g0 === T.DOOR) continue;
     const vi = Math.floor(rndI(tx, ty, 5) * NV), a = u0(vi), c = u1(vi);
+    const rad = plan && plan.floorR.get(ty * MW + tx);
+    if (rad) {
+      const pts = roundRect(tx, ty, tx + 1, ty + 1, rad), su = f => (vi + 0.02 + 0.96 * f) / (NV + 1);
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i], q = pts[(i + 1) % pts.length];
+        let n;
+        if (p.tag === 'arc') { const mx = (p.x + q.x) / 2 - (tx + 0.5), mz = (p.z + q.z) / 2 - (ty + 0.5), l = Math.hypot(mx, mz) || 1; n = [mx / l, 0, mz / l]; }
+        else { const [nx, nz] = EDGE_N[p.tag]; if (gridAt(w, tx + nx, ty + nz) !== T.VOID) continue; n = [nx, 0, nz]; }
+        const fa = p.tag === 'arc' ? [q.f, p.f] : (p.tag === 'N' || p.tag === 'S') ? [q.x - tx, p.x - tx] : [q.z - ty, p.z - ty];
+        b.quad([q.x, -depth, q.z], [p.x, -depth, p.z], [p.x, 0, p.z], [q.x, 0, q.z], n, [su(fa[0]), depth], [su(fa[1]), depth], [su(fa[1]), 0], [su(fa[0]), 0]);
+      }
+      continue;
+    }
     const face = (nx, nz, A, B2) => { if (gridAt(w, tx + nx, ty + nz) !== T.VOID) return; b.quad([A[0], -depth, A[1]], [B2[0], -depth, B2[1]], [B2[0], 0, B2[1]], [A[0], 0, A[1]], [nx, 0, nz], [a, depth], [c, depth], [c, 0], [a, 0]); };
     face(0, 1, [tx, ty + 1], [tx + 1, ty + 1]); face(0, -1, [tx + 1, ty], [tx, ty]); face(1, 0, [tx + 1, ty + 1], [tx + 1, ty]); face(-1, 0, [tx, ty], [tx, ty + 1]);
   }
