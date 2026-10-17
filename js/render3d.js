@@ -25,8 +25,8 @@ export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 40,
 const REGION_PITCH_MIN = Math.min(CFG.camPitchMin, BOSS_CAM_MIN_PITCH);   // la carte de lumière couvre aussi les angles bas de la caméra de duel   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
 const CAM_YAW_MAX = 45;   // pivot maximal à gauche / droite (degrés) ; garder aligné sur CAM_YAW de game.js
 // Tilt-shift : rayon de flou maximal (px) à 100 %. Réglage joueur 0 à 150 % (0 = désactivé, saute aussi la boucle de flou du shader).
-const TILT_BASE = 4.2, OPT_KEY = 'pokesouls.options.v1';
-const tiltPct = () => { try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null'); if (o && typeof o.tilt === 'number') return Math.max(0, Math.min(150, o.tilt)); } catch (e) { /* défaut */ } return 100; };
+const TILT_BASE = 4.2;
+const tiltPct = () => 150;   // fixé à 150 % (plus de réglage joueur)
 
 // ---------- lot de billboards : un atlas de cellules + une géométrie mise à jour à chaque image ----------
 class Batch {
@@ -255,7 +255,7 @@ void main(){
   setTilt(pct) { this.tiltP = Math.max(0, Math.min(150, pct)); this.applyTilt(); }
   // menu pause ouvert : pas de tilt-shift (image nette derrière le menu) ; le réglage du joueur est rétabli à la reprise
   setPaused(on) { this.paused = !!on; this.applyTilt(); }
-  applyTilt() { this.mFinal.uniforms.uBlur.value = this.paused ? 0 : TILT_BASE * (this.tiltP ?? tiltPct()) / 100; }
+  applyTilt() { this.mFinal.uniforms.uBlur.value = this.paused ? 0 : TILT_BASE * (tiltPct()) / 100; }
   buildTargets() {
     const w = Math.round(SW * this.scale), h = Math.round(SH * this.scale);
     for (const k of Object.keys(this.rt)) this.rt[k].dispose();
