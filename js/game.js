@@ -1,5 +1,6 @@
 // Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
-import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies } from './assets.js';
+import { windNow, LEAF_COLS } from './wind.js';
+import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
@@ -47,7 +48,12 @@ export function speciesForMap(idx) {
   if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
+<<<<<<< HEAD
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
+=======
+const CAM_YAW = 45, CAM_TILT = 0;   // pivot latéral seulement : l'inclinaison haut/bas a été testée et écartée (inconfortable)
+const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
+>>>>>>> main
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
@@ -60,7 +66,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
+    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -210,7 +216,7 @@ export class Game {
       d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
       hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;
     }
-    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5),
+    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5), mood: d.tier === 'mini' && !d.clone && d.speed > 0 && Math.random() < 0.3 ? 'sleep' : 'stroll',
       vx: 0, vy: 0, kx: 0, ky: 0, dead: false, deadT: 0, boss: !!d.boss, clone: !!d.clone, big: d.tier === 'big', phase: 1, invuln: 0, tele: false, hitDone: false, bob: rand(0, 6) };
   }
 
@@ -270,6 +276,8 @@ export class Game {
     this.stamPause -= dt;
     let [ax, ay] = Input.axis();
     if ((ax || ay) && m.fx && m.fx.k === 'confuse') { const a = Math.sin(this.t * 4) * 0.9 + Math.sin(this.t * 7.3) * 0.5, c = Math.cos(a), s = Math.sin(a); [ax, ay] = [ax * c - ay * s, ax * s + ay * c]; }
+    this.updateCamPivot(dt);
+    if (this.camYaw && (ax || ay)) { const a = this.camYaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); [ax, ay] = [ax * c + ay * s, -ax * s + ay * c]; }   // le déplacement suit la caméra
     const moving = !!(ax || ay);
     if (m.exh) { this.stamTick(dt, false); this.switchT -= dt; if (this.switchT <= 0) this.autoSwitch(); return; }
 
@@ -304,6 +312,18 @@ export class Game {
     else if (moving) m.face = unit(ax, ay);
     setAnim(m, moving ? 'Walk' : 'Idle'); m.at += dt * (run ? 1.5 : 1) * (guarding ? 0.5 : 1);
     this.stamTick(dt, run || guarding);
+  }
+  // pivot de caméra au stick droit (manette), par crans verrouillés : gauche = un cran vers la gauche (-45°), droite = un cran vers la droite (+45°).
+  // Trois positions (-45°, 0°, +45°) ; l'angle reste en place quand on relâche. Pendant un verrouillage, le stick droit change de cible (le cran reste).
+  // Cinématique ou sans rendu HD-2D : retour à 0° sans perdre le cran choisi.
+  updateCamPivot(dt) {
+    const [sx] = Input.camStick(), free = !this.camFx && !this.cine && !!window.hd2d;
+    if (Math.abs(sx) < 0.6) this.camArm = true;
+    else if (this.camArm) { this.camArm = false; if (free && !this.lock) this.camStep = Math.max(-1, Math.min(1, this.camStep + (sx > 0 ? 1 : -1))); }
+    const ty = free ? this.camStep * CAM_YAW : 0, k = 1 - Math.exp(-dt * 9);
+    this.camYaw += (ty - this.camYaw) * k; this.camTilt = 0;
+    if (Math.abs(this.camYaw - ty) < 0.05) this.camYaw = ty;
+    setViewYaw(this.camYaw * Math.PI / 180);
   }
   stamTick(dt, hold) { if (!hold && this.stamPause <= 0) { const m = this.chief(); this.stam = Math.min(this.maxStam, this.stam + 35 * (m && m.fx && m.fx.k === 'para' ? 0.5 : 1) * (this.linkMalus > 0 ? 0.4 : 1) * (this.terrain.frost ? 0.5 : 1) * dt); } }
 
@@ -622,7 +642,7 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
+    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6); this.comboN = Math.max(this.comboN, 2); this.comboAt = this.lastPD; this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     dmg *= this.elemDefMult(m, o, src);
@@ -660,7 +680,7 @@ export class Game {
     this.state = 'dead'; this.deadT = 0; this.guarding = false; this.endLink(true); this.comboReset();
     const c = this.chief();
     if (this.essence > 0) this.souvenir = { map: this.mapIdx, x: c.x, y: c.y, amount: this.essence };
-    this.essence = 0; this.hubAt = null; this.save(); SFX.death(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
+    this.essence = 0; this.hubAt = null; this.save(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
   }
   async respawn() {
     const l = this.last, map = l ? l.map : 0;
@@ -693,7 +713,7 @@ export class Game {
       const sp = def.speed * (e.fx && e.fx.k === 'para' ? 0.5 : 1) * this.markSpeed(e), hw = Math.min(e.r, 6) * 0.8;
       switch (e.state) {
         case 'dormant': setAnim(e, 'Idle'); if (td < def.sight) e.state = 'chase'; break;
-        case 'idle': setAnim(e, 'Idle'); if (see) e.state = 'chase'; break;
+        case 'idle': if (see && (e.mood !== 'sleep' || td < def.sight * 0.5)) { e.state = 'chase'; e.sleeping = false; if (e.mood === 'sleep') e.alertT = 0.7; break; } if (def.tier === 'mini' && !def.clone && !e.tutDummy && def.speed > 0) this.wander(e, dt, def.speed, hw); else setAnim(e, 'Idle'); break;
         case 'return': {
           const hx = e.hx - e.x, hy = e.hy - e.y, hd = hyp(hx, hy);
           if (hd < 4) { e.state = def.dormant ? 'dormant' : 'idle'; e.hp = e.maxhp; } else { move(this, e, hx / hd * sp * dt, hy / hd * sp * dt, hw); setAnim(e, 'Walk'); e.face = unit(hx, hy); e.dir = dirFromVec(hx, hy); }
@@ -738,6 +758,33 @@ export class Game {
       for (const o of this.enemies) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = hyp(ox, oy); if (od > 0 && od < e.r + o.r) move(this, e, ox / od * 30 * dt, oy / od * 30 * dt, 4); }
     }
     this.enemies = this.enemies.filter(e => !(e.dead && e.deadT > 1.0 && !e.boss));
+  }
+  // petits mobs : ils flânent autour de leur point d'ancrage (pas lents, pauses, coups d'œil) au lieu de rester figés
+  wander(e, dt, speed, hw) {
+    const w = e.wd || (e.wd = { t: rand(0.2, 1.5), go: false, tx: e.x, ty: e.y, look: 0 });
+    if (e.mood === 'sleep') { e.sleeping = true; setAnim(e, 'Idle'); return; }   // assoupi : immobile, des « Z » flottent au-dessus de lui
+    w.t -= dt;
+    if (w.emoteT > 0) { w.emoteT -= dt; e.emote = w.emoteT > 0 ? w.emo : null; if (w.emoteT <= 0) { setAnim(e, 'Idle'); w.t = rand(1.5, 4); } return; }
+    if (!w.go) {
+      setAnim(e, 'Idle'); w.look -= dt;
+      if (w.look <= 0) { w.look = rand(1.2, 2.6); if (Math.random() < 0.55) { const a = rand(0, 6.283); e.face = { x: Math.cos(a), y: Math.sin(a) }; e.dir = dirFromVec(e.face.x, e.face.y); } }
+      if (w.t > 0) return;
+      if (Math.random() < 0.4) {   // petite danse / saut / chant avant de repartir
+        const sa = A.db[e.sprite], opts = ['Hop', 'Twirl', 'Appeal', 'Sing'].filter(n => sa && sa.anims[n]);
+        if (opts.length) { const n = opts[Math.floor(Math.random() * opts.length)]; setAnim(e, n, false); w.emo = n === 'Hop' ? 'hop' : 'note'; w.emoteT = Math.max(0.6, animTotal(sa.anims[n]) * TICK) + 0.2; e.emote = w.emo; return; }
+      }
+      for (let i = 0; i < 6; i++) {
+        const a = rand(0, 6.283), r = rand(16, 56), tx = e.hx + Math.cos(a) * r, ty = e.hy + Math.sin(a) * r;
+        if (M.lineClear(this.world, e.x, e.y, tx, ty) && M.boxFree(this.world, tx, ty, hw, 3)) { w.tx = tx; w.ty = ty; w.go = true; w.t = 5; return; }
+      }
+      w.t = rand(0.8, 1.8); return;
+    }
+    const dx = w.tx - e.x, dy = w.ty - e.y, d = hyp(dx, dy);
+    if (d < 3 || w.t <= 0) { w.go = false; w.t = rand(1.5, 4.5); w.look = 0.6; setAnim(e, 'Idle'); return; }
+    const px = e.x, py = e.y, st = speed * 0.34 * dt, u = unit(dx, dy);
+    move(this, e, u.x * st, u.y * st, hw);
+    if (hyp(e.x - px, e.y - py) < st * 0.3) { w.go = false; w.t = rand(0.6, 1.5); setAnim(e, 'Idle'); return; }   // bloqué : on repart plus tard
+    setAnim(e, 'Walk'); e.face = u; e.dir = dirFromVec(u.x, u.y);
   }
   enemyStrike(e, u, tg) {
     const def = e.def;
@@ -791,7 +838,7 @@ export class Game {
   }
   bossPhase(b, ph) {
     this.bossCry(b, 6, 1.3); b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
-    this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
+    this.shake = 8; SFX.bossPhase(b.sprite); this.burst(b.x, b.y - 10, b.def.color, 30);
     this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
     this.emit('bossPhase', b, ph);
@@ -857,48 +904,48 @@ export class Game {
         type = pool[0][0]; for (const l of pool) { r -= l[1]; if (r <= 0) { type = l[0]; break; } }
       }
     }
-    b.lastAtk = type; b.atkType = type; b.state = 'windup'; SFX.telegraph(); b.lockDir = null;
-    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6;
+    b.lastAtk = type; b.atkType = type; b.state = 'windup'; b.lockDir = null;
+    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6; SFX.bossTele(b.sprite, b.st);
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
     const T = b.atkType, d = b.dmg, col = b.def.color, id = b.sprite;
     const rec = (st, cd) => { b.state = 'recover'; b.st = st; b.cd = cd * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1); };
     if (T === 'ball') {
-      this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.shoot();
+      this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.bossBall(id);
       setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.5, 1.5);
     } else if (T === 'volley') {
       const n = b.phase >= 2 ? 5 : 3, ang = Math.atan2(tg.y - b.y, tg.x - b.x);
       for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: ang + (i - (n - 1) / 2) * 0.22, speed: 165, dmg: d * 0.9, r: 3.5, life: 3, team: 'e', color: col, owner: b });
-      SFX.shoot(); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.4);
+      SFX.bossVolley(id); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.4);
     } else if (T === 'nova') {
       const n = b.phase === 3 ? 18 : 14, off = rand(0, 6.28);
       for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: off + i * 6.283 / n, speed: 105, dmg: d * 0.8, r: 3.5, life: 3.2, team: 'e', color: col, owner: b });
-      SFX.boom(); this.shake = 3; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.6);
+      SFX.bossNova(id); this.shake = 3; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.6);
     } else if (T === 'swing') {
-      setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.swing();
+      setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.bossSwing(id);
       for (const m of this.actors()) {
         if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, dist = hyp(dx, dy);
         if (dist < 46 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
       }
       this.ringFx(b.x + b.face.x * 20, b.y + b.face.y * 20, 30, col); rec(0.6, 1.2);
     } else if (T === 'pulse') {
-      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.boom(); this.shake = 4;
+      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.bossPulse(id); this.shake = 4;
       for (let i = 0; i < 3; i++) this.rings.push({ x: b.x, y: b.y, r: 4 - i * 40, speed: 95, max: 250, hit: new Set(), dmg: d * 1.5, color: col, owner: b });
       rec(0.9, 1.4);
     } else if (T === 'dash') {
-      b.state = 'dash'; b.st = 0.5; b.rollHit = new Set(); SFX.swing();
+      b.state = 'dash'; b.st = 0.5; b.rollHit = new Set(); SFX.bossDash(id);
     } else if (T === 'rain') {
-      const n = 5 + b.phase * 2; SFX.boom();
+      const n = 5 + b.phase * 2; SFX.bossRain(id);
       for (let i = 0; i < n; i++) { const p = i === 0 ? { x: tg.x, y: tg.y } : { x: tg.x + rand(-85, 85), y: tg.y + rand(-65, 65) }; this.zones.push({ x: p.x, y: p.y, r: 20, t: 0, delay: 0.85 + i * 0.13, dmg: d * 1.2, color: b.def.rainColor || col, owner: b }); }
       setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.6, 1.5);
     } else if (T === 'beam') {
       const v = b.lockDir || u, ang = Math.atan2(v.y, v.x), len = this.rayObs(b.x, b.y, v, 260);
-      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.boom(); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
+      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.bossBeam(id); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
       for (const m of this.actors()) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
       setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
     } else if (T === 'summon') {
-      if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
+      SFX.bossSummon(id); if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
       setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);
     }
   }
@@ -909,7 +956,7 @@ export class Game {
     this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
-    this.openFog(); this.buildItems(); SFX.victory(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
+    this.openFog(); this.buildItems(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
     { const nx = M.MAPS[this.mapIdx + 1]; if (nx && nx.secret) setTimeout(() => this.emit('toast', 'Un lieu secret est apparu sur la carte…'), 4500); }
     this.emit('banner', b.def.name + ' VAINCU', 'victory'); setTimeout(() => this.emit('bossLine', b, 'death'), 1400);
   }
@@ -961,7 +1008,7 @@ export class Game {
     for (const z of this.zones) {
       z.t += dt;
       if (!z.done && z.t >= z.delay) {
-        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); SFX.boom();
+        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
         for (const m of this.actors()) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true, owner: z.owner });
       }
     }
@@ -974,7 +1021,12 @@ export class Game {
   floatText(x, y, s, c) { this.texts.push({ x: x + rand(-4, 4), y, s, c, t: 0 }); }
   updateFx(dt) {
     this.updateFxs(dt);
-    for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt; }
+    const wn = this.parts.some(p => p.wind) ? windNow() : 0;
+    for (const p of this.parts) {
+      p.life -= dt;
+      if (p.wind) { p.vx += (wn * 0.85 * p.k - p.vx) * Math.min(1, dt * 1.6); p.x += Math.sin(p.ph + p.life * 8) * 9 * dt; p.vz += Math.cos(p.ph + p.life * 8) * 40 * dt; if (p.z < 0) { p.z = 0; p.vz = 0; p.vx *= 0.5; p.life = Math.min(p.life, 0.3); } }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.g || 0) * dt;
+    }
     this.parts = this.parts.filter(p => p.life > 0);
     for (const t of this.texts) { t.t += dt; t.y -= 14 * dt; }
     if (this.pops) { for (const p of this.pops) p.t += dt; this.pops = this.pops.filter(p => p.t < 1.8); }
@@ -983,8 +1035,21 @@ export class Game {
   }
 
   // ---------- monde : zones, feux, portes, brume, coffres ----------
+  // feuilles du sol soulevées par les rafales, ou par les pas du chef (Tour Carillon)
+  windLeaves(dt) {
+    const c = this.chief(), sp = this.world.leafSpots; if (!c || !sp || !sp.length) return;
+    const lift = (s, n, burst) => { for (let i = 0; i < n; i++) { const life = rand(1.4, 2.6); this.parts.push({ x: s.x + rand(-8, 8), y: s.y + rand(-5, 5), z: 1, vx: burst ? rand(-30, 30) : 0, vy: rand(-14, 14), vz: rand(burst ? 26 : 14, burst ? 52 : 34), g: 34, life, max: life, c: LEAF_COLS[(Math.random() * LEAF_COLS.length) | 0], size: Math.random() < 0.3 ? 3 : 2, wind: 1, k: rand(0.6, 1.2), ph: rand(0, 6.28) }); } };
+    const gust = windNow(), st = Math.max(0, (gust - 38) / 60);
+    if (st > 0 && Math.random() < dt * st * 7) { for (let t = 0; t < 12; t++) { const s = sp[(Math.random() * sp.length) | 0]; if (Math.hypot(s.x - c.x, s.y - c.y) < 320) { lift(s, 1 + ((Math.random() * 3) | 0), false); break; } } }
+    this.stirT = (this.stirT || 0) - dt;
+    const moved = Math.hypot(c.x - (this._lx ?? c.x), c.y - (this._ly ?? c.y)) > 0.3; this._lx = c.x; this._ly = c.y;
+    if (this.stirT <= 0 && moved) {
+      for (const s of sp) if (Math.abs(s.x - c.x) < 14 && Math.abs(s.y - c.y) < 12 && !s.cd) { s.cd = 1; lift(s, 3, true); setTimeout(() => { s.cd = 0; }, 2500); }
+      this.stirT = 0.12;
+    }
+  }
   updateWorld(dt) {
-    const c = this.chief(); this.prompt = null; const pr = this.prog[this.mapIdx];
+    const c = this.chief(); this.prompt = null; if (this.world.leafSpots) this.windLeaves(dt); const pr = this.prog[this.mapIdx];
     const z = M.zoneAt(this.world, c.x, c.y);
     if (z && z.area && z.area !== this.lastArea) { this.lastArea = z.area; this.emit('area', z); }
     const s = this.souvenir;
@@ -1021,7 +1086,7 @@ export class Game {
     if (this.prompt && this.prompt.act && Input.pressed('interact') && !c.atk && !c.dodge && c.hurtT <= 0) this.prompt.act();
   }
   lightBonfire(b) {
-    this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.hubAt = { x: (b.tx + 0.5) * TS, y: (b.ty + 0.5) * TS }; this.emit('jingle', 'JINGLE_CAMPFIRE'); this.emit('banner', 'FEU ALLUMÉ', 'fire');
+    this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.hubAt = { x: (b.tx + 0.5) * TS, y: (b.ty + 0.5) * TS }; this.emit('banner', 'FEU ALLUMÉ', 'fire');
   }
   rest(quiet) {
     for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; m.fx = null; m.regen = null; }

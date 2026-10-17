@@ -3,27 +3,39 @@
 // Les fichiers sont dans assets/audio/music/<id en minuscules>.ogg ; une piste absente ou illisible est ignorée sans erreur.
 export const TRACKS = {
   INTRO_TITLE: { title: 'LOVE STORY X GOLDEN BROWN (Epic Orchestral Version)', author: 'Sam B Music', license: 'tous droits réservés, repris pour ce fan game non commercial', url: 'https://www.youtube.com/watch?v=s9NMV-k6Jcc', use: 'Écran titre' },
-  HUB_MAIN: { title: 'Dark Shrine Loop', author: 'qubodup', license: 'CC0', url: 'https://opengameart.org/content/dark-shrine-loop', use: 'Feu de camp, commandes' },
-  MENU_STARTER: { title: 'The Hope', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/the-hope', use: 'Choix du starter' },
-  MAP_1: { title: 'Laments of the War', author: 'Cethiel', license: 'CC0', url: 'https://opengameart.org/content/laments-of-the-war', use: 'Carte 1' },
-  MAP_2: { title: 'Mysterious', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/mysterious', use: 'Carte 2' },
-  MAP_3: { title: 'Forgoten Tomb Ambience', author: 'kindland', license: 'CC0', url: 'https://opengameart.org/content/forgoten-tomb-ambience', use: 'Carte 3' },
+  MENU_STARTER: { title: 'Choix du starter', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Choix du starter' },
+  MAP_1: { title: 'Îles Écume (Kanto)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Carte 1' },
+  MAP_2: { title: 'Centrale abandonnée (Kanto)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Carte 2' },
+  MAP_3: { title: 'Mont Braise (Kanto)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Carte 3' },
   MAP_4: { title: 'Dark Theme', author: 'JaggedStone', license: 'CC0', url: 'https://opengameart.org/content/dark-theme', use: 'Carte 4' },
-  MAP_5: { title: 'Horror Atmosphere', author: 'SubspaceAudio', license: 'CC0', url: 'https://opengameart.org/content/horror-atmosphere', use: 'Carte 5' },
-  MAP_6: { title: 'Fantasy Choir (3 orchestral pieces)', author: 'cesisco', license: 'CC0', url: 'https://opengameart.org/content/fantasy-choir-3-orchestral-pieces', use: 'Carte 6' },
-  MINIBOSS_A: { title: 'Sinister Boss Appears', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/sinister-boss-appears', use: 'Gros mob' },
-  MINIBOSS_B: { title: 'Dramatic Boss Encounter', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/dramatic-boss-encounter', use: 'Gros mob (alternance)' },
-  SUBBOSS_BIRDS: { title: 'Boss Battle 2 (Symphonic Metal)', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-2-symphonic-metal', use: 'Artikodin, Électhor, Sulfura' },
-  MAP_J1: { title: 'à choisir (Edo)', author: '—', license: '—', url: '', use: 'Johto · Tour Carillon' },
-  SUBBOSS_BEASTS: { title: 'à choisir (Edo, taiko)', author: '—', license: '—', url: '', use: 'Raikou, Entei, Suicune' },
-  SUBBOSS_KINGS: { title: 'Boss Battle Music', author: 'SubspaceAudio', license: 'CC0', url: 'https://opengameart.org/content/boss-battle-music', use: 'Rois de Kanto' },
+  MAP_5: { title: 'Laboratoire oublié (Kanto)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Carte 5' },
+  MAP_6: { title: 'Île Mystère (Kanto)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Carte 6 (secrète)' },
+  MINIBOSS_A: { title: 'Mini-boss A', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Gros mob' },
+  MINIBOSS_B: { title: 'Mini-boss B', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Gros mob (alternance)' },
+  SUBBOSS_BIRDS: { title: 'Boss des oiseaux, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Artikodin, Électhor, Sulfura' },
+  MAP_J1: { title: 'Tour Carillon (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Tour Carillon' },
+  MAP_J2: { title: 'Tour Brûlée (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Tour Brûlée' },
+  MAP_J3: { title: 'Lac du Miroir (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Lac du Miroir' },
+  MAP_J4: { title: 'Îles Tourbillon (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Îles Tourbillon' },
+  MAP_J5: { title: 'Forêt d\'Ilex (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Forêt d\'Ilex (secrète)' },
+  BOSS_RAIKOU: { title: 'Raikou, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou' },
+  BOSS_RAIKOU_P2: { title: 'Raikou, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou, sous 50 % de vie' },
+  BOSS_ENTEI: { title: 'Entei, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Entei' },
+  BOSS_ENTEI_P2: { title: 'Entei, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Entei, sous 50 % de vie' },
+  BOSS_SUICUNE: { title: 'Suicune, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Suicune' },
+  BOSS_SUICUNE_P2: { title: 'Suicune, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Suicune, sous 50 % de vie' },
+  SUBBOSS_BIRDS_P2: { title: 'Boss des oiseaux, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Oiseaux, sous 50 % de vie' },
+  SUBBOSS_KINGS_P2: { title: 'Boss des rois, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Rois de Kanto, sous 50 % de vie' },
+  BOSS_MEW_P2: { title: 'Mew, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew, sous 50 % de vie' },
+  BOSS_LUGIA_P1: { title: 'Lugia, la tempête (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Lugia, phase 1' },
+  BOSS_LUGIA_P2: { title: 'Lugia, le ciel dégagé (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Lugia, phase 2' },
+  SUBBOSS_KINGS: { title: 'Boss des rois, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Rois de Kanto (Dracolosse)' },
   SUBBOSS_KINGS_ALT: { title: 'Ancient Power of Serpents', author: 'josepharaoh99', license: 'CC0', url: 'https://opengameart.org/content/ancient-power-of-serpents', use: 'Rois de Kanto (variante)' },
-  BOSS_MEWTWO_P1: { title: 'Colossal Boss Battle Theme', author: 'Matthew Pablo (http://www.matthewpablo.com)', license: 'CC-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/content/colossal-boss-battle-theme', use: 'Mewtwo, phase 1' },
-  BOSS_MEWTWO_P2: { title: 'Dark Descent (extended cut)', author: 'Matthew Pablo (http://www.matthewpablo.com)', license: 'CC-BY 3.0 (crédit obligatoire)', url: 'https://opengameart.org/content/dark-descent-extended-cut', use: 'Mewtwo, phase 2' },
-  BOSS_MEW: { title: 'Epic Endgame Cinematic', author: 'cynicmusic', license: 'CC0', url: 'https://opengameart.org/content/epic-endgame-cinematic', use: 'Mew' },
-  JINGLE_CAMPFIRE: { title: 'Cunning plan (provisoire)', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/cunning-plan-short-seamless-loop', use: 'Feu allumé', jingle: true },
-  JINGLE_DEATH: { title: 'Better luck next time', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/node/143357', use: 'Mort', jingle: true },
-  JINGLE_VICTORY: { title: 'Victory sting', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/victory-sting', use: 'Boss vaincu', jingle: true },
+  BOSS_MEWTWO_P1: { title: 'Mewtwo, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 1' },
+  BOSS_MEWTWO_P2: { title: 'Mewtwo, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 2' },
+  BOSS_MEW: { title: 'Mew, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew' },
+  JINGLE_DEATH: { title: 'Mort (The Final Chord)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mort', jingle: true },
+  JINGLE_VICTORY: { title: 'Victoire (Hard-Won Victory)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Boss vaincu', jingle: true },
 };
 const STORE = 'pokesouls.options.v1';
 // Couche perso (reprises, usage privé) : active en local, coupée sur le site publié ; ?perso=0 ou ?perso=1 force le choix.
@@ -57,7 +69,7 @@ function load(id) {
 }
 function startSrc(id, fade, tempo, loop) {
   const g = ac.createGain(), s = ac.createBufferSource();
-  s.buffer = bufs[id]; s.loop = loop; s.playbackRate.value = tempo;
+  s.buffer = bufs[id]; s.loop = loop; if (loop && MAP[id] && MAP[id].loop_start) { s.loopStart = MAP[id].loop_start; s.loopEnd = 0; } s.playbackRate.value = tempo;
   g.gain.value = 0; g.gain.linearRampToValueAtTime(1, ac.currentTime + Math.max(0.02, fade));
   s.connect(g); g.connect(master); s.start();
   return { id, src: s, gain: g };
@@ -115,24 +127,23 @@ export const Music = {
 
 // ---------- chef d'orchestre : choisit la piste selon le contexte (BOSS > MINIBOSS > MAP > HUB > MENU) ----------
 let miniOn = false, miniOff = 0, miniAlt = false, miniId = 'MINIBOSS_A', lastMap = -1;
-const BOSS_TRACK = { raikou: 'SUBBOSS_BEASTS', entei: 'SUBBOSS_BEASTS', suicune: 'SUBBOSS_BEASTS', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
+const BOSS_TRACK = { raikou: 'BOSS_RAIKOU', entei: 'BOSS_ENTEI', suicune: 'BOSS_SUICUNE', lugia: 'BOSS_LUGIA_P1', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
+// phase 2 : quand le boss passe sous 50 % de vie
+const BOSS_P2 = { raikou: 'BOSS_RAIKOU_P2', entei: 'BOSS_ENTEI_P2', suicune: 'BOSS_SUICUNE_P2', lugia: 'BOSS_LUGIA_P2', articuno: 'SUBBOSS_BIRDS_P2', zapdos: 'SUBBOSS_BIRDS_P2', moltres: 'SUBBOSS_BIRDS_P2', dragonite: 'SUBBOSS_KINGS_P2', mewtwo: 'BOSS_MEWTWO_P2', mew: 'BOSS_MEW_P2' };
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
   if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »
-  if (ui.controls || !g || !g.world) return Music.direct('HUB_MAIN');
-  if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.world.def.mus || g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], g.world.def.boss === 'mewtwo' ? 'BOSS_MEWTWO_P2' : null, 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
+  if (ui.controls || !g || !g.world) return Music.direct(ui.screen === 'title' ? 'INTRO_TITLE' : 'MENU_STARTER'); // plus de thème de camp : on garde la musique du menu
+  if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.world.def.mus || g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], BOSS_P2[g.world.def.boss], 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
   const b = g.bossActive && g.boss && !g.boss.dead ? g.boss : null;
   if (b) {
     const key = g.world.def.boss, ratio = b.hp / b.maxhp; let id = BOSS_TRACK[key], tempo = 1;
-    if (key === 'mewtwo' && ratio < 0.5) id = 'BOSS_MEWTWO_P2';
-    if (key === 'mew' && ratio < 0.5) tempo = 1.08;
+    if (BOSS_P2[key] && ratio < 0.5) id = BOSS_P2[key];
     miniOn = false; return Music.direct(id, tempo);
   }
   const c = g.chief();
   const engaged = g.enemies.some(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230);
   if (engaged) { if (!miniOn) { miniOn = true; miniAlt = !miniAlt; miniId = miniAlt ? 'MINIBOSS_A' : 'MINIBOSS_B'; } miniOff = 3; } else if (miniOn && (miniOff -= dt) <= 0) miniOn = false;
   if (miniOn) return Music.direct(miniId);
-  if (ui.menuKind === 'bonfire') return Music.direct('HUB_MAIN');
-  if (g.hubAt) { if (Math.hypot(g.hubAt.x - c.x, g.hubAt.y - c.y) < 140) return Music.direct('HUB_MAIN'); g.hubAt = null; }
   return Music.direct(`MAP_${g.world.def.mus || g.mapIdx + 1}`);
 }

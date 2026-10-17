@@ -42,7 +42,7 @@ export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
 export const padFace = () => ({ f: FACE[padKind], s: SYS[padKind] });
 export function padLabels() {
   const f = FACE[padKind];
-  return [['Déplacement', 'Stick gauche'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
+  return [['Déplacement', 'Stick gauche'], ['Pivoter la caméra par crans de 45° (gauche/droite)', 'Stick droit'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
     ['Garde / parade (maintenir)', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Objets : roue', 'maintenir ' + f[5] + ' + stick droit, relâcher'], ['Changer de cible verrouillée', 'Stick droit gauche / droite'], ['Baie', padLabel('berry')], ['Super Bonbon', padLabel('candy')], ['Fiole d’endurance', padLabel('ether')], ['Rappel', padLabel('revive')], ['Lien (alliés)', 'Clic stick gauche'],
     ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix haut'], ['Pause', padLabel('pause')],
     ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
@@ -84,7 +84,7 @@ export const Controls = {
 };
 
 const down = new Set(), pressedNow = new Set(), padPrev = {}, padDown = new Set(), touchDown = new Set();
-let padAxes = [0, 0], touchAxes = [0, 0], lastTouchT = -1e9;
+let padAxes = [0, 0], touchAxes = [0, 0], lastTouchT = -1e9, padCam = [0, 0];   // padCam : stick droit (pivot de caméra)
 const press = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) { down.add(a); pressedNow.add(a); } };
 const release = c => { const acts = codeToAct[c]; if (acts) for (const a of acts) down.delete(a); };
 
@@ -146,12 +146,12 @@ let modNow = false, flickPrev = 0;
 const btnPrev = [], padEdge = new Set();
 function padReset() { padDown.clear(); btnPrev.length = 0; padEdge.clear(); for (const k of Object.keys(padPrev)) delete padPrev[k]; }
 addEventListener('gamepadconnected', e => { padKind = kindOf(e.gamepad.id); lastDev = 'pad'; });
-addEventListener('gamepaddisconnected', () => { padReset(); padOn = false; padAxes = [0, 0]; });
+addEventListener('gamepaddisconnected', () => { padReset(); padOn = false; padAxes = [0, 0]; padCam = [0, 0]; });
 addEventListener('blur', padReset);
 function pollPad() {
   const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
   const gp = pads.find(p => p.mapping === 'standard') || pads[0] || null;
-  padAxes = [0, 0];
+  padAxes = [0, 0]; padCam = [0, 0];
   if (!gp) { if (padOn) { padReset(); padOn = false; } return; }
   padOn = true; padKind = kindOf(gp.id); padInfo = { id: gp.id, mapping: gp.mapping };
   const dz = v => (Math.abs(v) < 0.2 ? 0 : v);
@@ -181,6 +181,7 @@ function pollPad() {
   if (mod) for (const [b, item] of Object.entries(PAD_ITEM)) if (padEdge.has(+b)) pressedNow.add(item);   // R + bouton de face fixe : haut baie, gauche bonbon, droite (A) huile, bas rappel
   { // stick droit, R relâché : un coup de stick à gauche / droite change de cible verrouillée
     const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);
+    padCam = !mod && mag > 0.2 ? [dz(rx), dz(ry)] : [0, 0];   // pivot de caméra (le jeu l'ignore pendant un verrouillage)
     const f = !mod && mag > 0.7 && Math.abs(rx) > Math.abs(ry) * 1.3 ? Math.sign(rx) : 0;
     if (f && f !== flickPrev) pressedNow.add(f < 0 ? 'lockPrev' : 'lockNext');
     flickPrev = f; modNow = mod;
@@ -210,6 +211,7 @@ export const Input = {
   padEdge: i => padEdge.has(i),
   padHeld: i => !!btnPrev[i],
   padStick: () => padAxes,
+  camStick: () => padCam,   // stick droit, zone morte appliquée, R relâché
   padMod: () => padOn && modNow,   // R tenu (objets rapides)
   eat: a => { pressedNow.delete(a); },
   // vrai quand une manette est branchée et que c'est elle qui a servi en dernier (hors mode tactile)

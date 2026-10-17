@@ -100,14 +100,17 @@ void main(){
 export const BILL_VERT = /* glsl */`
 attribute vec2 aFoot;
 varying vec2 vUv; varying vec2 vFoot; varying vec3 vW;
-uniform float uBias;
+uniform float uBias; uniform vec3 uCamF;
 void main(){
   vUv = uv; vFoot = aFoot;
   vec4 w = modelMatrix*vec4(position,1.);
   vW = w.xyz;
   vec4 clip = projectionMatrix*viewMatrix*w;
   // profondeur : celle du plan vertical passant par les pieds (évite que le haut du sprite s'enfonce dans un mur)
-  vec4 wf = vec4(w.x, w.y, aFoot.y, 1.);
+  // le plan est perpendiculaire à la direction horizontale de la caméra (qui peut pivoter) : on retire l'inclinaison du billboard le long de cet axe
+  vec2 aw = normalize(uCamF.xz + vec2(1e-5));
+  vec2 wz = w.xz - aw*dot(w.xz - aFoot, aw);
+  vec4 wf = vec4(wz.x, w.y, wz.y, 1.);
   vec4 cf = projectionMatrix*viewMatrix*wf;
   gl_Position = clip;
   gl_Position.z = (cf.z/cf.w)*clip.w - uBias*clip.w;

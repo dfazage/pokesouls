@@ -16,7 +16,8 @@ import { itemImage } from './items.js';
 
 const { TS } = M;
 let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
-export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5 };
+export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 40, camPitchMax: 40 };   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
+const CAM_YAW_MAX = 45;   // pivot maximal à gauche / droite (degrés) ; garder aligné sur CAM_YAW de game.js
 // Tilt-shift : rayon de flou maximal (px) à 100 %. Réglage joueur 0 à 150 % (0 = désactivé, saute aussi la boucle de flou du shader).
 const TILT_BASE = 4.2, OPT_KEY = 'pokesouls.options.v1';
 const tiltPct = () => { try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null'); if (o && typeof o.tilt === 'number') return Math.max(0, Math.min(150, o.tilt)); } catch (e) { /* défaut */ } return 100; };
@@ -42,14 +43,14 @@ class Batch {
       uniforms: {
         uMap: { value: this.tex }, uMapSize: { value: new THREE.Vector2(this.canvas.width, this.canvas.height) },
         uLight: shared.uLight, uReg: shared.uReg, uGain: shared.uGain, uTime: shared.uTime, uBias: { value: bias },
-        uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam,
+        uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam, uCamF: shared.uCamF,
       },
     });
     this.mesh = new THREE.Mesh(this.geo, this.mat); this.mesh.frustumCulled = false; this.mesh.renderOrder = order;
   }
   begin() { this.n = 0; this.ctx.setTransform(1, 0, 0, 1, 0, 0); this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
   // dessine un objet dans la prochaine cellule libre ; renvoie false si l'atlas est plein
-  add(item, cosP, sinP) {
+  add(item, cosP, sinP, cy = 1, sy = 0) {
     if (this.n >= this.max) return false;
     const i = this.n++, cs = this.cell, c = this.ctx, col = i % this.cols, row = (i / this.cols) | 0, x0 = col * cs, y0 = row * cs;
     c.save(); c.beginPath(); c.rect(x0, y0, cs, cs); c.clip();
@@ -59,7 +60,8 @@ class Batch {
     const u0 = (x0 + e) / aw, u1 = (x0 + cs - e) / aw, v0 = (y0 + e) / ah, v1 = (y0 + cs - e) / ah;
     const fx = item.x / TS, fz = item.y / TS, hw = cs / 2 / TS, top = this.foot / TS, bot = -(cs - this.foot) / TS;
     const P = this.pos, o = i * 12, U = this.uv, uo = i * 8, F = this.ft;
-    const corner = (k, u, v, tu, tv) => { P[o + k * 3] = fx + u; P[o + k * 3 + 1] = v * cosP; P[o + k * 3 + 2] = fz - v * sinP; U[uo + k * 2] = tu; U[uo + k * 2 + 1] = tv; F[uo + k * 2] = fx; F[uo + k * 2 + 1] = fz; };
+    // le billboard fait face à la caméra : « droite » = (cy, -sy), « loin de la caméra » = (-sy, -cy) dans le plan du sol (cy = 1, sy = 0 sans pivot)
+    const corner = (k, u, v, tu, tv) => { P[o + k * 3] = fx + u * cy - v * sinP * sy; P[o + k * 3 + 1] = v * cosP; P[o + k * 3 + 2] = fz - u * sy - v * sinP * cy; U[uo + k * 2] = tu; U[uo + k * 2 + 1] = tv; F[uo + k * 2] = fx; F[uo + k * 2 + 1] = fz; };
     corner(0, -hw, top, u0, v0); corner(1, hw, top, u1, v0); corner(2, hw, bot, u1, v1); corner(3, -hw, bot, u0, v1);
     return true;
   }
@@ -83,7 +85,7 @@ export class HD2D {
     this.camera = new THREE.PerspectiveCamera(CFG.fov, SW / SH, 0.1, 160);
     this.scene = new THREE.Scene();
     this.pitch = CFG.pitch * Math.PI / 180;
-    this.curPitch = this.pitch; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
+    this.curPitch = this.pitch; this.curYaw = 0; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
     this.sh = {
       uTime: { value: 0 }, uFog: { value: new THREE.Vector3(.05, .05, .1) }, uFogD: { value: .02 }, uMist: { value: .5 }, uCam: { value: new THREE.Vector3() },
       uLight: { value: null }, uOvN: { value: null }, uOvA: { value: null }, uReg: { value: new THREE.Vector4() }, uGain: { value: 1.12 },
@@ -114,21 +116,29 @@ export class HD2D {
 
   // ----- région du sol visible (en tuiles, relative à la cible) : sert de zone pour la carte de lumière et les décalques -----
   computeRegion() {
-    const c = this.camera; this.placeCamera(0, 0, 0, 0);
-    const ray = new THREE.Vector3(), pos = c.position.clone(); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
-    for (const [nx, ny] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1], [0, -1]]) {
-      ray.set(nx, ny, 0.5).unproject(c).sub(pos).normalize();
-      const t = ray.y < -0.03 ? -pos.y / ray.y : 40;
-      const px = pos.x + ray.x * t, pz = pos.z + ray.z * t;
-      x0 = Math.min(x0, px); x1 = Math.max(x1, px); z0 = Math.min(z0, pz); z1 = Math.max(z1, pz);
+    const c = this.camera, keepP = this.curPitch, keepY = this.curYaw;
+    const ray = new THREE.Vector3(); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    // union des régions vues sous tous les angles que le joueur peut prendre (pivot ±CAM_YAW_MAX° et inclinaison bornée)
+    const Y = CAM_YAW_MAX * Math.PI / 180, rad = d => d * Math.PI / 180;
+    for (const yw of [-Y, 0, Y]) for (const pd of [CFG.camPitchMin, CFG.pitch, CFG.camPitchMax]) {
+      this.curPitch = rad(pd); this.curYaw = yw; this.placeCamera(0, 0, 0, 0);
+      const pos = c.position.clone();
+      for (const [nx, ny] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1], [0, -1]]) {
+        ray.set(nx, ny, 0.5).unproject(c).sub(pos).normalize();
+        const t = Math.min(34, ray.y < -0.03 ? -pos.y / ray.y : 40);
+        const px = pos.x + ray.x * t, pz = pos.z + ray.z * t;
+        x0 = Math.min(x0, px); x1 = Math.max(x1, px); z0 = Math.min(z0, pz); z1 = Math.max(z1, pz);
+      }
     }
+    this.curPitch = keepP; this.curYaw = keepY; this.placeCamera(0, 0, 0, 0);
     const m = 2;
     const rw = Math.ceil((x1 - x0 + 2 * m) * TS / 16) * 16, rh = Math.ceil((z1 - z0 + 2 * m) * TS / 16) * 16;
     this.reg = { relX: (x0 - m) * TS, relY: (z0 - m) * TS, w: rw, h: rh, ox: 0, oy: 0 };
   }
   placeCamera(cx, cz, shx, shy) {
     const c = this.camera, p = this.curPitch, L = this.curLook, D = this.curDist;
-    c.position.set(cx + shx, L + D * Math.sin(p), cz + shy + D * Math.cos(p));
+    const yw = this.curYaw || 0;   // pivot autour de la cible : yw > 0 amène la caméra vers la droite de l'écran
+    c.position.set(cx + shx + D * Math.cos(p) * Math.sin(yw), L + D * Math.sin(p), cz + shy + D * Math.cos(p) * Math.cos(yw));
     c.lookAt(cx + shx, L, cz + shy);
     c.updateMatrixWorld(true);
   }
@@ -284,7 +294,8 @@ export class HD2D {
     const sh = this.sh, R = this.reg, t = g.t;
     { // paramètres de caméra : par défaut ceux du jeu, sinon ceux de la cinématique en cours
       const fx = g.camFx;
-      this.curPitch = (fx ? fx.pitch : CFG.pitch) * Math.PI / 180; this.curDist = fx ? fx.dist : CFG.dist; this.curLook = fx ? fx.look : CFG.look;
+      // pivot du joueur (stick droit) : inclinaison bornée, ignoré pendant une cinématique
+      this.curPitch = (fx ? fx.pitch : Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0)))) * Math.PI / 180; this.curYaw = fx ? 0 : (g.camYaw || 0) * Math.PI / 180; this.curDist = fx ? fx.dist : CFG.dist; this.curLook = fx ? fx.look : CFG.look;
       const fov = fx ? fx.fov : CFG.fov;
       if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
       if (this.pointK) this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
@@ -325,16 +336,17 @@ export class HD2D {
 
     tp = tk('lumiere', tp);
     // --- sprites ---
-    const cosP = Math.cos(this.curPitch), sinP = Math.sin(this.curPitch);
+    const cosP = Math.cos(this.curPitch), sinP = Math.sin(this.curPitch), cyw = Math.cos(this.curYaw), syw = Math.sin(this.curYaw);
     const inView = (x, y, pad = 60) => {
       if (!(x > R.ox - pad && x < R.ox + R.w + pad && y > R.oy - pad && y < R.oy + R.h + pad)) return false;
       const p = this.proj(x, y, 0); return !!p && p.nx > -1.35 && p.nx < 1.35 && p.ny > -1.5 && p.ny < 1.5;
     };
     const list = collectDrawList(g, inView);
     // les objets hors champ ajoutés sans test (objets au sol, chef, alliés) sont filtrés ici
-    const vis = list.filter(o => inView(o.x, o.y, 90)).sort((a, b) => a.y - b.y);
+    // tri du plus loin au plus près de la caméra (sans pivot : par y croissant)
+    const vis = list.filter(o => inView(o.x, o.y, 90)).sort((a, b) => (b.x * -syw + b.y * -cyw) - (a.x * -syw + a.y * -cyw));
     this.batchS.begin(); this.batchL.begin();
-    for (const o of vis) (o.big ? this.batchL : this.batchS).add(o, cosP, sinP);
+    for (const o of vis) (o.big ? this.batchL : this.batchS).add(o, cosP, sinP, cyw, syw);
     this.batchS.end(); this.batchL.end();
     setShadowSink(null);
     tp = tk('sprites', tp);

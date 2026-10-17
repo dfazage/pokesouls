@@ -13,7 +13,7 @@ export const THEMES = {
   lava: { floor: [66, 40, 38], arena: [78, 42, 34], wallA: '#5a3430', wallB: '#56302c', face: '#321a18', faceTop: '#8a5040', accent: [255, 130, 50], accent2: [255, 200, 90], fx: 'lava', amb: [200, 150, 130], ambArena: [210, 130, 100], decor: ['brazier', 'rock', 'crystal'] },
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
   // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
-  bell: { floor: [112, 104, 92], arena: [138, 128, 110], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
+  bell: { floor: [112, 104, 92], arena: [138, 128, 110], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [150, 140, 142], ambArena: [180, 158, 134], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
@@ -54,9 +54,11 @@ const JOHTO = [
         { cell: [0, 2], name: 'Escalier des lanternes' }, { cell: [1, 2], name: 'Cour des cloches' }, { cell: [2, 2], name: 'Jardin des ex-voto' },
         { cell: [3, 2], name: 'Esplanade des tatamis' }, { cell: [3, 1], name: 'Allée de laque' }, { cell: [2, 1], name: 'Parvis du carillon' },
         { cell: [1, 1], name: 'Antichambre du tonnerre' }, { cell: [0, 1], name: 'Terrasse des ex-voto' },
-      ].map((z, i) => i === 7 ? { ...z, zone: 'Lisière' } : z),
-      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [2, 5], [5, 6], [0, 7]],
-      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, pseudo: 7, chests: [1, 2, 3, 4, 5, 7, 3],
+        { cell: [3, 0], name: 'Pavillon des offrandes' }, { cell: [0, 0], name: 'Jardin caché' }, { cell: [2, 0], name: 'Belvédère des cloches' },
+      ].map((z, i) => i === 7 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
+      // pas de raccourci direct 2→5 : il faut faire tout le détour par l'esplanade et l'allée ; trois culs-de-sac (8, 9, 10) à explorer avant l'antichambre
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [0, 7], [4, 8], [7, 9], [5, 10]],
+      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, pseudo: 9, chests: [2, 3, 8, 7, 9, 10, 5],
     },
     areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
     mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos', pseudo: 'metagrossK' },
@@ -421,10 +423,10 @@ function generateFree(def) {
     const nm = k === last ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
     if (k >= 2) { const nd = k === last ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
     if (k === bigZ) place(k, tiers.big);
-    if (tiers.pseudo && k === (F.pseudo ?? 7)) place(k, tiers.pseudo);
+    if (tiers.pseudo && k === (F.pseudo ?? 9)) place(k, tiers.pseudo);
   });
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
-  if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 7, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
+  if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
   return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret: null, modules: [] };
 }
@@ -601,6 +603,29 @@ export function bakeFloor(world) {
     if (lf) { const gr = g.createLinearGradient(x, 0, x + 8, 0); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x, y, 8, TS); }
     if (rt) { const gr = g.createLinearGradient(x + TS, 0, x + TS - 8, 0); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x + TS - 8, y, 8, TS); }
     if (dn) { const gr = g.createLinearGradient(0, y + TS, 0, y + TS - 8); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x, y + TS - 8, TS, 8); }
+  }
+  // feuilles de momiji tombées au sol (quartier d'Edo) : par tas, surtout au pied des murs et des arbres ; les emplacements servent aussi aux rafales de vent
+  if (th.fx === 'garden') {
+    const LEAF = ['..#..', '#####', '.###.', '..#..', '..#..'], LC = ['#9e1019', '#b3121f', '#bf2a22', '#cc4a24', '#d9792a', '#d9a636'];
+    const spots = []; world.leafSpots = spots;
+    const near = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const v = world.grid[(ty + dy) * MW + tx + dx]; return v === T.VOID || v === T.SOLID; });
+    for (let ty = 1; ty < MH - 1; ty++) for (let tx = 1; tx < MW - 1; tx++) {
+      if (world.grid[ty * MW + tx] !== T.FLOOR) continue;
+      if (rnd(tx, ty, 811) > (near(tx, ty) ? 0.1 : 0.022)) continue;
+      const cx = tx * TS + 4 + rnd(tx, ty, 812) * (TS - 8), cy = ty * TS + 4 + rnd(tx, ty, 813) * (TS - 8), n = 3 + Math.floor(rnd(tx, ty, 814) * 5);
+      spots.push({ x: cx, y: cy });
+      for (let i = 0; i < n; i++) {
+        const lx = Math.round(cx + (rnd(tx, ty, 820 + i) - 0.5) * 22), ly = Math.round(cy + (rnd(tx, ty, 840 + i) - 0.5) * 14), col = LC[Math.floor(rnd(tx, ty, 860 + i) * LC.length)], fl = rnd(tx, ty, 880 + i);
+        const small = rnd(tx, ty, 900 + i) < 0.35, rot = Math.floor(rnd(tx, ty, 920 + i) * 4);
+        g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(lx + 1, ly + 3, small ? 3 : 4, 1);
+        g.fillStyle = col; g.globalAlpha = 0.92;
+        for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 5; xx++) if (LEAF[yy][xx] === '#' && !(small && (xx === 0 || xx === 4 || yy === 4))) {
+          const ax = rot & 1 ? 4 - xx : xx, ay = rot & 2 ? 4 - yy : yy;
+          g.fillRect(lx + (fl < 0.5 ? ax : ay), ly + (fl < 0.5 ? ay : ax), 1, 1);
+        }
+        g.globalAlpha = 1;
+      }
+    }
   }
   return c;
 }

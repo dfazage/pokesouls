@@ -5,32 +5,30 @@
   "end": null,
   "fallback_audio": "intro_title.ogg"
  },
- "HUB_MAIN": {
-  "title": "DS · Firelink Shrine (Motoi Sakuraba, Topic)",
-  "start": 0,
-  "end": null,
-  "fallback_audio": "hub_main.ogg"
- },
  "MENU_STARTER": {
-  "title": "ER · Roundtable Hold (Tsukasa Saitoh, Topic)",
+  "loop_start": 8,
+  "title": "Choix du starter (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "menu_starter.ogg"
  },
  "MAP_1": {
-  "title": "ER · Limgrave (Topic)",
+  "loop_start": 8,
+  "title": "Îles Écume (Kanto) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_1.ogg"
  },
  "MAP_2": {
-  "title": "DS · Darkroot Garden (Sound Phenomenon, Topic)",
+  "loop_start": 8,
+  "title": "Centrale abandonnée (Kanto) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_2.ogg"
  },
  "MAP_3": {
-  "title": "DS · Ancient Dragon / Ash Lake (K Playz, fan)",
+  "loop_start": 8,
+  "title": "Mont Braise (Kanto) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_3.ogg"
@@ -42,37 +40,43 @@
   "fallback_audio": "map_4.ogg"
  },
  "MAP_5": {
-  "title": "ER · Crumbling Farum Azula (Shoi Miyazawa, Topic)",
+  "loop_start": 8,
+  "title": "Laboratoire oublié (Kanto) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_5.ogg"
  },
  "MAP_6": {
-  "title": "ER · Miquella's Haligtree (Tai Tomisawa, Topic)",
+  "loop_start": 8,
+  "title": "Île Mystère (Kanto) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "map_6.ogg"
  },
  "MINIBOSS_A": {
-  "title": "DS · Taurus Demon (Topic)",
+  "loop_start": 8,
+  "title": "Mini-boss A (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_a.ogg"
  },
  "MINIBOSS_B": {
-  "title": "ER · Margit, the Fell Omen (Topic)",
+  "loop_start": 8,
+  "title": "Mini-boss B (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "miniboss_b.ogg"
  },
  "SUBBOSS_BIRDS": {
-  "title": "DS · Sif, the Great Grey Wolf (Topic)",
+  "loop_start": 8,
+  "title": "Boss des oiseaux, phase 1 (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_birds.ogg"
  },
  "SUBBOSS_KINGS": {
-  "title": "DS · Four Kings (Topic)",
+  "loop_start": 8,
+  "title": "Boss des rois, phase 1 (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "subboss_kings.ogg"
@@ -84,25 +88,25 @@
   "fallback_audio": "subboss_kings_alt.ogg"
  },
  "BOSS_MEWTWO_P1": {
-  "title": "ER · Starscourge Radahn (Shoi Miyazawa, Topic)",
+  "loop_start": 8,
+  "title": "Mewtwo, phase 1 (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p1.ogg"
  },
  "BOSS_MEWTWO_P2": {
-  "title": "ER · The Final Battle (Topic)",
+  "loop_start": 7.46,
+  "title": "Mewtwo, phase 2 (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mewtwo_p2.ogg"
  },
  "BOSS_MEW": {
-  "title": "DS · Gwyn, Lord of Cinder (Topic)",
+  "loop_start": 8,
+  "title": "Mew, phase 1 (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_mew.ogg"
- },
- "JINGLE_CAMPFIRE": {
-  "fallback_audio": "jingle_campfire.ogg"
  },
  "JINGLE_DEATH": {
   "fallback_audio": "jingle_death.ogg"
@@ -111,15 +115,115 @@
   "fallback_audio": "jingle_victory.ogg"
  },
  "MAP_J1": {
-  "title": "Provisoire (en attendant la musique Edo)",
+  "loop_start": 8,
+  "title": "Tour Carillon (Edo, Suno)",
   "start": 0,
   "end": null,
-  "fallback_audio": "map_2.ogg"
+  "fallback_audio": "map_j1.ogg"
  },
- "SUBBOSS_BEASTS": {
-  "title": "Provisoire (en attendant la musique Edo)",
+ "MAP_J2": {
+  "loop_start": 8,
+  "title": "Tour Brûlée (Edo, Suno)",
   "start": 0,
   "end": null,
-  "fallback_audio": "subboss_birds.ogg"
+  "fallback_audio": "map_j2.ogg"
+ },
+ "BOSS_LUGIA_P1": {
+  "loop_start": 8,
+  "title": "Lugia, la tempête (Edo, Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_lugia_p1.ogg"
+ },
+ "BOSS_LUGIA_P2": {
+  "loop_start": 8,
+  "title": "Lugia, le ciel dégagé (Edo, Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_lugia_p2.ogg"
+ },
+ "SUBBOSS_BIRDS_P2": {
+  "loop_start": 8,
+  "title": "Boss des oiseaux, phase 2 (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_birds_p2.ogg"
+ },
+ "SUBBOSS_KINGS_P2": {
+  "loop_start": 6.06,
+  "title": "Boss des rois, phase 2 (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "subboss_kings_p2.ogg"
+ },
+ "BOSS_MEW_P2": {
+  "loop_start": 8,
+  "title": "Mew, phase 2 (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_mew_p2.ogg"
+ },
+ "MAP_J3": {
+  "loop_start": 8,
+  "title": "Lac du Miroir (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_j3.ogg"
+ },
+ "MAP_J5": {
+  "loop_start": 8,
+  "title": "Forêt d'Ilex (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_j5.ogg"
+ },
+ "BOSS_RAIKOU": {
+  "loop_start": 8,
+  "title": "Raikou, phase 1 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_raikou.ogg"
+ },
+ "BOSS_RAIKOU_P2": {
+  "loop_start": 8,
+  "title": "Raikou, phase 2 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_raikou_p2.ogg"
+ },
+ "BOSS_ENTEI": {
+  "loop_start": 8,
+  "title": "Entei, phase 1 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_entei.ogg"
+ },
+ "BOSS_ENTEI_P2": {
+  "loop_start": 8,
+  "title": "Entei, phase 2 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_entei_p2.ogg"
+ },
+ "BOSS_SUICUNE": {
+  "loop_start": 8,
+  "title": "Suicune, phase 1 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_suicune.ogg"
+ },
+ "BOSS_SUICUNE_P2": {
+  "loop_start": 8,
+  "title": "Suicune, phase 2 (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_suicune_p2.ogg"
+ },
+ "MAP_J4": {
+  "loop_start": 8,
+  "title": "Îles Tourbillon (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_j4.ogg"
  }
 }
