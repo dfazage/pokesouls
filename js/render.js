@@ -1,4 +1,5 @@
 // Rendu : sol, murs, entités triées en profondeur, effets, éclairage HD-2D (ambiance multiplicative + lueurs additives).
+import { CHAR_K, BOSS_K } from './worldscale.js';
 import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
 import * as M from './maps.js';
@@ -75,10 +76,10 @@ export function collectDrawList(g, inView) {
   for (const d of g.chestObjs) { const by = M.decorBaseline(d), bx = (d.tx + 0.5) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t, pr.chests.includes(d.id)) }); }
   for (const b of g.world.bonfires) { const x = (b.tx + 0.5) * TS, y = (b.ty + 0.6) * TS; if (inView(x, y)) list.push({ x, y, f: c => drawBonfire(c, g, b, x, y) }); }
   for (const it of g.items) list.push({ x: it.x, y: it.y + 2, f: c => drawItem(c, g, it) });
-  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ x: e.x, y: e.y, big: e.boss || bigFor(e.sprite, e.def.scale || 1), huge: e.boss && (e.def.scale || 1) > 2, f: c => drawEnemy(c, g, e) });
+  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ x: e.x, y: e.y, k: e.boss ? CHAR_K * BOSS_K : CHAR_K, big: e.boss || bigFor(e.sprite, e.def.scale || 1), huge: e.boss && (e.def.scale || 1) > 2, f: c => drawEnemy(c, g, e) });
   for (const o of g.obs) if (!o.dead && o.solid && o.on && inView(o.x, o.y)) list.push({ x: o.x, y: o.y + o.hh, f: c => drawObsSolid(c, g, o) });
-  for (const q of g.allies) list.push({ x: q.x, y: q.y, big: bigFor(q.id, 1), f: c => drawAlly(c, g, q) });
-  { const m = g.chief(); list.push({ x: m.x, y: m.y, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
+  for (const q of g.allies) list.push({ x: q.x, y: q.y, k: CHAR_K, big: bigFor(q.id, 1), f: c => drawAlly(c, g, q) });
+  { const m = g.chief(); list.push({ x: m.x, y: m.y, k: CHAR_K, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
   if (g.swapFx) for (const s of g.swapFx) list.push({ x: s.x, y: s.y + (s.k === 'ball' ? 1 : -1), f: c => drawSwap(c, g, s) });
   if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
   list.push(...g.falaDraw(inView));   // Fala et ses Modules (carte 2)

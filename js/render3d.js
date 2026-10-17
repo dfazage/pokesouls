@@ -14,8 +14,10 @@ import * as S from './hd2d_shaders.js';
 import * as WD from './hd2d_world.js';
 import { itemImage } from './items.js';
 import { BOSS_CAM_MIN_PITCH } from './bosscine.js';
+import { WORLD_SCALE, CHAR_K, BOSS_K } from './worldscale.js';
 
 const { TS } = M;
+let shadowK = 1;   // taille des ombres au sol sous un personnage : suit la taille de son billboard (voir worldscale.js)
 let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
 export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 40, camPitchMax: 40 };
 const REGION_PITCH_MIN = Math.min(CFG.camPitchMin, BOSS_CAM_MIN_PITCH);   // la carte de lumière couvre aussi les angles bas de la caméra de duel   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
@@ -57,10 +59,10 @@ class Batch {
     const i = this.n++, cs = this.cell, c = this.ctx, col = i % this.cols, row = (i / this.cols) | 0, x0 = col * cs, y0 = row * cs;
     c.save(); c.beginPath(); c.rect(x0, y0, cs, cs); c.clip();
     c.translate(x0 + cs / 2 - Math.round(item.x), y0 + this.foot - Math.round(item.y));
-    item.f(c); c.restore();
+    shadowK = item.k || 1; item.f(c); shadowK = 1; c.restore();
     const aw = this.canvas.width, ah = this.canvas.height, e = 0.5;
     const u0 = (x0 + e) / aw, u1 = (x0 + cs - e) / aw, v0 = (y0 + e) / ah, v1 = (y0 + cs - e) / ah;
-    const fx = item.x / TS, fz = item.y / TS, hw = cs / 2 / TS, top = this.foot / TS, bot = -(cs - this.foot) / TS;
+    const k = item.k || 1, fx = item.x / TS, fz = item.y / TS, hw = cs / 2 / TS * k, top = this.foot / TS * k, bot = -(cs - this.foot) / TS * k;
     const P = this.pos, o = i * 12, U = this.uv, uo = i * 8, F = this.ft;
     // le billboard fait face à la caméra : « droite » = (cy, -sy), « loin de la caméra » = (-sy, -cy) dans le plan du sol (cy = 1, sy = 0 sans pivot)
     const corner = (k, u, v, tu, tv) => { P[o + k * 3] = fx + u * cy - v * sinP * sy; P[o + k * 3 + 1] = v * cosP; P[o + k * 3 + 2] = fz - u * sy - v * sinP * cy; U[uo + k * 2] = tu; U[uo + k * 2 + 1] = tv; F[uo + k * 2] = fx; F[uo + k * 2 + 1] = fz; };
@@ -87,7 +89,7 @@ export class HD2D {
     this.camera = new THREE.PerspectiveCamera(CFG.fov, SW / SH, 0.1, 160);
     this.scene = new THREE.Scene();
     this.pitch = CFG.pitch * Math.PI / 180;
-    this.curPitch = this.pitch; this.curYaw = 0; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
+    this.curPitch = this.pitch; this.curYaw = 0; this.curDist = CFG.dist / WORLD_SCALE; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
     this.sh = {
       uTime: { value: 0 }, uFog: { value: new THREE.Vector3(.05, .05, .1) }, uFogD: { value: .02 }, uMist: { value: .5 }, uCam: { value: new THREE.Vector3() },
       uLight: { value: null }, uOvN: { value: null }, uOvA: { value: null }, uReg: { value: new THREE.Vector4() }, uGain: { value: 1.12 },
@@ -287,7 +289,7 @@ export class HD2D {
     const v = this.v3.set(x / TS, z / TS, y / TS).applyMatrix4(this.camera.matrixWorldInverse);
     const depth = -v.z; if (depth < 0.2) return null;
     v.applyMatrix4(this.camera.projectionMatrix);
-    return { sx: (v.x * 0.5 + 0.5) * SW, sy: (1 - (v.y * 0.5 + 0.5)) * SH, s: this.ppu / depth / TS, nx: v.x, ny: v.y };
+    return { sx: (v.x * 0.5 + 0.5) * SW, sy: (1 - (v.y * 0.5 + 0.5)) * SH, s: this.ppu / depth / TS / WORLD_SCALE, nx: v.x, ny: v.y };   // / WORLD_SCALE : projectiles, particules et textes gardent leur taille à l'écran
   }
 
   render(g) {
@@ -303,7 +305,7 @@ export class HD2D {
       const bc = !fx && g.bossCam ? g.bossCam : null, bk = bc ? g.bossCamK : 0, mx = (a, b) => a + (b - a) * bk;
       const basePitch = Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0)));
       this.curPitch = (fx ? fx.pitch : mx(basePitch, bc ? bc.pitch : basePitch)) * Math.PI / 180; this.curYaw = fx ? 0 : (g.camYaw || 0) * Math.PI / 180;
-      this.curDist = fx ? fx.dist : mx(CFG.dist, bc ? bc.dist : CFG.dist); this.curLook = fx ? fx.look : mx(CFG.look, bc ? bc.look : CFG.look);
+      this.curDist = (fx ? fx.dist : mx(CFG.dist, bc ? bc.dist : CFG.dist)) / WORLD_SCALE;   // monde plus grand : caméra plus proche this.curLook = fx ? fx.look : mx(CFG.look, bc ? bc.look : CFG.look);
       const fov = fx ? fx.fov : mx(CFG.fov, bc ? bc.fov : CFG.fov);
       if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
       if (this.pointK) this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
@@ -340,7 +342,7 @@ export class HD2D {
     Ad.globalCompositeOperation = 'lighter';
     for (const l of lights) if (inReg(l)) radial(Ad, l.x, l.y, l.r * 0.7, l.c, l.a * 0.16);
     N.imageSmoothingEnabled = false;
-    setShadowSink((x, y, rx, a) => { N.fillStyle = `rgba(0,0,0,${a})`; N.beginPath(); N.ellipse(x, y, rx, rx * 0.4, 0, 0, 7); N.fill(); });
+    setShadowSink((x, y, rx, a) => { rx *= shadowK; N.fillStyle = `rgba(0,0,0,${a})`; N.beginPath(); N.ellipse(x, y, rx, rx * 0.4, 0, 0, 7); N.fill(); });
 
     tp = tk('lumiere', tp);
     // --- sprites ---
@@ -443,7 +445,7 @@ export class HD2D {
     N.globalAlpha = 1;
     // marqueur de verrouillage
     if (g.lock && !g.lock.dead) {
-      const e = g.lock, h = A.db[e.sprite].anchor.h * (e.def.scale || 1) + 10 + Math.sin(g.t * 6) * 1.5, q = this.proj(e.x, e.y, h);
+      const e = g.lock, h = A.db[e.sprite].anchor.h * (e.def.scale || 1) * (e.boss ? CHAR_K * BOSS_K : CHAR_K) + 10 + Math.sin(g.t * 6) * 1.5, q = this.proj(e.x, e.y, h);
       if (q) { const s = q.s; N.fillStyle = '#ff5a5a'; N.strokeStyle = '#300'; N.lineWidth = s * 0.6; N.beginPath(); N.moveTo(q.sx, q.sy + 5 * s); N.lineTo(q.sx - 4 * s, q.sy); N.lineTo(q.sx, q.sy - 5 * s); N.lineTo(q.sx + 4 * s, q.sy); N.closePath(); N.stroke(); N.fill(); }
     }
     this.airN.tex.needsUpdate = true; this.airA.tex.needsUpdate = true;
