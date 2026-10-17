@@ -1142,8 +1142,7 @@ export class Game {
   enterFog() {
     const a = this.world.arena, dir = this.world.fog.dir; SFX.door();
     this.lock = null; this.buf = null;
-    const short = !!this.prog[this.mapIdx].introSeen;   // revenu après une défaite : version courte
-    if (short) { this.startBoss(true); this.emit('fade'); } else this.startBoss(false);
+    this.startBoss(false);   // l'intro complète se rejoue à chaque tentative (passable avec la touche d'interaction)
   }
   give(item) {
     if (item === 'candy' || VIT_KEYS.includes(item)) { this.bag[item] = (this.bag[item] || 0) + 1; return D.ITEM_NAMES[item]; }
