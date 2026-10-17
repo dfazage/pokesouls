@@ -117,7 +117,7 @@ function playCry(id) {
 // effets en fichier : assets/audio/sfx/<nom>.ogg (ou .mp3 / .wav) ; absent = on retombe sur la version synthétisée, sans erreur
 const sfxFiles = {};
 // anti-spam des sons fichiers : cooldown par catégorie, 4 sons simultanés au plus, les sons importants coupent les coups normaux
-const SFX_CD = [[/^hit$/, 120, 0], [/^(super_effective|resisted)$/, 250, 2], [/^status_/, 400, 1], [/^(sig_|ct_)/, 150, 2], [/^(faint|heal)$/, 300, 2]];
+const SFX_CD = [[/^hit$/, 120, 0], [/^(super_effective|resisted)$/, 250, 2], [/^status_/, 400, 1], [/^(sig_|ct_)/, 150, 2], [/^(faint|heal)$/, 300, 2], [/^link_/, 300, 2]];
 const sfxLast = {}, sfxLive = [];
 function playSfxFile(name, vol = 0.55) {
   let f = sfxFiles[name];
@@ -140,6 +140,7 @@ export const SFX = {
   // son de CT (assets/audio/sfx/<id>.ogg) ; renvoie true s'il existe, sinon la version synthétisée reste active
   status(k) { return playSfxFile('status_' + k, 0.5); },
   sig(kind) { return playSfxFile('sig_' + kind, 0.5); },
+  link(kind) { return playSfxFile('link_' + kind, 0.6); },
   ct(id) { return playSfxFile(id, 0.5); },
   silent: new Proxy({}, { get: () => () => {} }),
   resisted() { const t = performance.now(); if (t - (SFX._res ?? -1e9) < 90) return true; SFX._res = t; return playSfxFile('resisted', 0.5); },

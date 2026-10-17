@@ -5,3 +5,4 @@ Source : Pokémon Noir/Blanc (DS) « Attack Move Sound Effects », fournis par l
  hit.ogg (coup normal, aussi coup reçu)  faint.ogg (KO)  heal.ogg (soin)  status_<burn|poison|freeze|para|confuse>.ogg
  sig_<cross|whirl|blast|rush|storm|fan|leaves|sun>.ogg  attaques signature (par type d'attaque)
 Les boss gardent leurs sons synthétisés (cinématiques).
+ link_ready.ogg / link_start.ogg / link_end.ogg  Lien (jauge prête, activation, fin) : sons synthétisés générés pour le jeu
