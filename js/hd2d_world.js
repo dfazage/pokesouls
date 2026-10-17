@@ -26,10 +26,10 @@ export const HD = {
   rock: { curve: { walls: 1 }, type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },
-  bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
+  bell: { curve: { ground: 1 }, type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .5 } },
-  ember: { curve: { ground: 0.6 }, type: 3, open: true, banks: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
+  ember: { curve: { ground: 1 }, type: 3, open: true, banks: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
     roof: [[.07, .06, .06], [.17, .14, .13]], win: .9, walls: [[.2, .17, .15], [.28, .2, .15], [.15, .12, .1], [.3, .26, .22], [.24, .16, .12], [.34, .28, .24], [.18, .15, .14], [.12, .1, .09]],
     part: { n: 280, size: 30, color: [1., .55, .2], vel: [0, .5, 0], sway: 1.5, box: [44, 12, 40] }, emisTint: [1.25, .85, .5], emisK: 1.5,
     grade: { ts: [1.02, .95, .92], th: [1.1, 1.02, .92], sat: 1.12, con: 1.1, bloom: .62, vig: .45 } },
@@ -39,7 +39,7 @@ export const HD = {
   storm: { curve: { ground: 1 }, type: 8, open: true, water: true, edge: 'water', fog: [.04, .14, .24], fogD: .02, mist: .55, abyss: [[.01, .05, .1], [.04, .2, .3], [.3, .85, .95]], prop: 'tree', propCol: [.1, .26, .12], emis: [.5, .9, 1.], light: [.9, 1.0, 1.1], bob: 0,
     part: { n: 340, size: 22, color: [.7, .95, 1.], vel: [.04, .55, 0], sway: 1.1, box: [44, 14, 40] }, emisTint: [.8, 1.05, 1.2], emisK: .8,
     grade: { ts: [.82, .98, 1.12], th: [1.02, 1.02, 1.0], sat: 1.12, con: 1.16, bloom: .3, vig: .52 } },
-  ilex: { type: 9, open: true, edge: 'forest', fog: [.1, .18, .12], fogD: .016, mist: .45, abyss: [[.1, .22, .1], [.18, .34, .14], [1., .85, .45]], prop: 'tree', propCol: [.1, .3, .14], emis: [1., .9, .5], light: [1.02, 1.04, .96], bob: 0,
+  ilex: { curve: { ground: 1 }, type: 9, open: true, edge: 'forest', fog: [.1, .18, .12], fogD: .016, mist: .45, abyss: [[.1, .22, .1], [.18, .34, .14], [1., .85, .45]], prop: 'tree', propCol: [.1, .3, .14], emis: [1., .9, .5], light: [1.02, 1.04, .96], bob: 0,
     trees: [[.1, .3, .14], [.08, .26, .13], [.12, .34, .15], [.5, .42, .12]],
     part: { n: 320, size: 34, color: [1., .9, .5], vel: [0, .22, 0], sway: 1.7, box: [44, 12, 40] }, emisTint: [1.1, 1.05, .8], emisK: 1.2,
     grade: { ts: [.95, 1.02, .98], th: [1.07, 1.04, .94], sat: 1.14, con: 1.07, bloom: .58, vig: .4 } },
@@ -189,12 +189,13 @@ export function wallHeight(w, tx, ty) {
 // La simulation reste sur la grille : seuls les coins visibles sont arrondis. Un coin saillant est coupé par un quart de cercle
 // (on ne voit jamais le mur plus près que sa vraie limite) ; un coin rentrant reçoit un petit congé (rayon court, hors de portée du joueur).
 // Réglage par thème : HD[key].curve = { walls, ground } de 0 (blocs) à 1. ?curve=0 (ou une valeur) dans l'URL force le réglage pour comparer.
+// Arènes : un vrai cercle (maps.js, markArenaRing), au rendu comme aux collisions ; ?curve=0 ne touche pas l'arène.
 const CURVE_Q = 4;   // facettes par quart de cercle : arrondi « low-poly », cohérent avec le pixel art
 const CURVE_URL = (() => { try { const v = new URLSearchParams(location.search).get('curve'); return v == null ? null : Math.max(0, Math.min(1, parseFloat(v) || 0)); } catch (e) { return null; } })();
 export function curveOf(key) {
   const cfg = HD[key] || {}, c = cfg.curve || {};
   if (CURVE_URL == null) return { walls: c.walls || 0, ground: c.ground || 0 };
-  return { walls: cfg.open ? 0 : CURVE_URL, ground: cfg.water || cfg.banks ? CURVE_URL : 0 };
+  return { walls: cfg.open ? 0 : CURVE_URL, ground: cfg.open ? CURVE_URL : 0 };
 }
 // rayons (en tuiles) : saillant 0,5 + rentrant 0,45 donnent une courbe continue sur les escaliers à 45° ; le joueur (4 × 3 px) ne touche jamais un congé
 const R_WALL = 0.5, R_WALL_IN = 0.45, R_GROUND = 0.45, R_GROUND_IN = 0.5;
@@ -218,6 +219,66 @@ function roundRect(x0, z0, x1, z1, rad) {
 const EDGE_N = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
 const solidFloor = (w, tx, ty) => { const v = gridAt(w, tx, ty); return v !== T.VOID && v !== T.DOOR; };
 const isWallTile = (w, tx, ty) => inB(tx, ty) && !!w.wall[ty * MW + tx] && w.grid[ty * MW + tx] === T.VOID;
+// ---------- arène ronde ----------
+const ARENA_SEG = 120, ARENA_WALL_W = 1.2;
+const ringFlag = (w, tx, ty) => w.arenaRing && inB(tx, ty) ? w.arenaRing.flag[ty * MW + tx] : 0;
+const ringAt = (w, x, z) => ringFlag(w, Math.floor(x), Math.floor(z));
+// cases de sol remplacées par le disque de l'arène (bord gouverné par le cercle)
+const arenaExcl = (w, tx, ty) => ringFlag(w, tx, ty) === 1 && Math.hypot(tx + 0.5 - w.arena.cx, ty + 0.5 - w.arena.cy) > w.arena.r - 1.41;
+// hauteur du mur d'arène selon l'angle : haut au fond (nord), bas devant (sud), comme les murs en cases
+const arenaWallH = s => WALL_LOW + (WALL_TALL - WALL_LOW) * (0.5 - 0.5 * s);
+function arenaSegs(w) {
+  const a = w.arena, rc = w.arenaRing.rc, out = [];
+  for (let i = 0; i < ARENA_SEG; i++) {
+    const a0 = i / ARENA_SEG * Math.PI * 2, a1 = (i + 1) / ARENA_SEG * Math.PI * 2, am = (a0 + a1) / 2, c = Math.cos(am), s = Math.sin(am);
+    const at = rr => ringAt(w, a.cx + c * rr, a.cy + s * rr);
+    const tileAt = rr => gridAt(w, Math.floor(a.cx + c * rr), Math.floor(a.cy + s * rr));
+    const mouth = [a.r - 1.4, a.r - 0.9, a.r - 0.4, a.r - 0.05, rc - 0.05].some(rr => at(rr) === 0 && tileAt(rr) !== T.VOID);   // sol de l'entrée (règles de la grille)
+    out.push({ a0, a1, ring: at(rc + 0.6) === 2, edge: !mouth, floorOut: tileAt(rc - 0.05) !== T.VOID });
+  }
+  return out;
+}
+// sol de l'arène : anneau intérieur (texture à sa place) + bande du bord (texture en miroir vers l'intérieur : le cercle dépasse les cases peintes)
+function arenaGround(b, w) {
+  const a = w.arena, rc = w.arenaRing.rc, rA = a.r - 2.3, rB = a.r - 0.7, uvW = q => [q[0] / MW, q[1] / MH];
+  const P = (ang, rr) => [a.cx + Math.cos(ang) * rr, a.cy + Math.sin(ang) * rr];
+  const Q = (ang, rr) => { const p = P(ang, rr); return [p[0], 0, p[1]]; };
+  for (const sg of arenaSegs(w)) {
+    b.quad(Q(sg.a0, rA), Q(sg.a0, rB), Q(sg.a1, rB), Q(sg.a1, rA), [0, 1, 0], uvW(P(sg.a0, rA)), uvW(P(sg.a0, rB)), uvW(P(sg.a1, rB)), uvW(P(sg.a1, rA)));
+    if (sg.edge) b.quad(Q(sg.a0, rB), Q(sg.a0, rc), Q(sg.a1, rc), Q(sg.a1, rB), [0, 1, 0], uvW(P(sg.a0, rB)), uvW(P(sg.a0, 2 * rB - rc)), uvW(P(sg.a1, 2 * rB - rc)), uvW(P(sg.a1, rB)));
+    else if (sg.floorOut) b.quad(Q(sg.a0, rB), Q(sg.a0, rc), Q(sg.a1, rc), Q(sg.a1, rB), [0, 1, 0], uvW(P(sg.a0, rB)), uvW(P(sg.a0, rc)), uvW(P(sg.a1, rc)), uvW(P(sg.a1, rB)));   // entrée : texture du couloir
+  }
+}
+// mur d'arène (Kanto) : couronne lisse entre rc et rc + ARENA_WALL_W, paroi intérieure posée au sol, paroi extérieure dans l'abîme
+function arenaWall(bt, bs, w) {
+  const a = w.arena, rc = w.arenaRing.rc, ro = rc + ARENA_WALL_W, dep = -(w.theme && w.theme.open ? OPEN_DEPTH : DEPTH);
+  const P = (ang, rr) => [a.cx + Math.cos(ang) * rr, a.cy + Math.sin(ang) * rr];
+  const segs = arenaSegs(w);
+  segs.forEach((sg, i) => {
+    if (!sg.ring) return;
+    const h0 = arenaWallH(Math.sin(sg.a0)), h1 = arenaWallH(Math.sin(sg.a1)), vi = i % NV;
+    const i0 = P(sg.a0, rc), i1 = P(sg.a1, rc), o0 = P(sg.a0, ro), o1 = P(sg.a1, ro), cm = Math.cos((sg.a0 + sg.a1) / 2), sm = Math.sin((sg.a0 + sg.a1) / 2);
+    const L = (rc * (sg.a1 - sg.a0)), tu = k => (vi + k) / NV, su = k => (vi + 0.02 + 0.96 * k) / (NV + 1);
+    bt.quad([i0[0], h0, i0[1]], [o0[0], h0, o0[1]], [o1[0], h1, o1[1]], [i1[0], h1, i1[1]], [0, 1, 0], [tu(0), 0], [tu(0), ARENA_WALL_W], [tu(Math.min(1, L)), ARENA_WALL_W], [tu(Math.min(1, L)), 0]);
+    bs.quad([i1[0], 0, i1[1]], [i0[0], 0, i0[1]], [i0[0], h0, i0[1]], [i1[0], h1, i1[1]], [-cm, 0, -sm], [su(0), 0], [su(1), 0], [su(1), -h0], [su(0), -h1]);
+    bs.quad([o0[0], dep, o0[1]], [o1[0], dep, o1[1]], [o1[0], h1, o1[1]], [o0[0], h0, o0[1]], [cm, 0, sm], [su(0), -dep], [su(1), -dep], [su(1), -h1], [su(0), -h0]);
+    // bouts de la couronne (à l'entrée)
+    for (const [k, ang, hh, nb] of [[0, sg.a0, h0, segs[(i + ARENA_SEG - 1) % ARENA_SEG]], [1, sg.a1, h1, segs[(i + 1) % ARENA_SEG]]]) {
+      if (nb.ring) continue;
+      const p = P(ang, rc), q = P(ang, ro), t = k ? 1 : -1;
+      bs.quad([p[0], dep, p[1]], [q[0], dep, q[1]], [q[0], hh, q[1]], [p[0], hh, p[1]], [-Math.sin(ang) * t * -1, 0, Math.cos(ang) * t], [su(0), -dep], [su(1), -dep], [su(1), -hh], [su(0), -hh]);
+    }
+  });
+}
+// berge de l'arène (Johto, eau ou braises) : paroi lisse sous le bord du disque
+function arenaBank(b, w, depth) {
+  const a = w.arena, rc = w.arenaRing.rc, P = (ang) => [a.cx + Math.cos(ang) * rc, a.cy + Math.sin(ang) * rc];
+  arenaSegs(w).forEach((sg, i) => {
+    if (!sg.ring) return;
+    const p0 = P(sg.a0), p1 = P(sg.a1), cm = Math.cos((sg.a0 + sg.a1) / 2), sm = Math.sin((sg.a0 + sg.a1) / 2), vi = i % NV, su = k => (vi + 0.02 + 0.96 * k) / (NV + 1);
+    b.quad([p1[0], -depth, p1[1]], [p0[0], -depth, p0[1]], [p0[0], 0, p0[1]], [p1[0], 0, p1[1]], [cm, 0, sm], [su(0), depth], [su(1), depth], [su(1), 0], [su(0), 0]);
+  });
+}
 
 // plan des arrondis d'une carte (mis en cache sur le monde)
 function curvePlan(w, cv) {
@@ -227,7 +288,7 @@ function curvePlan(w, cv) {
   if (cv.walls > 0) {
     const r = R_WALL * cv.walls, ri = R_WALL_IN * cv.walls;
     for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
-      if (!isWallTile(w, tx, ty)) continue;
+      if (!isWallTile(w, tx, ty) || ringFlag(w, tx, ty) === 2) continue;   // le mur d'arène est une couronne lisse
       const S = floorLike(w, tx, ty + 1), z1 = ty + 1 + (S ? fz : 0), P = [[tx, ty], [tx + 1, ty], [tx + 1, z1], [tx, z1]];
       const rad = CORNERS.map(([dx, dz]) => solidFloor(w, tx + dx, ty) && solidFloor(w, tx, ty + dz) && solidFloor(w, tx + dx, ty + dz) ? r : 0);
       if (rad.some(v => v > 0)) {
@@ -240,6 +301,7 @@ function curvePlan(w, cv) {
       if (!solidFloor(w, tx, ty)) continue;
       for (const [dx, dz] of CORNERS) {
         if (!isWallTile(w, tx + dx, ty) || !isWallTile(w, tx, ty + dz)) continue;
+        if (ringFlag(w, tx, ty) === 1 || ringFlag(w, tx + dx, ty) === 2 || ringFlag(w, tx, ty + dz) === 2) continue;
         const h = Math.min(wallHeight(w, tx + dx, ty), wallHeight(w, tx, ty + dz));
         const P = [tx + (dx > 0 ? 1 : 0), ty + (dz > 0 ? 1 : 0) + (dz < 0 ? fz : 0)];   // sous la face sud du mur du dessus
         plan.wallFill.push({ P, dx, dz, r: ri, h });
@@ -249,12 +311,12 @@ function curvePlan(w, cv) {
   if (cv.ground > 0) {
     const r = R_GROUND * cv.ground, ri = R_GROUND_IN * cv.ground, water = (tx, ty) => gridAt(w, tx, ty) === T.VOID;
     for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
-      if (!solidFloor(w, tx, ty)) continue;
+      if (!solidFloor(w, tx, ty) || ringFlag(w, tx, ty) === 1) continue;
       const rad = CORNERS.map(([dx, dz]) => water(tx + dx, ty) && water(tx, ty + dz) && water(tx + dx, ty + dz) ? r : 0);
       if (rad.some(v => v > 0)) plan.floorR.set(ty * MW + tx, rad);
     }
     for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
-      if (!water(tx, ty)) continue;   // thèmes de plein air : les murs de bordure ne sont pas dessinés, l'eau va jusqu'au sol
+      if (!water(tx, ty) || ringFlag(w, tx, ty) === 2) continue;   // thèmes de plein air : les murs de bordure ne sont pas dessinés, l'eau va jusqu'au sol
       for (const [dx, dz] of CORNERS) {
         if (!solidFloor(w, tx + dx, ty) || !solidFloor(w, tx, ty + dz)) continue;
         plan.groundFill.push({ P: [tx + (dx > 0 ? 1 : 0), ty + (dz > 0 ? 1 : 0)], dx, dz, r: ri });
@@ -285,6 +347,7 @@ export function buildGround(w, cv = { walls: 0, ground: 0 }) {
   const uvW = q => [q[0] / MW, q[1] / MH];
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (w.grid[ty * MW + tx] === T.VOID) continue;
+    if (w.arenaRing && arenaExcl(w, tx, ty)) continue;   // remplacée par le disque de l'arène
     const rad = plan && plan.floorR.get(ty * MW + tx);
     if (rad) {   // berge arrondie : éventail depuis le centre de la case
       const pts = roundRect(tx, ty, tx + 1, ty + 1, rad), c = [tx + 0.5, ty + 0.5];
@@ -294,6 +357,7 @@ export function buildGround(w, cv = { walls: 0, ground: 0 }) {
     const u0 = tx / MW, u1 = (tx + 1) / MW, v0 = ty / MH, v1 = (ty + 1) / MH;
     b.quad([tx, 0, ty], [tx, 0, ty + 1], [tx + 1, 0, ty + 1], [tx + 1, 0, ty], [0, 1, 0], [u0, v0], [u0, v1], [u1, v1], [u1, v0]);
   }
+  if (w.arenaRing) arenaGround(b, w);
   if (plan) {
     // sol découvert sous un coin de mur coupé : texture de la case de sol en diagonale, en miroir par rapport au coin
     for (const c of plan.wallPatch) cornerFan(b, c.P, c.dx, c.dz, c.r, 0, q => uvW([2 * c.P[0] - q[0], 2 * c.P[1] - q[1]]), c.zmax);
@@ -311,6 +375,7 @@ export function buildWalls(w, cv = { walls: 0, ground: 0 }) {
   const baseOf = (nx, ny, h) => { const wh = wallH(nx, ny); if (wh !== null) return wh >= h ? null : wh; if (floorLike(w, nx, ny)) return 0; return -(w.theme && w.theme.open ? OPEN_DEPTH : DEPTH); };
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (!w.wall[ty * MW + tx] || w.grid[ty * MW + tx] !== T.VOID) continue;
+    if (ringFlag(w, tx, ty) === 2) continue;   // mur d'arène : couronne lisse (arenaWall)
     const h = wallHeight(w, tx, ty), vi = Math.floor(rndI(tx, ty, 3) * NV);
     const S = floorLike(w, tx, ty + 1);
     const x0 = tx, x1 = tx + 1, z0 = ty, z1 = ty + 1 + (S ? fz : 0);
@@ -349,6 +414,7 @@ export function buildWalls(w, cv = { walls: 0, ground: 0 }) {
     sideFace(1, 0, [x1, z1], [x1, z0]);       // est
     sideFace(-1, 0, [x0, z0], [x0, z1]);      // ouest
   }
+  if (w.arenaRing) arenaWall(bt, bs, w);
   if (plan) for (const f of plan.wallFill) {   // congés des coins rentrants
     const vi = Math.floor(rndI(Math.round(f.P[0] * 3), Math.round(f.P[1] * 3), 7) * NV), fl = Math.floor;
     cornerFan(bt, f.P, f.dx, f.dz, f.r, f.h, q => [(vi + (q[0] - fl(q[0]))) / NV, q[1] - fl(q[1])]);
@@ -361,9 +427,11 @@ export function buildWalls(w, cv = { walls: 0, ground: 0 }) {
 export function buildBanks(w, depth, cv = { walls: 0, ground: 0 }) {
   const b = new GeoB(), plan = cv.ground > 0 ? curvePlan(w, cv) : null;
   const u0 = (k) => (k + 0.02) / (NV + 1), u1 = (k) => (k + 0.98) / (NV + 1);
+  if (w.arenaRing) arenaBank(b, w, depth);
   if (plan) for (const f of plan.groundFill) { const vi = Math.floor(rndI(f.P[0], f.P[1], 9) * NV); arcWall(b, f.P, f.dx, f.dz, f.r, -depth, 0, k => (vi + 0.02 + 0.96 * k) / (NV + 1), true); }
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     const g0 = w.grid[ty * MW + tx]; if (g0 === T.VOID || g0 === T.DOOR) continue;
+    if (w.arenaRing && arenaExcl(w, tx, ty)) continue;
     const vi = Math.floor(rndI(tx, ty, 5) * NV), a = u0(vi), c = u1(vi);
     const rad = plan && plan.floorR.get(ty * MW + tx);
     if (rad) {

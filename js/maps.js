@@ -449,7 +449,28 @@ export function buildWorld(idx) {
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
   Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, chasm: L.chasm || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
   computeWall(world);
+  markArenaRing(world);
   return world;
+}
+// Arène ronde : le bord de l'arène suit un vrai cercle de rayon rc, au rendu (HD-2D) comme aux collisions.
+// flag 1 : sol d'arène gouverné par le cercle ; flag 2 : vide de l'anneau autour (franchissable à l'intérieur du cercle).
+// L'entrée (sol du couloir et ses voisins) garde les règles de la grille.
+export const ARENA_RC = 0.25;   // le cercle passe à r + 0,25 tuile : même surface jouable que l'arène en cases
+function markArenaRing(world) {
+  const a = world.arena; if (!a) { world.arenaRing = null; return; }
+  const g = world.grid, rc = a.r + ARENA_RC, flag = new Uint8Array(MW * MH);
+  const inMap = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH;
+  const dc = (x, y) => Math.hypot(x + 0.5 - a.cx, y + 0.5 - a.cy);
+  const walk = (x, y) => inMap(x, y) && !isSolidTile(world, x, y);
+  const corr = (x, y) => walk(x, y) && dc(x, y) > a.r;   // sol hors du cercle : le couloir d'entrée
+  const nearCorr = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (corr(x + i, y + j)) return true; return false; };
+  const y0 = Math.max(0, Math.floor(a.cy - a.r - 4)), y1 = Math.min(MH - 1, Math.ceil(a.cy + a.r + 4)), x0 = Math.max(0, Math.floor(a.cx - a.r - 4)), x1 = Math.min(MW - 1, Math.ceil(a.cx + a.r + 4));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const d = dc(x, y), v = g[y * MW + x];
+    if (d <= a.r && walk(x, y) && !nearCorr(x, y)) flag[y * MW + x] = 1;
+    else if (v === T.VOID && d > a.r && d < a.r + 2.6 && !nearCorr(x, y) && !(world.chasm && world.chasm[y * MW + x])) flag[y * MW + x] = 2;
+  }
+  world.arenaRing = { rc, flag };
 }
 // masque de murs : vide adjacent (8 voisins) à du sol
 function computeWall(world) {
@@ -496,6 +517,8 @@ export function solidAt(world, px, py) {
   const ob = world.obs;
   if (ob) for (let i = 0; i < ob.length; i++) { const o = ob[i]; if (o.on && o.solid && !o.dead && Math.abs(px - o.x) < o.hw && Math.abs(py - o.y) < o.hh) return true; }
   const tx = Math.floor(px / TS), ty = Math.floor(py / TS);
+  const ar = world.arenaRing;
+  if (ar && tx >= 0 && ty >= 0 && tx < MW && ty < MH && ar.flag[ty * MW + tx]) { const dx = px / TS - world.arena.cx, dy = py / TS - world.arena.cy; return dx * dx + dy * dy > ar.rc * ar.rc; }   // arène : vrai cercle
   if (isSolidTile(world, tx, ty)) return true;
   const ly = py - ty * TS;
   if (ly < FACE && ty > 0 && world.grid[(ty - 1) * MW + tx] === T.VOID) return true;
