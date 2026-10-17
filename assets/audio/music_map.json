@@ -5,12 +5,6 @@
   "end": null,
   "fallback_audio": "intro_title.ogg"
  },
- "HUB_MAIN": {
-  "title": "DS · Firelink Shrine (Motoi Sakuraba, Topic)",
-  "start": 0,
-  "end": null,
-  "fallback_audio": "hub_main.ogg"
- },
  "MENU_STARTER": {
   "title": "ER · Roundtable Hold (Tsukasa Saitoh, Topic)",
   "start": 0,

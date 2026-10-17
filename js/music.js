@@ -3,7 +3,6 @@
 // Les fichiers sont dans assets/audio/music/<id en minuscules>.ogg ; une piste absente ou illisible est ignorée sans erreur.
 export const TRACKS = {
   INTRO_TITLE: { title: 'LOVE STORY X GOLDEN BROWN (Epic Orchestral Version)', author: 'Sam B Music', license: 'tous droits réservés, repris pour ce fan game non commercial', url: 'https://www.youtube.com/watch?v=s9NMV-k6Jcc', use: 'Écran titre' },
-  HUB_MAIN: { title: 'Dark Shrine Loop', author: 'qubodup', license: 'CC0', url: 'https://opengameart.org/content/dark-shrine-loop', use: 'Feu de camp, commandes' },
   MENU_STARTER: { title: 'The Hope', author: 'TAD', license: 'CC0', url: 'https://opengameart.org/content/the-hope', use: 'Choix du starter' },
   MAP_1: { title: 'Laments of the War', author: 'Cethiel', license: 'CC0', url: 'https://opengameart.org/content/laments-of-the-war', use: 'Carte 1' },
   MAP_2: { title: 'Mysterious', author: 'nene', license: 'CC0', url: 'https://opengameart.org/content/mysterious', use: 'Carte 2' },
@@ -122,7 +121,7 @@ const BOSS_TRACK = { raikou: 'SUBBOSS_BEASTS', entei: 'SUBBOSS_BEASTS', suicune:
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
   if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »
-  if (ui.controls || !g || !g.world) return Music.direct('HUB_MAIN');
+  if (ui.controls || !g || !g.world) return Music.direct(ui.screen === 'title' ? 'INTRO_TITLE' : 'MENU_STARTER'); // plus de thème de camp : on garde la musique du menu
   if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.world.def.mus || g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], g.world.def.boss === 'mewtwo' ? 'BOSS_MEWTWO_P2' : null, 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
   const b = g.bossActive && g.boss && !g.boss.dead ? g.boss : null;
   if (b) {
@@ -135,7 +134,5 @@ export function directMusic(g, ui, dt) {
   const engaged = g.enemies.some(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230);
   if (engaged) { if (!miniOn) { miniOn = true; miniAlt = !miniAlt; miniId = miniAlt ? 'MINIBOSS_A' : 'MINIBOSS_B'; } miniOff = 3; } else if (miniOn && (miniOff -= dt) <= 0) miniOn = false;
   if (miniOn) return Music.direct(miniId);
-  if (ui.menuKind === 'bonfire') return Music.direct('HUB_MAIN');
-  if (g.hubAt) { if (Math.hypot(g.hubAt.x - c.x, g.hubAt.y - c.y) < 140) return Music.direct('HUB_MAIN'); g.hubAt = null; }
   return Music.direct(`MAP_${g.world.def.mus || g.mapIdx + 1}`);
 }
