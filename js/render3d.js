@@ -12,6 +12,7 @@ import { collectDrawList, groundFx, buildLights, radial, setShadowSink } from '.
 import { drawFxs } from './fx.js';
 import * as S from './hd2d_shaders.js';
 import * as WD from './hd2d_world.js';
+import * as D3 from './hd2d_decor.js';
 import { itemImage } from './items.js';
 import { BOSS_CAM_MIN_PITCH, BOSS_CAM_DEFAULT } from './bosscine.js';
 import { PROPS } from './props.js';
@@ -290,7 +291,7 @@ void main(){
 
   // ----- monde (une carte) -----
   setWorld(g) {
-    this.disposeWorld();
+    this.disposeWorld(); this.decor3d = null;
     const w = g.world, key = WD.THEME_KEY(w.theme), cfg = WD.HD[key], sh = this.sh;
     this.world = w; this.key = key; this.cfg = cfg;
     const grp = this.group = new THREE.Group();
@@ -315,6 +316,7 @@ void main(){
     this.doorMeshes = [null, null]; this.mistMesh = null; this.sig = '';
     this.abyss = WD.buildAbyss(key, sh); grp.add(this.abyss);
     this.props = WD.buildProps(w, key, w.idx * 7 + 3, sh); grp.add(this.props);
+    this.decor3d = D3.buildDecor3d(w, key, sh); if (this.decor3d) grp.add(this.decor3d.group);   // lanternes, torii, cloches, arbres en 3D (repli : sprites)
     this.parts = WD.buildParticles(key, sh); grp.add(this.parts);
     this.scene.add(grp);
     // brouillard, étalonnage
@@ -407,6 +409,7 @@ void main(){
     Ad.globalCompositeOperation = 'lighter';
     for (const l of lights) if (inReg(l)) radial(Ad, l.x, l.y, l.r * 0.7, l.c, l.a * 0.16);
     N.imageSmoothingEnabled = false;
+    if (this.decor3d) { N.fillStyle = 'rgba(0,0,0,.35)'; for (const [sx, sy, srx] of this.decor3d.shadows) if (inReg({ x: sx, y: sy, r: srx })) { N.beginPath(); N.ellipse(sx, sy - 3, srx, 5, 0, 0, 7); N.fill(); } }   // ombres au sol des décors 3D
     setShadowSink((x, y, rx, a) => { rx *= shadowK; N.fillStyle = `rgba(0,0,0,${a})`; N.beginPath(); N.ellipse(x, y, rx, rx * 0.4, 0, 0, 7); N.fill(); });
 
     tp = tk('lumiere', tp);
@@ -416,7 +419,7 @@ void main(){
       if (!(x > R.ox - pad && x < R.ox + R.w + pad && y > R.oy - pad && y < R.oy + R.h + pad)) return false;
       const p = this.proj(x, y, 0); return !!p && p.nx > -1.35 && p.nx < 1.35 && p.ny > -3.4 && p.ny < 1.5;   // marge basse large : un boss en envol reste visible alors que son point au sol est hors écran
     };
-    const list = collectDrawList(g, inView);
+    const list = collectDrawList(g, inView, this.decor3d && this.decor3d.kinds);
     // les objets hors champ ajoutés sans test (objets au sol, chef, alliés) sont filtrés ici
     // tri du plus loin au plus près de la caméra (sans pivot : par y croissant)
     const vis = list.filter(o => inView(o.x, o.y, 90)).sort((a, b) => (b.x * -syw + b.y * -cyw) - (a.x * -syw + a.y * -cyw));
