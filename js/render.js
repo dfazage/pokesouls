@@ -199,7 +199,17 @@ function markPips(ctx, g, o, top) {
 export function groundFx(ctx, g, hook) {
   drawSurfs(ctx, g);
   for (const r of g.rings) {
-    if (r.r <= 0) continue; ctx.strokeStyle = r.color || 'rgba(224,160,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
+    if (r.r <= 0 || r.delay > 0) continue;
+    if (r.arc && hook) {   // rendu 3D : la crête est un vrai maillage, on ne dessine ici que la bande mouillée au sol
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(20,70,140,.35)'; ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(r.x, r.y, r.r - 10, r.arc.ang - r.arc.aw, r.arc.ang + r.arc.aw); ctx.stroke(); ctx.lineCap = 'butt'; continue;
+    }
+    if (r.arc) {   // crête de marée : bande épaisse, écume claire sur le bord avant
+      const a0 = r.arc.ang - r.arc.aw, a1 = r.arc.ang + r.arc.aw;
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(70,150,230,.55)'; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(r.x, r.y, r.r - 4, a0, a1); ctx.stroke();
+      ctx.strokeStyle = 'rgba(190,230,255,.9)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, a0, a1); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(r.x, r.y, r.r + 3, a0, a1); ctx.stroke(); ctx.lineCap = 'butt'; continue;
+    }
+    ctx.strokeStyle = r.color || 'rgba(224,160,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
   }
   if (g.fxRings) for (const r of g.fxRings) { const k = r.t / 0.45; ctx.globalAlpha = 1 - k; ctx.strokeStyle = r.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(r.x, r.y, r.r * (0.3 + 0.7 * k), 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
@@ -216,6 +226,10 @@ export function groundFx(ctx, g, hook) {
     else if (e.boss && e.atkType === 'tp' && e.tpDest) { const gl = e.def.glow || [220, 160, 255], q = Math.max(0, Math.min(1, e.st / 0.4)); ctx.fillStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.2 + 0.2 * k})`; ctx.beginPath(); ctx.ellipse(e.tpDest.x, e.tpDest.y, 9, 6, 0, 0, 7); ctx.fill(); ctx.strokeStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.5 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.tpDest.x, e.tpDest.y, 14 + 12 * q, 0, 7); ctx.stroke(); }   // image rémanente : où il va apparaître
     else if (e.boss && (e.atkType === 'swing' || e.atkType === 'feint')) { ctx.fillStyle = `rgba(255,70,90,${0.18 + 0.14 * k})`; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.arc(e.x, e.y, 30 + e.r * 1.5, Math.atan2(e.face.y, e.face.x) - 1.57, Math.atan2(e.face.y, e.face.x) + 1.57); ctx.fill(); }
     else if (e.boss && e.atkType === 'pulse') { ctx.strokeStyle = `rgba(224,160,255,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, 20 + 30 * (1 - e.st), 0, 7); ctx.stroke(); }
+    else if (e.boss && e.atkType === 'tide') {   // secteur de 110° qui se remplit vers l'extérieur pendant la préparation
+      const an = Math.atan2(e.face.y, e.face.x), aw = 0.96, p = e.held ? 1 : Math.max(0, Math.min(1, 1 - e.st / 1.3)), R = 40 + 175 * p;
+      ctx.fillStyle = `rgba(255,70,70,${0.14 + 0.12 * k})`; ctx.beginPath(); ctx.arc(e.x, e.y, R, an - aw, an + aw); ctx.arc(e.x, e.y, 40, an + aw, an - aw, true); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = `rgba(255,110,100,${0.5 + 0.3 * k})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(e.x, e.y, 215, an - aw, an + aw); ctx.stroke(); ctx.beginPath(); ctx.arc(e.x, e.y, 40, an - aw, an + aw); ctx.stroke(); }
     else if (e.boss && e.atkType === 'wall') { const u = e.face, px = -u.y, py = u.x, hw = 130; ctx.strokeStyle = `rgba(255,70,70,${0.3 + 0.35 * k})`; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(e.x + u.x * 30 + px * hw, e.y + u.y * 30 + py * hw); ctx.lineTo(e.x + u.x * 30 - px * hw, e.y + u.y * 30 - py * hw); ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.x + u.x * 30, e.y + u.y * 30); ctx.lineTo(e.x + u.x * 150, e.y + u.y * 150); ctx.stroke(); ctx.setLineDash([]); }
     else if (e.boss && e.atkType === 'whirl') { ctx.strokeStyle = `rgba(255,90,90,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; for (let n = 1; n <= 3; n++) { ctx.beginPath(); ctx.ellipse(e.x, e.y, 34 * n + 30 * (1 - Math.max(0, Math.min(1, e.st))), (34 * n + 30 * (1 - Math.max(0, Math.min(1, e.st)))) * 0.8, 0, 0, 7); ctx.stroke(); } }
     else if (e.boss && e.atkType === 'geyser') { const u = { x: g.chief().x - e.x, y: g.chief().y - e.y }, l = Math.hypot(u.x, u.y) || 1; ctx.strokeStyle = `rgba(255,90,90,${0.3 + 0.35 * k})`; ctx.lineWidth = 3; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + u.x / l * 250, e.y + u.y / l * 250); ctx.stroke(); ctx.setLineDash([]); }

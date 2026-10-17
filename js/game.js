@@ -30,7 +30,7 @@ const unit = (x, y) => { const l = hyp(x, y) || 1; return { x: x / l, y: y / l }
 // Équilibrage des boss (simulation sim_boss_balance.py, config D) : plafond des bonus par coup, Lien limité.
 export const BAL = { BOSS_MULT_CAP: 3.1, LINK_BOSS_FILL: 0.25, LINK_BOSS_CAP: 0.05, LINK_BOSS_DMG: 0.5, REACT_BOSS_CAP: 0.05 };
 // Préparation par défaut des attaques de boss (s). `tp` (téléportation dans le dos) et `feint` (feinte sans coup) n'existent que dans les combos écrits.
-export const BOSS_WIND = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75, tp: 0.4, feint: 0.5 };
+export const BOSS_WIND = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, tide: 1.3, whirl: 0.9, geyser: 0.8, mirror: 0.75, tp: 0.4, feint: 0.5 };
 const VIT_KEYS = Object.keys(D.VITAMINS);
 const hasAnim = (id, n) => !!(A.db[id] && A.db[id].anims[n]);
 const pickAnim = (id, list) => list.find(n => hasAnim(id, n)) || 'Idle';
@@ -948,7 +948,7 @@ export class Game {
       case 'windup': {
         b.st -= dt; const ty = b.atkType;
         if (b.held) { /* finisseur retardé : pose tenue, visée figée */ }
-        else if (ty === 'dash' || ty === 'beam') { if (b.st > 0.3) b.lockDir = u; b.face = b.lockDir || u; } else if (ty !== 'pulse' && ty !== 'nova' && ty !== 'tp') b.face = u;
+        else if (ty === 'dash' || ty === 'beam' || ty === 'tide') { if (b.st > 0.3) b.lockDir = u; b.face = b.lockDir || u; } else if (ty !== 'pulse' && ty !== 'nova' && ty !== 'tp') b.face = u;
         b.dir = dirFromVec(b.face.x, b.face.y); setAnim(b, ty === 'pulse' || ty === 'nova' ? pickAnim(id, ['SpAttack', 'Charge']) : 'Charge'); b.tele = true;
         if (b.st <= 0) {
           const step = b.combo && b.combo.c.steps[b.combo.i];
@@ -1094,6 +1094,10 @@ export class Game {
       this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.bossBeam(id); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
       for (const m of this.actors()) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
       setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
+    } else if (T === 'tide') {   // Lugia : Marée — une seule crête en arc, télégraphiée, qu'on esquive en roulant à l'impact ou en restant collé au boss
+      const f = b.lockDir || b.face, ang = Math.atan2(f.y, f.x), n = b.phase === 3 ? 2 : 1;
+      for (let i = 0; i < n; i++) this.rings.push({ x: b.x, y: b.y, r: 40, speed: 190, max: 215, band: 8, delay: i * 0.6, arc: { ang, aw: 0.96 }, hit: new Set(), dmg: d * 1.4, color: '#bfe6ff', owner: b });
+      SFX.bossNova(id); this.shake = 5; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.9, 2.2);
     } else if (T === 'wall') {   // Lugia : mur de houle, deux brèches à trouver (phase 2+ : deuxième vague plus lente derrière)
       const ang = Math.atan2(tg.y - b.y, tg.x - b.x), ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux, n = 13, gap = Math.floor(rand(2, n - 3));
       for (let w = 0; w < (b.phase >= 2 ? 2 : 1); w++) for (let i = 0; i < n; i++) {
@@ -1181,8 +1185,10 @@ export class Game {
   }
   updateRings(dt) {
     for (const r of this.rings) {
+      if (r.delay > 0) { r.delay -= dt; continue; }
       r.r += r.speed * dt;
-      if (r.r > 0) for (const m of this.actors()) if (!m.exh && !r.hit.has(m) && Math.abs(hyp(m.x - r.x, m.y - r.y) - r.r) < 6) { r.hit.add(m); this.hurtMember(m, r.dmg, r, { parry: false, heavy: true, owner: r.owner }); }
+      const inArc = m => { if (!r.arc) return true; let d = Math.atan2(m.y - r.y, m.x - r.x) - r.arc.ang; d = Math.atan2(Math.sin(d), Math.cos(d)); return Math.abs(d) <= r.arc.aw; };
+      if (r.r > 0) for (const m of this.actors()) if (!m.exh && !r.hit.has(m) && Math.abs(hyp(m.x - r.x, m.y - r.y) - r.r) < (r.band || 6) && inArc(m)) { r.hit.add(m); this.hurtMember(m, r.dmg, r, { parry: false, heavy: true, owner: r.owner }); }
     }
     this.rings = this.rings.filter(r => r.r < r.max);
     for (const b of this.beams) b.t += dt; this.beams = this.beams.filter(b => b.t < b.max);
