@@ -69,7 +69,7 @@ function load(id) {
 }
 function startSrc(id, fade, tempo, loop) {
   const g = ac.createGain(), s = ac.createBufferSource();
-  s.buffer = bufs[id]; s.loop = loop; s.playbackRate.value = tempo;
+  s.buffer = bufs[id]; s.loop = loop; if (loop && MAP[id] && MAP[id].loop_start) { s.loopStart = MAP[id].loop_start; s.loopEnd = 0; } s.playbackRate.value = tempo;
   g.gain.value = 0; g.gain.linearRampToValueAtTime(1, ac.currentTime + Math.max(0.02, fade));
   s.connect(g); g.connect(master); s.start();
   return { id, src: s, gain: g };
