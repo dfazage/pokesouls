@@ -44,6 +44,7 @@ export function speciesForMap(idx) {
   for (const t of [...d.mobs.mini, ...d.mobs.mid, d.mobs.big]) set.add(D.spriteOfEnemy(t));
   const b = D.BOSSES[d.boss]; set.add(b.sprite); if (b.summon) set.add(D.spriteOfEnemy(b.summon));
   if (d.fala) set.add(FALA_KEY);   // quête de Fala
+  if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
