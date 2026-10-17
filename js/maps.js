@@ -18,8 +18,8 @@ export const THEMES = {
   ember: { floor: [96, 88, 82], arena: [118, 96, 82], wallA: '#4a3a34', wallB: '#46362f', face: '#251a16', faceTop: '#7a5a48', accent: [255, 140, 60], accent2: [255, 205, 110], fx: 'garden', open: true, bridgeCol: [136, 96, 60], scorch: true, edge: 'ruin', leaf: ['#4a1a14', '#7a2a1a', '#b04a1e', '#34140f'],
     edo: [[104, 96, 90], [118, 78, 62], [88, 66, 50]], amb: [190, 150, 128], ambArena: [214, 128, 96], decor: ['lantern', 'tree', 'bell', 'torii', 'brazier'] },
   // Lac du Miroir : temple sur l'eau à l'aube de printemps ; le vide est de l'eau, les passages sont des ponts
-  mirror: { floor: [168, 176, 176], arena: [196, 202, 198], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
-    edo: [[168, 176, 176], [150, 162, 168], [176, 146, 104]], amb: [196, 208, 216], ambArena: [200, 226, 236], decor: ['lantern', 'tree', 'torii', 'rock', 'lantern'] },
+  mirror: { glowy: true, floor: [140, 158, 166], arena: [138, 166, 180], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
+    edo: [[138, 156, 164], [120, 142, 152], [176, 142, 100]], amb: [176, 196, 212], ambArena: [186, 220, 238], decor: ['lantern', 'tree', 'torii', 'rock', 'lantern'] },
   // Îles Tourbillon : archipel battu par la tempête, courants et tourbillons
   storm: { floor: [86, 94, 106], arena: [112, 120, 134], wallA: '#5a6676', wallB: '#566272', face: '#2e3846', faceTop: '#8e9cb0', accent: [200, 225, 255], accent2: [150, 190, 255], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [110, 90, 68], leaf: ['#5a7a6a', '#6a8a7a', '#7a9a8a', '#4a6a5a'],
     edo: [[88, 96, 108], [104, 108, 118], [104, 86, 64]], amb: [160, 176, 200], ambArena: [190, 205, 235], decor: ['lantern', 'rock', 'torii', 'rock', 'bell'] },
@@ -81,11 +81,11 @@ const JOHTO = [
       zones: [
         { cell: [1, 2], name: 'Parvis calciné' }, { cell: [0, 2], name: 'Jardin des érables' }, { cell: [1, 1], name: 'Allée des cendres' },
         { cell: [3, 2], name: 'Remparts effondrés' }, { cell: [2, 1], name: 'Cour du temple effondré' }, { cell: [3, 1], name: 'Escalier de la tour' },
-        { cell: [3, 0], name: 'Étage effondré' }, { cell: [2, 2], name: 'Cour des tuiles' }, { cell: [0, 1], name: 'Chapelle des cloches' }, { cell: [1, 0], name: 'Belvédère calciné' },
+        { cell: [2, 0], name: 'Étage effondré' }, { cell: [2, 2], name: 'Cour des tuiles' }, { cell: [0, 1], name: 'Chapelle des cloches' }, { cell: [1, 0], name: 'Belvédère calciné' },
       ].map((z, i) => ({ ...z, rx: 14, ry: 9, ...(i === 0 || i === 1 ? { zone: 'Lisière' } : i > 7 ? { zone: 'Cœur' } : {}) })),
       links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9], [7, 4], [8, 2], [9, 4]],
       canyons: [{ z: 1, off: 4 }, { z: 2, ax: 'h', off: -3 }, { z: 4, off: -3, w: 4, gap: -2 }, { z: 7, off: 3 }, { z: 3, ax: 'h', off: 2 }, { z: 8, off: -2 }],
-      door: [3, 5], arena: { cell: [2, 0], from: 6 }, bonfires: [0, 4, 6], big: 5, pseudo: 8, chests: [1, 2, 3, 4, 8, 9, 7, 5],
+      door: [3, 5], arena: { cell: [3, 0], from: 5 }, bonfires: [0, 4, 6], big: 5, pseudo: 8, chests: [1, 2, 3, 4, 8, 9, 7, 5],
     },
     areas: ['Parvis calciné', 'Allée des cendres', 'Cour du temple effondré', 'Escalier de la tour', 'Étage effondré'], sanctuary: "Sanctuaire d'Entei",
     mobs: { mini: ['houndour', 'slugma', 'magby'], mid: ['houndoom', 'magcargo', 'magmarJ'], big: 'houndoomA', pseudo: 'tyranitarK' },
@@ -96,11 +96,11 @@ const JOHTO = [
       zones: [
         { cell: [0, 2], name: 'Débarcadère' }, { cell: [0, 1], name: 'Jardin de lotus' }, { cell: [1, 2], name: 'Ponts en zigzag' },
         { cell: [1, 1], name: 'Île des cerisiers' }, { cell: [2, 1], name: 'Pavillon flottant' }, { cell: [2, 2], name: 'Îlot des pêcheurs' },
-        { cell: [3, 1], name: 'Gradins du lac' }, { cell: [3, 0], name: "Antichambre de l'aurore" }, { cell: [3, 2], name: 'Ponton des lanternes' },
+        { cell: [3, 1], name: 'Gradins du lac' }, { cell: [2, 0], name: "Antichambre de l'aurore" }, { cell: [3, 2], name: 'Ponton des lanternes' },
         { cell: [0, 0], name: 'Récif du dragon' }, { cell: [1, 0], name: 'Rocher du pêcheur' },
       ].map((z, i) => i === 0 || i === 1 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
       links: [[0, 1], [0, 2], [2, 3], [3, 4], [4, 5], [4, 6], [6, 7], [6, 8], [1, 9], [3, 10]], passW: 6,
-      door: [2, 5], arena: { cell: [2, 0], from: 7 }, bonfires: [0, 3, 7], big: 6, pseudo: 9, pits: 2, chests: [1, 3, 5, 8, 9, 10, 4, 6],
+      door: [2, 5], arena: { cell: [3, 0], from: 6 }, bonfires: [0, 3, 7], big: 6, pseudo: 9, pits: 2, chests: [1, 3, 5, 8, 9, 10, 4, 6],
     },
     areas: ['Débarcadère', 'Ponts en zigzag', 'Île des cerisiers', 'Pavillon flottant', 'Gradins du lac'], sanctuary: 'Sanctuaire de Suicune',
     mobs: { mini: ['marill', 'wooper', 'remoraid'], mid: ['azumarill', 'quagsire', 'octillery'], big: 'mantineB', pseudo: 'salamenceK' },
@@ -125,10 +125,10 @@ const JOHTO = [
       zones: [
         { cell: [0, 2], name: "Entrée du sanctuaire" }, { cell: [1, 2], name: 'Bosquet doré' }, { cell: [1, 1], name: 'Clairière des rêves' },
         { cell: [2, 2], name: 'Souche millénaire' }, { cell: [2, 1], name: 'Sentier de lierre' }, { cell: [3, 2], name: 'Source du temps' },
-        { cell: [0, 1], name: 'Verger perdu' }, { cell: [3, 0], name: 'Antichambre du printemps' }, { cell: [1, 0], name: 'Tronc creux' },
+        { cell: [0, 1], name: 'Verger perdu' }, { cell: [3, 1], name: 'Antichambre du printemps' }, { cell: [1, 0], name: 'Tronc creux' },
       ].map((z, i) => i < 2 || i === 6 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
       links: [[0, 1], [1, 3], [3, 4], [3, 5], [2, 4], [2, 8], [4, 7], [0, 6]],
-      door: [1, 2], arena: { cell: [2, 0], from: 7 }, bonfires: [0, 4, 7], big: 5, pseudo: 8, chests: [1, 2, 3, 5, 6, 8, 4, 7],
+      door: [1, 2], arena: { cell: [3, 0], from: 7 }, bonfires: [0, 4, 7], big: 5, pseudo: 8, chests: [1, 2, 3, 5, 6, 8, 4, 7],
     },
     areas: ["Entrée du sanctuaire", 'Bosquet doré', 'Sentier de lierre', 'Antichambre du printemps'], sanctuary: 'Cœur de la forêt',
     mobs: { mini: ['hoppip', 'sunkern', 'pineco'], mid: ['skiploom', 'sunflora', 'forretress'], big: 'meganiumB', pseudo: 'goodraK' },
@@ -694,6 +694,18 @@ export function bakeFloor(world) {
         else if (r > 0.3 && r < 0.335) { g.strokeStyle = 'rgba(255,120,40,.65)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x + 3, y + 7 + r * 30 % 6); g.lineTo(x + 10, y + 12); g.lineTo(x + 15, y + 10); g.lineTo(x + 22, y + 17); g.stroke(); ge.strokeStyle = '#ff7a2a'; ge.lineWidth = 1.2; ge.beginPath(); ge.moveTo(x + 3, y + 7 + r * 30 % 6); ge.lineTo(x + 10, y + 12); ge.lineTo(x + 15, y + 10); ge.lineTo(x + 22, y + 17); ge.stroke(); }
       }
       if (th.water && isBr) { g.fillStyle = 'rgba(40,24,12,.35)'; g.fillRect(x, y + 11, TS, 1); }
+      if (th.water && th.glowy) {   // Lac du Miroir : dalles mouillées, runes d'aube lumineuses, pétales et gouttes de rosée qui brillent
+        if (!isBr) {
+          const wet = g.createLinearGradient(x, y, x + TS, y + TS); wet.addColorStop(0, 'rgba(120,200,230,.16)'); wet.addColorStop(0.5, 'rgba(255,255,255,0)'); wet.addColorStop(1, 'rgba(90,170,210,.14)'); g.fillStyle = wet; g.fillRect(x, y, TS, TS);
+          if (r < 0.2) { g.fillStyle = 'rgba(52,120,104,.38)'; g.beginPath(); g.ellipse(x + 5 + r * 60 % 14, y + 18 + r * 25 % 5, 6, 2.5, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(140,220,170,.22)'; g.fillRect(x + 4 + r * 60 % 14, y + 17, 5, 1); }   // algues et mousse humide
+          if (r > 0.9 && r < 0.935) { g.strokeStyle = 'rgba(150,235,255,.85)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 8); g.lineTo(x + 11, y + 12); g.lineTo(x + 14, y + 9); g.lineTo(x + 21, y + 16); g.stroke();
+            ge.strokeStyle = '#7fe6ff'; ge.lineWidth = 1.6; ge.beginPath(); ge.moveTo(x + 4, y + 8); ge.lineTo(x + 11, y + 12); ge.lineTo(x + 14, y + 9); ge.lineTo(x + 21, y + 16); ge.stroke(); }   // veines d'eau lumineuses dans la pierre
+          if (r > 0.935 && r < 0.95) { const cx0 = x + 12, cy0 = y + 12; for (const [rr, al] of [[8, .5], [5, .8]]) { g.strokeStyle = `rgba(160,235,255,${al * 0.7})`; g.lineWidth = 1; g.beginPath(); g.ellipse(cx0, cy0, rr, rr * 0.55, 0, 0, 7); g.stroke(); ge.strokeStyle = `rgba(130,225,255,${al})`; ge.beginPath(); ge.ellipse(cx0, cy0, rr, rr * 0.55, 0, 0, 7); ge.stroke(); } }   // ondes concentriques
+          if (r > 0.6 && r < 0.64) { const px = x + 5 + r * 300 % 14, py = y + 6 + r * 170 % 12; g.fillStyle = 'rgba(250,190,212,.92)'; g.beginPath(); g.ellipse(px, py, 2.6, 1.5, r * 20, 0, 7); g.fill(); ge.fillStyle = 'rgba(255,170,205,.55)'; ge.beginPath(); ge.ellipse(px, py, 3.4, 2.2, r * 20, 0, 7); ge.fill(); }   // pétales de cerisier
+        }
+        if (r > 0.72 && r < 0.78) { const px = x + 4 + r * 211 % 16, py = y + 4 + r * 137 % 16; g.fillStyle = 'rgba(225,248,255,.8)'; g.fillRect(px, py, 2, 2); ge.fillStyle = 'rgba(170,235,250,.6)'; ge.beginPath(); ge.arc(px + 1, py + 1, 1.5, 0, 7); ge.fill(); }   // gouttes de rosée
+        if (inA && r > 0.45) { g.strokeStyle = 'rgba(190,240,255,.2)'; g.lineWidth = 1; g.beginPath(); g.ellipse(x + 12, y + 12, 5 + r * 5, 2.5 + r * 2, 0, 0, 7); g.stroke(); ge.strokeStyle = 'rgba(150,230,255,.22)'; ge.beginPath(); ge.ellipse(x + 12, y + 12, 5 + r * 5, 2.5 + r * 2, 0, 0, 7); ge.stroke(); }   // l'arène est une nappe d'eau : ondes lumineuses
+      }
       if (!inA && r > 0.975) { g.fillStyle = 'rgba(232,184,84,.5)'; g.fillRect(x + 11, y + 11, 2, 2); ge.fillStyle = 'rgba(232,184,84,.6)'; ge.fillRect(x + 10.5, y + 10.5, 3, 3); }   // clous dorés qui accrochent la lumière des lanternes
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
