@@ -199,7 +199,7 @@ const JOHTO = [
 export const CHAPTER_MAPS = { kanto: KANTO, johto: JOHTO };
 export const CHAPTER_INFO = {
   kanto: { n: 'I', name: 'Kanto', gen: 1, sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', world: 'assets/ui/worldmap.jpg', nodes: [[11.5, 58], [26, 23], [50.5, 63], [63, 38.5], [86, 18]] },
-  johto: { n: 'II', name: 'Johto', gen: 2, sub: 'Trois bêtes, un sanctuaire marin et un temple hors du temps', world: 'assets/ui/worldmap.jpg', nodes: [[14, 62], [34, 28], [56, 66], [74, 36], [88, 14]] },
+  johto: { n: 'II', name: 'Johto', gen: 2, sub: 'Trois bêtes, un sanctuaire marin et un temple hors du temps', world: 'assets/ui/worldmap-johto.jpg', nodes: [[30, 41], [54, 24], [52.5, 54], [65, 78], [28, 74]] },
 };
 export const MAPS = [];
 export let CHAPTER = 'kanto';
