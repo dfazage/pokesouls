@@ -126,7 +126,7 @@ def main():
     manifest = {'ts': S, 'cols': COLS, 'file': 'props/floor.png', 'efile': 'props/floor_e.png', 'tiles': man}
     da, dea, dec, runs = build_decals(); da.save(os.path.join(out, 'floor_d.png'), optimize=True); dea.save(os.path.join(out, 'floor_de.png'), optimize=True)
     wa, wea, wk = build_walls(); wa.save(os.path.join(out, 'walls.png'), optimize=True); wea.save(os.path.join(out, 'walls_e.png'), optimize=True)
-    manifest.update({'wfile': 'props/walls.png', 'wefile': 'props/walls_e.png', 'walls': wk, 'dfile': 'props/floor_d.png', 'defile': 'props/floor_de.png', 'decals': dec, 'runs': runs, 'hfile': 'props/house.png', 'hefile': 'props/house_e.png', 'ffile': 'props/forest.png'})
+    manifest.update({'wfile': 'props/walls.png', 'wefile': 'props/walls_e.png', 'walls': wk, 'dfile': 'props/floor_d.png', 'defile': 'props/floor_de.png', 'decals': dec, 'runs': runs, 'hfile': 'props/house.png', 'hefile': 'props/house_e.png', 'ffile': 'props/forest.png', 'd3file': 'props/decor3d.png', 'd3efile': 'props/decor3d_e.png'})
     atlas.save(os.path.join(out, 'floor.png'), optimize=True); eatlas.save(os.path.join(out, 'floor_e.png'), optimize=True)
     json.dump(manifest, open(os.path.join(ROOT, 'assets', 'floor.json'), 'w'), separators=(',', ':'))
     print('tuiles', len(tiles), 'sets', len(man), 'atlas', atlas.size, 'décors', sum(len(v) for v in dec.values()), da.size)

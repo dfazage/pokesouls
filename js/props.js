@@ -6,7 +6,7 @@
 // Si une clé manque ou si l'image n'est pas chargée, drawProp renvoie false et l'appelant garde son dessin procédural.
 export const PROPS = { db: {}, img: {}, pitch: 40 };
 // Atlas de sol / décors de sol / murs pixel art (assets/floor.json, généré par tools/props_gen/build_floor.py) : db = manifeste, img = atlas, eimg = masque d'émission
-export const FLOOR = { db: null, img: null, eimg: null, dimg: null, deimg: null, wimg: null, weimg: null, himg: null, heimg: null, fimg: null };   // pitch : inclinaison courante de la caméra en degrés (écrit par render3d)
+export const FLOOR = { db: null, img: null, eimg: null, dimg: null, deimg: null, wimg: null, weimg: null, himg: null, heimg: null, fimg: null, d3img: null, d3eimg: null };   // pitch : inclinaison courante de la caméra en degrés (écrit par render3d)
 
 function loadImage(src) {
   return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image ' + src)); i.src = src; });
@@ -16,10 +16,11 @@ async function loadFloor() {
   try {
     const db = await (await fetch('assets/floor.json')).json();
     const opt = f => f ? loadImage('assets/' + f).catch(() => null) : Promise.resolve(null);
-    const [img, eimg, dimg, deimg, wimg, weimg, himg, heimg, fimg] = await Promise.all([loadImage('assets/' + db.file), opt(db.efile), opt(db.dfile), opt(db.defile), opt(db.wfile), opt(db.wefile), opt(db.hfile), opt(db.hefile), opt(db.ffile)]);
+    const [img, eimg, dimg, deimg, wimg, weimg, himg, heimg, fimg, d3img, d3eimg] = await Promise.all([loadImage('assets/' + db.file), opt(db.efile), opt(db.dfile), opt(db.defile), opt(db.wfile), opt(db.wefile), opt(db.hfile), opt(db.hefile), opt(db.ffile), opt(db.d3file), opt(db.d3efile)]);
     FLOOR.db = db; FLOOR.img = img; FLOOR.eimg = eimg; FLOOR.dimg = dimg; FLOOR.deimg = deimg; FLOOR.wimg = wimg; FLOOR.weimg = weimg;
+    FLOOR.d3img = d3img && d3eimg ? d3img : null; FLOOR.d3eimg = d3img && d3eimg ? d3eimg : null;   // décors 3D (lanternes, torii, cloches) : les deux images ou aucune
     FLOOR.fimg = fimg; FLOOR.himg = himg && heimg ? himg : null; FLOOR.heimg = himg && heimg ? heimg : null;   // maisons 3D texturées : les deux images ou aucune (repli : ancien shader procédural)
-  } catch (e) { FLOOR.db = null; FLOOR.img = FLOOR.eimg = FLOOR.dimg = FLOOR.deimg = FLOOR.wimg = FLOOR.weimg = FLOOR.himg = FLOOR.heimg = FLOOR.fimg = null; /* repli : sol et murs dessinés par le code */ }
+  } catch (e) { FLOOR.db = null; FLOOR.img = FLOOR.eimg = FLOOR.dimg = FLOOR.deimg = FLOOR.wimg = FLOOR.weimg = FLOOR.himg = FLOOR.heimg = FLOOR.fimg = FLOOR.d3img = FLOOR.d3eimg = null; /* repli : sol et murs dessinés par le code */ }
 }
 
 export async function loadProps() {

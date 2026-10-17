@@ -417,6 +417,77 @@ void main(){
   gl_FragColor = vec4(applyFog(col, vW), 1.);
 }`;
 
+// ---------- décors 3D d'Edo (lanternes, torii, cloches, arbres : js/hd2d_decor.js, atlas assets/props/decor3d.png via tools/props_gen/decor3d_tex.py) ----------
+// Contrairement aux maisons lointaines, ces objets sont dans la zone jouable : ils lisent la carte de lumière du jeu (feux, lanternes, éclairs) comme le sol et les sprites.
+// aMat : 0 pierre, 1 laque, 2 bois sombre, 3 bronze, 4 bois clair, 5 face de lanterne (flamme), 6 bronze de la cloche (oscille). Avec uTree : 0 écorce, 1 feuillage (même atlas que la forêt d'Ilex).
+export const DECOR_VERT = /* glsl */`
+attribute float aMat; attribute vec3 aUV;
+varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vMat; varying vec2 vUV; varying float vInst;
+uniform float uTime, uSwing;
+void main(){
+  mat4 im = instanceMatrix;
+  vInst = fract(sin(dot(im[3].xz, vec2(12.9898, 78.233)))*43758.5453);
+  vec3 p = position, nn = normal;
+  if(aMat > 5.5 && aMat < 6.5){                         // cloche : balancement autour de la poutre (axe x), dans le plan de la caméra par défaut
+    float a = uSwing*sin(uTime*1.4 + vInst*6.28), c = cos(a), s = sin(a);
+    vec3 d = p - vec3(0., 2.2, 0.);
+    p = vec3(d.x, d.y*c - d.z*s, d.y*s + d.z*c) + vec3(0., 2.2, 0.);
+    nn = vec3(nn.x, nn.y*c - nn.z*s, nn.y*s + nn.z*c);
+  }
+  vec4 w = modelMatrix*(im*vec4(p, 1.));
+  vW = w.xyz;
+  vN = normalize(mat3(modelMatrix*im)*nn);
+  vCol = instanceColor; vMat = aMat; vUV = aUV.xz;
+  gl_Position = projectionMatrix*viewMatrix*w;
+}`;
+export const DECOR_FRAG = /* glsl */`
+uniform float uTime, uGain, uTree; uniform vec3 uStone, uLacq, uBronze, uEmisCol;
+uniform sampler2D uTex, uEmi, uTexF, uLight; uniform vec4 uReg;
+varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vMat; varying vec2 vUV; varying float vInst;
+${GLSL_COMMON}
+${FOG_FRAG}
+// cellule i de l'atlas decor3d (144 × 24) ; rep = 1 : la cellule se répète tous les 1 tuile
+vec2 cellUV(float i, vec2 uv, float rep){
+  vec2 f = rep > .5 ? floor(fract(uv)*24.) : floor(clamp(uv*24., vec2(0.), vec2(23.)));
+  return (vec2(i*24. + f.x, f.y) + .5)/vec2(144., 24.);
+}
+void main(){
+  vec3 n = normalize(vN);
+  float dif = max(dot(n, normalize(vec3(-.35, .8, .5))), 0.);
+  vec3 alb; float em = 0.; vec3 add = vec3(0.);
+  vec2 reg = (vW.xz - uReg.xy)*uReg.zw;
+  vec3 L = min(texture2D(uLight, reg).rgb*uGain, vec3(1.3));   // plafonné : la lanterne éclaire sa propre pierre
+  if(uTree > .5){
+    float up = smoothstep(0., 2.6, vW.y);
+    if(vMat < .5){
+      vec2 f = floor(fract(vec2(vUV.x*1.7, vUV.y*.8))*24.);
+      alb = texture2D(uTexF, (vec2(48. + f.x, f.y) + .5)/vec2(72., 24.)).rgb*1.15;
+    } else {
+      vec3 a = abs(n); vec2 p = a.y > max(a.x, a.z) ? vW.xz : (a.x > a.z ? vec2(vW.z, vW.y) : vec2(vW.x, vW.y));
+      p += vInst*13.;
+      float alt = step(.5, hash21(floor(p*.25) + vInst*7.));
+      vec2 f = floor(fract(p)*24.);
+      float g = texture2D(uTexF, (vec2(alt*24. + f.x, f.y) + .5)/vec2(72., 24.)).r;
+      alb = vCol*(.45 + g*1.15);
+      alb = mix(alb, vec3(.95, .85, .45)*g, step(.93, g)*.35);
+      vec2 sp = floor(p*24.);
+      add += uEmisCol*step(.9935, hash21(sp + floor(uTime*.25 + vInst*9.)*3.1))*(.5 + .5*sin(uTime*2. + sp.x))*.9*step(.3, up);   // lucioles / pollen
+    }
+  } else {
+    float e = 0.;
+    if(vMat < .5){ vec2 t = cellUV(0., vUV, 1.); alb = texture2D(uTex, t).rgb*uStone*vCol*1.12; }
+    else if(vMat < 1.5){ vec2 t = cellUV(1., vUV, 1.); alb = texture2D(uTex, t).rgb*uLacq*1.25; }
+    else if(vMat < 2.5){ alb = texture2D(uTex, cellUV(2., vUV, 1.)).rgb*1.2; }
+    else if(vMat < 3.5 || vMat > 5.5){ alb = texture2D(uTex, cellUV(3., vUV, 1.)).rgb*uBronze*1.15; }
+    else if(vMat < 4.5){ alb = texture2D(uTex, cellUV(4., vUV, 1.)).rgb*1.1; }
+    else { vec2 t = cellUV(5., vUV, 0.); alb = texture2D(uTex, t).rgb; e = texture2D(uEmi, t).r; }
+    em = e*(.8 + .2*sin(uTime*9. + vInst*40.) + .08*sin(uTime*23. + vInst*9.));
+    add += vec3(1., .74, .4)*em*1.05;
+  }
+  vec3 col = alb*L*(.62 + .5*dif) + alb*max(L - .75, 0.)*.25 + add;
+  gl_FragColor = vec4(applyFog(col, vW), 1.);
+}`;
+
 // ---------- particules d'ambiance ----------
 export const PART_VERT = /* glsl */`
 attribute vec4 aSeed;   // x,y,z : position initiale [0,1], w : taille/phase
