@@ -156,36 +156,42 @@
   "fallback_audio": "map_j5.ogg"
  },
  "BOSS_RAIKOU": {
+  "loop_start": 8,
   "title": "Raikou, phase 1 (Edo) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_raikou.ogg"
  },
  "BOSS_RAIKOU_P2": {
+  "loop_start": 8,
   "title": "Raikou, phase 2 (Edo) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_raikou_p2.ogg"
  },
  "BOSS_ENTEI": {
+  "loop_start": 8,
   "title": "Entei, phase 1 (Edo) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_entei.ogg"
  },
  "BOSS_ENTEI_P2": {
+  "loop_start": 8,
   "title": "Entei, phase 2 (Edo) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_entei_p2.ogg"
  },
  "BOSS_SUICUNE": {
+  "loop_start": 8,
   "title": "Suicune, phase 1 (Edo) (Suno)",
   "start": 0,
   "end": null,
   "fallback_audio": "boss_suicune.ogg"
  },
  "BOSS_SUICUNE_P2": {
+  "loop_start": 8,
   "title": "Suicune, phase 2 (Edo) (Suno)",
   "start": 0,
   "end": null,
