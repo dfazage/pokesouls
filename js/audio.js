@@ -120,7 +120,7 @@ export const SFX = {
   hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
   // coup super efficace : impact plus lourd que le coup normal (claquement sec, boum grave, craquement, résonance métallique) ; au plus un toutes les 90 ms quand une zone touche plusieurs cibles
   superHit() {
-    const now = performance.now(); if (now - (SFX._sup || 0) < 90) return; SFX._sup = now;
+    const now = performance.now(); if (now - (SFX._sup ?? -1e9) < 90) return; SFX._sup = now;
     band(2800, 0.9, 0.09, 0.2); band(5400, 1.2, 0.14, 0.09, 0.008);
     tone(125, 36, 0.38, 'sine', 0.18); noise(0.34, 0.09, 520, 0.005);
     band(750, 1.3, 0.24, 0.15, 0.02); band(1900, 2, 0.16, 0.08, 0.03);
