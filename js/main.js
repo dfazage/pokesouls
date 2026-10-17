@@ -10,7 +10,7 @@ import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
 import { ENDINGS, endingsSeen, markEnding, fmtTime } from './endings.js';
 import { showWorlds, showStarters, showDialogue, showInfo, showReserve, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
-import { POOL } from './pool.js';
+import { POOL, spriteLine } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
 import { initTouch } from './touch.js';
@@ -122,15 +122,15 @@ function startEnding(end, id) {
 }
 async function newGame(choice, chapter = 'kanto') {
   Game.wipe(chapter); const g = new Game(chapter); g.newGame(choice);
-  await loadPortraits(g.team.flatMap(m => m.line));
+  await loadPortraits(g.team.flatMap(spriteLine));
   await launch(g);
 }
 async function resume() { const g = new Game(lastChapter()); if (!g.hasSave) return; await launch(g); }
 // ?dev : état de test, Dracaufeu / Florizarre / Tortank niv. 36 au dernier feu (Antichambre), devant la brume de Mewtwo ; ?dev=lugia : même équipe devant Lugia (Johto) ; ?dev=psy : Laggron / Alakazam / Ectoplasma devant Mewtwo. Sans toucher à la sauvegarde
 async function devStart() {
   const v = (location.search.match(/[?&]dev=(\w+)/) || [])[1], boss = v === 'lugia' ? 'lugia' : 'mewtwo';   // ?dev = Mewtwo (Kanto), équipe de départ ; ?dev=lugia = Lugia (Johto) ; ?dev=psy = équipe Psy devant Mewtwo
-  const g = new Game(boss === 'lugia' ? 'johto' : 'kanto'); g.devPreset(boss, v === 'psy');
-  await loadPortraits(g.team.flatMap(m => m.line));
+  const g = new Game(boss === 'lugia' ? 'johto' : 'kanto'); g.devPreset(boss, v === 'psy', v === 'armor');
+  await loadPortraits(g.team.flatMap(spriteLine));
   await launch(g);
 }
 

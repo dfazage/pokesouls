@@ -5,7 +5,7 @@ import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
 import * as D from './data.js';
-import { poolEntry, archOf, startTm } from './pool.js';
+import { poolEntry, archOf, startTm, spriteLine } from './pool.js';
 import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { zoneImpactFx, zoneLives } from './zonefx.js';
@@ -16,6 +16,7 @@ import { installBossOutro } from './outro.js';
 import { ENDINGS } from './endings.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
+import { installBranch, setBranch } from './branch.js';
 import { installHeld } from './held.js';
 import { makeDodge, dodgeTravel, dodgeInvEnd, dodgeInvuln } from './dodge.js';
 
@@ -57,7 +58,8 @@ export function speciesForMap(idx) {
 }
 const CAM_YAW = 45, CAM_TILT = 0, CAM_LOW_STEPS = 2;   // pivot latéral ±45° ; inclinaison crantée (stick droit haut / bas) : 0 = vue d'exploration, 2 = vue basse comme en duel (voir render3d.js)
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [], dropped: [] });
-const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
+// stade d'évolution : une lignée à embranchement (m.evo) reste au stade 1 tant que le joueur n'a pas choisi son armure (branch.js)
+const stageOf = (lvl, m) => (m && m.evo && !m.branch ? 0 : lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
   constructor(chapter = 'kanto') {
@@ -83,11 +85,11 @@ export class Game {
   chief() { return this.team[this.chiefIdx]; }
   makeMember(key, i) {
     const e0 = poolEntry(key), mod = key === FALA_KEY ? DEFAULT_MODULE : null, e = mod ? { ...e0, type: MODULES[mod].type } : e0;   // Fala : l'élément vient du Module équipé
-    return { key, mod, held: null, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
+    return { key, mod, held: null, type: e.type, gab: e.gab, line: e.line, evo: e.evo || null, branch: null, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
       hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0, fx: null, regen: null, frzImm: 0 };
   }
   computeDef(m) {
-    const a = archOf({ ...poolEntry(m.key), type: m.type }), st = stageOf(m.lvl), id = m.line[st], v = m.vit;
+    const a = archOf({ ...poolEntry(m.key), type: m.type, gab: m.gab }), st = stageOf(m.lvl, m), id = m.line[st], v = m.vit;
     m.stage = st; m.id = id;
     m.def = { ...a, id, name: D.NAMES_FR[id], hp: Math.round(a.hp * D.hpMult(m.lvl) * D.STAGE_HP[st] * (1 + 0.08 * v.hpup)),
       dmg: a.dmg * D.dmgMult(m.lvl) * D.STAGE_DMG[st] * (1 + 0.06 * v.protein), speed: a.speed * (1 + 0.03 * v.carbos), ability: D.TMS[m.tm] };
@@ -103,14 +105,15 @@ export class Game {
     this.save();
   }
   // état de test (?dev) : Dracaufeu, Florizarre et Tortank au niveau 36 (stade final), assis au dernier feu du Laboratoire, devant la brume de Mewtwo.
-  // ?dev=psy : Laggron, Alakazam, Ectoplasma ; ?dev=lugia : même équipe qu'en ?dev mais devant Lugia (Johto).
+  // ?dev=psy : Laggron, Alakazam, Ectoplasma ; ?dev=lugia : même équipe qu'en ?dev mais devant Lugia (Johto) ; ?dev=armor : Charbambin niveau 15 (armure à choisir), Florizarre, Tortank.
   // Il n'écrit jamais dans la sauvegarde : la vraie partie du joueur reste intacte (save() est neutralisé par noSave).
-  devPreset(boss = 'mewtwo', psy = false) {
+  devPreset(boss = 'mewtwo', psy = false, armor = false) {
     this.noSave = true;
-    this.picks = psy ? ['mudkip', 'abra', 'gastly'] : ['charmander', 'bulbasaur', 'squirtle'];   // clés de lignée du pool : Laggron, Alakazam, Ectoplasma (?dev=psy) ; Dracaufeu, Florizarre, Tortank (défaut)
+    this.picks = armor ? ['charcadet', 'bulbasaur', 'squirtle'] : psy ? ['mudkip', 'abra', 'gastly'] : ['charmander', 'bulbasaur', 'squirtle'];   // clés de lignée du pool : Laggron, Alakazam, Ectoplasma (?dev=psy) ; Dracaufeu, Florizarre, Tortank (défaut)
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     for (const m of this.team) m.lvl = D.EVOLVE_AT[1];
+    if (armor) this.team[0].lvl = D.EVOLVE_AT[0];   // Charbambin au niveau d'évolution : les deux armures sont disponibles dans l'Équipe
     this.bench = []; this.helds = []; this.chiefIdx = 0; this.essence = 0; this.pity = 0; this.link = 0; this.souvenir = null;
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 };
     this.berries = this.maxBerries = 5; this.ethers = this.maxEthers = 3;
@@ -124,7 +127,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), held: this.team.map(m => m.held || null), helds: this.helds, bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null, held: m.held || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), branches: this.team.map(m => m.branch || null), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), held: this.team.map(m => m.held || null), helds: this.helds, bench: this.bench.map(m => ({ key: m.key, branch: m.branch || null, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null, held: m.held || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, pity: Math.round(this.pity * 1e4) / 1e4, tips: this.tips, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { if (this.noSave) return; try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
@@ -141,10 +144,11 @@ export class Game {
       if (key === FALA_KEY && MODULES[o.mod]) { m.mod = o.mod; m.type = MODULES[o.mod].type; }
       if (D.HELD[o.held] && !m.mod) m.held = o.held;
       m.lvl = o.lvl || D.START_LEVEL; if (o.vit) Object.assign(m.vit, o.vit);
-      if (o.tm && D.TMS[o.tm]) { const st = stageOf(m.lvl); if (D.tmCompat(o.tm, m.type, m.line[st], st).ok) m.tm = o.tm; }
+      if (o.branch) setBranch(m, o.branch);   // armure déjà choisie (lignée à embranchement)
+      if (o.tm && D.TMS[o.tm]) { const st = stageOf(m.lvl, m); if (D.tmCompat(o.tm, m.type, m.line[st], st).ok) m.tm = o.tm; }
       return m;
     };
-    this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i], held: (s.held || [])[i] }));
+    this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], branch: (s.branches || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i], held: (s.held || [])[i] }));
     this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
     this.helds = (s.helds || []).filter(k => D.HELD[k]); for (const m of this.team.concat(this.bench)) if (m.held && !this.helds.includes(m.held)) this.helds.push(m.held);   // objets tenus possédés (les anciennes sauvegardes n'en ont pas)
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.pity = s.pity || 0; this.link = s.link || 0;
@@ -162,7 +166,7 @@ export class Game {
   }
   // charge les sprites de l'équipe puis entre dans la carte de reprise
   async start() {
-    await loadSpecies(this.team.flatMap(m => m.line), null, true);
+    await loadSpecies(this.team.flatMap(spriteLine), null, true);
     const l = this.last;
     await this.enterMap(l ? l.map : 0, l ? l.id : 'start', true);
     if (this.tutState === 'pending') { this.startTutorial(); }
@@ -1402,6 +1406,7 @@ export class Game {
   // ---------- objets, niveaux, CT (menus) ----------
   gainLevel(m) {
     const st0 = m.stage; m.lvl++; this.applyLevels(false);
+    if (m.evo && !m.branch && m.lvl === D.EVOLVE_AT[0]) this.emit('toast', 'Une armure répond à ' + m.def.name + ' : ouvre l’Équipe (consommables) pour le faire évoluer');
     if (m.stage > st0) { m.hp = m.maxhp; this.emit('banner', D.NAMES_FR[m.line[st0]].toUpperCase() + ' ÉVOLUE !', 'item'); this.emit('toast', D.NAMES_FR[m.line[st0]] + ' évolue en ' + D.NAMES_FR[m.id]); }
   }
   levelUp(i) {
@@ -1440,6 +1445,7 @@ installBossCine(Game, { Input, TS, vw: () => W, H, clamp, hyp, setAnim, SFX, M }
 installBossOutro(Game, { ASH, setAnim, hasAnim, SFX, M, TS, vw: () => W, H, clamp, bossCamOf });
 installFala(Game, { M, TS, SFX, hyp });
 installReserve(Game, { D, stageOf });
+installBranch(Game, { D, stageOf, SFX });
 installHeld(Game, { D, hyp, SFX });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 

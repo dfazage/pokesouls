@@ -23,7 +23,7 @@ function bindVol() {
   const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; };
 }
 
-// ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
+// ---------- choix des compagnons (pool de 40 lignées, 3 libres) ----------
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
 // ---------- choix du chapitre (région) ----------
 // silhouettes animées des chapitres verrouillés : Idle PMDCollab (rangée du bas), aplatie en violet sombre (assets/ui/sil-*-idle.png)
@@ -70,7 +70,7 @@ export function showStarters(onDone, onBack) {
       <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
         <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<div class="pcell"><button class="pth ${picks.includes(p.key) ? 'on taken' : ''} ${p.key === focus ? 'foc' : ''}" ${p.key === padTo ? 'data-padfirst' : ''} data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>${p.key === focus && !done ? bubble(p.key) : ''}</div>`).join('')}</div></div>`).join('')}</div>
       <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
-        <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
+        <small>${f.evo ? esc(D.NAMES_FR[f.line[0]]) + ' → ' + f.evo.map(e => esc(D.NAMES_FR[e.id])).join(' / ') : f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
         <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
         <div class="act"><button id="st-back">${step > 0 ? '← Retirer le dernier' : '← Retour au menu'}</button>${done ? '<button id="st-go" class="pri" data-padfirst>Commencer l’aventure</button>' : `<span class="pcount">Équipe : ${step} / 3</span>`}</div></div>`;
@@ -97,7 +97,7 @@ export function showBonfireMenu(game, bonfire, onClose, extra) {
     const m = open(`<div class="panel"><h2>${esc(bonfire.name)}</h2><p class="sub">Le feu vous accueille. Se reposer soigne l'équipe, recharge les baies et fait revenir les ennemis.</p>
       <div class="essl">Essence : <b>${game.essence}</b> &nbsp; Super Bonbons : <b>${game.bag.candy || 0}</b></div>
       <div class="lv">${game.team.map((t, i) => { const c = D.levelCost(t.lvl), ok = game.essence >= c && t.lvl < D.MAX_LEVEL;
-        const nxtStage = t.stage < 2 && t.lvl + 1 >= D.EVOLVE_AT[t.stage] ? ` · <em>évolue en ${esc(D.NAMES_FR[t.line[t.stage + 1]])}</em>` : '';
+        const nxtStage = t.evo && !t.branch ? (t.lvl >= D.EVOLVE_AT[0] ? ' · <em>armure à choisir (Équipe)</em>' : t.lvl + 1 >= D.EVOLVE_AT[0] ? ' · <em>une armure l’attend au niveau ' + D.EVOLVE_AT[0] + '</em>' : '') : t.stage < 2 && t.lvl + 1 >= D.EVOLVE_AT[t.stage] ? ` · <em>évolue en ${esc(D.NAMES_FR[t.line[t.stage + 1]])}</em>` : '';
         return `<div class="row"><img src="${portrait(t.id)}" alt=""><div><b>${esc(t.def.name)}</b> <span>${t.def.typeName} · ${t.def.cls}</span><small>Niv. ${t.lvl}${t.lvl < D.MAX_LEVEL ? ` · PV ${t.maxhp}` : ' · max'}${nxtStage}</small>${t.key === FALA_KEY ? `<small class="pmods">Module : ${MOD_ORDER.map(id => `<button class="pmod ${t.mod === id ? 'on' : ''}" style="--m:${MODULES[id].color}" data-mod="${i}:${id}">${MODULES[id].name}</button>`).join('')}</small>` : ''}</div><button data-up="${i}" ${ok ? '' : 'disabled'}>Monter · ${c}</button></div>`; }).join('')}</div>
       <div class="act"><button id="m-bag">Équipe</button>${game.bench.length ? '<button id="m-reserve">Réserve</button>' : ''}<button id="m-travel">Voyager</button><button id="m-rest">Se reposer</button><button id="m-close">Repartir</button></div></div>`);
     m.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { game.levelUp(+b.dataset.up); render(); });
@@ -130,6 +130,7 @@ export function showBag(game, onClose) {
     if (bagTab === 'cons') {
       const cards = [];
       const card = (cls, icon, name, qty, desc, btn) => `<div class="ic ${cls}"><div class="ico">${icon}</div><div class="ib"><b>${name}</b>${qty != null ? `<em>×${qty}</em>` : ''}<small>${desc}</small></div>${btn || ''}</div>`;
+      if (sel.evo && !sel.branch) for (const e of sel.evo) cards.push(card('c-armor', iconImg(e.item), esc(e.name), null, esc(e.desc) + (sel.lvl < D.EVOLVE_AT[0] ? ` <b>Disponible au niveau ${D.EVOLVE_AT[0]}.</b>` : ' <b>Choix définitif.</b>'), `<button data-use="armor:${e.id}" ${game.canBranch(sel) ? '' : 'disabled'}>Revêtir</button>`));
       cards.push(card('c-candy', iconImg('candy'), 'Super Bonbon', game.bag.candy || 0, '+1 niveau sans dépenser d’essence.', `<button data-use="candy:candy" ${(game.bag.candy > 0 && sel.lvl < D.MAX_LEVEL) ? '' : 'disabled'}>Donner</button>`));
       cards.push(card('c-revive', iconImg('revive'), 'Rappel', game.bag.revive || 0, 'Réveille un Pokémon K.O. avec la moitié de ses PV.', `<button data-use="revive:revive" ${(game.bag.revive > 0 && sel.exh) ? '' : 'disabled'}>Rappeler</button>`));
       for (const k of Object.keys(names)) cards.push(card('c-vit', iconImg(k), names[k].name, game.bag[k] || 0, names[k].desc + `<span class="pips">${'●'.repeat(sel.vit[k])}${'○'.repeat(5 - sel.vit[k])}</span>`, `<button data-use="vit:${k}" ${(game.bag[k] > 0 && sel.vit[k] < 5) ? '' : 'disabled'}>Donner</button>`));
@@ -167,6 +168,7 @@ export function showBag(game, onClose) {
     m.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { questSel = questSel === b.dataset.q ? null : b.dataset.q; render(); });
     m.querySelectorAll('[data-use]').forEach(b => b.onclick = () => {
       const [kind, key] = b.dataset.use.split(':');
+      if (kind === 'armor') { game.chooseBranch(bagSel, key).then(() => render()); return; }
       if (kind === 'equip') game.equipHeld(bagSel, key); else if (kind === 'unequip') game.unequipHeld(bagSel); else if (kind === 'candy') game.useCandy(bagSel); else if (kind === 'vit') game.useVitamin(bagSel, key); else if (kind === 'revive') game.useRevive(bagSel); else game.teach(bagSel, key);
       render();
     });
