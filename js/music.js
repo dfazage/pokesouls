@@ -35,7 +35,7 @@ export const TRACKS = {
   BOSS_MEWTWO_P2: { title: 'Mewtwo, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 2' },
   BOSS_MEW: { title: 'Mew, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew' },
   JINGLE_DEATH: { title: 'Mort (sobre)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mort', jingle: true },
-  JINGLE_VICTORY: { title: 'Victoire (Hard-Won Triumph)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Boss vaincu', jingle: true },
+  JINGLE_VICTORY: { title: 'Victoire (Hard-Won Victory)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Boss vaincu', jingle: true },
 };
 const STORE = 'pokesouls.options.v1';
 // Couche perso (reprises, usage privé) : active en local, coupée sur le site publié ; ?perso=0 ou ?perso=1 force le choix.
