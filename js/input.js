@@ -42,7 +42,7 @@ export const padKindName = () => (padOn ? KIND_NAME[padKind] : '');
 export const padFace = () => ({ f: FACE[padKind], s: SYS[padKind] });
 export function padLabels() {
   const f = FACE[padKind];
-  return [['Déplacement', 'Stick gauche'], ['Pivoter la caméra (gauche/droite)', 'Stick droit'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
+  return [['Déplacement', 'Stick gauche'], ['Pivoter la caméra par crans de 45° (gauche/droite)', 'Stick droit'], ['Esquive (appui) / course (maintenu)', padLabel('dodge')], ['Interagir', padLabel('interact')], ['Attaque légère', padLabel('light')], ['Attaque lourde', padLabel('heavy')],
     ['Garde / parade (maintenir)', padLabel('guard')], ['Capacité spéciale', padLabel('ability')], ['Relève (Pokémon suivant)', padLabel('next')], ['Objets : roue', 'maintenir ' + f[5] + ' + stick droit, relâcher'], ['Changer de cible verrouillée', 'Stick droit gauche / droite'], ['Baie', padLabel('berry')], ['Super Bonbon', padLabel('candy')], ['Fiole d’endurance', padLabel('ether')], ['Rappel', padLabel('revive')], ['Lien (alliés)', 'Clic stick gauche'],
     ['Verrouillage', 'Clic stick droit'], ['Carte / téléportation', padLabel('map')], ['Sac', 'Croix haut'], ['Pause', padLabel('pause')],
     ['Menus : naviguer', 'Croix ou stick gauche'], ['Menus : valider / retour', f[0] + ' / ' + f[1]], ['Menus : changer d’onglet', f[4] + ' / ' + f[5]]];
