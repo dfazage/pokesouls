@@ -10,7 +10,7 @@ import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
-import { installBossCine } from './bosscine.js';
+import { installBossCine, bossCamOf } from './bosscine.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
 
@@ -62,7 +62,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -199,7 +199,7 @@ export class Game {
       if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
       this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
     }
-    this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null;
+    this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null; this.bossCam = null; this.bossCamK = 0;
     this.closeFog();
   }
   makeEnemy(type, x, y) {
@@ -221,6 +221,7 @@ export class Game {
     if (this.state === 'loading' || !this.world) return;
     if (this.hitstop > 0) { this.hitstop -= dt; return; }
     this.t += dt;
+    this.updateBossCam(dt);
     if (this.furyT > 0) { this.furyT -= dt; this.shake = Math.max(this.shake, this.furyAmp * Math.min(1, this.furyT / 0.5) * (0.75 + 0.25 * Math.sin(this.t * 60))); }   // fureur : secousse tenue pendant le cri
     this.shake = Math.max(0, this.shake - dt * 14);
     this.buffT = Math.max(0, this.buffT - dt);
@@ -239,7 +240,9 @@ export class Game {
     this.updateWorld(dt);
     const c = this.chief();
     if (this.cine) return;
-    const tx = clamp(c.x - W / 2, 0, M.MW * TS - W), ty = clamp(c.y - H / 2 - 6, 0, M.MH * TS - H);
+    const bc = this.bossCam, bs = this.boss, f = bc && bs ? bc.focus * this.bossCamK : 0;   // duel : la caméra se décale vers le boss
+    const fx = f ? c.x + (bs.x - c.x) * f : c.x, fy = f ? c.y + (bs.y - c.y) * f : c.y;
+    const tx = clamp(fx - W / 2, 0, M.MW * TS - W), ty = clamp(fy - H / 2 - 6 * (1 - f), 0, M.MH * TS - H);
     const k = 1 - Math.exp(-9 * dt); this.cam.x += (tx - this.cam.x) * k; this.cam.y += (ty - this.cam.y) * k;
   }
 
@@ -308,6 +311,13 @@ export class Game {
     else if (moving) m.face = unit(ax, ay);
     setAnim(m, moving ? 'Walk' : 'Idle'); m.at += dt * (run ? 1.5 : 1) * (guarding ? 0.5 : 1);
     this.stamTick(dt, run || guarding);
+  }
+  // caméra de duel (HD-2D) : fondu (~2 s) vers le réglage du boss tant que le combat dure, retour à l'exploration ensuite (boss vaincu, mort du joueur)
+  updateBossCam(dt) {
+    const b = this.boss, on = !!window.hd2d && this.bossActive && b && !b.dead && !this.cine && this.state !== 'dead';
+    if (on && !this.bossCam) this.bossCam = bossCamOf(b);
+    this.bossCamK += ((on ? 1 : 0) - this.bossCamK) * (1 - Math.exp(-dt * 1.6));
+    if (!on && this.bossCamK < 0.003) { this.bossCamK = 0; this.bossCam = null; }
   }
   // pivot de caméra au stick droit (manette), par crans verrouillés : gauche = un cran vers la gauche (-45°), droite = un cran vers la droite (+45°).
   // Trois positions (-45°, 0°, +45°) ; l'angle reste en place quand on relâche. Pendant un verrouillage, le stick droit change de cible (le cran reste).
