@@ -1060,7 +1060,7 @@ export class Game {
     if (this.prompt && this.prompt.act && Input.pressed('interact') && !c.atk && !c.dodge && c.hurtT <= 0) this.prompt.act();
   }
   lightBonfire(b) {
-    this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.hubAt = { x: (b.tx + 0.5) * TS, y: (b.ty + 0.5) * TS }; this.emit('jingle', 'JINGLE_CAMPFIRE'); this.emit('banner', 'FEU ALLUMÉ', 'fire');
+    this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.hubAt = { x: (b.tx + 0.5) * TS, y: (b.ty + 0.5) * TS }; this.emit('banner', 'FEU ALLUMÉ', 'fire');
   }
   rest(quiet) {
     for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; m.fx = null; m.regen = null; }

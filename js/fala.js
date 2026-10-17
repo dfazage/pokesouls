@@ -164,7 +164,7 @@ export function installFala(Game, { M, TS, SFX, hyp }) {
     open(lines, () => {
       for (const id of carried) { q.given.push(id); const name = this.give(MODULES[id].reward); this.emit('toast', `${MODULES[id].name} remis · ${name} · ${q.given.length}/4`); }
       if (finishing) {
-        q.done = true; this.recruit(FALA_KEY); SFX.pick(); this.emit('jingle', 'JINGLE_CAMPFIRE'); this.emit('banner', 'FALA REJOINT LA RÉSERVE', 'fire'); this.emit('dialogue', { lines: SCRIPTS.tuto() });
+        q.done = true; this.recruit(FALA_KEY); SFX.pick(); this.emit('banner', 'FALA REJOINT LA RÉSERVE', 'fire'); this.emit('dialogue', { lines: SCRIPTS.tuto() });
       }
       this.save();
     });
