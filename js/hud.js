@@ -80,7 +80,7 @@ export function createHud(game) {
       { const rv = game.bag.revive || 0; E.revive.textContent = '×' + rv; E.revive.parentNode.classList.toggle('empty', !rv); }
       E.berries.parentNode.classList.toggle('empty', !game.berries); E.ethers.parentNode.classList.toggle('empty', !game.ethers);
       { const lk = game.linkT > 0; E['link-f'].style.width = (lk ? 100 * game.linkT / 8 : game.link) + '%'; E.linkbox.classList.toggle('ready', !lk && game.link >= 100); E.linkbox.classList.toggle('on', lk); E['link-t'].textContent = lk ? Math.ceil(game.linkT) + ' s' : game.link >= 100 ? 'PRÊT' : Math.floor(game.link) + ' %'; root.classList.toggle('linking', lk);
-        { const tp = game.t - game.lastParry, td = game.t - game.lastPD, W = game.relayWin, par = tp >= 0 && tp < W, dod = !par && td >= 0 && td < W;   // fenêtre après parade (riposte lourde + relève) ou esquive (relève)
+        { const tp = game.t - game.lastParry, td = game.t - game.lastPD, W = game.relayWin, par = tp > -1 && tp < W, dod = !par && td > -1 && td < W;   // fenêtre après parade (riposte lourde + relève) ou esquive (relève)
           E.opp.classList.toggle('on', par || dod); E.opp.classList.toggle('dod', dod);
           if (par || dod) {
             E.op1.textContent = kl('heavy'); E.op2.textContent = kl('next'); const c0 = game.chief(), h = window.hd2d; let sx, sy;

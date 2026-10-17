@@ -74,6 +74,7 @@ export function installExtras(G, d) {
   P.initExtras = function () {
     this.link = 0; this.linkT = 0; this.linkMalus = 0; this.allies = [];
     this.comboN = 0; this.comboAt = -9; this.comboWin = 0.8; this.relayWin = 1.3; this.later = [];
+    this.parryWin = 0.28; this.parryPre = 0.15; this.guardPressT = -9;   // parade : fenêtre après l'appui (0,28 s) et pré-appui toléré avant l'impact (0,15 s)
     this.obs = []; this.gust = null; this.terrain = { slow: 1, frost: false }; this.lastPD = -9; this.curElem = 'normal';
   };
 

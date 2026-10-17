@@ -250,6 +250,7 @@ export class Game {
     const m = this.chief();
     this.swapCd -= dt;
     const linkKey = Input.pressed('link'); if (linkKey) this.tryLink();
+    if (Input.pressed('guard')) this.guardPressT = this.t;
     for (const a of ['light', 'heavy', 'ability', 'dodge']) if (Input.pressed(a) && !(linkKey && a === 'ability')) this.buf = { a, t: 0.3 };
     if (this.buf) { this.buf.t -= dt; if (this.buf.t <= 0) this.buf = null; }
     if (Input.pressed('next')) this.cycleChief();
@@ -617,13 +618,14 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t; this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }
+    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6);   // le chrono du relais démarre à la fin de la roulade this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     dmg *= this.elemDefMult(m, o, src);
-    if (chief && this.guarding && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
-      if (this.guardT < 0.22 && o.parry !== false) {
-        this.lastParry = this.t; this.tutEvent('parry'); SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
+    const pre = chief && !this.guarding && o.parry !== false && this.stam > 0 && this.t - this.guardPressT <= this.parryPre;   // pré-appui : garde pressée juste avant l'impact
+    if (chief && (this.guarding || pre) && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
+      if ((pre || this.guardT < this.parryWin) && o.parry !== false) {
+        this.guardPressT = -9; this.lastParry = this.t + 0.4; this.tutEvent('parry');   // fenêtre de relais : après la récupération (0,4 s) SFX.parry(); this.hitstop = 0.09; this.shake = 3; this.floatText(m.x, m.y - 24, 'PARADE !', '#9fe8ff'); this.burst(m.x + m.face.x * 10, m.y - 6, '#9fe8ff', 10); this.fx('protect', m.x + m.face.x * 12, m.y, { scale: 0.6, z: 12, add: true, dur: 0.4, glow: '#9fe8ff' });
         m.inv = 0.4; this.stam = Math.min(this.maxStam, this.stam + 20); this.addLink(14); this.comboN = 2; this.comboAt = this.t + 0.6;
         return 'parry';
       }

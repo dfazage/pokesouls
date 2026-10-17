@@ -274,7 +274,7 @@ function drawMember(ctx, g, m) {
   if (!m.exh) markPips(ctx, g, m, m.y - A.db[id].anchor.h - 16);
   if (m.regen && !m.exh) { ctx.strokeStyle = 'rgba(141,255,176,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(m.x, m.y, 12 + Math.sin(g.t * 6) * 1.5, 5, 0, 0, 7); ctx.stroke(); }
   if (ch && !m.exh) { const y = m.y - A.db[id].anchor.h - 4 + Math.sin(g.t * 5); ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.moveTo(m.x - 3, y - 4); ctx.lineTo(m.x + 3, y - 4); ctx.lineTo(m.x, y); ctx.fill(); }
-  if (ch && g.guarding) { ctx.strokeStyle = g.guardT < 0.22 ? 'rgba(160,240,255,.9)' : 'rgba(180,210,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(m.x + m.face.x * 8, m.y - 8 + m.face.y * 5, 11, Math.atan2(m.face.y, m.face.x) - 1.1, Math.atan2(m.face.y, m.face.x) + 1.1); ctx.stroke(); }
+  if (ch && g.guarding) { ctx.strokeStyle = g.guardT < g.parryWin ? 'rgba(160,240,255,.9)' : 'rgba(180,210,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(m.x + m.face.x * 8, m.y - 8 + m.face.y * 5, 11, Math.atan2(m.face.y, m.face.x) - 1.1, Math.atan2(m.face.y, m.face.x) + 1.1); ctx.stroke(); }
 }
 
 function drawEnemy(ctx, g, e) {
