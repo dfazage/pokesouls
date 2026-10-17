@@ -83,6 +83,7 @@ export function collectDrawList(g, inView) {
   { const m = g.chief(); list.push({ x: m.x, y: m.y, k: CHAR_K, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
   if (g.swapFx) for (const s of g.swapFx) list.push({ x: s.x, y: s.y + (s.k === 'ball' ? 1 : -1), f: c => drawSwap(c, g, s) });
   if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
+  if (g.loot) for (const l of g.loot) if (inView(l.x, l.y)) list.push({ x: l.x, y: l.y, f: c => drawLoot(c, g, l) });   // butin au sol (drops d'ennemis)
   list.push(...g.falaDraw(inView));   // Fala et ses Modules (carte 2)
   return list;
 }
@@ -396,6 +397,20 @@ function drawItem(ctx, g, it) {
   M.drawDecor(ctx, g.world, { kind: 'chest', tx: it.x / TS - 0.5, ty: it.y / TS - 1, w: 1, h: 1, seed: 3 }, g.t, false);   // pieds du coffre = point de pose de l'objet
 }
 function drawPlaque(ctx, g, it) { shadow(ctx, it.x, it.y, 8, 0.35); const y = it.y - 10 + Math.sin(g.t * 3) * 2; ctx.fillStyle = '#c690ff'; ctx.fillRect(it.x - 6, y - 8, 12, 16); ctx.fillStyle = '#f2e0ff'; ctx.fillRect(it.x - 4, y - 6, 8, 12); ctx.fillStyle = '#7a4fc0'; ctx.fillRect(it.x - 1, y - 4, 2, 8); ctx.fillRect(it.x - 3, y - 1, 6, 2); }
+// butin au sol : l'icône de l'objet saute puis flotte au-dessus d'une ombre ; halo vert (commun) ou doré avec colonne de lumière (rare). Clignote avant de disparaître.
+function drawLoot(ctx, g, l) {
+  if (l.life < 8 && Math.floor(g.t * 6) % 2) return;
+  const k = Math.min(1, l.age / 0.45), hop = Math.sin(k * Math.PI) * 14, z = 7 + hop * (1 - k) + (k >= 1 ? Math.sin(g.t * 4 + l.ph) * 1.5 : 0), col = l.rare ? '255,226,122' : '159,232,168';
+  shadow(ctx, l.x, l.y, 5 - hop * 0.12, 0.3);
+  const pulse = 0.5 + 0.3 * Math.sin(g.t * 5 + l.ph);
+  ctx.save();
+  ctx.strokeStyle = `rgba(${col},${pulse})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(l.x, l.y, 7 + (l.rare ? 2 : 0), 3, 0, 0, 7); ctx.stroke();
+  if (l.rare) for (let i = 0; i < 3; i++) { ctx.fillStyle = `rgba(${col},${0.16 - i * 0.04})`; ctx.fillRect(l.x - 5 + i, l.y - 46 - i * 6, 10 - i * 2, 46 + i * 6); }
+  const img = itemImage(l.key);
+  if (img) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, Math.round(l.x - 7), Math.round(l.y - z - 14), 14, 14); }
+  else { ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.moveTo(l.x, l.y - z - 11); ctx.lineTo(l.x + 5, l.y - z - 5); ctx.lineTo(l.x, l.y - z + 1); ctx.lineTo(l.x - 5, l.y - z - 5); ctx.fill(); }
+  ctx.restore();
+}
 function drawSouvenir(ctx, g) { const s = g.souvenir, y = s.y - 8 + Math.sin(g.t * 3) * 2; ctx.fillStyle = 'rgba(201,167,255,.9)'; ctx.beginPath(); ctx.arc(s.x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, y, 2, 0, 7); ctx.fill(); }
 
 export function buildLights(g) {
@@ -421,6 +436,7 @@ export function buildLights(g) {
   if (g.fxRings) for (const r of g.fxRings) lights.push({ x: r.x, y: r.y, r: r.r * 1.2, c: hexToRgb(r.c), a: 0.6 * (1 - r.t / 0.45) });
   for (const l of fxLights(g)) lights.push({ ...l, c: hexToRgb(l.c) });
   if (g.souvenir) lights.push({ x: g.souvenir.x, y: g.souvenir.y - 8, r: 40, c: [200, 160, 255], a: 0.8 });
+  if (g.loot) for (const l of g.loot) lights.push({ x: l.x, y: l.y - 8, r: l.rare ? 46 : 26, c: l.rare ? [255, 220, 110] : [160, 240, 170], a: l.rare ? 0.8 : 0.45 });
   for (const it of g.items) lights.push({ x: it.x, y: it.y - 10, r: 70, c: it.kind === 'portal' ? [190, 150, 255] : [255, 220, 130], a: 0.9 });
   for (const l of g.falaLights()) lights.push(l);
   if (pr.bossDead) { const a = g.world.arena; lights.push({ x: a.cx * TS, y: a.cy * TS, r: 160, c: [255, 220, 170], a: 0.7 }); }
