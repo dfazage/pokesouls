@@ -7,6 +7,7 @@ import { itemImage } from './items.js';
 import { W, H } from './game.js';
 import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
+import { bossAshState } from './bosscine.js';
 
 const { TS } = M;
 let lightC = null;
@@ -281,7 +282,23 @@ function drawMember(ctx, g, m) {
   if (ch && g.guarding) { ctx.strokeStyle = g.guardT < g.parryWin ? 'rgba(160,240,255,.9)' : 'rgba(180,210,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(m.x + m.face.x * 8, m.y - 8 + m.face.y * 5, 11, Math.atan2(m.face.y, m.face.x) - 1.1, Math.atan2(m.face.y, m.face.x) + 1.1); ctx.stroke(); }
 }
 
+// boss vaincu : taille normale, pause, puis bandes de sprite qui partent en cendres de haut en bas (les particules sont émises par Game.updateEnemies)
+function drawBossAsh(ctx, g, e) {
+  const id = e.sprite, sp = A.db[id], { sc, k, d } = bossAshState(e);
+  if (d >= 1) return;
+  const z = (e.def.hover ? 6 : 0) * (1 - k), H = sp.anchor.h * sc + 8, top = e.y - z - H;
+  shadow(ctx, e.x, e.y, 12 * sc * 1.3, 0.35 * (1 - d));
+  const anim = sp.anims.Faint ? 'Faint' : 'Idle', n = Math.ceil(H / 3), tint = `grayscale(${(d * 0.9).toFixed(2)}) brightness(${(1 - 0.35 * d).toFixed(2)})`;
+  for (let i = 0; i < n; i++) {
+    const h = Math.sin(i * 12.9898 + 4.1) * 43758.5453, rnd = h - Math.floor(h);
+    if ((i / n) * 0.7 + rnd * 0.3 < d * 1.02) continue;
+    ctx.save(); ctx.beginPath(); ctx.rect(e.x - 500, top + i * 3, 1000, 3); ctx.clip();
+    drawSprite(ctx, id, anim, e.at / TICK, false, e.dir, e.x, e.y, { scale: sc, z, alpha: 1 - d * 0.25, tint });
+    ctx.restore();
+  }
+}
 function drawEnemy(ctx, g, e) {
+  if (e.dead && e.boss) { drawBossAsh(ctx, g, e); return; }
   const id = e.sprite, def = e.def, sc = def.scale || 1, sp = A.db[id];
   const fly = def.fly || def.hover || e.clone; const lift = e.lift || 0; const big = e.boss && def.hover && sc > 2;   // grand boss en vol : houle lente (corps qui monte et descend, léger balancement)
   const z = (big ? 14 + Math.sin(g.t * 1.7 + e.bob) * 7 + Math.sin(g.t * 0.9) * 3 : fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
