@@ -241,7 +241,7 @@ export class Game {
     let d, lv = lv0, hp, dmg, r, ess;
     if (type === 'boss') {
       const B = D.BOSSES[this.world.def.boss]; d = { ...B, boss: true, kind: 'boss', sight: 999, anim: 'Shoot', tier: 'boss' };
-      hp = Math.round(B.hp * D.BOSS_HP_MULT); dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
+      hp = Math.round(B.hp * D.BOSS_HP_MULT * D.bossHpLv(lv0)); dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
     } else {
       d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
       hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;

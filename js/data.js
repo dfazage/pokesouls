@@ -8,7 +8,7 @@ export const levelCost = n => Math.round(60 * Math.pow(1.115, n - START_LEVEL));
 export const STAGE_HP = [1, 1.35, 1.8], STAGE_DMG = [1, 1.3, 1.7];
 // Essence lâchée : proportionnelle au coût d'un niveau au niveau de l'ennemi (ESS_RATE × coût × k). Une carte entière rapporte ~18 niveaux-équipe à la même cadence que les cartes d'avant,
 // ce qui garde l'équipe à peu près au niveau de la carte (±3) au lieu de la dépasser de 8-10 niveaux. Un seul réglage : ESS_RATE.
-export const ESS_RATE = 0.2;
+export const ESS_RATE = 0.18;
 export const essenceOf = (lv, k) => Math.max(1, Math.round(ESS_RATE * levelCost(lv) * k));
 
 // ---------- starters (27 familles, 3 stades) ----------
@@ -420,3 +420,7 @@ export const BOSS_STYLES = STYLES;
 
 export const BOSS_THRESHOLDS = [0.6, 0.25];
 export const BOSS_HP_MULT = 1.15;   // léger surplus de PV : parades, liens et combos abattaient les boss trop vite
+// Les dégâts du joueur montent de 6 % par niveau (et ×1,7 au stade final) alors que les PV d'un boss étaient fixes : Mewtwo tombait en moins d'une minute en phase 1 à 36.
+// Au-delà du niveau 22 (Suicune), les PV des boss suivent donc le niveau de leur carte : +6 % par niveau (Mewtwo ×1,96, Lugia ×1,84, Mew ×2,4). Avant : inchangé.
+export const BOSS_HP_FROM = 22, BOSS_HP_PER_LV = 0.06;
+export const bossHpLv = lv => 1 + BOSS_HP_PER_LV * Math.max(0, lv - BOSS_HP_FROM);
