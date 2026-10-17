@@ -1,5 +1,5 @@
 // Interface en jeu (DOM, conception 1280×720, mise à l'échelle par CSS).
-import { A } from './assets.js';
+import { A, TICK, animTotal, drawSprite, dirFromVec } from './assets.js';
 import { BOSS_THRESHOLDS, NAMES_FR, STATUS } from './data.js';
 import * as M from './maps.js';
 import { Controls, keyLabel, Input, padLabel } from './input.js';
@@ -46,7 +46,7 @@ export function createHud(game) {
     <div id="prompt"><kbd id="k-int"></kbd> <span id="prompt-t"></span></div>
     <div id="bossline"><b></b><span></span></div><div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
-    <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><div class="txt"><div class="sub"></div><div class="nm"></div><div class="say"></div></div><div class="bar t"></div><div class="bar b"></div></div>
+    <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><canvas class="pm" width="200" height="200" hidden></canvas><div class="txt"><div class="sub"></div><div class="nm"></div><div class="say"></div></div><div class="bar t"></div><div class="bar b"></div></div>
     <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="say"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
   for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'cb1', 'cb2', 'cb3', 'cb-bar', 'opp', 'op1', 'op2', 'op-bar', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
@@ -127,7 +127,26 @@ export function createHud(game) {
     phaseScreen(b, ph) {
       const el = $('#phasescreen', root), col = b.def.color || '#e0b0ff', g = b.def.glow || [255, 255, 255];
       el.style.setProperty('--bc', col); el.style.setProperty('--gl', g.join(','));
-      $('.pm', el).innerHTML = MOTIF[b.sprite] || ''; el.dataset.ph = ph;
+      el.dataset.ph = ph;
+      { // le boss lui-même : son sprite joue ses animations de combat en grand (repli sur le motif géométrique si le sprite manque)
+        const sp = A.db[b.sprite], svg = $('svg.pm', el), cv = $('canvas.pm', el);
+        const seq = (ph >= 3 ? ['Charge', 'SpAttack', 'Shoot', 'Attack'] : ['Charge', 'Attack', 'SpAttack']).filter(n => sp && sp.anims[n]);
+        cancelAnimationFrame(hud._psRaf);
+        if (sp && seq.length) {
+          svg.hidden = true; cv.hidden = false; svg.innerHTML = '';
+          const g = cv.getContext('2d'), dir = dirFromVec(0, 1), t0 = performance.now();
+          const durs = seq.map(n => Math.max(0.5, animTotal(sp.anims[n]) * TICK)), cyc = durs.reduce((a, d) => a + d, 0);
+          const tick = now => {
+            const tt = (now - t0) / 1000; if (tt > 2.6) return;
+            let r = tt % cyc, i = 0; while (r >= durs[i]) { r -= durs[i]; i++; }
+            const an = sp.anims[seq[i]], sc = Math.max(1, Math.floor(160 / an.fh));
+            g.clearRect(0, 0, cv.width, cv.height); g.imageSmoothingEnabled = false;
+            drawSprite(g, b.sprite, seq[i], r / TICK, false, dir, cv.width / 2, cv.height * 0.78, { scale: sc });
+            hud._psRaf = requestAnimationFrame(tick);
+          };
+          hud._psRaf = requestAnimationFrame(tick);
+        } else { cv.hidden = true; svg.hidden = false; svg.innerHTML = MOTIF[b.sprite] || ''; }
+      }
       $('.sub', el).textContent = 'PHASE ' + ROMAN[ph]; $('.nm', el).textContent = (b.def.phases && b.def.phases[ph - 2]) || ''; $('.say', el).textContent = (BOSS_LINES[b.sprite] || {})['p' + ph] || '';
       el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(hud._ps); hud._ps = setTimeout(() => el.classList.remove('show'), 2500);
     },
