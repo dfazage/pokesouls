@@ -273,7 +273,7 @@ export function showControls(onClose) {
 
 // ---------- pause ----------
 export function showPauseMenu(game, h) {
-  open(`<div class="panel"><h2>Pause</h2><p class="sub">${esc(game.world.name)} · Carte ${game.mapIdx + 1}/6</p>
+  open(`<div class="panel"><h2>Pause</h2><p class="sub">${esc(game.world.name)} · Carte ${game.mapIdx + 1}/${M.MAPS.length}</p>
     ${volRow()}<div class="act col"><button id="p-res" class="pri">Reprendre</button><button id="p-bag">Équipe</button><button id="p-map">Carte et voyage</button><button id="p-keys">Commandes</button><button id="p-credits">Crédits</button><button id="p-title">Retour au menu principal</button><button id="p-reset" class="warn">Effacer la sauvegarde</button></div></div>`);
   const back = () => showPauseMenu(game, h);
   bindVol(); $('#p-credits').onclick = h.credits; $('#p-res').onclick = h.resume; $('#p-bag').onclick = h.bag; $('#p-map').onclick = h.travel; $('#p-keys').onclick = h.keys;

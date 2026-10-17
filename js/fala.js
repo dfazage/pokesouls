@@ -95,6 +95,7 @@ export function installFala(Game, { M, TS, SFX, hyp }) {
   P.falaProg = function () { return this.prog[this.mapIdx]; };
   P.falaQ = function () {
     const pr = this.prog[1]; // la quête n'existe que dans le monde d'Électhor
+    if (!pr) return { helped: false, wall: false, done: false, mods: [], given: [] };   // chapitre sans cette carte (Johto) : quête inerte
     const q = pr.fala || (pr.fala = {});
     q.helped = !!q.helped; q.wall = !!q.wall; q.done = !!q.done; q.mods = q.mods || []; q.given = q.given || [];
     return q;
