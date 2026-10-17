@@ -74,7 +74,7 @@ export function collectDrawList(g, inView) {
   for (const d of g.chestObjs) { const by = M.decorBaseline(d), bx = (d.tx + 0.5) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t, pr.chests.includes(d.id)) }); }
   for (const b of g.world.bonfires) { const x = (b.tx + 0.5) * TS, y = (b.ty + 0.6) * TS; if (inView(x, y)) list.push({ x, y, f: c => drawBonfire(c, g, b, x, y) }); }
   for (const it of g.items) list.push({ x: it.x, y: it.y + 2, f: c => drawItem(c, g, it) });
-  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ x: e.x, y: e.y, big: e.boss || bigFor(e.sprite, e.def.scale || 1), f: c => drawEnemy(c, g, e) });
+  for (const e of g.enemies) if (inView(e.x, e.y)) list.push({ x: e.x, y: e.y, big: e.boss || bigFor(e.sprite, e.def.scale || 1), huge: e.boss && (e.def.scale || 1) > 2, f: c => drawEnemy(c, g, e) });
   for (const o of g.obs) if (!o.dead && o.solid && o.on && inView(o.x, o.y)) list.push({ x: o.x, y: o.y + o.hh, f: c => drawObsSolid(c, g, o) });
   for (const q of g.allies) list.push({ x: q.x, y: q.y, big: bigFor(q.id, 1), f: c => drawAlly(c, g, q) });
   { const m = g.chief(); list.push({ x: m.x, y: m.y, big: bigFor(m.id, 1), f: c => drawMember(c, g, m) }); }
@@ -210,8 +210,12 @@ export function groundFx(ctx, g, hook) {
     if (e.boss && (e.atkType === 'dash' || e.atkType === 'beam') && e.lockDir) { const L = e.atkType === 'beam' ? 260 : 150; ctx.strokeStyle = `rgba(255,70,70,${0.35 + 0.35 * k})`; ctx.lineWidth = e.atkType === 'beam' ? 8 : 12; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.lockDir.x * L, e.y + e.lockDir.y * L); ctx.stroke(); continue; }
     if (e.boss && e.atkType === 'nova') { ctx.strokeStyle = `rgba(255,255,255,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, 14 + 22 * (1 - e.st), 0, 7); ctx.stroke(); continue; }
     if (def.kind === 'bomb') { ctx.fillStyle = `rgba(255,90,40,${0.15 + 0.15 * k})`; ctx.beginPath(); ctx.arc(e.x, e.y, def.blast, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,60,.8)'; ctx.lineWidth = 1; ctx.stroke(); }
-    else if (e.boss && e.atkType === 'swing') { ctx.fillStyle = `rgba(255,70,90,${0.18 + 0.14 * k})`; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.arc(e.x, e.y, 46, Math.atan2(e.face.y, e.face.x) - 1.57, Math.atan2(e.face.y, e.face.x) + 1.57); ctx.fill(); }
+    else if (e.boss && e.atkType === 'swing') { ctx.fillStyle = `rgba(255,70,90,${0.18 + 0.14 * k})`; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.arc(e.x, e.y, 30 + e.r * 1.5, Math.atan2(e.face.y, e.face.x) - 1.57, Math.atan2(e.face.y, e.face.x) + 1.57); ctx.fill(); }
     else if (e.boss && e.atkType === 'pulse') { ctx.strokeStyle = `rgba(224,160,255,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, 20 + 30 * (1 - e.st), 0, 7); ctx.stroke(); }
+    else if (e.boss && e.atkType === 'wall') { const u = e.face, px = -u.y, py = u.x, hw = 130; ctx.strokeStyle = `rgba(255,70,70,${0.3 + 0.35 * k})`; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(e.x + u.x * 30 + px * hw, e.y + u.y * 30 + py * hw); ctx.lineTo(e.x + u.x * 30 - px * hw, e.y + u.y * 30 - py * hw); ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.x + u.x * 30, e.y + u.y * 30); ctx.lineTo(e.x + u.x * 150, e.y + u.y * 150); ctx.stroke(); ctx.setLineDash([]); }
+    else if (e.boss && e.atkType === 'whirl') { ctx.strokeStyle = `rgba(255,90,90,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; for (let n = 1; n <= 3; n++) { ctx.beginPath(); ctx.ellipse(e.x, e.y, 34 * n + 30 * (1 - Math.max(0, Math.min(1, e.st))), (34 * n + 30 * (1 - Math.max(0, Math.min(1, e.st)))) * 0.8, 0, 0, 7); ctx.stroke(); } }
+    else if (e.boss && e.atkType === 'geyser') { const u = { x: g.chief().x - e.x, y: g.chief().y - e.y }, l = Math.hypot(u.x, u.y) || 1; ctx.strokeStyle = `rgba(255,90,90,${0.3 + 0.35 * k})`; ctx.lineWidth = 3; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + u.x / l * 250, e.y + u.y / l * 250); ctx.stroke(); ctx.setLineDash([]); }
+    else if (e.boss && e.atkType === 'mirror') { const a = g.world.arena, c = g.chief(); ctx.strokeStyle = `rgba(223,242,255,${0.4 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(2 * a.cx * 24 - c.x, 2 * a.cy * 24 - c.y, 20, 0, 7); ctx.stroke(); }
     else if (e.boss) { continue; }
     else if (def.kind === 'roller') { const u = { x: g.chief().x - e.x, y: g.chief().y - e.y }; const l = Math.hypot(u.x, u.y) || 1; ctx.strokeStyle = `rgba(255,70,70,${0.4 + 0.3 * k})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + u.x / l * 120, e.y + u.y / l * 120); ctx.stroke(); }
   }
@@ -279,7 +283,8 @@ function drawMember(ctx, g, m) {
 
 function drawEnemy(ctx, g, e) {
   const id = e.sprite, def = e.def, sc = def.scale || 1, sp = A.db[id];
-  const fly = def.fly || def.hover || e.clone; const lift = e.lift || 0; const z = (fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
+  const fly = def.fly || def.hover || e.clone; const lift = e.lift || 0; const big = e.boss && def.hover && sc > 2;   // grand boss en vol : houle lente (corps qui monte et descend, léger balancement)
+  const z = (big ? 14 + Math.sin(g.t * 1.7 + e.bob) * 7 + Math.sin(g.t * 0.9) * 3 : fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
   let alpha = 1; if (e.dead && !e.boss) alpha = Math.max(0, 1 - e.deadT / 0.9);
   if (e.cineAlpha !== undefined && e.cineAlpha < 1) alpha *= e.cineAlpha;   // cinématique d'intro : apparition
   shadow(ctx, e.x, e.y, (e.boss ? 12 : 7) * sc * (e.boss ? 1.3 : 1) * (1 + Math.min(lift, 200) / 400), 0.35 * alpha * (1 - Math.min(0.7, lift / 260)));
@@ -348,7 +353,7 @@ export function buildLights(g) {
   for (const p of g.projs) lights.push({ x: p.x, y: p.y - 8, r: p.big ? 60 : 38, c: hexToRgb(p.color), a: 0.9 });
   for (const e of g.enemies) {
     if (e.dead) continue;
-    if (e.boss) lights.push({ x: e.x, y: e.y - 14, r: 90, c: e.def.glow, a: (e.tele ? 1 : 0.7) * (e.reveal === undefined ? 1 : 0.1 + 0.9 * e.reveal) });
+    if (e.boss) lights.push({ x: e.x, y: e.y - 14, r: 90, c: e.def.glow, a: (e.tele ? 1 : 0.7) * (e.def.scale > 2 ? 0.3 : 1) * (e.reveal === undefined ? 1 : 0.1 + 0.9 * e.reveal) });
     else if (e.tele) lights.push({ x: e.x, y: e.y - 8, r: 44, c: [255, 60, 50], a: 0.9 });
     else if (e.def.color) lights.push({ x: e.x, y: e.y - 8, r: 30, c: hexToRgb(e.def.color), a: 0.5 });
   }

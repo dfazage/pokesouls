@@ -911,7 +911,7 @@ export class Game {
       }
     }
     b.lastAtk = type; b.atkType = type; b.state = 'windup'; b.lockDir = null;
-    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6; SFX.bossTele(b.sprite, b.st);
+    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75 }[type] || 0.6; SFX.bossTele(b.sprite, b.st);
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
@@ -932,9 +932,9 @@ export class Game {
       setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.bossSwing(id);
       for (const m of this.actors()) {
         if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, dist = hyp(dx, dy);
-        if (dist < 46 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
+        if (dist < 30 + b.r * 1.5 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
       }
-      this.ringFx(b.x + b.face.x * 20, b.y + b.face.y * 20, 30, col); rec(0.6, 1.2);
+      this.ringFx(b.x + b.face.x * b.r * 1.4, b.y + b.face.y * b.r * 1.4, 22 + b.r * 1.2, col); rec(0.6, 1.2);
     } else if (T === 'pulse') {
       setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.bossPulse(id); this.shake = 4;
       for (let i = 0; i < 3; i++) this.rings.push({ x: b.x, y: b.y, r: 4 - i * 40, speed: 95, max: 250, hit: new Set(), dmg: d * 1.5, color: col, owner: b });
@@ -950,6 +950,29 @@ export class Game {
       this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.bossBeam(id); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
       for (const m of this.actors()) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
       setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
+    } else if (T === 'wall') {   // Lugia : mur de houle, deux brèches à trouver (phase 2+ : deuxième vague plus lente derrière)
+      const ang = Math.atan2(tg.y - b.y, tg.x - b.x), ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux, n = 13, gap = Math.floor(rand(2, n - 3));
+      for (let w = 0; w < (b.phase >= 2 ? 2 : 1); w++) for (let i = 0; i < n; i++) {
+        if (Math.abs(i - gap) <= 1 || (b.phase === 3 && w === 1 && Math.abs(i - (n - 1 - gap)) <= 1)) continue;
+        const o = (i - (n - 1) / 2) * 20, back = 24 - w * 46;
+        this.fireProj({ x: b.x + ux * back + px * o, y: b.y + uy * back + py * o, ang, speed: w ? 78 : 96, dmg: d * 0.85, r: 4.5, life: 3.8, team: 'e', color: w ? '#dff2ff' : col, owner: b });
+      }
+      SFX.bossNova(id); this.shake = 4; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.9, 1.7);
+    } else if (T === 'whirl') {   // Lugia : tourbillon, spirale de zones qui s'ouvre autour de lui
+      const n = 11 + b.phase * 3, a0 = rand(0, 6.28), dir = Math.random() < 0.5 ? 1 : -1; SFX.bossRain(id);
+      for (let i = 0; i < n; i++) { const an = a0 + dir * i * 0.62, rad = 34 + i * 13; this.zones.push({ x: b.x + Math.cos(an) * rad, y: b.y + Math.sin(an) * rad * 0.8, r: 17, t: 0, delay: 0.7 + i * 0.11, dmg: d * 1.1, color: b.def.rainColor || col, owner: b }); }
+      this.ringFx(b.x, b.y, 40, col); setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(1.0, 1.7);
+    } else if (T === 'geyser') {   // Suicune : geysers en chaîne qui filent vers le joueur (phase 3 : trois traînées)
+      const ang = Math.atan2(tg.y - b.y, tg.x - b.x); SFX.bossRain(id);
+      for (const off of (b.phase === 3 ? [-0.38, 0, 0.38] : b.phase === 2 ? [-0.2, 0.2] : [0])) for (let i = 0; i < 8; i++) this.zones.push({ x: b.x + Math.cos(ang + off) * (38 + i * 27), y: b.y + Math.sin(ang + off) * (38 + i * 27), r: 18, t: 0, delay: 0.55 + i * 0.13, dmg: d * 1.1, color: b.def.rainColor || col, owner: b });
+      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.5);
+    } else if (T === 'mirror') {   // Suicune : se reflète de l'autre côté du joueur et tire en éventail
+      const a = this.world.arena, cx = a.cx * TS, cy = a.cy * TS; let nx = 2 * cx - tg.x, ny = 2 * cy - tg.y; const dd = hyp(nx - cx, ny - cy), lim = (a.r - 2) * TS; if (dd > lim) { nx = cx + (nx - cx) * lim / dd; ny = cy + (ny - cy) * lim / dd; }
+      for (let i = 0; i < 14; i++) this.spark(b.x, b.y - 10, col, 1.6); this.ringFx(b.x, b.y, 26, col);
+      if (M.boxFree(this.world, nx, ny, 6, 4)) { b.x = nx; b.y = ny; } for (let i = 0; i < 14; i++) this.spark(b.x, b.y - 10, col, 1.6); this.ringFx(b.x, b.y, 30, '#dff2ff'); SFX.dodge();
+      const n = b.phase >= 2 ? 7 : 5, ang = Math.atan2(tg.y - b.y, tg.x - b.x); b.face = { x: Math.cos(ang), y: Math.sin(ang) };
+      for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: ang + (i - (n - 1) / 2) * 0.2, speed: 150, dmg: d * 0.9, r: 3.8, life: 3, team: 'e', color: col, owner: b });
+      SFX.bossVolley(id); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.2);
     } else if (T === 'summon') {
       SFX.bossSummon(id); if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
       setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);

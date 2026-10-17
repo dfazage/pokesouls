@@ -155,7 +155,8 @@ export class HD2D {
   initBatches() {
     this.batchS = new Batch(128, 8, 8, 112, 5, this.sh, 0.0015);
     this.batchL = new Batch(256, 4, 4, 200, 6, this.sh, 0.0015);
-    this.scene.add(this.batchS.mesh, this.batchL.mesh);
+    this.batchX = new Batch(640, 2, 2, 520, 6, this.sh, 0.0015);   // boss géants (×2,3) : cellule haute pour les envols, les ailes et l'ombre
+    this.scene.add(this.batchS.mesh, this.batchL.mesh, this.batchX.mesh);
   }
   initAir() {
     const mk = () => { const c = document.createElement('canvas'); c.width = SW; c.height = SH; return c; };
@@ -346,15 +347,15 @@ export class HD2D {
     const cosP = Math.cos(this.curPitch), sinP = Math.sin(this.curPitch), cyw = Math.cos(this.curYaw), syw = Math.sin(this.curYaw);
     const inView = (x, y, pad = 60) => {
       if (!(x > R.ox - pad && x < R.ox + R.w + pad && y > R.oy - pad && y < R.oy + R.h + pad)) return false;
-      const p = this.proj(x, y, 0); return !!p && p.nx > -1.35 && p.nx < 1.35 && p.ny > -1.5 && p.ny < 1.5;
+      const p = this.proj(x, y, 0); return !!p && p.nx > -1.35 && p.nx < 1.35 && p.ny > -3.4 && p.ny < 1.5;   // marge basse large : un boss en envol reste visible alors que son point au sol est hors écran
     };
     const list = collectDrawList(g, inView);
     // les objets hors champ ajoutés sans test (objets au sol, chef, alliés) sont filtrés ici
     // tri du plus loin au plus près de la caméra (sans pivot : par y croissant)
     const vis = list.filter(o => inView(o.x, o.y, 90)).sort((a, b) => (b.x * -syw + b.y * -cyw) - (a.x * -syw + a.y * -cyw));
-    this.batchS.begin(); this.batchL.begin();
-    for (const o of vis) (o.big ? this.batchL : this.batchS).add(o, cosP, sinP, cyw, syw);
-    this.batchS.end(); this.batchL.end();
+    this.batchS.begin(); this.batchL.begin(); this.batchX.begin();
+    for (const o of vis) (o.huge ? this.batchX : o.big ? this.batchL : this.batchS).add(o, cosP, sinP, cyw, syw);
+    this.batchS.end(); this.batchL.end(); this.batchX.end();
     setShadowSink(null);
     tp = tk('sprites', tp);
 
