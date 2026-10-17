@@ -42,6 +42,13 @@ Chaque chapitre correspond à une génération. Les cartes sont des zones ouvert
 - **Entrée de boss** : l'arène se trouve toujours au nord de la dernière zone et s'aborde de face, par le sud, à travers la brume. Une cinématique d'environ 10 s (caméra qui se rapproche, éveil propre à chaque boss, carton-titre) précède le combat ; elle se passe avec la touche d'interaction, et elle est rejouée en entier à chaque tentative, après une défaite aussi.
 - **Phases de boss** : écran animé à 60 % et 25 % des PV (un motif et un titre par boss), puis des obstacles et éléments de terrain apparaissent, toujours annoncés par un cercle au sol : piliers de glace et sol givré (Artikodin), pylônes qui attirent la foudre (Électhor), rochers de basalte et lave (Sulfura), chutes de rochers et rafales (Dracolosse), cristaux et zones de gravité (Mewtwo), ronces et fleurs de soin (Mew). Les obstacles bloquent aussi les tirs du boss ; le feu fait fondre la glace et brûle les ronces, l'eau éteint la lave.
 
+## Combos écrits des boss
+
+Les 11 boss attaquent par séquences écrites (`BOSS_STYLES` dans `js/data.js`) : chaque étape est `[attaque, préparation, pause, retard du coup]`, le combo est choisi selon la distance (près / moyen / loin), le dernier coup est parfois retardé de 0,2 à 0,5 s (pose tenue), une parade brise le combo, et chaque combo se termine par une ouverture de 1,2 s ou plus. La phase 3 ajoute un temps fort lancé tous les 3 combos (`every`). La téléportation (`tp`) laisse une image rémanente de 0,4 s au point d'arrivée. Les mini-boss gardent l'IA générique.
+
+- `node tools/check_bosses.mjs` : valide les règles de lisibilité de chaque kit.
+- `node tools/sim_boss_combos.mjs` : simule chaque boss avec le vrai moteur (délais, ordre, bandes, ouvertures, parade, étourdissement).
+
 ## Moteur d'éléments (branche `feature/moteur-elements`)
 
 Le monde réagit aux types (code dans `js/elements.js`, valeurs de départ à équilibrer) :

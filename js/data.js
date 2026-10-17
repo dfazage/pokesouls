@@ -242,6 +242,7 @@ export const spriteOfEnemy = t => (ENEMIES[t] && ENEMIES[t].sprite) || t;
 
 // ---------- boss ----------
 // moves[phase-1] : liste [attaque, poids] ; attaques : ball, volley, nova, swing, pulse, dash, rain, beam, summon
+// (repli : chaque boss a aussi des `combos` écrits, définis plus bas, qui prennent le relais dans bossChoose)
 export const BOSSES = {
   articuno: { sprite: 'articuno', phases: ['Le blizzard se lève', 'Zéro absolu'], status: ['freeze', 0.25], name: 'ARTIKODIN', sub: 'L’oiseau des glaces', scale: 2.3, hp: 380, dmg: 13, r: 19, speed: 56, color: '#9fe8ff', glow: [140, 220, 255], hover: true, rainColor: '#bfeaff',
     moves: [[['ball', 3], ['volley', 2], ['rain', 2]], [['ball', 2], ['volley', 2], ['rain', 3], ['nova', 2], ['dash', 1]], [['volley', 2], ['rain', 3], ['nova', 3], ['dash', 2]]] },
@@ -252,8 +253,7 @@ export const BOSSES = {
   dragonite: { sprite: 'dragonite', phases: ['Le roi s’éveille', 'Colère du dragon'], status: ['para', 0.2], name: 'DRACOLOSSE', sub: 'Roi de Kanto', scale: 2.3, hp: 760, dmg: 17, r: 19, speed: 60, color: '#ffb060', glow: [255, 180, 90], rainColor: '#ffc080',
     moves: [[['swing', 3], ['dash', 2], ['ball', 2]], [['swing', 2], ['beam', 3], ['volley', 2], ['dash', 2]], [['beam', 3], ['rain', 3], ['nova', 2], ['dash', 3], ['swing', 2]]] },
   mewtwo: { sprite: 'mewtwo', phases: ['L’esprit s’ouvre', 'Clones psychiques'], status: ['confuse', 0.25], name: 'MEWTWO', sub: 'Le Cloné', scale: 2.3, hp: 950, dmg: 18, r: 14, speed: 66, want: 54, color: '#d89aff', glow: [180, 100, 255], hover: true, rainColor: '#e0a0ff', summon: 'clone',
-    // rythme « Elden Ring » : anticipations plus brèves, peu de répit, enchaînements (swing→pulse, ball→ball…), téléportations en phases 2-3
-    tempo: { wind: 0.75, rec: 0.6 }, chain: { swing: ['pulse', 'swing'], ball: ['ball', 'swing'], pulse: ['ball'] }, chainP: [0.35, 0.5, 0.65], blinkP: [0, 0.3, 0.45],
+    // le rythme « Elden Ring » de Mewtwo (anticipations brèves, enchaînements, téléportations) passe désormais par ses combos écrits (voir plus bas) ; `moves` ne sert plus que de repli
     moves: [[['ball', 3], ['swing', 3]], [['ball', 3], ['swing', 2], ['pulse', 3]], [['ball', 3], ['swing', 2], ['pulse', 3], ['summon', 2]]] },
   mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', scale: 1.15, hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
@@ -269,5 +269,154 @@ export const BOSSES = {
   raikou: { sprite: 'raikou', phases: ['Le tonnerre approche', 'Foudre de bronze'], status: ['para', 0.3], name: 'RAIKOU', sub: 'Le Tonnerre', scale: 2.3, hp: 420, dmg: 13, r: 18, speed: 68, color: '#f2c84a', glow: [255, 205, 80], rainColor: '#fff0a0',
     moves: [[['dash', 3], ['ball', 2], ['rain', 2]], [['dash', 2], ['volley', 2], ['rain', 3], ['nova', 2]], [['dash', 3], ['rain', 3], ['nova', 3], ['beam', 2]]] },
 };
+
+// ---------- combos écrits (style souls-like) ----------
+// Chaque boss a un style (Duelliste, Poursuivant, Maître du terrain, Illusionniste, Colosse, Seigneur du ciel, Transformé) et, par phase, une liste de combos nommés et appris par cœur.
+// cb(nom, bande, poids, étapes, ouverture, every)
+//   bande : 'near' | 'mid' | 'far' (ou plusieurs séparées par une espace, ou 'any'). Seuil en px de monde : `bands` du boss (défaut [64, 150], 1 LC = 24 px).
+//   étape : [attaque, préparation (s), pause avant l'étape suivante (s), retard du coup (s)]. Attaques : ball volley nova swing pulse dash rain beam summon wall whirl geyser mirror,
+//           plus `tp` (téléportation dans le dos : image rémanente pendant la préparation, puis coup) et `feint` (même signal, aucun coup).
+//   ouverture : secondes sans menace après le dernier coup du combo (le joueur la mérite en esquivant tout le combo).
+//   every : N = combo « temps fort » de la phase, lancé une fois sur N dans un ordre fixe, quelle que soit la distance.
+// Règles : jamais le même combo deux fois de suite ; un retard (+0,3 s environ) n'est jamais sans signal (pose tenue + lueur fixe) ; une parade brise le combo.
+const cb = (name, band, w, steps, open, every) => ({ name, band, w, steps, open, every });
+const STYLES = {
+  articuno: { style: 'Seigneur du ciel', want: 96, bands: [72, 170], combos: [
+    [cb('Battement', 'near', 3, [['swing', .55, .5], ['swing', .55]], 1.6),
+     cb('Plongeon givrant', 'mid far', 3, [['dash', .95]], 2.0),
+     cb('Rafale', 'mid far', 3, [['volley', .7, .4], ['volley', .7]], 1.6)],
+    [cb('Battement', 'near', 2, [['swing', .5, .4], ['swing', .5, .4], ['swing', .5, 0, .3]], 1.5),
+     cb('Plongeon double', 'mid far', 3, [['dash', .9, .4], ['dash', .75]], 2.0),
+     cb('Rafale', 'mid', 2, [['volley', .7, .4], ['volley', .7, .4], ['volley', .7, 0, .3]], 1.7),
+     cb('Grêle', 'far', 2, [['rain', .75, .45], ['rain', .7]], 1.8)],
+    [cb('Battement', 'near', 2, [['swing', .5, .35], ['swing', .5, .35], ['swing', .5, 0, .3]], 1.5),
+     cb('Plongeon double', 'mid', 2, [['dash', .85, .35], ['dash', .7]], 1.9),
+     cb('Rafale', 'far', 2, [['volley', .65, .35], ['volley', .65, .35], ['volley', .65, 0, .3]], 1.6),
+     cb('Blizzard', 'any', 1, [['nova', .8, .3], ['rain', .7, .25], ['rain', .7, .25], ['nova', .8, 0, .3]], 2.5, 3)]] },
+  zapdos: { style: 'Poursuivant', want: 80, bands: [64, 150], combos: [
+    [cb('Patte', 'near', 3, [['swing', .5, .4], ['swing', .5]], 1.5),
+     cb('Course-éclair', 'mid far', 3, [['dash', .85, .35], ['swing', .5]], 1.6),
+     cb('Étincelles', 'far', 2, [['ball', .6, .4], ['ball', .6]], 1.5)],
+    [cb('Patte', 'near', 2, [['swing', .5, .4], ['swing', .5, .35], ['swing', .5, 0, .3]], 1.5),
+     cb('Course-éclair', 'mid', 3, [['dash', .8, .3], ['swing', .45, .3], ['swing', .45, 0, .3]], 1.5),
+     cb('Double charge', 'far', 2, [['dash', .85, .45], ['dash', .75]], 1.8),
+     cb('Foudroiement', 'mid far', 2, [['rain', .7, .4], ['volley', .7]], 1.6)],
+    [cb('Patte', 'near', 2, [['swing', .5, .3], ['swing', .5, .3], ['swing', .5, 0, .3]], 1.4),
+     cb('Course-éclair', 'mid', 2, [['dash', .8, .25], ['swing', .45, .25], ['swing', .45, 0, .3]], 1.4),
+     cb('Double charge', 'far', 2, [['dash', .8, .35], ['dash', .7]], 1.7),
+     cb('Orage', 'any', 1, [['rain', .7, .25], ['dash', .8, .25], ['rain', .7, .2], ['nova', .8, 0, .3]], 2.5, 3)]] },
+  moltres: { style: 'Transformé', want: 90, bands: [70, 160], combos: [
+    [cb('Serres', 'near', 3, [['swing', .55, .45], ['swing', .55]], 1.5),
+     cb('Rase-mottes', 'mid far', 3, [['dash', .95]], 2.0),
+     cb('Trois boules', 'mid far', 3, [['ball', .65, .4], ['ball', .65, .4], ['ball', .65]], 1.6)],
+    [cb('Onde ardente', 'near', 2, [['swing', .5, .35], ['pulse', .8, 0, .25]], 1.5),
+     cb('Rase-mottes', 'mid', 3, [['dash', .9, .35], ['dash', .8]], 1.9),
+     cb('Trois boules', 'far', 2, [['ball', .65, .4], ['ball', .65, .4], ['ball', .65, 0, .3]], 1.6),
+     cb('Éruption', 'mid far', 2, [['pulse', .9, 0, .3]], 1.8)],
+    // phase 3 « Renaissance » : le phénix devient un Poursuivant (charges enchaînées, peu de pauses) mais ses ouvertures restent de 2 s
+    [cb('Serres', 'near', 2, [['swing', .5, .3], ['swing', .5, .3], ['pulse', .75, 0, .3]], 1.8),
+     cb('Course ardente', 'mid far', 3, [['dash', .8, .3], ['dash', .75, .3], ['swing', .45, .25], ['pulse', .7, 0, .3]], 2.0),
+     cb('Trois boules', 'mid far', 2, [['ball', .6, .3], ['ball', .6, .3], ['ball', .6, 0, .3]], 1.8),
+     cb('Renaissance', 'any', 1, [['nova', .85, .35], ['dash', .8, .25], ['dash', .75, .25], ['pulse', .7, 0, .3]], 2.5, 3)]] },
+  dragonite: { style: 'Colosse', want: 60, bands: [60, 130], combos: [
+    [cb('Coup de queue', 'near', 3, [['swing', .8, .6], ['swing', .8]], 2.5),
+     cb('Charge du roi', 'mid far', 3, [['dash', 1.0]], 2.5),
+     cb('Souffle draconique', 'far', 2, [['ball', .9, .6], ['ball', .9]], 2.0)],
+    [cb('Coup de queue', 'near', 3, [['swing', .75, .5], ['swing', .75, 0, .3]], 2.5),
+     cb('Charge du roi', 'mid', 3, [['dash', .95]], 2.5),
+     cb('Rayon', 'mid far', 2, [['beam', 1.1]], 2.2)],
+    [cb('Piétinement', 'near', 3, [['swing', .7, .5], ['pulse', .9, 0, .2]], 2.5),
+     cb('Charge du roi', 'mid', 2, [['dash', .9, .4], ['dash', .85]], 2.3),
+     cb('Rayon', 'far', 2, [['beam', 1.1, .5], ['ball', .8]], 2.2),
+     cb('Colère du dragon', 'any', 1, [['beam', 1.1, .4], ['dash', .9, .4], ['pulse', .9, 0, .3]], 2.8, 3)]] },
+  mewtwo: { style: 'Duelliste', want: 54, bands: [64, 150], combos: [
+    [cb('Lame psy', 'near', 3, [['swing', .5, .4], ['swing', .5, .4], ['swing', .5, .5], ['pulse', .7, 0, .3]], 1.5),
+     cb('Pulse psy', 'near', 2, [['swing', .5, .35], ['pulse', .7, 0, .3]], 1.4),
+     cb('Éclat double', 'mid', 3, [['ball', .7, .4], ['ball', .7, .3], ['tp', .4]], 1.4),
+     cb('Boule psy', 'mid far', 2, [['ball', .7, .5], ['ball', .7]], 1.3),
+     cb('Téléfrappe', 'far', 3, [['tp', .4]], 1.5)],
+    // phase 2 : le combo s'allonge et se pare de feintes
+    [cb('Lame psy', 'near', 3, [['swing', .5, .4], ['swing', .5, .4], ['feint', .6, .25], ['swing', .5, .5], ['pulse', .7, 0, .3]], 1.4),
+     cb('Pulse psy', 'near', 2, [['swing', .5, .3], ['feint', .55, .25], ['pulse', .7, 0, .35]], 1.4),
+     cb('Éclat double', 'mid', 3, [['ball', .65, .3], ['ball', .65, .3], ['tp', .4, .3], ['swing', .45]], 1.3),
+     cb('Boule psy', 'mid far', 2, [['ball', .65, .4], ['ball', .65, .3], ['ball', .65]], 1.3),
+     cb('Téléfrappe', 'far', 3, [['tp', .4, .3], ['swing', .45]], 1.4)],
+    // phase 3 : la grande danse psychique (≈ 3,5 s) n'offre qu'une seule vraie ouverture, à la fin
+    [cb('Lame psy', 'near', 2, [['swing', .45, .35], ['swing', .45, .35], ['feint', .55, .2], ['swing', .45, .4], ['pulse', .65, 0, .3]], 1.3),
+     cb('Éclat double', 'mid', 2, [['ball', .6, .25], ['ball', .6, .25], ['tp', .4, .25], ['swing', .45]], 1.3),
+     cb('Téléfrappe', 'far', 2, [['tp', .4, .25], ['swing', .45]], 1.3),
+     cb('Grande danse psychique', 'any', 1, [['tp', .4, .2], ['swing', .45, .2], ['pulse', .6, .15], ['tp', .4, .15], ['pulse', .7, 0, .3]], 2.5, 3)]] },
+  mew: { style: 'Illusionniste', want: 60, bands: [56, 130], combos: [   // version nerveuse : leurres vifs, ouvertures courtes
+    [cb('Éclats', 'near', 3, [['swing', .45, .3], ['swing', .45]], 1.2),
+     cb('Pirouette', 'mid far', 3, [['ball', .55, .25], ['ball', .55, .25], ['tp', .4]], 1.3),
+     cb('Éventail', 'far', 2, [['volley', .6, .3], ['volley', .6, 0, .3]], 1.3)],
+    [cb('Éclats', 'near', 2, [['swing', .45, .3], ['swing', .45, .3], ['feint', .5, .2], ['swing', .45]], 1.2),
+     cb('Pirouette', 'mid', 3, [['ball', .55, .25], ['tp', .4, .25], ['swing', .45]], 1.3),
+     cb('Tour de passe-passe', 'far', 3, [['summon', .8, .3], ['volley', .6, .3], ['tp', .4]], 1.3)],
+    [cb('Éclats', 'near', 2, [['swing', .45, .25], ['swing', .45, .25], ['pulse', .65, 0, .3]], 1.2),
+     cb('Pirouette', 'mid', 2, [['ball', .5, .2], ['ball', .5, .2], ['tp', .4, .2], ['swing', .4]], 1.2),
+     cb('Tour de passe-passe', 'far', 2, [['summon', .8, .3], ['volley', .55, .25], ['tp', .4]], 1.2),
+     cb('Tous les possibles', 'any', 1, [['summon', .8, .3], ['tp', .4, .2], ['volley', .6, .2], ['tp', .4, .15], ['pulse', .7, 0, .3]], 1.4, 3)]] },
+  celebi: { style: 'Illusionniste', want: 60, bands: [56, 130], combos: [   // Illusionniste + Duelliste : l'« écho du temps » rejoue une attaque avec un long retard
+    [cb('Fleurs', 'near', 3, [['swing', .45, .3], ['pulse', .7, 0, .3]], 1.2),
+     cb('Pas dérobé', 'mid far', 3, [['tp', .4, .3], ['swing', .45, .3], ['swing', .45]], 1.3),
+     cb('Écho du temps', 'far', 2, [['ball', .6, .5], ['ball', .6, 0, .5]], 1.3)],
+    [cb('Fleurs', 'near', 2, [['swing', .45, .3], ['feint', .5, .2], ['swing', .45, 0, .3]], 1.2),
+     cb('Pas dérobé', 'mid', 3, [['tp', .4, .3], ['swing', .45, .3], ['feint', .5, .2], ['swing', .45, 0, .3]], 1.2),
+     cb('Écho du temps', 'far', 2, [['ball', .6, .4], ['ball', .6, .25, .45], ['ball', .6]], 1.3),
+     cb('Rêve', 'mid far', 2, [['summon', .8, .3], ['volley', .6]], 1.3)],
+    [cb('Fleurs', 'near', 2, [['swing', .45, .25], ['pulse', .65, 0, .3]], 1.2),
+     cb('Pas dérobé', 'mid', 2, [['tp', .4, .25], ['swing', .45, .25], ['swing', .45, 0, .3]], 1.2),
+     cb('Écho du temps', 'far', 2, [['ball', .55, .3], ['ball', .55, .2, .45], ['ball', .55]], 1.2),
+     cb('Tous les printemps', 'any', 1, [['summon', .8, .25], ['ball', .55, .25], ['ball', .55, .15, .4], ['tp', .4, .15], ['swing', .45, 0, .3]], 1.4, 3)]] },
+  raikou: { style: 'Poursuivant', want: 80, bands: [64, 150], combos: [   // les pylônes de terrain restent gérés par extras.js
+    [cb('Patte', 'near', 3, [['swing', .5, .4], ['swing', .5]], 1.6),
+     cb('Ruée-foudre', 'mid far', 3, [['dash', .85, .35], ['swing', .5]], 1.7),
+     cb('Éclair', 'far', 2, [['ball', .6, .4], ['ball', .6]], 1.5)],
+    [cb('Patte', 'near', 2, [['swing', .5, .4], ['swing', .5, .35], ['swing', .5, 0, .3]], 1.6),
+     cb('Ruée-foudre', 'mid', 3, [['dash', .85, .3], ['swing', .5, .3], ['pulse', .8, 0, .3]], 1.6),
+     cb('Quatre éclairs', 'mid far', 3, [['rain', .7, .4], ['rain', .7, .4], ['volley', .7, 0, .3]], 1.7)],
+    [cb('Patte', 'near', 2, [['swing', .5, .3], ['swing', .5, .3], ['swing', .5, 0, .3]], 1.5),
+     cb('Ruée-foudre', 'mid', 2, [['dash', .8, .25], ['swing', .45, .25], ['pulse', .75, 0, .3]], 1.5),
+     cb('Quatre éclairs', 'far', 2, [['rain', .7, .3], ['rain', .7, .3], ['volley', .7, 0, .3]], 1.6),
+     cb('Foudre de bronze', 'any', 1, [['dash', .8, .25], ['rain', .7, .2], ['dash', .75, .2], ['nova', .8, 0, .3]], 2.5, 3)]] },
+  entei: { style: 'Maître du terrain', want: 84, bands: [64, 150], combos: [   // braises et brasiers : extras.js ; rythme lourd, préparations lisibles
+    [cb('Griffe', 'near', 3, [['swing', .6, .45], ['swing', .6]], 1.8),
+     cb('Ruée de braise', 'mid far', 3, [['dash', .9, .35], ['swing', .5]], 1.8),
+     cb('Boule de feu', 'far', 2, [['ball', .7, .5], ['ball', .7]], 1.6)],
+    [cb('Griffe', 'near', 2, [['swing', .6, .4], ['swing', .6, .35], ['pulse', 1.0, 0, .3]], 1.7),
+     cb('Ruée de braise', 'mid', 3, [['dash', .9, .3], ['swing', .6, .35], ['pulse', 1.0, 0, .3]], 1.7),
+     cb('Volée ardente', 'mid far', 3, [['volley', .8, .4], ['volley', .8, .4], ['volley', .8, 0, .3]], 1.6)],
+    [cb('Griffe', 'near', 2, [['swing', .6, .3], ['swing', .6, .3], ['pulse', .95, 0, .3]], 1.6),
+     cb('Ruée de braise', 'mid', 2, [['dash', .85, .25], ['swing', .55, .3], ['pulse', .95, 0, .3]], 1.6),
+     cb('Pluie de cendres', 'far', 2, [['rain', 1.0, .5], ['rain', 1.0]], 1.8),
+     cb('Colère de la cendre', 'any', 1, [['dash', .9, .3], ['swing', .6, .3], ['volley', .8, .4, .4], ['nova', 1.4]], 2.5, 3)]] },
+  suicune: { style: 'Illusionniste', want: 80, bands: [64, 150], combos: [   // version « lecture lente » : l'épreuve est de reconnaître le vrai, pas de survivre à la cadence
+    [cb('Coup de mer', 'near', 2, [['swing', .55, .4], ['swing', .55]], 1.5),
+     cb('Marée montante', 'mid far', 3, [['geyser', .8, .5], ['geyser', .8]], 1.8),
+     cb('Reflet', 'mid far', 3, [['mirror', .75, .5], ['dash', .85]], 1.8)],
+    [cb('Coup de mer', 'near', 2, [['swing', .55, .35], ['swing', .55, 0, .3]], 1.5),
+     cb('Marée montante', 'mid', 2, [['geyser', .8, .4], ['geyser', .8]], 1.7),
+     cb('Danse des reflets', 'mid far', 3, [['summon', .8, .35], ['mirror', .75, .4], ['geyser', .8, 0, .3]], 1.8)],
+    [cb('Coup de mer', 'near', 2, [['swing', .5, .3], ['swing', .5, 0, .3]], 1.4),
+     cb('Marée montante', 'mid', 2, [['geyser', .75, .3], ['geyser', .75]], 1.6),
+     cb('Danse des reflets', 'far', 2, [['summon', .8, .3], ['mirror', .7, .3], ['geyser', .75]], 1.7),
+     cb('Aurore', 'any', 1, [['mirror', .7, .3], ['geyser', .8, .25], ['mirror', .7, .25], ['beam', 1.1, 0, .3]], 2.5, 3)]] },
+  lugia: { style: 'Seigneur du ciel', want: 96, bands: [72, 170], combos: [   // phase 3 « ciel dégagé » : le combat change de nature
+    [cb('Battement', 'near', 2, [['swing', .6, .5], ['swing', .6]], 1.8),
+     cb('Aéropique', 'mid far', 3, [['wall', 1.0, .5], ['wall', 1.0]], 2.0),
+     cb('Tourbillon', 'mid far', 3, [['whirl', .9]], 2.0)],
+    [cb('Battement', 'near', 2, [['swing', .55, .4], ['swing', .55, 0, .3]], 1.7),
+     cb('Aéropique', 'mid', 3, [['wall', 1.0, .4], ['whirl', .9, .4], ['wall', 1.0, 0, .3]], 2.0),
+     cb('Tourbillon', 'far', 2, [['whirl', .9, .5], ['ball', .7]], 1.9),
+     cb('Rayon des abysses', 'mid far', 2, [['beam', 1.1, .5], ['ball', .7]], 1.9)],
+    [cb('Battement', 'near', 2, [['swing', .5, .3], ['swing', .5, 0, .3]], 1.6),
+     cb('Aéropique', 'mid', 2, [['wall', .95, .3], ['whirl', .85, .3], ['wall', .95, 0, .3]], 1.9),
+     cb('Rayon des abysses', 'far', 2, [['beam', 1.0, .4], ['ball', .65]], 1.8),
+     cb('Grand Aéropique', 'any', 1, [['wall', .9, .25], ['whirl', .85, .2], ['beam', 1.0, .2], ['nova', .8, 0, .3]], 2.5, 3)]] },
+};
+for (const k in STYLES) Object.assign(BOSSES[k], STYLES[k]);
+export const BOSS_STYLES = STYLES;
+
 export const BOSS_THRESHOLDS = [0.6, 0.25];
 export const BOSS_HP_MULT = 1.15;   // léger surplus de PV : parades, liens et combos abattaient les boss trop vite

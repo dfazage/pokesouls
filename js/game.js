@@ -28,6 +28,8 @@ const hyp = Math.hypot;
 const unit = (x, y) => { const l = hyp(x, y) || 1; return { x: x / l, y: y / l }; };
 // Équilibrage des boss (simulation sim_boss_balance.py, config D) : plafond des bonus par coup, Lien limité.
 export const BAL = { BOSS_MULT_CAP: 3.1, LINK_BOSS_FILL: 0.25, LINK_BOSS_CAP: 0.05, LINK_BOSS_DMG: 0.5, REACT_BOSS_CAP: 0.05 };
+// Préparation par défaut des attaques de boss (s). `tp` (téléportation dans le dos) et `feint` (feinte sans coup) n'existent que dans les combos écrits.
+export const BOSS_WIND = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75, tp: 0.4, feint: 0.5 };
 const VIT_KEYS = Object.keys(D.VITAMINS);
 const hasAnim = (id, n) => !!(A.db[id] && A.db[id].anims[n]);
 const pickAnim = (id, list) => list.find(n => hasAnim(id, n)) || 'Idle';
@@ -876,7 +878,7 @@ export class Game {
     this.emit('bossStart', b, short);
   }
   bossPhase(b, ph) {
-    this.bossCry(b, 6, 1.3); b.phase = ph; b.next = null; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
+    this.bossCry(b, 6, 1.3); b.phase = ph; b.next = null; b.combo = null; b.held = false; b.nCombo = 0; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
     this.shake = 8; SFX.bossPhase(b.sprite); this.burst(b.x, b.y - 10, b.def.color, 30);
     this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
@@ -903,29 +905,36 @@ export class Game {
       }
       case 'windup': {
         b.st -= dt; const ty = b.atkType;
-        if (ty === 'dash' || ty === 'beam') { if (b.st > 0.3) b.lockDir = u; b.face = b.lockDir || u; } else if (ty !== 'pulse' && ty !== 'nova') b.face = u;
+        if (b.held) { /* finisseur retardé : pose tenue, visée figée */ }
+        else if (ty === 'dash' || ty === 'beam') { if (b.st > 0.3) b.lockDir = u; b.face = b.lockDir || u; } else if (ty !== 'pulse' && ty !== 'nova' && ty !== 'tp') b.face = u;
         b.dir = dirFromVec(b.face.x, b.face.y); setAnim(b, ty === 'pulse' || ty === 'nova' ? pickAnim(id, ['SpAttack', 'Charge']) : 'Charge'); b.tele = true;
-        if (b.st <= 0) { b.tele = false; this.bossStrike(b, u, tg); }
+        if (b.st <= 0) {
+          const step = b.combo && b.combo.c.steps[b.combo.i];
+          if (step && step[3] && !b.held) { b.held = true; b.st += step[3]; }   // coup retardé : le dernier temps tombe plus tard que prévu
+          else { b.held = false; b.tele = false; this.bossStrike(b, u, tg); }
+        }
         break;
       }
       case 'dash': {
         b.st -= dt; const v = b.lockDir; const px = b.x, py = b.y; move(this, b, v.x * 270 * dt, v.y * 270 * dt, 6, 4); this.hitObs(b.x + v.x * 14, b.y + v.y * 14, 6, 70, 'boss'); setAnim(b, 'Walk'); b.at += dt * 2;
         this.parts.push({ x: b.x, y: b.y, z: 6, vx: 0, vy: 0, vz: 5, life: 0.3, max: 0.3, c: def.color, size: 3 });
-        for (const m of this.actors()) if (!m.exh && !b.rollHit.has(m) && hyp(m.x - b.x, m.y - b.y) < b.r + 9) { b.rollHit.add(m); const r = this.hurtMember(m, b.dmg * 1.8, b, { owner: b, heavy: true }); if (r === 'parry') { b.st = 0; } }
-        if (b.st <= 0 || hyp(b.x - px, b.y - py) < 0.4 * 270 * dt * 0.5) { b.state = 'recover'; b.st = 0.8; b.cd = b.phase === 1 ? 1.4 : 0.9; this.shake = 3; }
+        for (const m of this.actors()) if (!m.exh && !b.rollHit.has(m) && hyp(m.x - b.x, m.y - b.y) < b.r + 9) { b.rollHit.add(m); const r = this.hurtMember(m, b.dmg * 1.8, b, { owner: b, heavy: true }); if (r === 'parry') { b.st = 0; b.dashParried = true; } }
+        if (b.st <= 0 || hyp(b.x - px, b.y - py) < 0.4 * 270 * dt * 0.5) { b.state = 'recover'; b.st = 0.8; b.cd = b.phase === 1 ? 1.4 : 0.9; this.shake = 3; const par = b.dashParried; b.dashParried = false; if (b.combo) this.bossComboAfter(b, par); }
         break;
       }
       case 'recover': b.st -= dt; setAnim(b, 'Idle');
+        if (b.combo && b.combo.pending && td > 34) { const sp = def.speed * 1.6; move(this, b, u.x * sp * dt, u.y * sp * dt, 6, 4); b.face = u; b.dir = dirFromVec(u.x, u.y); setAnim(b, 'Walk'); }   // entre deux coups d'un combo, il poursuit sans reculer
         if (b.st <= 0) {
+          if (b.combo) { if (b.combo.pending) { this.bossComboStep(b); break; } b.combo = null; b.held = false; }   // combo interrompu (étourdissement…) : on repart sur un choix normal
           b.state = 'move';
-          const bp = Array.isArray(def.blinkP) ? def.blinkP[b.phase - 1] : def.blinkP !== undefined ? def.blinkP : def.blink ? 0.7 : 0;
+          const bp = def.combos ? 0 : Array.isArray(def.blinkP) ? def.blinkP[b.phase - 1] : def.blinkP !== undefined ? def.blinkP : def.blink ? 0.7 : 0;
           if (bp && !b.next && Math.random() < bp) this.blink(b, tg);
           if (b.queue > 0) { b.queue--; b.cd = 0; this.bossChoose(b, td, 'ball'); }
           else if (b.next) { const nx = b.next; b.next = null; b.cd = 0; this.bossChoose(b, td, nx); }
         }
         break;
     }
-    if (b.phase >= 2 && b.state === 'move' && b.obsT !== undefined) { b.obsT -= dt; if (b.obsT <= 0) { this.spawnObstacles(b); b.obsT = b.phase === 3 ? 6.5 : 9; } }
+    if (b.phase >= 2 && b.obsT !== undefined && b.state !== 'phase') { b.obsT -= dt; if (b.obsT <= 0 && b.state === 'move') { this.spawnObstacles(b); b.obsT = b.phase === 3 ? 6.5 : 9; } }   // le compteur tourne même pendant les combos ; l'obstacle apparaît entre deux combos
     if (b.phase === 3 && def.summon && b.state === 'move' && !this.enemies.some(e => e.clone && !e.dead) && b.cd < 0) this.spawnSummons(b);
     for (const e of this.enemies) if (e.clone && !e.dead) { e.face = unit(tg.x - e.x, tg.y - e.y); e.dir = dirFromVec(e.face.x, e.face.y); }
   }
@@ -947,7 +956,48 @@ export class Game {
       }
     }
   }
+  // ---------- combos écrits (style souls-like) ----------
+  // def.combos[phase-1] = [{ name, band: 'near'|'mid'|'far'|'any', w, steps, open, every }]
+  // étape = [attaque, préparation (s), pause avant l'étape suivante (s), retard du coup (s)] ; open = ouverture offerte après le dernier coup (s)
+  // every = N : combo « temps fort », lancé une fois sur N (ordre fixe, donc appris par cœur) au lieu d'un tirage
+  bossComboPick(b, td) {
+    const cs = b.def.combos[b.phase - 1]; if (!cs || !cs.length) return null;
+    const n = b.nCombo || 0; let c = cs.find(x => x.every && n % x.every === x.every - 1);
+    if (!c) {
+      const bd = b.def.bands || [64, 150], band = td < bd[0] ? 'near' : td < bd[1] ? 'mid' : 'far';
+      const order = { near: ['near', 'mid', 'far'], mid: ['mid', 'far', 'near'], far: ['far', 'mid', 'near'] }[band]; let pool = [];
+      // jamais deux fois le même combo de suite : si la bande n'a que celui-là, on prend le plus proche voisin (un combo de corps à corps ne sert jamais de repli au loin)
+      for (const bn of order) { pool = cs.filter(x => !x.every && x.name !== b.lastCombo && (x.band === 'any' || x.band.includes(bn))); if (pool.length) break; }
+      if (!pool.length) pool = cs.filter(x => !x.every && x.name !== b.lastCombo);
+      if (!pool.length) pool = cs.filter(x => !x.every);
+      let tot = pool.reduce((s, x) => s + x.w, 0), r = Math.random() * tot; c = pool[0];
+      for (const x of pool) { r -= x.w; if (r <= 0) { c = x; break; } }
+    }
+    b.nCombo = n + 1; b.lastCombo = c.name; return c;
+  }
+  bossComboStep(b) {
+    const k = b.combo, s = k.c.steps[k.i], T = s[0];
+    k.pending = false; b.atkType = T; b.lastAtk = T; b.state = 'windup'; b.lockDir = null; b.held = false;
+    b.st = s[1] !== undefined ? s[1] : (BOSS_WIND[T] || 0.6);
+    if (T === 'tp') this.bossTpAim(b);
+    SFX.bossTele(b.sprite, b.st);
+  }
+  // après un coup : pause courte puis étape suivante, ou ouverture à la fin du combo. Parade réussie : le combo est brisé.
+  bossComboAfter(b, parried) {
+    const k = b.combo; if (!k) return;
+    if (parried) { b.combo = null; return; }
+    const s = k.c.steps[k.i];
+    if (k.i >= k.c.steps.length - 1) { b.combo = null; const o = k.c.open || 1.5; b.st = o; b.cd = o + 0.2; return; }
+    k.i++; k.pending = true; b.st = s[2] !== undefined ? s[2] : 0.35; b.cd = 0;
+  }
+  // téléportation dans le dos : le point d'arrivée est fixé au début de la préparation (image rémanente), pas au moment du coup
+  bossTpAim(b) {
+    const [tg] = this.nearestMember(b); b.tpDest = null; if (!tg) return;
+    const a = this.world.arena, v = unit(tg.x - b.x, tg.y - b.y);
+    for (const k of [26, 18, 34]) { const x = tg.x + v.x * k, y = tg.y + v.y * k; if (hyp(x - a.cx * TS, y - a.cy * TS) < (a.r - 1.5) * TS && M.boxFree(this.world, x, y, 6, 4)) { b.tpDest = { x, y }; return; } }
+  }
   bossChoose(b, td, force) {
+    if (!force && b.def.combos) { const c = this.bossComboPick(b, td); if (c) { b.combo = { c, i: 0, pending: false }; this.bossComboStep(b); return; } }
     const list = b.def.moves[b.phase - 1]; let type = force;
     if (!type) {
       if (td < 42 && list.some(l => l[0] === 'swing') && Math.random() < 0.7) type = 'swing';
@@ -957,14 +1007,15 @@ export class Game {
       }
     }
     b.lastAtk = type; b.atkType = type; b.state = 'windup'; b.lockDir = null;
-    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75 }[type] || 0.6; if (b.def.tempo) b.st *= b.def.tempo.wind; SFX.bossTele(b.sprite, b.st);
+    b.st = BOSS_WIND[type] || 0.6; if (b.def.tempo) b.st *= b.def.tempo.wind; SFX.bossTele(b.sprite, b.st);
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
     const T = b.atkType, d = b.dmg, col = b.def.color, id = b.sprite;
     const tp = b.def.tempo ? b.def.tempo.rec : 1;   // tempo propre au boss (Mewtwo : récupérations courtes, enchaînements)
-    const rec = (st, cd) => {
+    const rec = (st, cd, parried) => {
       b.state = 'recover'; b.st = st * tp; b.cd = cd * tp * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1);
+      if (b.combo) { this.bossComboAfter(b, parried); return; }
       const ch = b.def.chain && b.def.chain[T];
       if (ch && !b.queue && Math.random() < b.def.chainP[b.phase - 1]) b.next = ch[Math.floor(Math.random() * ch.length)];
     };
@@ -983,7 +1034,7 @@ export class Game {
       setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.bossSwing(id);
       for (const m of this.actors()) {
         if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, dist = hyp(dx, dy);
-        if (dist < 30 + b.r * 1.5 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
+        if (dist < 30 + b.r * 1.5 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6, true); return; } }
       }
       this.ringFx(b.x + b.face.x * b.r * 1.4, b.y + b.face.y * b.r * 1.4, 22 + b.r * 1.2, col); rec(0.6, 1.2);
     } else if (T === 'pulse') {
@@ -1024,6 +1075,13 @@ export class Game {
       const n = b.phase >= 2 ? 7 : 5, ang = Math.atan2(tg.y - b.y, tg.x - b.x); b.face = { x: Math.cos(ang), y: Math.sin(ang) };
       for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: ang + (i - (n - 1) / 2) * 0.2, speed: 150, dmg: d * 0.9, r: 3.8, life: 3, team: 'e', color: col, owner: b });
       SFX.bossVolley(id); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.2);
+    } else if (T === 'tp') {   // téléportation dans le dos : image rémanente pendant la préparation, puis coup à l'arrivée (parable)
+      for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, col, 1.5);
+      if (b.tpDest) { b.x = b.tpDest.x; b.y = b.tpDest.y; b.tpDest = null; }
+      for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, col, 1.5); SFX.dodge();
+      const v = unit(tg.x - b.x, tg.y - b.y); b.face = v; b.dir = dirFromVec(v.x, v.y); b.atkType = 'swing'; this.bossStrike(b, v, tg);
+    } else if (T === 'feint') {   // feinte : même signal qu'une attaque, aucun coup ; punit l'esquive réflexe sur le coup suivant
+      setAnim(b, 'Idle', false); rec(0.1, 0);
     } else if (T === 'summon') {
       SFX.bossSummon(id); if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
       setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);
