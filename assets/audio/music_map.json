@@ -95,9 +95,6 @@
   "end": null,
   "fallback_audio": "boss_mew.ogg"
  },
- "JINGLE_CAMPFIRE": {
-  "fallback_audio": "jingle_campfire.ogg"
- },
  "JINGLE_DEATH": {
   "fallback_audio": "jingle_death.ogg"
  },
