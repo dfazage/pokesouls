@@ -213,6 +213,11 @@ const rnd = (x, y, s = 0) => { let h = (x * 374761393 + y * 668265263 + s * 2147
 
 const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1], lantern: [1, 1], bell: [2, 2], torii: [2, 1] };
 
+// Collision resserrée des décors dont le sprite est bien plus étroit que leur emprise (placement et espacement inchangés) :
+// au lieu de bloquer toute l'emprise en cases (invisible : l'arbre bloquait 48×48 px pour un tronc de ~14 px), seul le pied compte.
+// Boîtes [cx, cy, hw, hh] en px depuis le coin haut-gauche de l'emprise ; le sprite pose ses pieds à ~2 px sous le bas de l'emprise.
+const COLBOX = { tree: [[24, 39, 9, 7]], lantern: [[12, 16, 8, 6]] };
+
 // ---------- génération « zones libres » ----------
 // Au lieu de salles reliées par des couloirs : de grandes zones ouvertes (formes organiques) posées sur la grille de cellules,
 // reliées par de larges passages, avec un raccourci verrouillé (porte qui s'ouvre de l'autre côté) et un seul passage de brume (arène).
@@ -445,9 +450,21 @@ export function buildWorld(idx) {
   const def = MAPS[idx], th = THEMES[def.theme];
   const world = { idx, def, theme: th, name: def.name };
   const L = generateFree({ ...def, decorKinds: th.decor, free: { ...def.free, zones: def.free.zones.map(z => z.decor ? z : (zoneDecor(def.id, z.name) ? { ...z, decor: zoneDecor(def.id, z.name) } : z)) } });
-  for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
+  const cbox = new Map();   // collisions resserrées : index de tuile -> boîtes [cx, cy, hw, hh] (px) qui la touchent
+  for (const d of L.decor) {
+    const [w, h] = FOOT[d.kind], cb = COLBOX[d.kind];
+    if (cb) {
+      for (const [bx, by, hw, hh] of cb) {
+        const cx = d.tx * TS + bx, cy = d.ty * TS + by, b = [cx, cy, hw, hh];
+        for (let ty = Math.floor((cy - hh) / TS); ty <= Math.floor((cy + hh - 0.001) / TS); ty++) for (let tx = Math.floor((cx - hw) / TS); tx <= Math.floor((cx + hw - 0.001) / TS); tx++) { const k = ty * MW + tx; (cbox.get(k) || cbox.set(k, []).get(k)).push(b); }
+      }
+      continue;
+    }
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID;
+  }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
+  world.cbox = cbox;
   Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, chasm: L.chasm || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
   computeWall(world);
   markArenaRing(world);
@@ -518,6 +535,8 @@ export function solidAt(world, px, py) {
   const ob = world.obs;
   if (ob) for (let i = 0; i < ob.length; i++) { const o = ob[i]; if (o.on && o.solid && !o.dead && Math.abs(px - o.x) < o.hw && Math.abs(py - o.y) < o.hh) return true; }
   const tx = Math.floor(px / TS), ty = Math.floor(py / TS);
+  const cb = world.cbox && world.cbox.get(ty * MW + tx);   // décors à collision resserrée (tronc, pied de lanterne)
+  if (cb) for (let i = 0; i < cb.length; i++) { const b = cb[i]; if (Math.abs(px - b[0]) < b[2] && Math.abs(py - b[1]) < b[3]) return true; }
   const ar = world.arenaRing;
   if (ar && tx >= 0 && ty >= 0 && tx < MW && ty < MH && ar.flag[ty * MW + tx]) { const dx = px / TS - world.arena.cx, dy = py / TS - world.arena.cy; return dx * dx + dy * dy > ar.rc * ar.rc; }   // arène : vrai cercle
   if (isSolidTile(world, tx, ty)) return true;
