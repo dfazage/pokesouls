@@ -234,7 +234,7 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 #bossintro{position:absolute;inset:0;z-index:12;pointer-events:none;display:none;--bc:#e0b0ff}
 #bossintro.show{display:block}
 #bossintro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height .9s cubic-bezier(.4,0,.2,1)}#bossintro .bar.t{top:0}#bossintro .bar.b{bottom:0}
-#bossintro.bars .bar{height:11%}
+#bossintro.bars .bar{height:0}   /* plein écran : plus de bandes noires */
 #bossintro .veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 20%,rgba(0,0,0,.9) 90%);opacity:0}
 #bossintro .flash{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#fff,color-mix(in srgb,var(--bc) 70%,transparent) 60%,transparent);opacity:0;mix-blend-mode:screen}
 #bossintro .card{position:absolute;left:0;right:0;top:41%;text-align:center;transition:opacity .9s;opacity:1}
@@ -247,7 +247,7 @@ button:hover:not(:disabled){background:#3a2a70;border-color:var(--pur)}button:di
 #bossintro .lore{font:italic 13px Georgia,serif;color:#cfc8bc;margin-top:8px;letter-spacing:.04em}
 #bossintro.c-tag .tag,#bossintro.c-ep .ep,#bossintro.c-lore .lore{opacity:1;transform:none}
 #bossintro.c-nm .nm{opacity:1;filter:none;letter-spacing:.14em}#bossintro.c-nm .ln{transform:scaleX(1)}
-#bossintro .skip{position:absolute;right:22px;bottom:calc(11% + 12px);pointer-events:auto;cursor:pointer;background:rgba(18,15,12,.7);border:1px solid rgba(255,255,255,.22);border-radius:10px;color:#e8e0d0;font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.12em;padding:6px 12px;display:flex;gap:10px;align-items:center;opacity:0;transition:opacity .6s}
+#bossintro .skip{position:absolute;right:22px;bottom:22px;pointer-events:auto;cursor:pointer;background:rgba(18,15,12,.7);border:1px solid rgba(255,255,255,.22);border-radius:10px;color:#e8e0d0;font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.12em;padding:6px 12px;display:flex;gap:10px;align-items:center;opacity:0;transition:opacity .6s}
 #bossintro.bars .skip{opacity:.85}#bossintro.out .skip{opacity:0}
 #bossintro .skip .lk{color:#9a927f;font-style:italic;font-weight:400;letter-spacing:.06em}
 #hud.cine :is(#tut,#chief,.slot,#quick,#linkbox,#combo,#skills,#essence,#prompt,#toast,#compass,#hints,#area,#banner){opacity:0!important}

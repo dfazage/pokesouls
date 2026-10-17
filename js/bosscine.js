@@ -55,7 +55,7 @@ export function bossAshState(e) {
 const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 // bc : réglage de duel du boss ; l'intro se termine exactement dessus, sans saut quand les commandes sont rendues
 export function cineKey(t, bc) {
-  const K = bc ? [...KF.slice(0, -1).map((k, i) => bc.big && i >= 3 ? [k[0], k[1], k[2] * 1.45, k[3], k[4], k[5]] : k), [KF[KF.length - 1][0], bc.pitch, bc.dist, bc.fov, bc.look, bc.focus]] : KF;   // boss géant : plans rapprochés reculés
+  const K = bc ? [...KF.slice(0, -1).map((k, i) => bc.big && i >= 3 ? [k[0], k[1], k[2] * 1.8, k[3], k[4] + 4, k[5]] : k), [KF[KF.length - 1][0], bc.pitch, bc.dist, bc.fov, bc.look, bc.focus]] : KF;   // boss géant : plans rapprochés reculés
   if (t <= K[0][0]) return K[0].slice(1);
   for (let i = 1; i < K.length; i++) {
     if (t <= K[i][0]) { const a = K[i - 1], b = K[i], k = sm((t - a[0]) / (b[0] - a[0])); return b.map((v, j) => j ? a[j] + (v - a[j]) * k : 0).slice(1); }

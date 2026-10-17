@@ -379,13 +379,24 @@ function generateFree(def) {
   def.loot.forEach((item, ci) => { let p = spot(chestZ[ci % chestZ.length], 120); for (let k = 1; !p && k < zones.length; k++) p = spot(k, 200); if (p) { reserve(p[0], p[1], 1, 1, 1); chests.push({ tx: p[0], ty: p[1], item }); } });
   computeReach();
   const tiers = def.mobs, pick = a => a[Math.floor(R() * a.length)];
-  const place = (k, type) => { const p = spot(k, 120, farFromFire); if (p) { reserve(p[0], p[1], 1, 1, 1); spawns.push({ type, tx: p[0], ty: p[1], room: k }); } };
+  const place = (k, type, up = 0) => { const p = spot(k, 120, farFromFire); if (p) { reserve(p[0], p[1], 1, 1, 1); spawns.push({ type, tx: p[0], ty: p[1], room: k, ...(up ? { up } : {}) }); } };
   const bigZ = F.big ?? 4;
+  // Tiers de mobs par zone : BAS (petites espèces, niveau de la carte), MOYEN (mélange, +1 pour les espèces moyennes), HAUT (espèces moyennes « élites » à +3 niveaux).
+  // Le tier n'est pas linéaire : il dépend de la profondeur dans le graphe de zones, des culs-de-sac (plus dangereux, mais ce sont eux qui gardent les coffres) et d'un aléa fixe par carte
+  // (hachage de la graine, sans toucher au tirage R : la géométrie des cartes ne bouge pas). La zone qui mène à l'arène est toujours au moins MOYEN.
+  const adj = zones.map(() => []); for (const [a, b] of F.links || zones.slice(1).map((_, i) => [i, i + 1])) { adj[a].push(b); adj[b].push(a); }
+  const depth = zones.map(() => -1); depth[0] = 0; for (const q = [0]; q.length;) { const a = q.shift(); for (const b of adj[a]) if (depth[b] < 0) { depth[b] = depth[a] + 1; q.push(b); } }
+  const maxD = Math.max(1, ...depth), hsh = k => { let h = (Math.imul(def.seed | 0, 2654435761) + Math.imul(k + 1, 40503)) >>> 0; h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0; return (h & 1023) / 1023; };
+  const danger = zones.map((_, k) => { let d = 0.15 + 0.5 * Math.max(0, depth[k]) / maxD + (adj[k].length === 1 && k !== 0 ? 0.3 : 0) + (hsh(k) - 0.5) * 0.5; if (k === F.arena.from) d = Math.max(d, 0.5); if (k === 1) d = Math.min(d, 0.3); return d; });
+  const tierOf = k => danger[k] < 0.38 ? 0 : danger[k] < 0.68 ? 1 : 2;
+  zones.forEach(z => z.tier = z.k === 0 ? -1 : tierOf(z.k));
   zones.forEach(z => {
     const k = z.k; if (k === 0) return;
     const th_ = F.thin ?? 1, cnt = n => Math.max(1, Math.round(n * th_));   // thin : cartes plus vastes, rencontres moins serrées
-    const nm = cnt(k === last ? 2 : 2 + (k % 3)); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
-    if (k >= 2) { const nd = cnt(k === last ? 2 : 1 + (k % 2)); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
+    const t = z.tier, ex = k === last ? 1 : 0;
+    if (t === 0) { for (let i = 0; i < cnt(3 + (k % 2) + ex); i++) place(k, pick(tiers.mini)); }
+    else if (t === 1) { for (let i = 0; i < cnt(2 + ex); i++) place(k, pick(tiers.mini)); for (let i = 0; i < cnt(1 + (k % 2) + ex); i++) place(k, pick(tiers.mid)); }
+    else { for (let i = 0; i < cnt(1 + ex); i++) place(k, pick(tiers.mini)); for (let i = 0; i < cnt(1); i++) place(k, pick(tiers.mid)); for (let i = 0; i < cnt(1 + (k % 2) + ex); i++) place(k, pick(tiers.mid), 3); }
     if (k === bigZ) place(k, tiers.big);
   });
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
