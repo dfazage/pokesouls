@@ -127,9 +127,9 @@ export const Music = {
 
 // ---------- chef d'orchestre : choisit la piste selon le contexte (BOSS > MINIBOSS > MAP > HUB > MENU) ----------
 let miniOn = false, miniOff = 0, miniAlt = false, miniId = 'MINIBOSS_A', lastMap = -1;
-const BOSS_TRACK = { raikou: 'BOSS_RAIKOU', entei: 'BOSS_ENTEI', suicune: 'BOSS_SUICUNE', lugia: 'BOSS_LUGIA_P1', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW' };
+const BOSS_TRACK = { raikou: 'BOSS_RAIKOU', entei: 'BOSS_ENTEI', suicune: 'BOSS_SUICUNE', lugia: 'BOSS_LUGIA_P1', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW', celebi: 'BOSS_MEW' };
 // phase 2 : quand le boss passe sous 50 % de vie
-const BOSS_P2 = { raikou: 'BOSS_RAIKOU_P2', entei: 'BOSS_ENTEI_P2', suicune: 'BOSS_SUICUNE_P2', lugia: 'BOSS_LUGIA_P2', articuno: 'SUBBOSS_BIRDS_P2', zapdos: 'SUBBOSS_BIRDS_P2', moltres: 'SUBBOSS_BIRDS_P2', dragonite: 'SUBBOSS_KINGS_P2', mewtwo: 'BOSS_MEWTWO_P2', mew: 'BOSS_MEW_P2' };
+const BOSS_P2 = { raikou: 'BOSS_RAIKOU_P2', entei: 'BOSS_ENTEI_P2', suicune: 'BOSS_SUICUNE_P2', lugia: 'BOSS_LUGIA_P2', articuno: 'SUBBOSS_BIRDS_P2', zapdos: 'SUBBOSS_BIRDS_P2', moltres: 'SUBBOSS_BIRDS_P2', dragonite: 'SUBBOSS_KINGS_P2', mewtwo: 'BOSS_MEWTWO_P2', mew: 'BOSS_MEW_P2', celebi: 'BOSS_MEW_P2' };
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
   if (ui.screen === 'title' && !ui.controls) return Music.direct('INTRO_TITLE'); // intro : boucle jusqu'à « Nouvelle partie » / « Continuer »

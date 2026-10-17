@@ -4,7 +4,8 @@ import * as M from './maps.js';
 import * as S from './hd2d_shaders.js';
 
 const { TS, MW, MH, FACE, T } = M;
-export const DEPTH = 3.4, OPEN_DEPTH = 0.06;           // profondeur de l'abîme sous le sol (en tuiles)
+export const DEPTH = 3.4, OPEN_DEPTH = 0.06, WATER_DEPTH = 0.42;
+const floorDepth = cfg => cfg.water ? WATER_DEPTH : cfg.open ? OPEN_DEPTH : DEPTH;           // profondeur de l'abîme sous le sol (en tuiles)
 export const WALL_TALL = 1.8, WALL_LOW = 0.28, WALL_SIDE = 1.3, WALL_MID = 1.0;
 
 // ---------- réglages par thème ----------
@@ -28,6 +29,20 @@ export const HD = {
   bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .5 } },
+  ember: { type: 6, open: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.11, .085, .07], [.2, .14, .1], [1., .5, .2]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
+    roof: [[.07, .06, .06], [.17, .14, .13]], win: .9, walls: [[.2, .17, .15], [.28, .2, .15], [.15, .12, .1], [.3, .26, .22], [.24, .16, .12], [.34, .28, .24], [.18, .15, .14], [.12, .1, .09]],
+    part: { n: 280, size: 30, color: [1., .55, .2], vel: [0, .5, 0], sway: 1.5, box: [44, 12, 40] }, emisTint: [1.25, .85, .5], emisK: 1.5,
+    grade: { ts: [1.02, .95, .92], th: [1.1, 1.02, .92], sat: 1.12, con: 1.1, bloom: .62, vig: .45 } },
+  mirror: { type: 7, open: true, water: true, edge: 'water', fog: [.52, .66, .74], fogD: .011, mist: .35, abyss: [[.13, .36, .44], [.3, .6, .66], [1., .82, .9]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .8, .85], light: [1.05, 1.03, 1.02], bob: 0,
+    part: { n: 260, size: 34, color: [1., .78, .88], vel: [.25, -.22, 0], sway: 1.9, box: [44, 12, 40] }, emisTint: [1.1, 1.05, 1.0], emisK: 1.0,
+    grade: { ts: [.96, 1., 1.05], th: [1.05, 1.03, 1.], sat: 1.1, con: 1.05, bloom: .6, vig: .34 } },
+  storm: { type: 8, open: true, water: true, edge: 'water', fog: [.16, .2, .27], fogD: .017, mist: .5, abyss: [[.06, .11, .18], [.16, .26, .38], [.8, .9, 1.]], prop: 'tree', propCol: [.1, .26, .12], emis: [.8, .9, 1.], light: [.96, 1., 1.06], bob: 0,
+    part: { n: 380, size: 26, color: [.8, .9, 1.], vel: [-.35, -1.5, 0], sway: .5, box: [44, 14, 40] }, emisTint: [1., 1.05, 1.15], emisK: 1.0,
+    grade: { ts: [.92, .97, 1.06], th: [.98, 1.02, 1.04], sat: 1.05, con: 1.1, bloom: .5, vig: .46 } },
+  ilex: { type: 9, open: true, edge: 'forest', fog: [.1, .18, .12], fogD: .016, mist: .45, abyss: [[.1, .22, .1], [.18, .34, .14], [1., .85, .45]], prop: 'tree', propCol: [.1, .3, .14], emis: [1., .9, .5], light: [1.02, 1.04, .96], bob: 0,
+    trees: [[.1, .3, .14], [.08, .26, .13], [.12, .34, .15], [.5, .42, .12]],
+    part: { n: 320, size: 34, color: [1., .9, .5], vel: [0, .22, 0], sway: 1.7, box: [44, 12, 40] }, emisTint: [1.1, 1.05, .8], emisK: 1.2,
+    grade: { ts: [.95, 1.02, .98], th: [1.07, 1.04, .94], sat: 1.14, con: 1.07, bloom: .58, vig: .4 } },
   mystic: { type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
     part: { n: 360, size: 38, color: [.7, 1., .75], vel: [0, .22, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.1, 1., .9], emisK: .85,
     grade: { ts: [.92, 1.02, 1.], th: [1.02, 1.04, 1.], sat: 1.12, con: 1.07, bloom: .55, vig: .42 } },
@@ -203,6 +218,19 @@ export function buildWalls(w) {
   return { top: bt.build(), side: bs.build() };
 }
 
+// rives des îles : parois verticales sous chaque bord de sol qui donne sur l'eau
+export function buildBanks(w, depth) {
+  const b = new GeoB();
+  const u0 = (k) => (k + 0.02) / (NV + 1), u1 = (k) => (k + 0.98) / (NV + 1);
+  for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+    const g0 = w.grid[ty * MW + tx]; if (g0 === T.VOID || g0 === T.DOOR) continue;
+    const vi = Math.floor(rndI(tx, ty, 5) * NV), a = u0(vi), c = u1(vi);
+    const face = (nx, nz, A, B2) => { if (gridAt(w, tx + nx, ty + nz) !== T.VOID) return; b.quad([A[0], -depth, A[1]], [B2[0], -depth, B2[1]], [B2[0], 0, B2[1]], [A[0], 0, A[1]], [nx, 0, nz], [a, depth], [c, depth], [c, 0], [a, 0]); };
+    face(0, 1, [tx, ty + 1], [tx + 1, ty + 1]); face(0, -1, [tx + 1, ty], [tx, ty]); face(1, 0, [tx + 1, ty + 1], [tx + 1, ty]); face(-1, 0, [tx, ty], [tx, ty + 1]);
+  }
+  return b.build();
+}
+
 // portes de salle de boss (tuiles T.DOOR) : blocs pleins, faces texturées « porte »
 export function buildDoors(w) {
   const bt = new GeoB(), bs = new GeoB(), vi = NV;
@@ -275,8 +303,8 @@ export function buildProps(w, key, seed, shared) {
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (w.grid[ty * MW + tx] !== T.VOID) {
     for (let j = -R_; j <= R_; j++) for (let i = -R_; i <= R_; i++) near[(ty + MG + j) * W2 + (tx + MG + i)] = 1;
   }
-  const items = [], wallItems = [], target = Math.round(W2 * H2 / 34);
-  if (cfg.open) {   // plein air : plus de murs, les limites sont des haies et des arbres (la collision reste celle de la grille)
+  const items = [], wallItems = [], target = Math.round(W2 * H2 / 34), forest = cfg.edge === 'forest', water = cfg.edge === 'water';
+  if (cfg.open && cfg.edge !== 'water') {   // plein air : plus de murs, les limites sont des maisons, des ruines ou des arbres (la collision reste celle de la grille)
     const dist = new Uint8Array(MW * MH).fill(99);
     for (let i = 0; i < MW * MH; i++) if (w.grid[i] !== T.VOID) dist[i] = 0;
     for (let d = 1; d <= 6; d++) for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
@@ -292,30 +320,39 @@ export function buildProps(w, key, seed, shared) {
       const low = floorAbove(tx, ty);   // côté sud d'une zone : haies basses, pour ne jamais cacher le joueur
       const put = (k, kind, px, pz) => {
         const a = V(tx, ty, k * 5 + 1), b = V(tx, ty, k * 5 + 2), c = V(tx, ty, k * 5 + 3), e = V(tx, ty, k * 5 + 4);
+        if (forest) {   // sous-bois : buissons bas côté caméra, arbres plus hauts ailleurs
+          let sx, sy;
+          if (kind === 0) { sx = 1.5 + a * 0.7; sy = low ? 0.55 + b * 0.35 : 1.1 + b * 0.7; }
+          else if (kind === 1) { sx = 1.4 + a * 0.9; sy = low ? 1.3 + b * 0.9 : 2.4 + b * 1.8; }
+          else { sx = 1.6 + a * 1.0; sy = low ? 2.4 + b * 1.4 : 3.4 + b * 2.4; }
+          items.push([tx + px + (kind === 0 ? V(tx, ty, k + 80) * 0.5 - 0.25 : 0), ty + pz, a, b, c, kind, sx, sy, e]); return;
+        }
         if (kind === 0) { wallItems.push([tx + 0.5, ty + 0.5, a, b, c, 0, 1.02, low ? 0.78 + b * 0.12 : 1.0 + b * 0.5, e]); return; }   // muret en torchis coiffé de tuiles
         let sx, sy;   // maisons de ville : corps de plâtre et de bois, toit de tuiles
         if (kind === 1) { sx = 1.7 + a * 0.7; sy = low ? 1.7 + b * 0.5 : 2.6 + b * 1.0; }
         else { sx = 2.0 + a * 0.9; sy = low ? 2.6 + b * 0.8 : 3.4 + b * 1.6; }
         items.push([tx + px, ty + pz, a, b, c, kind, sx, sy, e]);
       };
-      if (d === 1) put(0, 0, 0.5, 0.5);
+      if (d === 1) { if (forest) for (let k = 0; k < 3; k++) put(k, 0, 0.15 + V(tx, ty, 40 + k) * 0.7, 0.15 + V(tx, ty, 50 + k) * 0.7); else put(0, 0, 0.5, 0.5); }
       else if (d === 2) put(0, low ? 0 : 1, 0.3 + V(tx, ty, 60) * 0.4, 0.3 + V(tx, ty, 61) * 0.4);
       else if (d <= 4) { if (V(tx, ty, 65) < 0.8) put(0, low && d === 3 ? 1 : 2, 0.2 + V(tx, ty, 66) * 0.6, 0.2 + V(tx, ty, 67) * 0.6); }
       else if (V(tx, ty, 68) < 0.5) put(0, 2, V(tx, ty, 69), V(tx, ty, 70));
     }
   }
-  for (let k = 0; k < target * 3 && items.length < target; k++) {
+  for (let k = 0; !water && k < target * 3 && items.length < target; k++) {
     const x = R() * W2, z = R() * H2, ix = Math.floor(x), iz = Math.floor(z);
     if (near[iz * W2 + ix]) continue;
     // distance minimale entre deux accessoires
     items.push([x - MG, z - MG, R(), R(), R()]);
   }
-  const geo = propGeometry(cfg.open ? 'edo' : cfg.prop), n = items.length;
+  if (!items.length) items.push([-300, -300, 0, 0, 0, 0, 0.01, 0.01, 0]);   // jamais de maillage vide (pas d'attribut de couleur sinon)
+  const geo = propGeometry(cfg.open && !forest ? 'edo' : cfg.prop), n = items.length;
   const mat = new THREE.ShaderMaterial({
     vertexShader: S.PROP_VERT, fragmentShader: S.PROP_FRAG,
     uniforms: {
       uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam,
-      uType: { value: cfg.open ? 6 : { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
+      uRoofA: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[0] : [.1, .12, .16])) }, uRoofB: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[1] : [.24, .27, .33])) }, uWinT: { value: cfg.win || .7 },
+      uType: { value: cfg.open ? (forest ? 8 : 6) : { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
       uEmisCol: { value: new THREE.Vector3(...cfg.emis) }, uLightCol: { value: new THREE.Vector3(...cfg.light) }, uBob: { value: cfg.bob },
     },
   });
@@ -329,13 +366,14 @@ export function buildProps(w, key, seed, shared) {
     else if (cfg.prop === 'spire') { sx = sz = 0.5 + a * 0.9; sy = 5.5 + b2 * 7; }
     else if (cfg.prop === 'column') { sx = sz = 0.7 + a * 0.8; sy = 3.8 + b2 * 4.5; }
     else if (cfg.prop === 'stalag') { sx = sz = 0.7 + a * 1.1; sy = 5 + b2 * 6; }
+    else if (cfg.open && forest) { sx = sz = 1.8 + a * 1.2; sy = 4 + b2 * 3; }
     else if (cfg.open) { sx = sz = 2.2 + a * 1.2; sy = 3.4 + b2 * 2.4; }   // toits lointains de la ville
     else { sx = sz = 1.5 + a * 1.2; sy = 6 + b2 * 5.5; }
     const rot = cfg.open ? Math.floor(c * 4) * Math.PI / 2 : c * 6.283;
     m4.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(sx, sy, sz));
     mesh.setMatrixAt(i, m4);
     const k = 0.75 + b2 * 0.5;
-    const pc = cfg.open ? EDO_WALL[Math.floor(c * 7.99) % EDO_WALL.length] : cfg.propCol;
+    const pc = cfg.open ? (forest ? (cfg.trees || [cfg.propCol])[Math.floor(c * 7.99) % (cfg.trees || [1]).length] : (cfg.walls || EDO_WALL)[Math.floor(c * 7.99) % (cfg.walls || EDO_WALL).length]) : cfg.propCol;
     col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); mesh.setColorAt(i, col);
   });
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -347,7 +385,7 @@ export function buildProps(w, key, seed, shared) {
     const wm = new THREE.InstancedMesh(mergeGeos([wb, cap]), wmat, wallItems.length);
     wallItems.forEach(([x, z, a, b2, c, , sx, sy], i) => {
       m4.compose(new THREE.Vector3(x, -OPEN_DEPTH, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sx)); wm.setMatrixAt(i, m4);
-      const pc = EDO_WALL[Math.floor(c * 7.99) % EDO_WALL.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
+      const pal = cfg.walls || EDO_WALL, pc = pal[Math.floor(c * 7.99) % pal.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
     });
     wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; wm.frustumCulled = false;
     mesh.add(wm);
@@ -378,7 +416,7 @@ export function buildAbyss(key, shared) {
     vertexShader: S.ABYSS_VERT, fragmentShader: S.ABYSS_FRAG,
     uniforms: { uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: { value: 0 }, uCam: shared.uCam, uType: { value: cfg.type }, uCol1: { value: new THREE.Vector3(...cfg.abyss[0]) }, uCol2: { value: new THREE.Vector3(...cfg.abyss[1]) }, uCol3: { value: new THREE.Vector3(...cfg.abyss[2]) } },
   });
-  const m = new THREE.Mesh(geo, mat); m.position.set(MW / 2, -(cfg.open ? OPEN_DEPTH : DEPTH), MH / 2); m.frustumCulled = false;
+  const m = new THREE.Mesh(geo, mat); m.position.set(MW / 2, -floorDepth(cfg), MH / 2); m.frustumCulled = false;
   return m;
 }
 

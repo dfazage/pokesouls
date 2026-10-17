@@ -64,6 +64,10 @@ export const PLAN = {
   mewtwo:    { 2: [['crystal', 3]], 3: [['crystal', 3], ['gravity', 2]] },
   mew:       { 2: [['thorn', 2], ['flower', 2]], 3: [['thorn', 3], ['flower', 2]] },
   raikou:    { 2: [['pylon', 1]], 3: [['pylon', 2]] },
+  entei:     { 2: [['basalt', 1], ['lava', 2]], 3: [['basalt', 2], ['lava', 4]] },
+  suicune:   { 2: [['ice', 2]], 3: [['ice', 3], ['frost', 2]] },
+  lugia:     { 2: [['gravity', 1]], 3: [['gravity', 2], ['rock', 2]] },
+  celebi:    { 2: [['thorn', 2], ['flower', 2]], 3: [['thorn', 3], ['flower', 2], ['gravity', 1]] },
 };
 
 export function installExtras(G, d) {
@@ -276,7 +280,7 @@ export function installExtras(G, d) {
       }
       any = true;
     }
-    if (b.sprite === 'dragonite' && b.phase === 3 && Math.random() < 0.6) {
+    if (((b.sprite === 'dragonite' && b.phase === 3) || (b.sprite === 'lugia' && b.phase >= 2)) && Math.random() < 0.6) {
       const an = rand(0, 6.283); this.gust = { dx: Math.cos(an), dy: Math.sin(an), t: 0, delay: 1.0, dur: 2.6 }; any = true;
     }
     if (any) SFX.telegraph();
