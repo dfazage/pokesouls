@@ -529,8 +529,16 @@ const EDO_WALL = [[.78, .72, .58], [.7, .52, .32], [.4, .26, .16], [.74, .72, .6
 // restent droites, chaque marche d'escalier devient un pan coupé à 45° (comme un mur d'enceinte d'Edo). Le muret est posé sur ce tracé,
 // décalé d'une demi-case vers le vide. Arène : couronne de murets sur le cercle. Ruines (Tour Brûlée) : segments courts, brèches, hauteurs irrégulières.
 // Retourne des segments [x, z, a, b, c, rot, longueur, hauteur, épaisseur] pour le maillage des murets.
-function muretRuns(w, ruin) {
-  const out = [], TH = 0.9, OFF = 0.5;
+// style : 'edo' (Tour Carillon), 'ruin' (Tour Brûlée), 'lake' (Lac du Miroir : ruines de pierre éparses sur les côtés, posées dans l'eau)
+function muretRuns(w, style) {
+  const ruin = style !== 'edo', lake = style === 'lake';
+  const out = [], TH = lake ? 0.8 : 0.9, OFF = lake ? 0.4 : 0.5, baseY = lake ? -WATER_DEPTH : -OPEN_DEPTH;
+  // lac : jamais côté caméra ni le long des pontons ; par tronçons de quelques cases (bruit par cellule de 3 cases), surtout à gauche et à droite
+  const lakeKeep = (tx, ty, nx, nz) => {
+    if (nz > 0 || (w.bridge && w.bridge[ty * MW + tx])) return false;
+    const cell = rndI(Math.floor((tx + nx * 0.5) / 3), Math.floor((ty + nz * 0.5) / 3), 21);
+    return nz < 0 ? cell > 0.5 : cell > 0.22;
+  };
   const isFloor = (tx, ty) => gridAt(w, tx, ty) !== T.VOID;
   const skipV = (tx, ty) => (w.chasm && inB(tx, ty) && w.chasm[ty * MW + tx]) || ringFlag(w, tx, ty) === 2;   // gouffre ouvert, anneau d'arène (couronne à part)
   const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
@@ -542,7 +550,7 @@ function muretRuns(w, ruin) {
       if (isFloor(tx + nx, ty + nz)) continue;
       const dx = -nz, dz = nx, cx = tx + 0.5 + nx * 0.5, cz = ty + 0.5 + nz * 0.5;
       const ax = cx - dx * 0.5, az = cz - dz * 0.5, bx = cx + dx * 0.5, bz = cz + dz * 0.5;
-      const on = !skipV(tx + nx, ty + nz) && ringFlag(w, tx, ty) !== 1;
+      const on = !skipV(tx + nx, ty + nz) && ringFlag(w, tx, ty) !== 1 && (!lake || lakeKeep(tx, ty, nx, nz));
       const e = { ax, az, bx, bz, mx: cx, mz: cz, nx, nz, on, used: false, low: nz > 0 };
       edges.push(e); const k = key(ax, az); if (!byStart.has(k)) byStart.set(k, []); byStart.get(k).push(e);
     }
@@ -553,7 +561,7 @@ function muretRuns(w, ruin) {
   const seg = (p, q, h, e0, e1) => {
     const dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1e-3) return;
     const ux = dx / L, uz = dz / L, sh = (e1 - e0) / 2, mx = (p[0] + q[0]) / 2 + ux * sh, mz = (p[1] + q[1]) / 2 + uz * sh;
-    out.push([mx, mz, hash(mx, mz, 1), hash(mx, mz, 2), hash(mx, mz, 3), -Math.atan2(dz, dx), L + e0 + e1, h, TH]);
+    out.push([mx, mz, hash(mx, mz, 1), hash(mx, mz, 2), hash(mx, mz, 3), -Math.atan2(dz, dx), L + e0 + e1, h - baseY - OPEN_DEPTH, TH, baseY]);
   };
   const ext = (a, b) => { if (a == null || b == null) return 0; let d = Math.abs(a - b) % (Math.PI * 2); if (d > Math.PI) d = Math.PI * 2 - d; return Math.min(0.5, TH / 2 * Math.tan(d / 2)) + 0.02; };
   for (const e0 of edges) {
@@ -584,7 +592,7 @@ function muretRuns(w, ruin) {
       if (!r) return;
       const prev = closed || i > 0 ? runs[(i - 1 + R) % R] : null, next = closed || i < R - 1 ? runs[(i + 1) % R] : null;
       let h = r.low ? LOW_H : chainH;
-      if (ruin) { const mx = (r.p[0] + r.q[0]) / 2, mz = (r.p[1] + r.q[1]) / 2, b = hash(mx, mz, 2); if (!r.low && hash(mx, mz, 4) < 0.1) return; h = r.low ? 0.62 + b * 0.25 : (b < 0.25 ? 0.55 + b : 0.9 + b * 0.7); }
+      if (ruin) { const mx = (r.p[0] + r.q[0]) / 2, mz = (r.p[1] + r.q[1]) / 2, b = hash(mx, mz, 2); if (!r.low && hash(mx, mz, 4) < (lake ? 0.15 : 0.1)) return; h = r.low ? 0.62 + b * 0.25 : (b < 0.25 ? 0.55 + b : 0.9 + b * 0.7); if (lake) h = b < 0.3 ? 0.35 + b * 1.2 : 0.8 + b * 0.9; }
       seg(r.p, r.q, h, ext(prev && prev.ang, r.ang), ext(r.ang, next && next.ang));
     });
   }
@@ -594,6 +602,10 @@ function muretRuns(w, ruin) {
     const hA = 1.0 + rndI(Math.round(a.cx), Math.round(a.cy), 7) * 0.4, e = Math.min(0.5, TH / 2 * Math.tan(Math.PI * 2 / segs.length)) + 0.02;
     for (let i = 0; i < segs.length; i += 2) {
       const s0 = segs[i], s1 = segs[(i + 1) % segs.length], hOf = m => (Math.sin(m) > 0.45 ? LOW_H : hA);
+      if (lake) {   // sanctuaire du lac : couronne en ruine, par pans, jamais devant la caméra
+        const m = s0.a1, b = rndI(i >> 3, 5, 23); if (!s0.ring || !s1.ring || Math.sin(m) > 0.2 || rndI(i >> 3, 3, 22) < 0.4) continue;
+        seg(P(s0.a0), P(s1.a1), b < 0.3 ? 0.4 + b * 1.2 : 0.8 + rndI(i, 1, 24) * 0.9, e, e); continue;
+      }
       if (!s0.ring || !s1.ring) { if (s0.ring) seg(P(s0.a0), P(s0.a1), hOf((s0.a0 + s0.a1) / 2), e, e); continue; }
       seg(P(s0.a0), P(s1.a1), hOf(s0.a1), e, e);
     }
@@ -686,16 +698,18 @@ export function buildProps(w, key, seed, shared) {
   });
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   mesh.frustumCulled = false;
-  if (cfg.open && !forest && !water) wallItems.push(...muretRuns(w, key === 'ember'));
+  const mStyle = key === 'mirror' ? 'lake' : !water ? (key === 'ember' ? 'ruin' : 'edo') : null;
+  if (cfg.open && !forest && mStyle) wallItems.push(...muretRuns(w, mStyle));
   if (cfg.open && wallItems.length) {   // murets de torchis : boîte + chapeau de tuiles (le chapeau déborde sur l'épaisseur, pas sur la longueur : les segments se raccordent)
     const wb = new THREE.BoxGeometry(1, 0.82, 1); wb.translate(0, 0.41, 0);
     const cap = new THREE.BoxGeometry(1, 0.18, 1.16); cap.translate(0, 0.91, 0);
-    const wmat = mat.clone(); wmat.uniforms = { ...mat.uniforms, uType: { value: 7 } };
+    const wmat = mat.clone(); wmat.uniforms = { ...mat.uniforms, uType: { value: 7 }, uStone: { value: mStyle === 'lake' ? 1 : 0 } };
     const wm = new THREE.InstancedMesh(mergeGeos([wb, cap]), wmat, wallItems.length);
     const qy = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0);
-    wallItems.forEach(([x, z, a, b2, c, rot, sx, sy, th], i) => {
-      m4.compose(new THREE.Vector3(x, -OPEN_DEPTH, z), qy.setFromAxisAngle(yAx, rot || 0), new THREE.Vector3(sx, sy, th || sx)); wm.setMatrixAt(i, m4);
-      const pal = cfg.walls || EDO_WALL, pc = pal[Math.floor(c * 7.99) % pal.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
+    const STONE = [[.46, .52, .56], [.4, .45, .5], [.52, .56, .58], [.37, .42, .46], [.44, .48, .47]];   // pierre claire du lac, un peu bleutée
+    wallItems.forEach(([x, z, a, b2, c, rot, sx, sy, th, y0], i) => {
+      m4.compose(new THREE.Vector3(x, y0 ?? -OPEN_DEPTH, z), qy.setFromAxisAngle(yAx, rot || 0), new THREE.Vector3(sx, sy, th || sx)); wm.setMatrixAt(i, m4);
+      const pal = mStyle === 'lake' ? STONE : cfg.walls || EDO_WALL, pc = pal[Math.floor(c * 7.99) % pal.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
     });
     wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; wm.frustumCulled = false;
     mesh.add(wm);
