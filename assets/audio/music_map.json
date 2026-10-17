@@ -193,5 +193,11 @@
   "start": 0,
   "end": null,
   "fallback_audio": "boss_suicune_p2.ogg"
+ },
+ "MAP_J4": {
+  "title": "Îles Tourbillon (Edo) (Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_j4.ogg"
  }
 }

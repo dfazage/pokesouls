@@ -16,6 +16,7 @@ export const TRACKS = {
   MAP_J1: { title: 'Tour Carillon (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Tour Carillon' },
   MAP_J2: { title: 'Tour Brûlée (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Tour Brûlée' },
   MAP_J3: { title: 'Lac du Miroir (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Lac du Miroir' },
+  MAP_J4: { title: 'Îles Tourbillon (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Îles Tourbillon' },
   MAP_J5: { title: 'Forêt d\'Ilex (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Forêt d\'Ilex (secrète)' },
   BOSS_RAIKOU: { title: 'Raikou, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou' },
   BOSS_RAIKOU_P2: { title: 'Raikou, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou, sous 50 % de vie' },
