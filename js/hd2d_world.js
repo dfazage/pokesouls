@@ -5,7 +5,7 @@ import * as S from './hd2d_shaders.js';
 
 const { TS, MW, MH, FACE, T } = M;
 export const DEPTH = 3.4, OPEN_DEPTH = 0.06, WATER_DEPTH = 0.42;
-const floorDepth = cfg => cfg.water ? WATER_DEPTH : cfg.open ? OPEN_DEPTH : DEPTH;           // profondeur de l'abîme sous le sol (en tuiles)
+const floorDepth = cfg => cfg.water || cfg.banks ? WATER_DEPTH : cfg.open ? OPEN_DEPTH : DEPTH;           // profondeur de l'abîme sous le sol (en tuiles)
 export const WALL_TALL = 1.8, WALL_LOW = 0.28, WALL_SIDE = 1.3, WALL_MID = 1.0;
 
 // ---------- réglages par thème ----------
@@ -29,7 +29,7 @@ export const HD = {
   bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .5 } },
-  ember: { type: 6, open: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.11, .085, .07], [.2, .14, .1], [1., .5, .2]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
+  ember: { type: 3, open: true, banks: true, edge: 'ruin', fog: [.2, .1, .07], fogD: .016, mist: .5, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .5, .2], light: [1.1, .97, .9], bob: 0,
     roof: [[.07, .06, .06], [.17, .14, .13]], win: .9, walls: [[.2, .17, .15], [.28, .2, .15], [.15, .12, .1], [.3, .26, .22], [.24, .16, .12], [.34, .28, .24], [.18, .15, .14], [.12, .1, .09]],
     part: { n: 280, size: 30, color: [1., .55, .2], vel: [0, .5, 0], sway: 1.5, box: [44, 12, 40] }, emisTint: [1.25, .85, .5], emisK: 1.5,
     grade: { ts: [1.02, .95, .92], th: [1.1, 1.02, .92], sat: 1.12, con: 1.1, bloom: .62, vig: .45 } },
@@ -317,6 +317,7 @@ export function buildProps(w, key, seed, shared) {
     const V = (tx, ty, k) => rndI(tx, ty, k + 11);
     for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
       const d = dist[ty * MW + tx]; if (d === 0 || d > 6) continue;
+      if (w.chasm && w.chasm[ty * MW + tx]) continue;   // gouffre : on le laisse ouvert
       const low = floorAbove(tx, ty);   // côté sud d'une zone : haies basses, pour ne jamais cacher le joueur
       const put = (k, kind, px, pz) => {
         const a = V(tx, ty, k * 5 + 1), b = V(tx, ty, k * 5 + 2), c = V(tx, ty, k * 5 + 3), e = V(tx, ty, k * 5 + 4);

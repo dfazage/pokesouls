@@ -15,7 +15,7 @@ export const THEMES = {
   // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
   bell: { floor: [112, 104, 92], arena: [138, 128, 110], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [150, 140, 142], ambArena: [180, 158, 134], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
   // Tour Brûlée : pagode d'Écorcia calcinée, automne et cendres au couchant
-  ember: { floor: [96, 88, 82], arena: [118, 96, 82], wallA: '#4a3a34', wallB: '#46362f', face: '#251a16', faceTop: '#7a5a48', accent: [255, 140, 60], accent2: [255, 205, 110], fx: 'garden', open: true, scorch: true, edge: 'ruin', leaf: ['#4a1a14', '#7a2a1a', '#b04a1e', '#34140f'],
+  ember: { floor: [96, 88, 82], arena: [118, 96, 82], wallA: '#4a3a34', wallB: '#46362f', face: '#251a16', faceTop: '#7a5a48', accent: [255, 140, 60], accent2: [255, 205, 110], fx: 'garden', open: true, bridgeCol: [136, 96, 60], scorch: true, edge: 'ruin', leaf: ['#4a1a14', '#7a2a1a', '#b04a1e', '#34140f'],
     edo: [[104, 96, 90], [118, 78, 62], [88, 66, 50]], amb: [190, 150, 128], ambArena: [214, 128, 96], decor: ['lantern', 'tree', 'bell', 'torii', 'brazier'] },
   // Lac du Miroir : temple sur l'eau à l'aube de printemps ; le vide est de l'eau, les passages sont des ponts
   mirror: { floor: [168, 176, 176], arena: [196, 202, 198], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
@@ -82,8 +82,9 @@ const JOHTO = [
         { cell: [1, 2], name: 'Parvis calciné' }, { cell: [0, 2], name: 'Jardin des érables' }, { cell: [1, 1], name: 'Allée des cendres' },
         { cell: [3, 2], name: 'Remparts effondrés' }, { cell: [2, 1], name: 'Cour du temple effondré' }, { cell: [3, 1], name: 'Escalier de la tour' },
         { cell: [3, 0], name: 'Étage effondré' }, { cell: [2, 2], name: 'Cour des tuiles' }, { cell: [0, 1], name: 'Chapelle des cloches' }, { cell: [1, 0], name: 'Belvédère calciné' },
-      ].map((z, i) => i === 0 || i === 1 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
-      links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9]],
+      ].map((z, i) => ({ ...z, rx: 14, ry: 9, ...(i === 0 || i === 1 ? { zone: 'Lisière' } : i > 7 ? { zone: 'Cœur' } : {}) })),
+      links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9], [7, 4], [8, 2], [9, 4]],
+      canyons: [{ z: 1, off: 4 }, { z: 2, ax: 'h', off: -3 }, { z: 4, off: -3, w: 4, gap: -2 }, { z: 7, off: 3 }, { z: 3, ax: 'h', off: 2 }, { z: 8, off: -2 }],
       door: [3, 5], arena: { cell: [2, 0], from: 6 }, bonfires: [0, 4, 6], big: 5, pseudo: 8, chests: [1, 2, 3, 4, 8, 9, 7, 5],
     },
     areas: ['Parvis calciné', 'Allée des cendres', 'Cour du temple effondré', 'Escalier de la tour', 'Étage effondré'], sanctuary: "Sanctuaire d'Entei",
@@ -439,6 +440,20 @@ function generateFree(def) {
       pits.push([px, py, pr]); made++;
     }
   }
+  // 5b. gouffres : tranchées qui traversent une zone, franchissables par un pont de planches (carte « monde ouvert »)
+  const forced = new Uint8Array(MW * MH), chasm = new Uint8Array(MW * MH);
+  for (const cn of F.canyons || []) {
+    const z = zones[cn.z], vt = cn.ax !== 'h', half = (cn.w || 3) / 2, gc = (vt ? z.cy : z.cx) + (cn.gap || 0), gw = (cn.gapW || 5) / 2, c0 = (vt ? z.cx : z.cy) + (cn.off || 0);
+    for (let y = z.cy - z.ry - 3; y <= z.cy + z.ry + 3; y++) for (let x = z.cx - z.rx - 3; x <= z.cx + z.rx + 3; x++) {
+      if (!inMap(x, y) || grid[y * MW + x] !== T.FLOOR) continue;
+      const al = vt ? y : x, ac = vt ? x : y, wob = (nz(x, y, 4, 70 + z.k) - 0.5) * 2.4;
+      if (Math.abs(ac + 0.5 - c0 - wob) > half) continue;
+      if ((x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 < (arena.r + 5) ** 2) continue;
+      if (fpts.some(q => Math.hypot(q.x - x, q.y - y) < 5) || (door && door.tiles.some(([dx, dy]) => Math.hypot(dx - x, dy - y) < 6))) continue;
+      if (Math.abs(al + 0.5 - gc) <= gw) { forced[y * MW + x] = 1; continue; }
+      grid[y * MW + x] = T.VOID; roomOf[y * MW + x] = -1; chasm[y * MW + x] = 1;
+    }
+  }
   // 6. élagage : toute tuile de sol non reliée au départ (poches, îlots isolés) redevient vide
   {
     const st = zones[F.bonfires[0]], q = [[st.cx, st.cy + 2]], seen = new Uint8Array(MW * MH); let sx0 = st.cx, sy0 = st.cy + 2;
@@ -501,7 +516,9 @@ function generateFree(def) {
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
   const bridge = new Uint8Array(MW * MH);   // tuiles de passage (hors des zones et de l'arène) : ponts sur l'eau
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (grid[y * MW + x] !== T.VOID && !inZone(x, y) && (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 > arena.r * arena.r) bridge[y * MW + x] = 1;
-  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, bridge, secret: null, modules: [] };
+  if (F.canyons) bridge.fill(0);   // monde ouvert : seuls les ponts de gouffre sont en planches
+  for (let i = 0; i < forced.length; i++) if (forced[i] && grid[i] !== T.VOID) bridge[i] = 1;
+  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, bridge, chasm, secret: null, modules: [] };
 }
 
 // ---------- monde ----------
@@ -524,7 +541,7 @@ export function buildWorld(idx) {
   }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
-  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
+  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, chasm: L.chasm || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
   computeWall(world);
   return world;
 }
