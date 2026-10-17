@@ -397,25 +397,24 @@ function drawItem(ctx, g, it) {
   M.drawDecor(ctx, g.world, { kind: 'chest', tx: it.x / TS - 0.5, ty: it.y / TS - 1, w: 1, h: 1, seed: 3 }, g.t, false);   // pieds du coffre = point de pose de l'objet
 }
 function drawPlaque(ctx, g, it) { shadow(ctx, it.x, it.y, 8, 0.35); const y = it.y - 10 + Math.sin(g.t * 3) * 2; ctx.fillStyle = '#c690ff'; ctx.fillRect(it.x - 6, y - 8, 12, 16); ctx.fillStyle = '#f2e0ff'; ctx.fillRect(it.x - 4, y - 6, 8, 12); ctx.fillStyle = '#7a4fc0'; ctx.fillRect(it.x - 1, y - 4, 2, 8); ctx.fillRect(it.x - 3, y - 1, 6, 2); }
-// butin au sol : l'icône tombe de la hauteur de l'ennemi, rebondit deux fois puis reste posée sur le sol ; elle se soulève un peu quand elle est aimantée.
+// butin au sol : l'objet est lancé depuis l'ennemi, monte en l'air (arc d'environ 29 px), retombe sur son point d'arrivée et fait un petit rebond ; il se soulève un peu quand il est aimanté.
 // Halo vert (commun) ou doré avec colonne de lumière (rare). Clignote avant de disparaître.
-function lootHeight(t) {
-  if (t < 0.30) return 22 * (1 - (t / 0.30) ** 2);
-  if (t < 0.52) return 6 * Math.sin(Math.PI * (t - 0.30) / 0.22);
-  if (t < 0.64) return 1.5 * Math.sin(Math.PI * (t - 0.52) / 0.12);
-  return 0;
-}
+const LOOT_FLIGHT = 0.55;   // durée du lancer (s) ; le ramassage n'est possible qu'ensuite (game.js)
 function drawLoot(ctx, g, l) {
-  if (l.life < 8 && Math.floor(g.t * 6) % 2) return;
-  const pull = l.pull || 0, z = lootHeight(l.age) + 4 * pull, col = l.rare ? '255,226,122' : '159,232,168';
-  shadow(ctx, l.x, l.y, Math.max(3, 5 - z * 0.15), 0.3);
+  if (!l.fx && l.life < 8 && Math.floor(g.t * 6) % 2) return;
+  let x = l.x, y = l.y, z;
+  if (l.age < LOOT_FLIGHT) { const p = l.age / LOOT_FLIGHT; x = l.ox + (l.x - l.ox) * p; y = l.oy + (l.y - l.oy) * p; z = 10 * (1 - p) + 96 * p * (1 - p); }   // du torse de l'ennemi au sol, en arc
+  else { const t = l.age - LOOT_FLIGHT; z = t < 0.22 ? 4 * Math.sin(Math.PI * t / 0.22) : 0; }                                                              // petit rebond à l'arrivée
+  z += 4 * (l.pull || 0);
+  const col = l.rare ? '255,226,122' : '159,232,168';
+  shadow(ctx, x, y, Math.max(3, 5 - z * 0.12), 0.3);
   const pulse = 0.5 + 0.3 * Math.sin(g.t * 5 + l.ph);
   ctx.save();
-  if (l.age > 0.6) { ctx.strokeStyle = `rgba(${col},${pulse})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(l.x, l.y, 7 + (l.rare ? 2 : 0), 3, 0, 0, 7); ctx.stroke(); }
-  if (l.rare) for (let i = 0; i < 3; i++) { ctx.fillStyle = `rgba(${col},${0.16 - i * 0.04})`; ctx.fillRect(l.x - 4 + i, l.y - 30 - i * 4, 8 - i * 2, 30 + i * 4); }
+  if (l.age > LOOT_FLIGHT + 0.1) { ctx.strokeStyle = `rgba(${col},${pulse})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, y, 7 + (l.rare ? 2 : 0), 3, 0, 0, 7); ctx.stroke(); }
+  if (l.rare && l.age > LOOT_FLIGHT) for (let i = 0; i < 3; i++) { ctx.fillStyle = `rgba(${col},${0.16 - i * 0.04})`; ctx.fillRect(x - 4 + i, y - 30 - i * 4, 8 - i * 2, 30 + i * 4); }
   const img = itemImage(l.key);
-  if (img) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, Math.round(l.x - 6.5), Math.round(l.y - z - 13), 13, 13); }
-  else { ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.moveTo(l.x, l.y - z - 10); ctx.lineTo(l.x + 4, l.y - z - 5); ctx.lineTo(l.x, l.y - z - 1); ctx.lineTo(l.x - 4, l.y - z - 5); ctx.fill(); }
+  if (img) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, Math.round(x - 6.5), Math.round(y - z - 13), 13, 13); }
+  else { ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.moveTo(x, y - z - 10); ctx.lineTo(x + 4, y - z - 5); ctx.lineTo(x, y - z - 1); ctx.lineTo(x - 4, y - z - 5); ctx.fill(); }
   ctx.restore();
 }
 function drawSouvenir(ctx, g) { const s = g.souvenir, y = s.y - 8 + Math.sin(g.t * 3) * 2; ctx.fillStyle = 'rgba(201,167,255,.9)'; ctx.beginPath(); ctx.arc(s.x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, y, 2, 0, 7); ctx.fill(); }
