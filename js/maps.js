@@ -1,5 +1,5 @@
 // Les cinq cartes du Chapitre Génération 1 (quatre cartes + une carte secrète) : définition, génération des salles, collisions et rendu du décor.
-// Toutes les cartes sauf le Laboratoire oublié (dessiné à la main) : zones libres générées avec une graine fixe (voir generateFree). L'ancien générateur à salles et couloirs (generate) n'est plus utilisé.
+// Toutes les cartes : zones libres générées avec une graine fixe (voir generateFree).
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
 // PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
@@ -85,7 +85,19 @@ const KANTO = [
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
     mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'dragoniteK' },
     loot: ['candy', 'carbos', 'ct_hydro', 'berrypack', 'hpup', 'zinc', 'etherpack', 'revive'], reward: ['ct_fireblast', 'candy'] },
-  { id: 'm5', name: 'Laboratoire oublié', sub: 'Là où Mewtwo est né', theme: 'lab', mus: 5, lv: 38, seed: 5, boss: 'mewtwo', manual: true, final: true,
+  { id: 'm5', name: 'Laboratoire oublié', sub: 'Là où Mewtwo est né', theme: 'lab', mus: 5, lv: 38, seed: 5, boss: 'mewtwo', final: true,
+    // zones libres : le hall (0) s'ouvre sur l'observation (1) et les archives (7) ; les cuves (2) mènent au poste de contrôle (3), puis à l'antichambre (5) ; la porte relie l'observation à la galerie des miroirs (4), qu'on atteint aussi par le quai (9)
+    free: {
+      zones: [
+        { cell: [0, 2], name: "Hall d'entrée" }, { cell: [1, 2], name: "Salle d'observation" }, { cell: [1, 1], name: 'Salle des cuves' },
+        { cell: [2, 1], name: 'Salle de contrôle' }, { cell: [2, 2], name: 'Galerie des miroirs' }, { cell: [3, 1], name: 'Antichambre' },
+        { cell: [1, 0], name: 'Chambre de clonage', decor: ['tankbroken', 'pillar', 'tankbroken'] }, { cell: [0, 1], name: 'Archives effacées' }, { cell: [2, 0], name: 'Laboratoire annexe' }, { cell: [3, 2], name: 'Quai de maintenance' },
+      ].map((z, i) => i === 2 ? { ...z, decor: ['tank', 'tank', 'pillar'] } : i === 3 ? { ...z, decor: ['console', 'console', 'pillar'] } : i === 4 ? { ...z, decor: ['mirror', 'mirror', 'pillar'] } : z)
+        .map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i === 5 ? { ...z, zone: 'Approche' } : i === 4 || i === 9 ? { ...z, zone: 'Approche' } : { ...z, zone: 'Cœur' })
+        .map(shape([[3, -1, 11, 7], [-2, 2, 12, 8], [-2, -1, 13, 8], [-3, 2, 12, 8], [3, 1, 12, 8], [0, 0, 10, 6], [-3, 3, 11, 6], [2, -2, 9, 8], [3, 3, 11, 6], [-2, 2, 9, 6]])),
+      links: [[0, 1], [1, 2], [2, 3], [3, 5], [2, 6], [0, 7], [3, 8], [4, 9], [9, 5]], pow: 2.1, noise: 0.9, thin: 0.9,
+      door: [1, 4], arena: { cell: [3, 0], from: 5 }, bonfires: [0, 3, 5], big: 6, chests: [2, 3, 6, 8, 7, 4],
+    },
     areas: [], sanctuary: 'Sanctuaire de Mewtwo',
     mobs: { mini: ['magnemite', 'koffing', 'voltorb'], mid: ['porygon', 'weezing'], big: 'electrodeA' },
     loot: ['candy', 'calcium', 'ct_psychic', 'etherpack', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy'] },
@@ -199,206 +211,6 @@ function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>
 const rnd = (x, y, s = 0) => { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
 
 const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1], lantern: [1, 1], bell: [2, 2], torii: [2, 1] };
-
-// ---------- carte du laboratoire (dessinée à la main) ----------
-const LAB = (() => {
-  const DY = 4 + PADY;
-  const R = [
-    ['R0', 3, 38, 12, 9, 'Lisière', "Hall d'entrée"], ['C0', 15, 41, 9, 3, 'Lisière', null], ['R1', 24, 36, 11, 12, 'Lisière', "Salle d'observation"],
-    ['C1', 28, 29, 3, 7, 'Cœur', null], ['R2', 20, 12, 30, 17, 'Cœur', 'Salle des cuves'], ['C2v', 9, 26, 3, 12, 'Cœur', null], ['C2h', 12, 26, 8, 3, 'Cœur', null],
-    ['C3', 50, 19, 4, 3, 'Cœur', null], ['R3', 54, 15, 9, 10, 'Cœur', 'Salle de contrôle'], ['C5', 33, 8, 3, 4, 'Cœur', null], ['R4', 28, 0, 14, 8, 'Cœur', 'Chambre de clonage'],
-    ['C4', 63, 18, 8, 3, 'Approche', null], ['R5', 71, 10, 16, 18, 'Approche', 'Galerie des miroirs'], ['C6v', 80, 28, 3, 11, 'Approche', null], ['C6h', 80, 36, 30, 3, 'Approche', null], ['R7', 109, 30, 9, 10, 'Approche', 'Antichambre'], ['C7', 112, 24, 3, 7, 'Sanctuaire', null],
-  ].map(r => ({ id: r[0], x: r[1], y: r[2] + DY, w: r[3], h: r[4], zone: r[5], name: r[6] }));
-  const decor = [['tank', 26, 15], ['tank', 26, 23], ['tank', 32, 19], ['tank', 38, 15], ['tank', 38, 23], ['tank', 44, 19], ['pillar', 27, 39], ['pillar', 32, 39], ['pillar', 27, 45], ['pillar', 32, 45],
-    ['pillar', 6, 40], ['pillar', 12, 40], ['pillar', 6, 45], ['pillar', 12, 45], ['mirror', 75, 14], ['mirror', 75, 22], ['mirror', 82, 14], ['mirror', 82, 22], ['mirror', 79, 18],
-    ['console', 57, 17], ['console', 59, 22], ['tankbroken', 31, 3], ['tankbroken', 37, 3], ['pillar', 29, 6], ['pillar', 40, 6], ['pillar', 111, 31], ['pillar', 116, 31], ['pillar', 111, 34], ['pillar', 116, 34]]
-    .map(([kind, x, y]) => ({ kind, tx: x, ty: y + DY }));
-  const spawns = [['magnemite', 28, 41], ['magnemite', 32, 44], ['koffing', 30, 38], ['koffing', 28, 18], ['koffing', 41, 21], ['koffing', 34, 27], ['voltorb', 24, 20], ['voltorb', 46, 25], ['voltorb', 31, 13], ['magnemite', 45, 14],
-    ['koffing', 57, 21], ['koffing', 60, 17], ['electrodeA', 35, 4], ['porygon', 77, 18], ['porygon', 83, 19], ['weezing', 79, 12], ['magnemite', 84, 25], ['magnemite', 73, 25], ['koffing', 80, 22]]
-    .map(([type, x, y]) => ({ type, tx: x, ty: y + DY }));
-  return {
-    rooms: R, decor, spawns, arena: { cx: 113, cy: 14 + DY - 5, r: 15 }, // l'arène est au nord de l'antichambre : on y entre par le sud
-    door: { tiles: [[9, 31 + DY], [10, 31 + DY], [11, 31 + DY]], dir: { x: 0, y: 1 } }, // s'ouvre depuis le côté nord
-    fog: { tiles: [[112, 26 + DY], [113, 26 + DY], [114, 26 + DY]], dir: { x: 0, y: -1 } },
-    bonfires: [{ id: 'b1', name: "Hall d'entrée", tx: 8, ty: 42 + DY }, { id: 'b2', name: 'Salle de contrôle', tx: 58, ty: 20 + DY }, { id: 'b3', name: 'Antichambre', tx: 113, ty: 34 + DY }],
-    start: { tx: 8, ty: 44 + DY },
-    chests: [[5, 41], [40, 2], [61, 22], [84, 14], [114, 32], [22, 26]].map(([x, y]) => ({ tx: x, ty: y + DY })),
-  };
-})();
-
-// ---------- génération des cartes à salles ----------
-function generate(def) {
-  const R = rng(def.seed);
-  const cw = 31, ch = 21, ri = (a, b) => a + Math.floor(R() * (b - a + 1));
-  const rooms = [];
-  const path = def.path;
-  for (let i = 0; i < 7; i++) {
-    const [cx, cy] = path[i], ox = cx * cw, oy = cy * ch + PADY;
-    let w = i === 0 ? ri(12, 15) : i === 6 ? ri(13, 17) : ri(14, 24), h = i === 0 ? ri(9, 11) : ri(10, 15);
-    w = Math.min(w, cw - 4); h = Math.min(h, ch - 4);
-    let x = ox + 2 + ri(0, cw - 4 - w); const y = oy + 2 + ri(0, ch - 4 - h);
-    if (i === 6) x = ox + 15 - Math.floor(w / 2); // antichambre centrée sous l'arène : l'arrivée est frontale (vers le nord)
-    const zone = i < 2 ? 'Lisière' : i < 6 ? 'Cœur' : 'Approche';
-    rooms.push({ id: 'G' + i, x, y, w, h, zone, name: def.areas[i] });
-  }
-  const [ax, ay] = path[7];
-  const arena = { cx: ax * cw + 15, cy: ay * ch + 10 + PADY - Math.ceil(ARENA_R - 9), r: ARENA_R };
-  const mid = r => ({ x: Math.floor(r.x + r.w / 2), y: Math.floor(r.y + r.h / 2) });
-  // couloirs : segments [x, y, w, h] (L : horizontal puis vertical), largeur 3
-  const corrs = [];
-  const link = (a, b) => {
-    const segs = [];
-    const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x), y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
-    segs.push({ x: x0 - 1, y: a.y - 1, w: x1 - x0 + 3, h: 3, o: 'h' });
-    segs.push({ x: b.x - 1, y: y0 - 1, w: 3, h: y1 - y0 + 3, o: 'v' });
-    return segs;
-  };
-  const centers = rooms.map(mid); centers.push({ x: arena.cx, y: arena.cy });
-  const mainLinks = [];
-  for (let i = 0; i < 7; i++) { const s = link(centers[i], centers[i + 1]); mainLinks.push(s); s.forEach(g => corrs.push(g)); }
-  // raccourci : cherche deux salles éloignées dans le parcours mais voisines sur la grille
-  let shortcut = null;
-  for (let i = 0; i < 6 && !shortcut; i++) for (let j = i + 3; j < 7; j++) {
-    const d = Math.abs(path[i][0] - path[j][0]) + Math.abs(path[i][1] - path[j][1]);
-    if (d === 1) { shortcut = { i, j, segs: link(centers[i], centers[j]) }; break; }
-  }
-  const grid = new Uint8Array(MW * MH), roomOf = new Int16Array(MW * MH).fill(-1);
-  const fill = (x, y, w, h, v) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (i > 0 && j > 0 && i < MW - 1 && j < MH - 1) grid[j * MW + i] = v; };
-  rooms.forEach((r, k) => { fill(r.x, r.y, r.w, r.h, T.FLOOR); });
-  corrs.forEach(s => fill(s.x, s.y, s.w, s.h, T.FLOOR));
-  if (shortcut) shortcut.segs.forEach(s => fill(s.x, s.y, s.w, s.h, T.FLOOR));
-  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const dx = x + 0.5 - arena.cx, dy = y + 0.5 - arena.cy; if (dx * dx + dy * dy <= arena.r * arena.r) grid[y * MW + x] = T.FLOOR; }
-  // salles : indice par tuile (les salles nommées l'emportent sur les couloirs)
-  rooms.forEach((r, k) => { for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) roomOf[y * MW + x] = k; });
-  const inAnyRoom = (x, y) => rooms.some(r => x >= r.x - 1 && x < r.x + r.w + 1 && y >= r.y - 1 && y < r.y + r.h + 1);
-  const inArena = (x, y) => (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 <= (arena.r + 2) ** 2;
-  // zone des couloirs : prend le nom de la zone de la salle d'origine
-  // porte du raccourci
-  let door = null;
-  if (shortcut) {
-    const cand = shortcut.segs.map(s => {
-      const pts = [];
-      if (s.o === 'h') { const cy = s.y + 1; for (let x = s.x + 3; x < s.x + s.w - 3; x++) pts.push({ x, y: cy, o: 'h' }); }
-      else { const cx = s.x + 1; for (let y = s.y + 3; y < s.y + s.h - 3; y++) pts.push({ x: cx, y, o: 'v' }); }
-      return pts;
-    }).flat().filter(p => {
-      const t = p.o === 'h' ? [[p.x, p.y - 1], [p.x, p.y], [p.x, p.y + 1]] : [[p.x - 1, p.y], [p.x, p.y], [p.x + 1, p.y]];
-      return t.every(([x, y]) => !inAnyRoom(x, y) && !inArena(x, y) && grid[y * MW + x] === T.FLOOR);
-    });
-    if (cand.length) {
-      const p = cand[Math.floor(cand.length / 2)];
-      const tiles = p.o === 'h' ? [[p.x, p.y - 1], [p.x, p.y], [p.x, p.y + 1]] : [[p.x - 1, p.y], [p.x, p.y], [p.x + 1, p.y]];
-      // le côté d'ouverture est celui de la salle la plus tardive (j)
-      const cj = centers[shortcut.j], dirv = p.o === 'h' ? { x: cj.x > p.x ? -1 : 1, y: 0 } : { x: 0, y: cj.y > p.y ? -1 : 1 };
-      door = { tiles, dir: dirv };
-      tiles.forEach(([x, y]) => { grid[y * MW + x] = T.DOOR; });
-    }
-  }
-  // brume : dernier tronçon vers l'arène
-  const last = mainLinks[6]; let fog = null;
-  {
-    const a = centers[6], b = centers[7];
-    // marche de a vers b le long du L, trouve le premier point proche de l'arène
-    const pts = []; const sx = Math.sign(b.x - a.x) || 1, sy = Math.sign(b.y - a.y) || 1;
-    for (let x = a.x; x !== b.x; x += sx) pts.push({ x, y: a.y, dx: sx, dy: 0 });
-    for (let y = a.y; y !== b.y; y += sy) pts.push({ x: b.x, y, dx: 0, dy: sy });
-    const p = pts.find(q => (q.x + 0.5 - arena.cx) ** 2 + (q.y + 0.5 - arena.cy) ** 2 <= (arena.r + 3) ** 2 && !inAnyRoom(q.x, q.y)) || pts[pts.length - 1];
-    const tiles = p.dx ? [[p.x, p.y - 1], [p.x, p.y], [p.x, p.y + 1]] : [[p.x - 1, p.y], [p.x, p.y], [p.x + 1, p.y]];
-    fog = { tiles, dir: { x: p.dx, y: p.dy } };
-    tiles.forEach(([x, y]) => { grid[y * MW + x] = T.FOG; });
-  }
-  // zones des tuiles de couloir (pour les bannières)
-  const zoneCorr = new Int16Array(MW * MH).fill(-1);
-  // décors, coffres, feux, ennemis
-  const occ = new Uint8Array(MW * MH); // tuiles réservées (voies de circulation)
-  const lane = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const k = (y + j) * MW + x + i; if (k >= 0 && k < occ.length) occ[k] = 1; } };
-  corrs.forEach(s => { for (let y = s.y; y < s.y + s.h; y++) for (let x = s.x; x < s.x + s.w; x++) lane(x, y); });
-  if (shortcut) shortcut.segs.forEach(s => { for (let y = s.y; y < s.y + s.h; y++) for (let x = s.x; x < s.x + s.w; x++) lane(x, y); });
-  const free = (x, y, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = (y + j) * MW + x + i; if (occ[k] || grid[k] !== T.FLOOR) return false; } return true; };
-  const reserve = (x, y, w, h, pad = 0) => { for (let j = -pad; j < h + pad; j++) for (let i = -pad; i < w + pad; i++) { const k = (y + j) * MW + x + i; if (k >= 0 && k < occ.length) occ[k] = 1; } };
-  const bonfires = [];
-  [[0, 'b1'], [3, 'b2'], [6, 'b3']].forEach(([ri_, id]) => {
-    const r = rooms[ri_], c = mid(r); let bx = c.x, by = ri_ === 0 ? c.y - 2 : c.y - 3;
-    for (let t = 0; t < 30 && !free(bx, by, 1, 1); t++) { bx = r.x + 2 + Math.floor(R() * (r.w - 4)); by = r.y + 2 + Math.floor(R() * (r.h - 4)); }
-    reserve(bx, by, 1, 1, 1); bonfires.push({ id, name: r.name, tx: bx, ty: by });
-  });
-  const startRoom = rooms[0]; const start = { tx: bonfires[0].tx, ty: bonfires[0].ty + 2 };
-  const decor = [], chests = [], spawns = [];
-  rooms.forEach((r, k) => {
-    const n = Math.floor(r.w * r.h / 42);
-    for (let t = 0; t < n * 4 && decor.filter(d => d.room === k).length < n; t++) {
-      const kind = def.decorKinds[Math.floor(R() * def.decorKinds.length)], [w, h] = FOOT[kind];
-      const x = r.x + 1 + Math.floor(R() * (r.w - 2 - w + 1)), y = r.y + 1 + Math.floor(R() * (r.h - 2 - h + 1));
-      if (!free(x, y, w, h)) continue; reserve(x, y, w, h, 1); decor.push({ kind, tx: x, ty: y, room: k });
-    }
-  });
-  // coffres dans des salles du cœur
-  const chestRooms = [1, 2, 3, 4, 5, 6, 2, 4];
-  def.loot.forEach((item, ci) => {
-    const r = rooms[chestRooms[ci % chestRooms.length]];
-    for (let t = 0; t < 60; t++) {
-      const x = r.x + 1 + Math.floor(R() * (r.w - 2)), y = r.y + 1 + Math.floor(R() * (r.h - 2));
-      if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 1); chests.push({ tx: x, ty: y, item }); break;
-    }
-  });
-  // ennemis : paquets par salle
-  const tiers = def.mobs;
-  const pick = a => a[Math.floor(R() * a.length)];
-  const place = (r, type, k) => { for (let t = 0; t < 60; t++) { const x = r.x + 2 + Math.floor(R() * (r.w - 4)), y = r.y + 2 + Math.floor(R() * (r.h - 4)); if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 0); spawns.push({ type, tx: x, ty: y, room: k }); return; } };
-  rooms.forEach((r, k) => {
-    if (k === 0) return;
-    const nm = k === 6 ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(r, pick(tiers.mini), k);
-    if (k >= 2) { const nd = k === 6 ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(r, pick(tiers.mid), k); }
-    if (k === 4) place(r, tiers.big, k);
-  });
-  // le gros mob (mini-boss) doit exister : si la salle 4 n'a pas pu l'accueillir, balayage déterministe des autres salles (sans tirage aléatoire)
-  if (!spawns.some(sp => sp.type === tiers.big)) {
-    scan: for (const k of [4, 5, 3, 6, 2, 1]) {
-      const r = rooms[k]; if (!r) continue;
-      for (let y = r.y + 2; y < r.y + r.h - 2; y++) for (let x = r.x + 2; x < r.x + r.w - 2; x++) {
-        if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 0); spawns.push({ type: tiers.big, tx: x, ty: y, room: k }); break scan;
-      }
-    }
-  }
-  // quête de Fala : salle secrète voisine de la Lisière et emplacement des Modules.
-  // Calculé après tout le reste et sans toucher à la grille : la carte du reste du jeu est inchangée.
-  let secret = null; const modules = [];
-  if (def.fala) {
-    const SWd = 9, SHt = 7, PAD = 2;
-    const voidBox = (x0, y0, x1, y1) => { for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) { if (i < 2 || j < 2 || i >= MW - 2 || j >= MH - 2 || grid[j * MW + i] !== T.VOID) return false; } return true; };
-    search: for (const ri_ of def.fala.hub) {
-      const r = rooms[ri_];
-      for (const side of ['N', 'E', 'W', 'S']) for (const off of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
-        let sx, sy, gap;
-        if (side === 'N' || side === 'S') {
-          sx = r.x + Math.floor((r.w - SWd) / 2) + off; sy = side === 'N' ? r.y - 1 - SHt : r.y + r.h + 1;
-          const gx = sx + Math.floor(SWd / 2) - 1, gy = side === 'N' ? r.y - 1 : r.y + r.h;
-          if (gx < r.x || gx + 1 >= r.x + r.w) continue; gap = [[gx, gy], [gx + 1, gy]];
-        } else {
-          sy = r.y + Math.floor((r.h - SHt) / 2) + off; sx = side === 'W' ? r.x - 1 - SWd : r.x + r.w + 1;
-          const gy = sy + Math.floor(SHt / 2) - 1, gx = side === 'W' ? r.x - 1 : r.x + r.w;
-          if (gy < r.y || gy + 1 >= r.y + r.h) continue; gap = [[gx, gy], [gx, gy + 1]];
-        }
-        // marge de 2 tuiles de vide autour de la salle (hors côté de l'entrée, où il ne reste que la tuile du faux mur)
-        const x0 = sx - (side === 'E' ? 1 : PAD), x1 = sx + SWd - 1 + (side === 'W' ? 1 : PAD), y0 = sy - (side === 'S' ? 1 : PAD), y1 = sy + SHt - 1 + (side === 'N' ? 1 : PAD);
-        if (!voidBox(x0, y0, x1, y1)) continue;
-        const tiles = []; for (let j = sy; j < sy + SHt; j++) for (let i = sx; i < sx + SWd; i++) tiles.push([i, j]); gap.forEach(g_ => tiles.push(g_));
-        const far = { N: [sx + 1, sy + 1], S: [sx + 1, sy + SHt - 2], W: [sx + 1, sy + 1], E: [sx + SWd - 3, sy + 1] }[side];
-        const far2 = { N: [sx + SWd - 3, sy + 1], S: [sx + SWd - 3, sy + SHt - 2], W: [sx + 1, sy + SHt - 2], E: [sx + SWd - 3, sy + SHt - 2] }[side];
-        secret = { side, x: sx, y: sy, w: SWd, h: SHt, gap, tiles, name: 'Cellule de maintenance', npc: { tx: sx + Math.floor(SWd / 2), ty: sy + Math.floor(SHt / 2) }, decor: [{ kind: 'console', tx: far[0], ty: far[1] }, { kind: 'console', tx: far2[0], ty: far2[1] }] };
-        break search;
-      }
-    }
-    for (const [id, ri_] of Object.entries(def.fala.modules)) {
-      const r = rooms[ri_];
-      for (let t = 0; t < 200; t++) {
-        const x = r.x + 1 + Math.floor(R() * (r.w - 2)), y = r.y + 1 + Math.floor(R() * (r.h - 2));
-        if (!free(x, y, 1, 1)) continue; reserve(x, y, 1, 1, 1); modules.push({ id, tx: x, ty: y, room: ri_ }); break;
-      }
-    }
-  }
-  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret, modules };
-}
 
 // ---------- génération « zones libres » ----------
 // Au lieu de salles reliées par des couloirs : de grandes zones ouvertes (formes organiques) posées sur la grille de cellules,
@@ -551,7 +363,7 @@ function generateFree(def) {
   zones.forEach(z => {
     const n = Math.floor(Math.PI * z.rx * z.ry / 24);
     for (let t = 0; t < n * 5 && decor.filter(d => d.room === z.k).length < n; t++) {
-      const kind = def.decorKinds[Math.floor(R() * def.decorKinds.length)], [w, h] = FOOT[kind];
+      const dk = z.decor || def.decorKinds, kind = dk[Math.floor(R() * dk.length)], [w, h] = FOOT[kind];
       const x = z.cx + ri(-z.rx + 1, z.rx - 2), y = z.cy + ri(-z.ry + 1, z.ry - 2);
       if (!inMap(x, y) || !inZ(z.k, x, y) || !free(x, y, w, h) || !inZ(z.k, x + w - 1, y + h - 1)) continue; reserve(x, y, w, h, 1); decor.push({ kind, tx: x, ty: y, room: z.k });
     }
@@ -620,20 +432,8 @@ function generateFree(def) {
 export function buildWorld(idx) {
   const def = MAPS[idx], th = THEMES[def.theme];
   const world = { idx, def, theme: th, name: def.name };
-  let L;
-  if (def.manual) {
-    const grid = new Uint8Array(MW * MH), roomOf = new Int16Array(MW * MH).fill(-1);
-    LAB.rooms.forEach((r, i) => { for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) { grid[y * MW + x] = T.FLOOR; if (roomOf[y * MW + x] < 0 || r.name) roomOf[y * MW + x] = i; } });
-    const a = LAB.arena;
-    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const dx = x + 0.5 - a.cx, dy = y + 0.5 - a.cy; if (dx * dx + dy * dy <= a.r * a.r) grid[y * MW + x] = T.FLOOR; }
-    L = { ...LAB, grid, roomOf, decor: LAB.decor.map(d => ({ ...d })), chests: LAB.chests.map((c, i) => ({ ...c, item: def.loot[i % def.loot.length] })) };
-    for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
-    LAB.door.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.DOOR; }); LAB.fog.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.FOG; });
-  } else {
-    const g = (def.free ? generateFree : generate)({ ...def, decorKinds: th.decor });
-    L = g;
-    for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
-  }
+  const L = generateFree({ ...def, decorKinds: th.decor });
+  for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
   Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, chasm: L.chasm || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
@@ -711,7 +511,7 @@ export function bakeFloor(world) {
     const x = tx * TS, y = ty * TS, r = rnd(tx, ty);
     const a = world.arena, inA = (tx + 0.5 - a.cx) ** 2 + (ty + 0.5 - a.cy) ** 2 <= a.r * a.r;
     const ri = world.roomOf[ty * MW + tx];
-    const lab = th.floorLab && ri >= 0 && world.rooms[ri] && (world.rooms[ri].id === 'R2' || world.rooms[ri].id === 'R4');
+    const lab = th.floorLab && ri >= 0 && world.rooms[ri] && (world.rooms[ri].id === 'G2' || world.rooms[ri].id === 'G6');
     const base = inA ? th.arena : lab ? th.floorLab : th.floor;
     const k = ((tx + ty) & 1) ? 6 : 0;
     const vn = (px, py) => { const ix = Math.floor(px), iy = Math.floor(py), fx0 = px - ix, fy0 = py - iy, sm = t => t * t * (3 - 2 * t), a0 = rnd(ix, iy), b0 = rnd(ix + 1, iy), c0 = rnd(ix, iy + 1), d0 = rnd(ix + 1, iy + 1), top = a0 + (b0 - a0) * sm(fx0), bot = c0 + (d0 - c0) * sm(fx0); return top + (bot - top) * sm(fy0); };

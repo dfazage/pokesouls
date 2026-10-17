@@ -15,7 +15,7 @@ Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), g
 
 ## Le chapitre
 
-Chaque chapitre correspond à une génération. Les cartes sont des zones ouvertes (cavernes ou cours organiques reliées par de larges passages, boucles, un raccourci qui s'ouvre de l'autre côté, un seul passage de brume), générées avec une graine fixe ; seul le Laboratoire oublié de Kanto est dessiné à la main. Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
+Chaque chapitre correspond à une génération. Les cartes sont des zones ouvertes (cavernes ou cours organiques reliées par de larges passages, boucles, un raccourci qui s'ouvre de l'autre côté, un seul passage de brume), générées avec une graine fixe ;  Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
 
 | # | Carte | Boss | Gros mob |
 |---|---|---|---|
