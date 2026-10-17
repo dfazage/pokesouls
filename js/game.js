@@ -686,7 +686,7 @@ export class Game {
     if (e.state === 'idle' || e.state === 'dormant') e.state = 'chase';
     this.floatText(e.x, e.y - 18, String(dmg), crit || back ? '#ffd24a' : '#ffffff');
     this.burst(e.x, e.y - 6, crit ? '#ffd24a' : '#ffffff', crit ? 8 : 4); this.fxHit(e, src, o, crit);
-    (crit ? SFX.crit : SFX.hit)();
+    if (elemOn && this.lastTypeMult > 1) SFX.superHit(); else (crit ? SFX.crit : SFX.hit)();   // type efficace : impact « super efficace »
     const kd = unit(e.x - src.x, e.y - src.y);
     if (!e.boss && !e.def.armor) { e.kx = kd.x * (o.knock || 30) * 3; e.ky = kd.y * (o.knock || 30) * 3; }
     if (e.boss) {
