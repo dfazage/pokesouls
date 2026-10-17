@@ -286,13 +286,20 @@ function drawEnemy(ctx, g, e) {
   let anim = e.anim; if (!sp.anims[anim]) anim = 'Idle';
   if (e.dead && e.boss) anim = 'Faint';
   const tint = e.boss && e.reveal !== undefined && e.reveal < 1 ? `brightness(${(e.reveal * 0.85).toFixed(2)})` : e.fx ? statusTint(g, e.fx) : e.invuln > 0 && e.boss && !g.cine ? 'brightness(1.5) hue-rotate(40deg)' : e.clone ? 'hue-rotate(150deg) saturate(1.6) brightness(.9)' : e.state === 'dormant' ? null : null;
-  drawSprite(ctx, id, anim, e.at / TICK, e.loop && !(e.dead), e.dir, e.x, e.y, { scale: sc, z, alpha, flash: e.flash > 0, tint });
+  drawSprite(ctx, id, anim, e.at / TICK, e.loop && !(e.dead), e.dir, e.x, e.y, { scale: sc, z, alpha, flash: e.flash > 0, tint: tint || (e.sleeping && e.state === 'idle' ? 'brightness(.78)' : undefined) });
   if (e.dead) return;
   const top = e.y - z - sp.anchor.h * sc - 6;
   if (e.fx) statusTag(ctx, g, e, e.fx, sp.anchor.h * sc + z + 8);
   markPips(ctx, g, e, top - 10);
   if (e.shell && e.shell.hp > 0) { ctx.strokeStyle = `rgba(200,240,255,${0.5 + 0.2 * Math.sin(g.t * 6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(e.x, e.y - z - 12, 22, 28, 0, 0, 7); ctx.stroke(); ctx.fillStyle = '#000'; ctx.fillRect(e.x - 15, top + 8, 30, 4); ctx.fillStyle = '#bfeaff'; ctx.fillRect(e.x - 14, top + 9, 28 * e.shell.hp / e.shell.max, 2); }
   if (e.blind > 0) { ctx.fillStyle = '#e8f4ff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('?', e.x + 10, top + 4); }
+  if (e.sleeping && e.state === 'idle') {   // « Z » qui montent et s'estompent
+    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+    for (let i = 0; i < 3; i++) { const ph = ((g.t * 0.5 + i / 3 + e.bob) % 1), a = Math.sin(ph * Math.PI); ctx.globalAlpha = a; ctx.fillStyle = '#000'; ctx.fillText('Z', e.x + 5 + ph * 7 + 1, top + 4 - ph * 14 + 1); ctx.fillStyle = '#cfe4ff'; ctx.fillText('Z', e.x + 5 + ph * 7, top + 4 - ph * 14); }
+    ctx.globalAlpha = 1;
+  }
+  if (e.alertT > 0) { e.alertT -= 1 / 60; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText('!', e.x + 1, top + 1); ctx.fillStyle = '#ffd24a'; ctx.fillText('!', e.x, top); }
+  if (e.emote === 'note' && e.state === 'idle') { const ph = (g.t * 1.4 + e.bob) % 1; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center'; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#000'; ctx.fillText('♪', e.x + 7 + 1, top + 2 - ph * 8 + 1); ctx.fillStyle = '#ffe27a'; ctx.fillText('♪', e.x + 7, top + 2 - ph * 8); ctx.globalAlpha = 1; }
   if (e.tele) { ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText('!', e.x + 1, top + 1); ctx.fillStyle = '#ff4a4a'; ctx.fillText('!', e.x, top); }
   if (!e.boss && e.hp < e.maxhp) { const w = Math.max(14, e.r * 2.4); ctx.fillStyle = '#000'; ctx.fillRect(e.x - w / 2 - 1, top + 3, w + 2, 4); ctx.fillStyle = '#d63a3a'; ctx.fillRect(e.x - w / 2, top + 4, w * Math.max(0, e.hp / e.maxhp), 2); }
   if (e.boss) { const gl = def.glow; ctx.strokeStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.3 + 0.15 * Math.sin(g.t * 4)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(e.x, e.y - z - 10, 18, 24, 0, 0, 7); ctx.stroke(); }
