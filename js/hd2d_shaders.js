@@ -285,6 +285,8 @@ void main(){
         em += uEmisCol*win*(.7 + .3*sin(uTime*.9 + hash21(wc)*20.))*.9;
       }
     } else {                  // muret de torchis : namako (losanges blancs sur noir) et chapeau de tuiles
+      vec2 tg = vec2(-n.z, n.x);   // le motif suit la face (murets en biais et couronne d'arène), pas seulement x + z
+      if(dot(tg, tg) > .04) q = dot(vW.xz, normalize(tg));
       if(vH > .82){ col = uRoofA*1.2*(.32 + .85*dif)*uLightCol*(.8 + .5*step(.5, fract(q*3.))); }
       else {
         vec2 g2 = vec2(q*2.2, vW.y*2.6);
