@@ -48,8 +48,10 @@ export const SFX = {
   shoot() { tone(600, 200, 0.18, 'sawtooth', 0.04); },
   // allumage du feu : souffle de flamme puis quelques crépitements, aucune note
   bonfire() { whoosh(1.0, 0.12, 250, 2200); [0.12, 0.26, 0.33, 0.5, 0.62, 0.8].forEach(d => noise(0.03 + Math.random() * 0.03, 0.05 + Math.random() * 0.04, 3000 + Math.random() * 2500, d + Math.random() * 0.05)); },
-  death() { tone(220, 40, 1.2, 'sawtooth', 0.1); noise(1, 0.08, 400); },
-  victory() { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.8, 'triangle', 0.07, i * 0.15)); },
+  // K.O. d'un allié : coup sourd, sans note ni dent de scie
+  death() { tone(110, 45, 0.5, 'sine', 0.08); noise(0.5, 0.05, 350); },
+  // ramassage de la récompense : deux notes douces et longues (une quinte), sans arpège
+  victory() { tone(523, 523, 1.2, 'sine', 0.04); tone(784, 784, 1.4, 'sine', 0.035, 0.12); },
   heal() { tone(500, 900, 0.3, 'sine', 0.07); },
   blip(pitch = 1) { tone((700 + Math.random() * 120) * pitch, (640 + Math.random() * 100) * pitch, 0.035, 'square', 0.035); },
   pick() { tone(700, 1000, 0.12, 'triangle', 0.06); },

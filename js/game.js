@@ -672,7 +672,7 @@ export class Game {
     this.state = 'dead'; this.deadT = 0; this.guarding = false; this.endLink(true); this.comboReset();
     const c = this.chief();
     if (this.essence > 0) this.souvenir = { map: this.mapIdx, x: c.x, y: c.y, amount: this.essence };
-    this.essence = 0; this.hubAt = null; this.save(); SFX.death(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
+    this.essence = 0; this.hubAt = null; this.save(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
   }
   async respawn() {
     const l = this.last, map = l ? l.map : 0;
@@ -948,7 +948,7 @@ export class Game {
     this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
-    this.openFog(); this.buildItems(); SFX.victory(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
+    this.openFog(); this.buildItems(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
     { const nx = M.MAPS[this.mapIdx + 1]; if (nx && nx.secret) setTimeout(() => this.emit('toast', 'Un lieu secret est apparu sur la carte…'), 4500); }
     this.emit('banner', b.def.name + ' VAINCU', 'victory'); setTimeout(() => this.emit('bossLine', b, 'death'), 1400);
   }
