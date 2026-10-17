@@ -1,5 +1,5 @@
 // Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
-import { windNow, LEAF_COLS } from './wind.js';
+import { windNow, LEAF_COLS, ASH_COLS, EMBER_COLS } from './wind.js';
 import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
@@ -1296,7 +1296,8 @@ export class Game {
   // feuilles du sol soulevées par les rafales, ou par les pas du chef (Tour Carillon)
   windLeaves(dt) {
     const c = this.chief(), sp = this.world.leafSpots; if (!c || !sp || !sp.length) return;
-    const lift = (s, n, burst) => { for (let i = 0; i < n; i++) { const life = rand(1.4, 2.6); this.parts.push({ x: s.x + rand(-8, 8), y: s.y + rand(-5, 5), z: 1, vx: burst ? rand(-30, 30) : 0, vy: rand(-14, 14), vz: rand(burst ? 26 : 14, burst ? 52 : 34), g: 34, life, max: life, c: LEAF_COLS[(Math.random() * LEAF_COLS.length) | 0], size: Math.random() < 0.3 ? 3 : 2, wind: 1, k: rand(0.6, 1.2), ph: rand(0, 6.28) }); } };
+    const ash = this.world.def.theme === 'ember';   // Tour Brûlée : les rafales soulèvent suie, cendre et braises
+    const lift = (s, n, burst) => { for (let i = 0; i < n; i++) { const life = rand(1.4, 2.6); this.parts.push({ x: s.x + rand(-8, 8), y: s.y + rand(-5, 5), z: 1, vx: burst ? rand(-30, 30) : 0, vy: rand(-14, 14), vz: rand(burst ? 26 : 14, burst ? 52 : 34), g: 34, life, max: life, c: ash ? (Math.random() < 0.22 ? EMBER_COLS[(Math.random() * EMBER_COLS.length) | 0] : ASH_COLS[(Math.random() * ASH_COLS.length) | 0]) : LEAF_COLS[(Math.random() * LEAF_COLS.length) | 0], size: Math.random() < 0.3 ? 3 : 2, wind: 1, k: rand(0.6, 1.2), ph: rand(0, 6.28) }); } };
     const gust = windNow(), st = Math.max(0, (gust - 38) / 60);
     if (st > 0 && Math.random() < dt * st * 7) { for (let t = 0; t < 12; t++) { const s = sp[(Math.random() * sp.length) | 0]; if (Math.hypot(s.x - c.x, s.y - c.y) < 320) { lift(s, 1 + ((Math.random() * 3) | 0), false); break; } } }
     this.stirT = (this.stirT || 0) - dt;
