@@ -127,6 +127,10 @@ function playSfxFile(name, vol = 0.55) {
   try { const c = f.cloneNode(); c.volume = vol; const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
 }
 export const SFX = {
+  // son de CT (assets/audio/sfx/<id>.ogg) ; renvoie true s'il existe, sinon la version synthétisée reste active
+  ct(id) { return playSfxFile(id, 0.5); },
+  silent: new Proxy({}, { get: () => () => {} }),
+  resisted() { const t = performance.now(); if (t - (SFX._res ?? -1e9) < 90) return true; SFX._res = t; return playSfxFile('resisted', 0.5); },
   cry(id) { playCry(id); },
   swing() { band(1800, 0.7, 0.16, 0.07); band(900, 0.6, 0.12, 0.04, 0.03); },
   hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },

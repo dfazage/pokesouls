@@ -1,7 +1,4 @@
-Effets sonores en fichier (facultatif).
-
-Dépose ici un fichier pour remplacer la version synthétisée d'un effet ; s'il est absent, le jeu garde le son généré.
-
-  super_effective.ogg   (ou .mp3 / .wav)   son d'un coup de type efficace
-
-Seuls les fichiers dont tu as le droit de te servir doivent être ajoutés au dépôt.
+Effets sonores optionnels (remplacent la version synthétisée quand le fichier existe) :
+ super_effective.ogg  coup super efficace      resisted.ogg  coup peu efficace
+ ct_<id>.ogg          son de chaque CT (ct_flamethrower, ct_surf, ct_thunder...)
+Source : Pokémon Noir/Blanc (DS) « Attack Move Sound Effects », fournis par l'auteur, usage non commercial (fan game).

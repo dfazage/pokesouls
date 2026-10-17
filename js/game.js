@@ -610,17 +610,18 @@ export class Game {
     if (a.kind === 'sig') { this.doSignature(m, a); return; }
     if (a.kind === 'ability') {
       const tm = d.ability, k = tm.kind, ang = Math.atan2(aim.y, aim.x), np = this.projs.length;
+      const sfx = SFX.ct(m.tm) ? SFX.silent : SFX;   // son de CT issu des fichiers : on coupe la version synthétisée
       if (k === 'lunge' || k === 'smoke') this.meleeArc(m, aim, d.range + 14, -0.1, dmg, { heavy: true, stagger: 0.7, knock: 90, status: tm.status });
       else if (k === 'flame') {
         this.meleeArc(m, aim, 54, 0.35, dmg, { heavy: true, stagger: 0.6, knock: 60, status: tm.status });
         for (let i = 0; i < 26; i++) { const aa = ang + rand(-0.35, 0.35), s = rand(60, 170); this.parts.push({ x: m.x, y: m.y, z: 8, vx: Math.cos(aa) * s, vy: Math.sin(aa) * s * 0.7, vz: rand(-5, 15), life: rand(0.25, 0.45), max: 0.45, c: Math.random() < 0.5 ? tm.color : '#ffd36a', size: 3 }); }
-        this.fxRings.push({ x: m.x + aim.x * 28, y: m.y + aim.y * 28, r: 30, c: tm.color, t: 0 }); SFX.boom();
-      } else if (k === 'shock') { this.meleeArc(m, aim, tm.radius, -2, dmg, { heavy: true, stagger: 0.9, knock: 140, status: tm.status }); this.ringFx(m.x, m.y, tm.radius, tm.color); SFX.boom(); this.shake = Math.max(this.shake, 2); }
-      else if (k === 'volley') { for (let i = -2; i <= 2; i++) this.fireProj({ x: m.x, y: m.y, ang: ang + i * 0.16, speed: 230, dmg, r: 3, life: 0.9, team: 'p', color: tm.color, owner: m, status: tm.status }); SFX.shoot(); }
-      else if (k === 'burst') { this.fireProj({ x: m.x, y: m.y, ang, speed: 190, dmg, r: 5, life: 1.3, team: 'p', color: tm.color, owner: m, status: tm.status, explode: 32, heavy: true }); SFX.shoot(); }
-      else if (k === 'leech') { this.fireProj({ x: m.x, y: m.y, ang, speed: 220, dmg, r: 4, life: 1.0, team: 'p', color: tm.color, owner: m, status: tm.status, leech: true, heavy: true }); SFX.shoot(); }
+        this.fxRings.push({ x: m.x + aim.x * 28, y: m.y + aim.y * 28, r: 30, c: tm.color, t: 0 }); sfx.boom();
+      } else if (k === 'shock') { this.meleeArc(m, aim, tm.radius, -2, dmg, { heavy: true, stagger: 0.9, knock: 140, status: tm.status }); this.ringFx(m.x, m.y, tm.radius, tm.color); sfx.boom(); this.shake = Math.max(this.shake, 2); }
+      else if (k === 'volley') { for (let i = -2; i <= 2; i++) this.fireProj({ x: m.x, y: m.y, ang: ang + i * 0.16, speed: 230, dmg, r: 3, life: 0.9, team: 'p', color: tm.color, owner: m, status: tm.status }); sfx.shoot(); }
+      else if (k === 'burst') { this.fireProj({ x: m.x, y: m.y, ang, speed: 190, dmg, r: 5, life: 1.3, team: 'p', color: tm.color, owner: m, status: tm.status, explode: 32, heavy: true }); sfx.shoot(); }
+      else if (k === 'leech') { this.fireProj({ x: m.x, y: m.y, ang, speed: 220, dmg, r: 4, life: 1.0, team: 'p', color: tm.color, owner: m, status: tm.status, leech: true, heavy: true }); sfx.shoot(); }
       else if (k === 'beam') {
-        const len = 200; this.beams.push({ x: m.x, y: m.y - 6, ang, len, t: 0, max: 0.28, color: tm.color, w: 6 }); SFX.boom(); this.shake = Math.max(this.shake, 2);
+        const len = 200; this.beams.push({ x: m.x, y: m.y - 6, ang, len, t: 0, max: 0.28, color: tm.color, w: 6 }); sfx.boom(); this.shake = Math.max(this.shake, 2);
         let hit = false;
         for (const e of this.enemies) { if (e.dead) continue; const rx = e.x - m.x, ry = e.y - m.y, al = rx * aim.x + ry * aim.y, pd = Math.abs(rx * aim.y - ry * aim.x); if (al > 0 && al < len + e.r && pd < e.r + 7) { if (this.damageEnemy(e, dmg, m, { heavy: true, stagger: 0.8, knock: 80, status: tm.status })) hit = true; } }
         for (let q = 1; q <= 8; q++) this.hitObs(m.x + aim.x * len * q / 8, m.y + aim.y * len * q / 8, 8, dmg * 0.4, this.curElem);
@@ -628,11 +629,11 @@ export class Game {
       } else if (k === 'heal' || k === 'cleanse') {
         let tot = 0;
         for (const q of this.team) { if (q.exh) continue; const h = Math.min(q.maxhp - q.hp, q.maxhp * tm.mult); q.hp += h; tot += h; if (tm.cure || k === 'cleanse') q.fx = null; }
-        this.healAura(m, tm); this.floatText(m.x, m.y - 30, '+' + Math.round(tot) + ' PV', '#8dffb0'); SFX.heal();
+        this.healAura(m, tm); this.floatText(m.x, m.y - 30, '+' + Math.round(tot) + ' PV', '#8dffb0'); sfx.heal();
         this.emit('toast', tm.name + ' : toute l’équipe est soignée' + (tm.cure || k === 'cleanse' ? ' et guérie' : ''));
       } else if (k === 'regen') {
-        m.regen = { t: 8, pct: tm.mult }; this.healAura(m, tm); SFX.heal(); this.emit('toast', tm.name + ' : régénération pendant 8 s');
-      } else if (k === 'haste') { this.buffT = 10; this.buffMult = tm.mult; this.ringFx(m.x, m.y, 40, tm.color); SFX.pick(); this.emit('toast', tm.name + ' : dégâts ×' + tm.mult + ' pendant 10 s'); }
+        m.regen = { t: 8, pct: tm.mult }; this.healAura(m, tm); sfx.heal(); this.emit('toast', tm.name + ' : régénération pendant 8 s');
+      } else if (k === 'haste') { this.buffT = 10; this.buffMult = tm.mult; this.ringFx(m.x, m.y, 40, tm.color); sfx.pick(); this.emit('toast', tm.name + ' : dégâts ×' + tm.mult + ' pendant 10 s'); }
       this.fxAbility(m, tm, aim, ang, np);
       return;
     }
@@ -686,7 +687,7 @@ export class Game {
     if (e.state === 'idle' || e.state === 'dormant') e.state = 'chase';
     this.floatText(e.x, e.y - 18, String(dmg), crit || back ? '#ffd24a' : '#ffffff');
     this.burst(e.x, e.y - 6, crit ? '#ffd24a' : '#ffffff', crit ? 8 : 4); this.fxHit(e, src, o, crit);
-    if (elemOn && this.lastTypeMult > 1) SFX.superHit(); else (crit ? SFX.crit : SFX.hit)();   // type efficace : impact « super efficace »
+    if (elemOn && this.lastTypeMult > 1) SFX.superHit(); else if (elemOn && this.lastTypeMult < 1 && SFX.resisted()) { /* « peu efficace » */ } else (crit ? SFX.crit : SFX.hit)();   // type efficace : impact « super efficace »
     const kd = unit(e.x - src.x, e.y - src.y);
     if (!e.boss && !e.def.armor) { e.kx = kd.x * (o.knock || 30) * 3; e.ky = kd.y * (o.knock || 30) * 3; }
     if (e.boss) {
