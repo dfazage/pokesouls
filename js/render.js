@@ -70,7 +70,7 @@ export function render(g, ctx) {
 export function collectDrawList(g, inView) {
   const list = [], pr = g.prog[g.mapIdx];
   const bigFor = (id, sc) => { const sp = A.db[id]; if (!sp) return false; const an = sp.anims.Idle || Object.values(sp.anims)[0]; return !!an && Math.max(an.fw, an.fh) * sc > 92; };
-  for (const d of g.world.decor) { const by = M.decorBaseline(d), bx = (d.tx + d.w / 2) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t) }); }
+  for (const d of g.world.decor) { const by = M.decorBaseline(d), bx = (d.tx + d.w / 2) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, dk: d.kind, f: c => M.drawDecor(c, g.world, d, g.t) }); }
   for (const d of g.chestObjs) { const by = M.decorBaseline(d), bx = (d.tx + 0.5) * TS; if (inView(bx, by, 50)) list.push({ x: bx, y: by, f: c => M.drawDecor(c, g.world, d, g.t, pr.chests.includes(d.id)) }); }
   for (const b of g.world.bonfires) { const x = (b.tx + 0.5) * TS, y = (b.ty + 0.6) * TS; if (inView(x, y)) list.push({ x, y, f: c => drawBonfire(c, g, b, x, y) }); }
   for (const it of g.items) list.push({ x: it.x, y: it.y + 2, f: c => drawItem(c, g, it) });

@@ -8,6 +8,7 @@ import * as THREE from './vendor/three.module.min.js';
 import * as M from './maps.js';
 import { A } from './assets.js';
 import { W, H, setViewW } from './game.js';
+import { addBuildings, MODEL_KINDS } from './models3d.js';
 import { collectDrawList, groundFx, buildLights, radial, setShadowSink } from './render.js';
 import { drawFxs } from './fx.js';
 import * as S from './hd2d_shaders.js';
@@ -141,6 +142,7 @@ export class HD2D {
     this.sh.uLight.value = t(this.lightC); this.sh.uOvN.value = t(this.ovNC); this.sh.uOvA.value = t(this.ovAC);
   }
   initBatches() {
+    this.use3dBuildings = !/[?&]nobld/.test(location.search);
     this.batchS = new Batch(128, 8, 8, 112, 5, this.sh, 0.0015);
     this.batchL = new Batch(256, 4, 4, 200, 6, this.sh, 0.0015);
     this.scene.add(this.batchS.mesh, this.batchL.mesh);
@@ -238,6 +240,7 @@ export class HD2D {
     this.abyss = WD.buildAbyss(key, sh); grp.add(this.abyss);
     this.props = WD.buildProps(w, key, w.idx * 7 + 3, sh); grp.add(this.props);
     this.parts = WD.buildParticles(key, sh); grp.add(this.parts);
+    if (this.use3dBuildings) addBuildings(grp, w, sh, () => this.group === grp);
     this.scene.add(grp);
     // brouillard, étalonnage
     sh.uFog.value.set(...cfg.fog); sh.uFogD.value = cfg.fogD; sh.uMist.value = cfg.mist;
@@ -332,7 +335,7 @@ export class HD2D {
     };
     const list = collectDrawList(g, inView);
     // les objets hors champ ajoutés sans test (objets au sol, chef, alliés) sont filtrés ici
-    const vis = list.filter(o => inView(o.x, o.y, 90)).sort((a, b) => a.y - b.y);
+    const vis = list.filter(o => !(this.use3dBuildings && o.dk && MODEL_KINDS.has(o.dk)) && inView(o.x, o.y, 90)).sort((a, b) => a.y - b.y);
     this.batchS.begin(); this.batchL.begin();
     for (const o of vis) (o.big ? this.batchL : this.batchS).add(o, cosP, sinP);
     this.batchS.end(); this.batchL.end();
