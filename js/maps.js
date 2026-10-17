@@ -545,6 +545,12 @@ export function solidAt(world, px, py) {
   return false;
 }
 export function boxFree(world, x, y, hw, hh) { return !(solidAt(world, x - hw, y - hh) || solidAt(world, x + hw, y - hh) || solidAt(world, x - hw, y + hh) || solidAt(world, x + hw, y + hh)); }
+// Position libre la plus proche de (x, y) pour une boîte hw × hh : sert au spawn des mobs, dont le centre de case peut mordre sur un mur (pied de falaise) ou un décor.
+export function nearestFree(world, x, y, hw, hh) {
+  if (boxFree(world, x, y, hw, hh)) return [x, y];
+  for (let r = 2; r <= 48; r += 2) for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; if (boxFree(world, px, py, hw, hh)) return [px, py]; }
+  return null;
+}
 export function lineClear(world, x0, y0, x1, y1) {
   const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 8);
   for (let i = 1; i < n; i++) { const t = i / n; if (solidAt(world, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return false; }
