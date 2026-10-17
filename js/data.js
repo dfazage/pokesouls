@@ -251,7 +251,9 @@ export const BOSSES = {
     moves: [[['ball', 3], ['volley', 2], ['swing', 2]], [['pulse', 3], ['volley', 2], ['dash', 2], ['ball', 2]], [['pulse', 3], ['nova', 3], ['rain', 3], ['dash', 2]]] },
   dragonite: { sprite: 'dragonite', phases: ['Le roi s’éveille', 'Colère du dragon'], status: ['para', 0.2], name: 'DRACOLOSSE', sub: 'Roi de Kanto', scale: 2.3, hp: 760, dmg: 17, r: 19, speed: 60, color: '#ffb060', glow: [255, 180, 90], rainColor: '#ffc080',
     moves: [[['swing', 3], ['dash', 2], ['ball', 2]], [['swing', 2], ['beam', 3], ['volley', 2], ['dash', 2]], [['beam', 3], ['rain', 3], ['nova', 2], ['dash', 3], ['swing', 2]]] },
-  mewtwo: { sprite: 'mewtwo', phases: ['L’esprit s’ouvre', 'Clones psychiques'], status: ['confuse', 0.25], name: 'MEWTWO', sub: 'Le Cloné', scale: 2.3, hp: 950, dmg: 18, r: 14, speed: 54, color: '#d89aff', glow: [180, 100, 255], hover: true, rainColor: '#e0a0ff', summon: 'clone',
+  mewtwo: { sprite: 'mewtwo', phases: ['L’esprit s’ouvre', 'Clones psychiques'], status: ['confuse', 0.25], name: 'MEWTWO', sub: 'Le Cloné', scale: 2.3, hp: 950, dmg: 18, r: 14, speed: 66, want: 54, color: '#d89aff', glow: [180, 100, 255], hover: true, rainColor: '#e0a0ff', summon: 'clone',
+    // rythme « Elden Ring » : anticipations plus brèves, peu de répit, enchaînements (swing→pulse, ball→ball…), téléportations en phases 2-3
+    tempo: { wind: 0.75, rec: 0.6 }, chain: { swing: ['pulse', 'swing'], ball: ['ball', 'swing'], pulse: ['ball'] }, chainP: [0.35, 0.5, 0.65], blinkP: [0, 0.3, 0.45],
     moves: [[['ball', 3], ['swing', 3]], [['ball', 3], ['swing', 2], ['pulse', 3]], [['ball', 3], ['swing', 2], ['pulse', 3], ['summon', 2]]] },
   mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', scale: 1.15, hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },

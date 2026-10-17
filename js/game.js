@@ -876,7 +876,7 @@ export class Game {
     this.emit('bossStart', b, short);
   }
   bossPhase(b, ph) {
-    this.bossCry(b, 6, 1.3); b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
+    this.bossCry(b, 6, 1.3); b.phase = ph; b.next = null; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
     this.shake = 8; SFX.bossPhase(b.sprite); this.burst(b.x, b.y - 10, b.def.color, 30);
     this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
@@ -918,8 +918,10 @@ export class Game {
       case 'recover': b.st -= dt; setAnim(b, 'Idle');
         if (b.st <= 0) {
           b.state = 'move';
-          if (def.blink && Math.random() < 0.7) this.blink(b, tg);
+          const bp = Array.isArray(def.blinkP) ? def.blinkP[b.phase - 1] : def.blinkP !== undefined ? def.blinkP : def.blink ? 0.7 : 0;
+          if (bp && !b.next && Math.random() < bp) this.blink(b, tg);
           if (b.queue > 0) { b.queue--; b.cd = 0; this.bossChoose(b, td, 'ball'); }
+          else if (b.next) { const nx = b.next; b.next = null; b.cd = 0; this.bossChoose(b, td, nx); }
         }
         break;
     }
@@ -955,12 +957,17 @@ export class Game {
       }
     }
     b.lastAtk = type; b.atkType = type; b.state = 'windup'; b.lockDir = null;
-    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75 }[type] || 0.6; SFX.bossTele(b.sprite, b.st);
+    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0, wall: 1.0, whirl: 0.9, geyser: 0.8, mirror: 0.75 }[type] || 0.6; if (b.def.tempo) b.st *= b.def.tempo.wind; SFX.bossTele(b.sprite, b.st);
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
     const T = b.atkType, d = b.dmg, col = b.def.color, id = b.sprite;
-    const rec = (st, cd) => { b.state = 'recover'; b.st = st; b.cd = cd * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1); };
+    const tp = b.def.tempo ? b.def.tempo.rec : 1;   // tempo propre au boss (Mewtwo : récupérations courtes, enchaînements)
+    const rec = (st, cd) => {
+      b.state = 'recover'; b.st = st * tp; b.cd = cd * tp * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1);
+      const ch = b.def.chain && b.def.chain[T];
+      if (ch && !b.queue && Math.random() < b.def.chainP[b.phase - 1]) b.next = ch[Math.floor(Math.random() * ch.length)];
+    };
     if (T === 'ball') {
       this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.bossBall(id);
       setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.5, 1.5);

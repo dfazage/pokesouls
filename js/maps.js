@@ -3,7 +3,7 @@
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
 // PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
-export const TS = 24, MW = 124, MH = 73, PADY = 9, ARENA_R = 13.5, FACE = 10;
+export const TS = 24, MW = 124, MH = 73, PADY = 9, ARENA_R = 12.15, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
 
 const rgb = a => `rgb(${a[0]},${a[1]},${a[2]})`;
