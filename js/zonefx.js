@@ -158,3 +158,39 @@ export function zoneImpactFx(g, z) {
   }
   return true;
 }
+
+// ---------------------------------------------------------------- télégraphes de forme (secteur, ligne, onde, mur…)
+// Même DA que les zones rondes : motif pixel-art de l'élément + liseré à la couleur du boss, au lieu d'un aplat rouge.
+const TILES = {};
+function tile(st) {
+  if (TILES[st]) return TILES[st];
+  const S = 12, cv = document.createElement('canvas'); cv.width = cv.height = S; const c = cv.getContext('2d'), P = palOf(st), R = rng(st.length * 977 + st.charCodeAt(0));
+  const px = (x, y, col, a = 1) => { c.globalAlpha = a; c.fillStyle = col; c.fillRect(((x % S) + S) % S, ((y % S) + S) % S, 1, 1); };
+  c.fillStyle = P.deep; c.globalAlpha = 0.85; c.fillRect(0, 0, S, S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (((x + y) & 1) === 0) px(x, y, P.fill, 0.38);
+  if (st === 'water') { for (let x = 0; x < S; x++) { px(x, 3 + Math.round(Math.sin(x / S * 6.28)), P.rim, 0.9); px(x, 9 + Math.round(Math.sin(x / S * 6.28 + 2)), P.rim2, 0.8); } }
+  else if (st === 'fire') { let x = 1, y = 0; for (let i = 0; i < S; i++) { px(x, y, P.rim, 0.95); y++; x += R() < 0.5 ? 1 : -1; if (i % 4 === 3) px(x + 1, y, P.rim2, 0.9); } px(8, 9, P.rim, 1); px(9, 9, P.rim2, 1); }
+  else if (st === 'elec') { let x = 6; for (let y = 0; y < S; y++) { px(x, y, P.rim, 1); x += (y & 1) ? 2 : -2; px(x, y, P.rim2, 0.7); } }
+  else if (st === 'grass') { for (let i = 0; i < 5; i++) { px(2 + i, 2 + i, P.rim, 0.95); px(8 - i / 2 | 0, 11 - i, P.rim2, 0.85); } px(9, 3, P.rim, 1); }
+  else if (st === 'ice') { for (let i = 0; i < S; i++) { px(i, i, P.rim, 0.9); px(S - 1 - i, i, P.rim2, 0.55); } px(6, 6, '#fff', 1); }
+  else { for (const [x, y] of [[3, 3], [9, 3], [3, 9], [9, 9]]) { px(x, y, P.rim, 1); px(x + 1, y, P.rim2, 1); px(x, y + 1, P.rim2, 1); } px(6, 6, P.rim, 1); }
+  c.globalAlpha = 1; return (TILES[st] = cv);
+}
+const patOf = (ctx, st) => { const key = '_pat_' + st; return ctx[key] || (ctx[key] = ctx.createPattern(tile(st), 'repeat')); };
+function shape(ctx, st, k, held, build) {
+  const P = palOf(st), a = 0.5 + 0.3 * k;
+  ctx.save(); build(); ctx.globalAlpha = a; ctx.fillStyle = patOf(ctx, st); ctx.fill();
+  ctx.globalAlpha = held ? 1 : 0.7 + 0.3 * k; ctx.strokeStyle = P.rim2; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = P.rim; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.lineDashOffset = -performance.now() / 60; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+}
+function band(ctx, x0, y0, x1, y1, hw) { const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l * hw, ny = dx / l * hw; ctx.beginPath(); ctx.moveTo(x0 + nx, y0 + ny); ctx.lineTo(x1 + nx, y1 + ny); ctx.lineTo(x1 - nx, y1 - ny); ctx.lineTo(x0 - nx, y0 - ny); ctx.closePath(); }
+// renvoie true si le télégraphe de ce boss est dessiné ici (sinon l'ancien rendu rouge prend le relais)
+export function bossTele(ctx, g, e, k) {
+  const st = ZSTYLE[e.sprite]; if (!st) return false; const T = e.atkType, held = !!e.held;
+  if ((T === 'dash' || T === 'beam') && e.lockDir) { const L = T === 'beam' ? 260 : 150; shape(ctx, st, k, held, () => band(ctx, e.x, e.y, e.x + e.lockDir.x * L, e.y + e.lockDir.y * L, T === 'beam' ? 5 : 8)); return true; }
+  if (T === 'swing' || T === 'feint') { const an = Math.atan2(e.face.y, e.face.x); shape(ctx, st, k, held, () => { ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.arc(e.x, e.y, 30 + e.r * 1.5, an - 1.57, an + 1.57); ctx.closePath(); }); return true; }
+  if (T === 'tide') { const an = Math.atan2(e.face.y, e.face.x), aw = 0.96, p = held ? 1 : Math.max(0, Math.min(1, 1 - e.st / 1.3)), R = 40 + 175 * p; shape(ctx, st, k, held, () => { ctx.beginPath(); ctx.arc(e.x, e.y, R, an - aw, an + aw); ctx.arc(e.x, e.y, 40, an + aw, an - aw, true); ctx.closePath(); }); return true; }
+  if (T === 'wall') { const u = e.face, px = -u.y, py = u.x, hw = 130; shape(ctx, st, k, held, () => band(ctx, e.x + u.x * 30 + px * hw, e.y + u.y * 30 + py * hw, e.x + u.x * 30 - px * hw, e.y + u.y * 30 - py * hw, 6)); return true; }
+  if (T === 'nova' || T === 'pulse') { const R = Math.max(2, 14 + 22 * (1 - Math.min(1, e.st)) + (T === 'pulse' ? 6 : 0)); shape(ctx, st, k, held, () => { ctx.beginPath(); ctx.arc(e.x, e.y, R, 0, 7); }); return true; }
+  return false;
+}
