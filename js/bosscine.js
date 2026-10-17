@@ -4,7 +4,7 @@
 
 export const CINE_LEN = 10;       // durée totale
 export const CINE_UNLOCK = 9.3;   // les commandes sont rendues
-export const CINE_SHORT = 6;      // la version courte démarre ici (revenu après une défaite)
+export const CINE_SHORT = 6;      // (plus utilisée par le jeu : l intro complète se rejoue à chaque tentative)
 
 // Signature d'éveil propre à chaque boss (chaque entrée est une petite mise en scène) :
 // levit = lévitation psychique, dive = piqué enflammé, descend = descente givrée, strike = foudroiement,

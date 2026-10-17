@@ -11,6 +11,8 @@ import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
 import { ASH, bossAshState, installBossCine, bossCamOf } from './bosscine.js';
+import { installBossOutro } from './outro.js';
+import { ENDINGS } from './endings.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
 
@@ -66,7 +68,7 @@ export class Game {
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
-    this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
+    this.playT = 0; this.deaths = 0; this.outro = null; this.bag = {}; this.tms = []; this.unlocked = 0; this.souvenir = null; this.last = null; this.mapIdx = 0;
     this.prog = M.MAPS.map(newProg); this.floors = {}; this.lit = new Set(); this.chestObjs = [];
     this.world = null; this.floor = null; this.initExtras(); this.initElements(); this.initTutorial();
     this.hasSave = this.load();
@@ -98,7 +100,7 @@ export class Game {
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
     return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
-      essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
+      playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
   static exists(ch) { try { return !!localStorage.getItem(saveKey(ch)); } catch (e) { return false; } }
@@ -125,7 +127,7 @@ export class Game {
       if (s.map === 3) { s.map = 2; s.last = null; } else { s.map = mp(s.map || 0); if (s.last) s.last = { ...s.last, map: mp(s.last.map) }; }
       if (s.prog) s.prog = s.prog.filter((_, i) => i !== 3);
     }
-    this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0;
+    this.tutState = s.tut === 'pending' ? 'pending' : 'done'; this.souvenir = s.souvenir || null; this.mapIdx = s.map || 0; this.last = s.last || null; this.unlocked = s.unlocked || 0; this.chiefIdx = s.chiefIdx || 0; this.playT = s.playT || 0; this.deaths = s.deaths || 0;
     if (s.prog) s.prog.forEach((p, i) => { this.prog[i] = { ...newProg(), ...p }; });
     this.applyLevels(true);
     return true;
@@ -220,13 +222,13 @@ export class Game {
   update(dt) {
     if (this.state === 'loading' || !this.world) return;
     if (this.hitstop > 0) { this.hitstop -= dt; return; }
-    this.t += dt;
+    this.t += dt; this.playT += dt;
     this.updateBossCam(dt);
     if (this.furyT > 0) { this.furyT -= dt; this.shake = Math.max(this.shake, this.furyAmp * Math.min(1, this.furyT / 0.5) * (0.75 + 0.25 * Math.sin(this.t * 60))); }   // fureur : secousse tenue pendant le cri
     this.shake = Math.max(0, this.shake - dt * 14);
     this.buffT = Math.max(0, this.buffT - dt);
     if (this.state === 'dead') { this.deadT += dt; this.updateFx(dt); if (this.deadT > 3 && (Input.pressed('interact') || Input.pressed('light') || this.deadT > 6.5)) this.respawn(); return; }
-    const cineLock = this.cine ? this.updateCine(dt) : false;
+    const cineLock = this.cine ? this.updateCine(dt) : this.outro ? this.updateOutro(dt) : false;
     if (!cineLock) this.updateChief(dt);
     this.updateRespawn(dt);
     this.updateEnemies(dt);
@@ -239,7 +241,7 @@ export class Game {
     this.updateFx(dt);
     this.updateWorld(dt);
     const c = this.chief();
-    if (this.cine) return;
+    if (this.cine || this.outro) return;
     const bc = this.bossCam, bs = this.boss, f = bc && bs ? bc.focus * this.bossCamK : 0;   // duel : la caméra se décale vers le boss
     const fx = f ? c.x + (bs.x - c.x) * f : c.x, fy = f ? c.y + (bs.y - c.y) * f : c.y;
     const tx = clamp(fx - W / 2, 0, M.MW * TS - W), ty = clamp(fy - H / 2 - 6 * (1 - f), 0, M.MH * TS - H);
@@ -683,7 +685,7 @@ export class Game {
   }
   die() {
     if (this.state === 'dead') return;
-    this.state = 'dead'; this.deadT = 0; this.guarding = false; this.endLink(true); this.comboReset();
+    this.deaths++; this.state = 'dead'; this.deadT = 0; this.guarding = false; this.endLink(true); this.comboReset();
     const c = this.chief();
     if (this.essence > 0) this.souvenir = { map: this.mapIdx, x: c.x, y: c.y, amount: this.essence };
     this.essence = 0; this.hubAt = null; this.save(); this.emit('jingle', 'JINGLE_DEATH'); this.emit('banner', 'VOUS ÊTES MORT', 'death');
@@ -705,7 +707,7 @@ export class Game {
   updateEnemies(dt) {
     const ch = this.chief();
     for (const e of this.enemies) {
-      if (e.dead) { e.deadT += dt; e.at += dt; if (e.boss) this.bossAshTick(e, dt); continue; }
+      if (e.dead) { e.deadT += dt; e.at += dt; if (e.hold) e.deadT = Math.min(e.deadT, ASH.shrink + 0.3); if (e.boss) this.bossAshTick(e, dt); continue; }
       e.at += dt; e.flash -= dt; e.cd -= dt; e.invuln = Math.max(0, e.invuln - dt);
       this.tickEnemyFx(e, dt); if (e.dead) continue;
       if (hyp(e.x - ch.x, e.y - ch.y) > 320 && e.state === 'idle' && !e.boss) continue;
@@ -996,7 +998,10 @@ export class Game {
     this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
-    this.openFog(); this.buildItems(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
+    this.openFog();
+    const end = ENDINGS[b.sprite];
+    if (end) { this.save(); this.startOutro(b, end); return; }   // boss final / secret : chute, dialogue, cendres, écran de fin (outro.js)
+    this.buildItems(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
     { const nx = M.MAPS[this.mapIdx + 1]; if (nx && nx.secret) setTimeout(() => this.emit('toast', 'Un lieu secret est apparu sur la carte…'), 4500); }
     this.emit('banner', b.def.name + ' VAINCU', 'victory'); setTimeout(() => this.emit('bossLine', b, 'death'), 1400);
   }
@@ -1137,8 +1142,7 @@ export class Game {
   enterFog() {
     const a = this.world.arena, dir = this.world.fog.dir; SFX.door();
     this.lock = null; this.buf = null;
-    const short = !!this.prog[this.mapIdx].introSeen;   // revenu après une défaite : version courte
-    if (short) { this.startBoss(true); this.emit('fade'); } else this.startBoss(false);
+    this.startBoss(false);   // l'intro complète se rejoue à chaque tentative (passable avec la touche d'interaction)
   }
   give(item) {
     if (item === 'candy' || VIT_KEYS.includes(item)) { this.bag[item] = (this.bag[item] || 0) + 1; return D.ITEM_NAMES[item]; }
@@ -1211,6 +1215,7 @@ installFx(Game, { D });
 installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
 installTutorial(Game, { M, D, TS, SFX, hyp });
 installBossCine(Game, { Input, TS, vw: () => W, H, clamp, hyp, setAnim, SFX, M });
+installBossOutro(Game, { ASH, setAnim, hasAnim, SFX, M, TS, vw: () => W, H, clamp, bossCamOf });
 installFala(Game, { M, TS, SFX, hyp });
 installReserve(Game, { D, stageOf });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });

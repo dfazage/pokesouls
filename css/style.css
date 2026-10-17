@@ -684,3 +684,17 @@ body.touch #tut{top:92px}
 /* tactile : les vignettes de compagnons ne doivent pas hériter du rembourrage des boutons (sinon images écrasées en bâtons) */
 body.touch .pth,body.touch .pslot{padding:0}
 body.touch .pth{height:64px}
+
+/* ---- fins de chapitre (boss final / boss secret) ---- */
+#outro{position:absolute;inset:0;z-index:12;pointer-events:none}
+#outro i{position:absolute;left:0;right:0;height:0;background:#000;transition:height .9s cubic-bezier(.4,0,.2,1)}#outro i.t{top:0}#outro i.b{bottom:0}
+#outro.bars i{height:11%}
+#end small.esub,#fin small.fsub{letter-spacing:.3em;color:#9a9ab8;font-style:italic}
+.stats{display:flex;gap:36px;justify-content:center}.stats div{display:flex;flex-direction:column;gap:4px}.stats small{letter-spacing:.2em;color:#9a927f;text-transform:uppercase;font-size:11px}.stats b{font:700 26px 'Cinzel',Georgia,serif;color:var(--gold)}
+#end .tb,#fin .tb{display:flex;gap:14px}
+#epilogue{background:#000;z-index:30}#epilogue #ep-lines{display:flex;flex-direction:column;gap:22px}
+#epilogue p{margin:0;font:italic 24px Georgia,serif;color:#e8e0d0;letter-spacing:.06em;opacity:0;transform:translateY(8px);transition:opacity 1.6s,transform 1.6s}#epilogue p.on{opacity:1;transform:none}
+#epilogue .hint{position:absolute;bottom:26px;color:#6a6458;font-size:12px}
+#fin{z-index:31}#fin h1{font-size:120px;letter-spacing:.4em;margin:0 0 0 .4em;color:var(--gold);text-shadow:0 0 40px rgba(217,164,65,.55)}
+.chip{display:inline-block;padding:4px 14px;border:1px solid var(--gold);border-radius:99px;color:var(--gold);font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.3em;text-transform:uppercase;background:rgba(217,164,65,.1)}
+.chip[hidden]{display:none}

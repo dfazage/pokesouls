@@ -2,7 +2,7 @@
 // Croix ou stick gauche : déplacer la sélection · bouton du bas (A) : valider · bouton de droite (B) : retour · L / R : changer d'onglet.
 import { Input } from './input.js';
 
-const ROOTS = ['#menu.show', '#end.show', '#worlds.show', '#starters.show', '#title.show'];
+const ROOTS = ['#menu.show', '#end.show', '#fin.show', '#worlds.show', '#starters.show', '#title.show'];
 const BACK = ['#c-no', '#m-close', '#end-close', '#p-res', '#w-back', '#st-back'];
 const DIRS = { 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
 

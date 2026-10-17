@@ -8,6 +8,7 @@ import { Game, H, setViewW, lastChapter } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
+import { ENDINGS, endingsSeen, markEnding, fmtTime } from './endings.js';
 import { showWorlds, showStarters, showDialogue, showReserve, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
@@ -81,11 +82,40 @@ async function launch(g) {
     else if (type === 'bossStart') hud.bossIntro(a);
     else if (type === 'bossPhase') hud.phaseScreen(a, b);
     else if (type === 'bossLine') hud.bossLine(a, b);
-    else if (type === 'end' && a) { try { game.save(); } catch (e) { /* sauvegarde best-effort */ } setTimeout(() => { location.href = location.pathname + (game && game.dev ? '?dev' : ''); }, 400); }   // portail de Mew : retour direct à l'écran d'accueil
+    else if (type === 'outroEnd') startEnding(a, b);
+    else if (type === 'end' && a) startEnding(ENDINGS[game.world.def.boss], game.world.def.boss);   // portail de la carte secrète : on rejoue l'épilogue puis l'écran FIN
     else if (type === 'end') setTimeout(() => { const p = $('#end p'); if (p) p.innerHTML = a ? 'Mew est apaisé.<br>Le chapitre est bouclé, les générations suivantes arrivent.' : 'Mewtwo est tombé.<br>Un lieu secret est apparu sur la carte. Les générations suivantes arrivent.'; $('#end').classList.add('show'); }, 1500);
   };
   await game.start(); ui.screen = 'game';
   $('#loading').classList.remove('show'); mode = 'play'; Input.clear();
+}
+// ---------- fins ----------
+// boss final : panneau « Suivre l'appel / Rester » ; boss secret : épilogue puis écran FIN puis menu principal
+const toMenu = () => { location.href = location.pathname + (game && game.dev ? '?dev' : ''); };
+function stats() { const g = game, lv = Math.round(g.team.reduce((s, m) => s + m.lvl, 0) / g.team.length); return [['Temps de jeu', fmtTime(g.playT)], ['Défaites', String(g.deaths)], ['Niveau moyen', String(lv)]]; }
+function startEnding(end, id) {
+  if (!end) { toMenu(); return; }
+  mode = 'cutscene'; Input.clear(); try { game.save(); } catch (e) { /* best-effort */ }
+  if (end.kind === 'final') {
+    const el = $('#end'), pn = end.panel;
+    $('h2', el).textContent = pn.title; $('.esub', el).textContent = pn.sub; $('#end-text').innerHTML = pn.text;
+    $('#end-stats').innerHTML = stats().map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
+    $('#end-go').textContent = pn.go; $('#end-close').textContent = pn.stay;
+    $('#end-go').onclick = () => { el.classList.remove('show'); mode = 'play'; Input.clear(); game.followCall(); };
+    $('#end-close').onclick = () => { el.classList.remove('show'); mode = 'play'; Input.clear(); };
+    setTimeout(() => el.classList.add('show'), 400);
+    return;
+  }
+  markEnding(id);
+  const ep = $('#epilogue'), box = $('#ep-lines'); box.innerHTML = end.epilogue.map(t => `<p>${t}</p>`).join(''); ep.classList.add('show');
+  const ps = [...box.children]; let k = 0, tm = null;
+  const showFin = () => {
+    clearTimeout(tm); ep.removeEventListener('click', adv); ep.classList.remove('show');
+    const fin = $('#fin'); $('.fsub', fin).textContent = end.fin.sub; $('#fin-stats').innerHTML = stats().map(([a, v]) => `<div><small>${a}</small><b>${v}</b></div>`).join('');
+    fin.classList.add('show');
+  };
+  const adv = () => { clearTimeout(tm); if (k >= ps.length) { showFin(); return; } ps[k++].classList.add('on'); tm = setTimeout(adv, 3200); };
+  ep.addEventListener('click', adv); ep.dataset.adv = '1'; ep.advance = adv; adv();
 }
 async function newGame(choice, chapter = 'kanto') {
   Game.wipe(chapter); const g = new Game(chapter); g.newGame(choice);
@@ -129,6 +159,8 @@ function frame(now) {
     else if (Input.pressed('bag') && game.state === 'play') openBag();
     else if (Input.pressed('map') && !tutSkip && game.canTravel() && !game.tut) openTravel();
     else game.update(dt);
+  } else if (mode === 'cutscene') {
+    const ep = $('#epilogue'); if (ep.classList.contains('show') && (Input.pressed('interact') || Input.padEdge(Input.padOk()))) ep.advance && ep.advance();
   } else if (mode === 'menu' || mode === 'pause') {
     if (Input.pressed('pause') || (menuKind === 'bag' && Input.pressed('bag')) || (menuKind === 'travel' && Input.pressed('map')) || (menuKind === 'bonfire' && Input.pressed('interact'))) closeMenu();
   }
@@ -165,6 +197,8 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   $('#btn-keys').onclick = () => openControls(() => hideMenu());
   $('#btn-credits').onclick = () => showCredits(() => hideMenu());
   $('#end-close').onclick = () => $('#end').classList.remove('show');
+  $('#fin-menu').onclick = toMenu; $('#fin-credits').onclick = () => showCredits(() => hideMenu());
+  { const seen = endingsSeen(); if (seen.mew || seen.celebi) $('#title-chip').hidden = false; }
   $('#btn-install').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { /* ignoré */ } installEvt = null; $('#btn-install').hidden = true; };
   if (document.body.classList.contains('touch')) {
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
