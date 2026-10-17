@@ -570,6 +570,37 @@ function geoEdoHouse() {
 }
 // texture pixel art des maisons : filtrage au plus proche, valeurs brutes (comme les murs)
 function houseTex(img) { const t = new THREE.Texture(img); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; t.flipY = false; t.needsUpdate = true; return t; }
+
+// arbres et buissons de la forêt (texturés en pixel art par le shader TREE) : tronc effilé et grosse couronne de blobs ; buisson = trois blobs bas.
+// Attributs : aMat (0 écorce, 1 feuillage), aUV = (u autour du tronc, 0, hauteur depuis le sommet) pour l'écorce.
+function geoForest(bush) {
+  const P = [], N = [], MAT = [], UV = [];
+  const add = (g0, m, mx, my, mz, ox, oy, oz, rot = 0) => {
+    const g = g0.index ? g0.toNonIndexed() : g0, p = g.getAttribute('position'), n = g.getAttribute('normal'), uv = g.getAttribute('uv');
+    const c = Math.cos(rot), sn = Math.sin(rot);
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i) * mx, y = p.getY(i) * my, z = p.getZ(i) * mz;
+      P.push(x * c + z * sn + ox, y + oy, -x * sn + z * c + oz);
+      const nx = n.getX(i) / mx, ny = n.getY(i) / my, nz = n.getZ(i) / mz, l = Math.hypot(nx, ny, nz) || 1;
+      N.push((nx * c + nz * sn) / l, ny / l, (-nx * sn + nz * c) / l); MAT.push(m);
+      UV.push(m === 0 ? uv.getX(i) * 0.9 : 0, 0, m === 0 ? (1 - uv.getY(i)) * 0.62 : 0);
+    }
+  };
+  const blob = (r, ox, oy, oz, sx = 1, sy = 0.78, sz = 1, rot = 0) => add(new THREE.IcosahedronGeometry(r, 1), 1, sx, sy, sz, ox, oy, oz, rot);
+  if (!bush) {
+    add(new THREE.CylinderGeometry(0.05, 0.1, 0.62, 7, 2, true), 0, 1, 1, 1, 0, 0.31, 0);                // tronc
+    add(new THREE.CylinderGeometry(0.02, 0.05, 0.3, 5, 1, true), 0, 1, 1, 1, 0.085, 0.56, 0.02, 0);          // départ de branche
+    blob(0.34, 0, 0.7, 0, 1, 0.8, 1);
+    blob(0.25, 0.22, 0.6, 0.08); blob(0.25, -0.2, 0.62, -0.1); blob(0.24, 0.05, 0.6, 0.24); blob(0.23, -0.06, 0.58, -0.24);
+    blob(0.24, 0.0, 0.92, 0.02, 1, 0.85, 1); blob(0.18, 0.18, 0.84, -0.12); blob(0.17, -0.15, 0.82, 0.14);
+  } else {
+    blob(0.4, 0, 0.3, 0, 1, 0.8, 1); blob(0.3, 0.3, 0.24, 0.12); blob(0.3, -0.28, 0.25, -0.1); blob(0.26, 0.04, 0.22, -0.3); blob(0.24, -0.05, 0.62, 0.02, 1, 0.8, 1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+  g.setAttribute('aMat', new THREE.Float32BufferAttribute(MAT, 1)); g.setAttribute('aUV', new THREE.Float32BufferAttribute(UV, 3));
+  return g;
+}
 function propGeometry(kind) {
   if (kind === 'mono' || kind === 'tower') { const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0); return g; }
   if (kind === 'spire') return geoCone(5);
@@ -734,21 +765,23 @@ export function buildProps(w, key, seed, shared) {
     items.push([x - MG, z - MG, R(), R(), R()]);
   }
   if (!items.length) items.push([-300, -300, 0, 0, 0, 0, 0.01, 0.01, 0]);   // jamais de maillage vide (pas d'attribut de couleur sinon)
-  const geo = propGeometry(cfg.open && !forest ? 'edo' : cfg.prop), n = items.length;
+  const geo = forest && FLOOR.fimg ? geoForest(false) : propGeometry(cfg.open && !forest ? 'edo' : cfg.prop), n = items.length;
   const houses = cfg.open && !forest && !!FLOOR.himg;   // maisons 3D texturées (atlas house.png) ; sinon ancien dessin procédural
   const mat = new THREE.ShaderMaterial({
-    vertexShader: houses ? S.HOUSE_VERT : S.PROP_VERT, fragmentShader: houses ? S.HOUSE_FRAG : S.PROP_FRAG,
+    vertexShader: houses || (forest && FLOOR.fimg) ? S.HOUSE_VERT : S.PROP_VERT, fragmentShader: houses ? S.HOUSE_FRAG : forest && FLOOR.fimg ? S.TREE_FRAG : S.PROP_FRAG,
     uniforms: {
       uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam,
       uRoofA: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[0] : [.1, .12, .16])) }, uRoofB: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[1] : [.24, .27, .33])) }, uWinT: { value: cfg.win || .7 },
       uType: { value: cfg.open ? (forest ? 8 : 6) : { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
       uEmisCol: { value: new THREE.Vector3(...cfg.emis) }, uLightCol: { value: new THREE.Vector3(...cfg.light) }, uBob: { value: cfg.bob },
+      ...(forest && FLOOR.fimg ? { uTex: { value: houseTex(FLOOR.fimg) } } : {}),
       ...(houses ? { uTex: { value: houseTex(FLOOR.himg) }, uEmi: { value: houseTex(FLOOR.heimg) }, uWorn: { value: key === 'ember' ? 0.55 : 0.12 } } : {}),
     },
   });
-  const mesh = new THREE.InstancedMesh(geo, mat, n);
+  const trees = forest && !!FLOOR.fimg;   // arbres 3D texturés (atlas forest.png) : arbres et buissons dans deux maillages ; sinon ancien dessin procédural
+  const mesh = new THREE.InstancedMesh(geo, mat, trees ? items.filter(it => !(it.length > 5 && it[5] === 0)).length : n);
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
-  items.forEach(([x, z, a, b2, c], i) => {
+  const fill = (mesh, items) => items.forEach(([x, z, a, b2, c], i) => {
     let sx, sy, sz, y = -(cfg.open ? OPEN_DEPTH : DEPTH);
     if (items[i].length > 5) { sx = sz = items[i][6]; sy = items[i][7]; }
     else if (cfg.prop === 'mono') { sx = 0.5 + a * 0.8; sy = 1.5 + b2 * 4.5; sz = 0.5 + c * 0.8; y = -2 + a * 5.5; }
@@ -766,6 +799,11 @@ export function buildProps(w, key, seed, shared) {
     const pc = cfg.open ? (forest ? (cfg.trees || [cfg.propCol])[Math.floor(c * 7.99) % (cfg.trees || [1]).length] : (cfg.walls || EDO_WALL)[Math.floor(c * 7.99) % (cfg.walls || EDO_WALL).length]) : cfg.propCol;
     col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); mesh.setColorAt(i, col);
   });
+  if (trees) {
+    fill(mesh, items.filter(it => !(it.length > 5 && it[5] === 0)));
+    const bi = items.filter(it => it.length > 5 && it[5] === 0);
+    if (bi.length) { const bm = new THREE.InstancedMesh(geoForest(true), mat, bi.length); fill(bm, bi); bm.instanceMatrix.needsUpdate = true; if (bm.instanceColor) bm.instanceColor.needsUpdate = true; bm.frustumCulled = false; mesh.add(bm); }
+  } else fill(mesh, items);
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   mesh.frustumCulled = false;
   const mStyle = key === 'mirror' ? 'lake' : !water ? (key === 'ember' ? 'ruin' : 'edo') : null;
