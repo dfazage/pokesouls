@@ -1,5 +1,5 @@
 // Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
-import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw } from './assets.js';
+import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw, VIEW_YAW } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
@@ -61,7 +61,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = VIEW_YAW; this.camTilt = 0;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -308,18 +308,8 @@ export class Game {
     setAnim(m, moving ? 'Walk' : 'Idle'); m.at += dt * (run ? 1.5 : 1) * (guarding ? 0.5 : 1);
     this.stamTick(dt, run || guarding);
   }
-  // pivot de caméra au stick droit (manette), par crans verrouillés : gauche = un cran vers la gauche (-45°), droite = un cran vers la droite (+45°).
-  // Trois positions (-45°, 0°, +45°) ; l'angle reste en place quand on relâche. Pendant un verrouillage, le stick droit change de cible (le cran reste).
-  // Cinématique ou sans rendu HD-2D : retour à 0° sans perdre le cran choisi.
-  updateCamPivot(dt) {
-    const [sx] = Input.camStick(), free = !this.camFx && !this.cine && !!window.hd2d;
-    if (Math.abs(sx) < 0.6) this.camArm = true;
-    else if (this.camArm) { this.camArm = false; if (free && !this.lock) this.camStep = Math.max(-1, Math.min(1, this.camStep + (sx > 0 ? 1 : -1))); }
-    const ty = free ? this.camStep * CAM_YAW : 0, k = 1 - Math.exp(-dt * 9);
-    this.camYaw += (ty - this.camYaw) * k; this.camTilt = 0;
-    if (Math.abs(this.camYaw - ty) < 0.05) this.camYaw = ty;
-    setViewYaw(this.camYaw * Math.PI / 180);
-  }
+  // vue fixe tournée de VIEW_YAW° (assets.js) : pas d'option de caméra. Le déplacement et la rangée de sprite suivent cet angle.
+  updateCamPivot() { this.camYaw = window.hd2d ? VIEW_YAW : 0; this.camTilt = 0; setViewYaw(this.camYaw * Math.PI / 180); }   // le rendu 2D de secours reste de face
   stamTick(dt, hold) { if (!hold && this.stamPause <= 0) { const m = this.chief(); this.stam = Math.min(this.maxStam, this.stam + 35 * (m && m.fx && m.fx.k === 'para' ? 0.5 : 1) * (this.linkMalus > 0 ? 0.4 : 1) * (this.terrain.frost ? 0.5 : 1) * dt); } }
 
   tryDodge(m, ax, ay) {

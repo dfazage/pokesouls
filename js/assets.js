@@ -38,7 +38,9 @@ export function hitTick(an) { if (an.hit < 0) return -1; const c = cumul(an); re
 // direction (rangée de la feuille) à partir d'un vecteur : 0 bas, 1 bas-droite, 2 droite, 3 haut-droite, 4 haut, 5 haut-gauche, 6 gauche, 7 bas-gauche
 const ROW = [2, 1, 0, 7, 6, 5, 4, 3];
 // pivot de caméra (radians) : la rangée du sprite dépend de la direction vue à l'écran, pas de la direction dans le monde
-let viewYaw = 0, vyC = 1, vyS = 0;
+// angle de vue fixe de la carte (degrés) : 45 par défaut ; `?yaw=30` pour comparer, `?yaw=0` pour l'ancienne vue de face
+export const VIEW_YAW = (() => { try { const v = parseFloat(new URLSearchParams(location.search).get('yaw')); return isFinite(v) ? v : 45; } catch (e) { return 45; } })();
+let viewYaw = VIEW_YAW * Math.PI / 180, vyC = Math.cos(viewYaw), vyS = Math.sin(viewYaw);
 export function setViewYaw(a) { viewYaw = a; vyC = Math.cos(a); vyS = Math.sin(a); }
 export function dirFromVec(dx, dy) {
   if (viewYaw) { const sx = dx * vyC - dy * vyS, sy = dx * vyS + dy * vyC; dx = sx; dy = sy; }

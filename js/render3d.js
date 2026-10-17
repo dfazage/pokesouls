@@ -6,7 +6,7 @@
 // Le gameplay, les collisions et les entrées ne changent pas : la caméra est fixe, orientée nord (haut de l'écran = nord).
 import * as THREE from './vendor/three.module.min.js';
 import * as M from './maps.js';
-import { A } from './assets.js';
+import { A, VIEW_YAW } from './assets.js';
 import { W, H, setViewW } from './game.js';
 import { collectDrawList, groundFx, buildLights, radial, setShadowSink } from './render.js';
 import { drawFxs } from './fx.js';
@@ -17,7 +17,6 @@ import { itemImage } from './items.js';
 const { TS } = M;
 let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
 export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5, camPitchMin: 40, camPitchMax: 40 };   // camPitchMin / Max : bornes de l'inclinaison réglable au stick droit (degrés)
-const CAM_YAW_MAX = 45;   // pivot maximal à gauche / droite (degrés) ; garder aligné sur CAM_YAW de game.js
 // Tilt-shift : rayon de flou maximal (px) à 100 %. Réglage joueur 0 à 150 % (0 = désactivé, saute aussi la boucle de flou du shader).
 const TILT_BASE = 4.2, OPT_KEY = 'pokesouls.options.v1';
 const tiltPct = () => { try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null'); if (o && typeof o.tilt === 'number') return Math.max(0, Math.min(150, o.tilt)); } catch (e) { /* défaut */ } return 100; };
@@ -85,7 +84,7 @@ export class HD2D {
     this.camera = new THREE.PerspectiveCamera(CFG.fov, SW / SH, 0.1, 160);
     this.scene = new THREE.Scene();
     this.pitch = CFG.pitch * Math.PI / 180;
-    this.curPitch = this.pitch; this.curYaw = 0; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
+    this.curPitch = this.pitch; this.curYaw = VIEW_YAW * Math.PI / 180; this.curDist = CFG.dist; this.curLook = CFG.look; this.curFov = CFG.fov;   // modifiés par les cinématiques (g.camFx)
     this.sh = {
       uTime: { value: 0 }, uFog: { value: new THREE.Vector3(.05, .05, .1) }, uFogD: { value: .02 }, uMist: { value: .5 }, uCam: { value: new THREE.Vector3() },
       uLight: { value: null }, uOvN: { value: null }, uOvA: { value: null }, uReg: { value: new THREE.Vector4() }, uGain: { value: 1.12 },
@@ -118,9 +117,9 @@ export class HD2D {
   computeRegion() {
     const c = this.camera, keepP = this.curPitch, keepY = this.curYaw;
     const ray = new THREE.Vector3(); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
-    // union des régions vues sous tous les angles que le joueur peut prendre (pivot ±CAM_YAW_MAX° et inclinaison bornée)
-    const Y = CAM_YAW_MAX * Math.PI / 180, rad = d => d * Math.PI / 180;
-    for (const yw of [-Y, 0, Y]) for (const pd of [CFG.camPitchMin, CFG.pitch, CFG.camPitchMax]) {
+    // région vue sous l'angle fixe de la carte (VIEW_YAW)
+    const rad = d => d * Math.PI / 180;
+    for (const yw of [rad(VIEW_YAW)]) for (const pd of [CFG.pitch]) {
       this.curPitch = rad(pd); this.curYaw = yw; this.placeCamera(0, 0, 0, 0);
       const pos = c.position.clone();
       for (const [nx, ny] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1], [0, -1]]) {
@@ -295,7 +294,7 @@ export class HD2D {
     { // paramètres de caméra : par défaut ceux du jeu, sinon ceux de la cinématique en cours
       const fx = g.camFx;
       // pivot du joueur (stick droit) : inclinaison bornée, ignoré pendant une cinématique
-      this.curPitch = (fx ? fx.pitch : Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0)))) * Math.PI / 180; this.curYaw = fx ? 0 : (g.camYaw || 0) * Math.PI / 180; this.curDist = fx ? fx.dist : CFG.dist; this.curLook = fx ? fx.look : CFG.look;
+      this.curPitch = (fx ? fx.pitch : CFG.pitch) * Math.PI / 180; this.curYaw = VIEW_YAW * Math.PI / 180; this.curDist = fx ? fx.dist : CFG.dist; this.curLook = fx ? fx.look : CFG.look;
       const fov = fx ? fx.fov : CFG.fov;
       if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
       if (this.pointK) this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
