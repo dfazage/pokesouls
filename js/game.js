@@ -732,11 +732,16 @@ export class Game {
     this.save();
   }
   // objet posé au sol : lueur verte (commun) ou dorée (rare), ramassé en s'approchant (aimantation à courte portée)
-  spawnLoot(x, y, key, rare, i = 0, n = 1) {
-    const a = (i / n) * 6.283 + Math.random() * 0.8;
+  spawnLoot(x, y, key, rare, i = 0, n = 1, fx = false) {
     let lx = x, ly = y;
-    for (let r = 14; r >= 0; r -= 7) { const px = x + Math.cos(a) * r * (n > 1 ? 1 : 0), py = y + Math.sin(a) * r * 0.6 * (n > 1 ? 1 : 0); if (M.boxFree(this.world, px, py, 5, 3)) { lx = px; ly = py; break; } }
-    this.loot.push({ x: lx, y: ly, ox: x, oy: y, key, rare: !!rare, age: 0, life: rare ? 180 : 75, ph: Math.random() * 6.28 });
+    if (fx) {   // objet d'un coffre ou d'une récompense : déjà donné, il est seulement lancé hors de la source puis aimanté. Il retombe devant (côté sud), étalé selon i
+      const dx = (i - (n - 1) / 2) * 16, spots = [[dx, 18], [dx + 12, 16], [dx - 12, 16], [dx, 28], [dx + 22, 6], [dx - 22, 6]];
+      for (const [ox, oy] of spots) if (M.boxFree(this.world, x + ox, y + oy, 5, 3)) { lx = x + ox; ly = y + oy; break; }
+    } else {
+      const a = (i / n) * 6.283 + Math.random() * 0.8;
+      for (let r = 14; r >= 0; r -= 7) { const px = x + Math.cos(a) * r * (n > 1 ? 1 : 0), py = y + Math.sin(a) * r * 0.6 * (n > 1 ? 1 : 0); if (M.boxFree(this.world, px, py, 5, 3)) { lx = px; ly = py; break; } }
+    }
+    this.loot.push({ x: lx, y: ly, ox: x, oy: y, key, rare: !!rare, fx, age: 0, life: fx ? 12 : rare ? 180 : 75, ph: Math.random() * 6.28 });
   }
   updateLoot(dt) {
     if (!this.loot.length) return; const c = this.chief(); let taken = false;
@@ -745,6 +750,7 @@ export class Game {
       const d = hyp(l.x - c.x, l.y - c.y);
       l.pull = d < 46 ? Math.min(1, (l.pull || 0) + dt * 6) : Math.max(0, (l.pull || 0) - dt * 6);   // soulèvement visuel pendant l'aimantation
       if (d < 46 && d > 1) { const s = Math.min(d, (70 + (46 - d) * 6) * dt); l.x += (c.x - l.x) / d * s; l.y += (c.y - l.y) / d * s; }   // aimantation
+      if (d < 13 && l.fx) { l.life = 0; continue; }   // objet de coffre : déjà donné à l'ouverture, il est juste absorbé
       if (d < 13) {
         const n = this.give(l.key); l.life = 0; taken = true; SFX.pick();
         this.popItem(c.x, c.y - 6, l.key); this.floatText(c.x, c.y - 34, '+ ' + n.split(' (')[0], l.rare ? '#ffe27a' : '#9fe8a8');
@@ -761,7 +767,7 @@ export class Game {
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
     if (e.def.pseudo && !this.prog[this.mapIdx].pseudoDead) {   // mini-boss optionnel : deux Super Bonbons et une vitamine
-      this.prog[this.mapIdx].pseudoDead = true; ['candy', 'candy', 'hpup'].forEach((k, i) => { this.give(k); this.popItem(e.x + (i - 1) * 18, e.y - 8, k, i * 0.25); }); this.save();
+      this.prog[this.mapIdx].pseudoDead = true; ['candy', 'candy', 'hpup'].forEach((k, i) => { this.give(k); this.spawnLoot(e.x, e.y, k, false, i, 3, true); }); this.save();
       this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+2 Super Bonbons · +1 Vitamine PV');
     } else if (e.big && !e.def.pseudo && !this.prog[this.mapIdx].bigDead) {
       this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
@@ -1353,13 +1359,13 @@ export class Game {
   popItem(x, y, key, delay = 0) { (this.pops ||= []).push({ x, y, key, t: -delay }); }
   openChest(ch) {
     const pr = this.prog[this.mapIdx]; pr.chests.push(ch.id); const n = this.give(ch.item); SFX.pick(); this.save();
-    const cx = (ch.tx + 0.5) * TS, cy = (ch.ty + 0.55) * TS; this.popItem(cx, cy, ch.item); this.ringFx(cx, cy, 16, '#fff2a0');
+    const cx = (ch.tx + 0.5) * TS, cy = (ch.ty + 0.55) * TS; this.spawnLoot(cx, cy - 4, ch.item, false, 0, 1, true); this.ringFx(cx, cy, 16, '#fff2a0');
     this.emit('banner', n.toUpperCase().split(' (')[0], 'item', ch.item); this.emit('toast', 'Coffre : ' + n, ch.item);
   }
   takeReward() {
     const pr = this.prog[this.mapIdx]; if (pr.rewardTaken) return; pr.rewardTaken = true;
     const got = this.world.def.reward.map(i => this.give(i)); const rw = this.items.find(i => i.kind === 'reward'); this.items = this.items.filter(i => i.kind !== 'reward'); SFX.victory(); this.save();
-    if (rw) this.world.def.reward.forEach((k, i, a) => this.popItem(rw.x + (i - (a.length - 1) / 2) * 20, rw.y - 6, k, i * 0.25));
+    if (rw) this.world.def.reward.forEach((k, i, a) => this.spawnLoot(rw.x, rw.y - 4, k, i === 0, i, a.length, true));
     this.emit('banner', 'RÉCOMPENSE', 'item', this.world.def.reward[0]); this.emit('toast', got.join(' · '), this.world.def.reward[0]);
   }
   usePortal() {

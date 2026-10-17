@@ -401,7 +401,7 @@ function drawPlaque(ctx, g, it) { shadow(ctx, it.x, it.y, 8, 0.35); const y = it
 // Halo vert (commun) ou doré avec colonne de lumière (rare). Clignote avant de disparaître.
 const LOOT_FLIGHT = 0.55;   // durée du lancer (s) ; le ramassage n'est possible qu'ensuite (game.js)
 function drawLoot(ctx, g, l) {
-  if (l.life < 8 && Math.floor(g.t * 6) % 2) return;
+  if (!l.fx && l.life < 8 && Math.floor(g.t * 6) % 2) return;
   let x = l.x, y = l.y, z;
   if (l.age < LOOT_FLIGHT) { const p = l.age / LOOT_FLIGHT; x = l.ox + (l.x - l.ox) * p; y = l.oy + (l.y - l.oy) * p; z = 10 * (1 - p) + 96 * p * (1 - p); }   // du torse de l'ennemi au sol, en arc
   else { const t = l.age - LOOT_FLIGHT; z = t < 0.22 ? 4 * Math.sin(Math.PI * t / 0.22) : 0; }                                                              // petit rebond à l'arrivée
