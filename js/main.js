@@ -120,12 +120,12 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   Input.poll();
   padNav.update(dt); // menus : navigation manette (avant la logique de mode pour qu'un retour « B » ne ferme pas tout le feu de camp)
-  if (game && game.tut && !game.tut.done && (Input.pressed('skip') || Input.padEdge(8))) game.skipTutorial();   // Entrée / bouton Moins : passer le tutoriel
+  const tutSkip = !!(game && game.tut && !game.tut.done && (Input.pressed('skip') || Input.padEdge(8))); if (tutSkip) game.skipTutorial();   // le bouton Moins sert aussi de Carte : ce même appui ne doit pas ouvrir la carte   // Entrée / bouton Moins : passer le tutoriel
   { const pm = Input.usingPad(); if (pm !== lastPadMode) { lastPadMode = pm; if (game && game.tut) game.renderTut(); } } // le tuto réaffiche ses boutons quand on change de périphérique
   if (mode === 'play') {
     if (Input.pressed('pause')) openPause();
     else if (Input.pressed('bag') && game.state === 'play') openBag();
-    else if (Input.pressed('map') && game.canTravel() && !game.tut) openTravel();
+    else if (Input.pressed('map') && !tutSkip && game.canTravel() && !game.tut) openTravel();
     else game.update(dt);
   } else if (mode === 'menu' || mode === 'pause') {
     if (Input.pressed('pause') || (menuKind === 'bag' && Input.pressed('bag')) || (menuKind === 'travel' && Input.pressed('map')) || (menuKind === 'bonfire' && Input.pressed('interact'))) closeMenu();
