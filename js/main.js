@@ -126,9 +126,10 @@ async function newGame(choice, chapter = 'kanto') {
   await launch(g);
 }
 async function resume() { const g = new Game(lastChapter()); if (!g.hasSave) return; await launch(g); }
-// ?dev seul : état de test, Laggron / Alakazam / Ectoplasma niv. 36 au feu devant Mewtwo, sans toucher à la sauvegarde
+// ?dev : état de test, Dracaufeu / Florizarre / Tortank niv. 36 au dernier feu devant la brume de Lugia (Johto) ; ?dev=mewtwo : Laggron / Alakazam / Ectoplasma devant Mewtwo. Sans toucher à la sauvegarde
 async function devStart() {
-  const g = new Game('kanto'); g.devPreset();
+  const boss = (location.search.match(/[?&]dev=(\w+)/) || [])[1] === 'mewtwo' ? 'mewtwo' : 'lugia';   // ?dev = Lugia (Johto) ; ?dev=mewtwo = ancien état de test
+  const g = new Game(boss === 'lugia' ? 'johto' : 'kanto'); g.devPreset(boss);
   await loadPortraits(g.team.flatMap(m => m.line));
   await launch(g);
 }
