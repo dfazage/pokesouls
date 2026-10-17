@@ -179,7 +179,7 @@ function frame(now) {
     else render(game, ctx);
     hud.update(dt);
   }
-  leaves.update(mode === 'play' || mode === 'pause' ? dt : 0, !!(game && game.world && (game.world.def.theme === 'bell' || game.world.def.theme === 'ember') && mode !== 'title'));
+  leaves.update(mode === 'play' || mode === 'pause' ? dt : 0, (game && game.world && mode !== 'title' && (game.world.def.theme === 'ember' ? 'ash' : game.world.def.theme === 'bell' ? 'leaf' : false)));
   touchUi.update(mode);
   directMusic(game, ui, dt);
   Input.endFrame();
