@@ -1,9 +1,7 @@
-// Brume d'entrée des sanctuaires de boss : un portail de nuages en pixel art (générés en code), une lueur au centre et la
-// silhouette du boss qui se précise quand le joueur approche. Un seul moteur ; chaque boss règle palette, mouvement et effets
+// Brume d'entrée des sanctuaires de boss : un portail de nuages en pixel art (générés en code), une lueur au centre, et le portail
+// s'ouvre quand le joueur approche. Un seul moteur ; chaque boss règle palette, mouvement et effets
 // dans FOG_STYLES. L'objet est dessiné comme un décor (billboard en HD-2D, sprite en 2D), voir collectDrawList.
 import * as M from './maps.js';
-import * as D from './data.js';
-import { A, drawSprite } from './assets.js';
 
 const TS = 24, RX = 34, RY0 = 44;
 let RY = RY0;                             // demi-hauteur courante : réduite pendant le combat (voir drawFog)          // demi-largeur et demi-hauteur du portail (px de monde)
@@ -179,12 +177,6 @@ function drawFog(c, g, X, Y, boss, st, burst) {
   const gk = (0.45 + 0.9 * o) * fade, gl = st.glow;
   for (let r = low ? 0 : 34; r > 3; r -= 3) { c.fillStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.1 * gk})`; c.beginPath(); c.ellipse(X, YC + 4, r * 1.2, r * 1.35, 0, 0, 7); c.fill(); }
   
-  // silhouette du boss derrière la brume
-  const spr = D.BOSSES[boss] && D.BOSSES[boss].sprite, sp = spr && A.db[spr];
-  if (sp && !low) {
-    const sc = Math.min(D.BOSSES[boss].scale || 1.5, 92 / (sp.anchor.h || 60)), al = (0.2 + 0.78 * o) * fade;
-    drawSprite(c, spr, 'Idle', t * 8, true, 0, X, YC + 36, { scale: sc, alpha: al, tint: 'brightness(.07) saturate(.5)' });
-  }
   layer(1); layer(2);
   for (const e of st.fx) FX[e] && FX[e](c, t, X, YC, o, st);
   // brume rasante au pied du portail
