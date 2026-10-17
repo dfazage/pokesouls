@@ -181,7 +181,17 @@ export class Game {
   travel(idx, dest) { if (!this.canTravel() || idx > this.unlocked) return false; this.enterMap(idx, dest); return true; }
 
   openFog() { for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; }
-  closeFog() { if (this.prog[this.mapIdx].bossDead) return; for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FOG; }
+  closeFog() {
+    if (this.prog[this.mapIdx].bossDead) return;
+    for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FOG;
+    this.unstickTeam();
+  }
+  // garde-fou : si la brume (ou un mur) se referme sur l'équipe, on la replace côté arène, au point d'arrivée de l'intro
+  unstickTeam() {
+    const a = this.world.arena, dir = this.world.fog.dir;
+    const ex = (a.cx - dir.x * (a.r - 2)) * TS, ey = (a.cy - dir.y * (a.r - 2)) * TS;
+    for (const m of this.team) if (!M.boxFree(this.world, m.x, m.y, 6, 4)) { m.x = ex; m.y = ey; m.kx = 0; m.ky = 0; }
+  }
   buildItems() {
     const pr = this.prog[this.mapIdx], a = this.world.arena; this.items = [];
     if (pr.bossDead) {
@@ -836,6 +846,7 @@ export class Game {
 
   // ---------- boss ----------
   startBoss(short) {
+    if (this.cine || this.bossActive || this.boss && !this.boss.dead) return;   // double appui : une seule intro à la fois
     const a = this.world.arena, dir = this.world.fog.dir;
     this.bossActive = true; if (short) this.closeFog();
     const b = this.makeEnemy('boss', (a.cx + dir.x * 4) * TS, (a.cy + dir.y * 4) * TS);

@@ -194,7 +194,7 @@ export function installBossCine(Game, d) {
       if (q.fogOpen && !q.fogClosed && along > TS * 1.4) { q.fogClosed = true; this.closeFog(); }
     } else if (!q.short) { if (!q.fogClosed) { q.fogClosed = true; this.closeFog(); } setAnim(c, 'Idle'); c.at += dt; }
     else { setAnim(c, 'Idle'); c.at += dt; }
-    if (locked) { for (const m of this.team) this.tickMember(m, dt); this.stamTick(dt, false); }
+    if (locked) { for (const m of this.team) { this.tickMember(m, dt); m.inv = Math.max(m.inv, 0.3); m.kx = m.ky = 0; m.hurtT = 0; } this.stamTick(dt, false); }   // intro : l'équipe est intouchable et sans élan
     // boss
     this.cineApply(b); this.cineFire(q, t); this.cineCry(q, t);
     q.flash = Math.max(0, q.flash - dt * 2.6);
@@ -212,7 +212,7 @@ export function installBossCine(Game, d) {
     if (b.state === 'intro') { b.st = 0; } b.invuln = 0;
     if (!q.fogClosed) this.closeFog();
     this.prog[this.mapIdx].introSeen = true; this.save();
-    q.done = true; this.cine = null; this.camFx = null;
+    this.unstickTeam(); q.done = true; this.cine = null; this.camFx = null;
     if (window.hd2d) { this.bossCam = bossCamOf(b); this.bossCamK = 1; }   // le duel reprend le réglage de fin d'intro
   };
 }
