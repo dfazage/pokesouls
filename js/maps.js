@@ -176,7 +176,7 @@ const JOHTO = [
         { cell: [1, 2], name: 'Banc de corail' }, { cell: [2, 1], name: 'Île du phare' }, { cell: [2, 2], name: 'Récif des raies' },
         { cell: [2, 0], name: 'Arche de pierre' }, { cell: [3, 1], name: 'Antichambre du tourbillon' }, { cell: [3, 2], name: 'Écueil des brumes' },
       ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
-      links: [[0, 1], [0, 2], [2, 3], [2, 4], [4, 5], [4, 6], [4, 7], [7, 8]], passW: 6,
+      links: [[0, 1], [0, 2], [2, 3], [2, 4], [4, 5], [4, 6], [4, 7], [7, 8]], passW: 6, zs: 0.9,   // zs : îles 10 % plus petites (carte trop grande pour Lugia)
       door: [3, 5], arena: { cell: [3, 0], from: 7 }, bonfires: [0, 4, 7], big: 2, pseudo: 6, pits: 2, chests: [1, 3, 5, 6, 8, 2, 4],
     },
     areas: ['Rivage naufragé', 'Atoll des cormorans', 'Île du phare', 'Antichambre du tourbillon'], sanctuary: 'Sanctuaire de Lugia',
@@ -232,7 +232,7 @@ function generateFree(def) {
     const a = v(0, 0) + (v(1, 0) - v(0, 0)) * sm(fx), b = v(0, 1) + (v(1, 1) - v(0, 1)) * sm(fx); return a + (b - a) * sm(fy);
   };
   const last = F.zones.length - 1;
-  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2) + (z.ox || 0), cy: z.cell[1] * ch + 10 + PADY + ri(-3, 2) + (z.oy || 0), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
+  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2) + (z.ox || 0), cy: z.cell[1] * ch + 10 + PADY + ri(-3, 2) + (z.oy || 0), rx: Math.round((z.rx || ri(11, 12)) * (F.zs || 1)), ry: Math.round((z.ry || ri(7, 8)) * (F.zs || 1)), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
   // l'arène et la zone qui y mène, puis le raccourci : on écarte les zones pour garder du vide (3 cases au moins) où poser la brume et la porte
   const AC = F.arena.cell, arena = { cx: AC[0] * cw + 15, cy: AC[1] * ch + 10 + PADY - Math.ceil(ARENA_R - 9), r: ARENA_R };
   const zf = zones[F.arena.from], vert = Math.abs(arena.cy - zf.cy) >= Math.abs(arena.cx - zf.cx);
