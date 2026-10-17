@@ -7,7 +7,7 @@ const TYPE_EN = { Feu: 'fire', Eau: 'water', Plante: 'grass', Normal: 'normal', 
 
 // Fichier d'icône d'un objet (clé du jeu : candy, revive, hpup…, ou id de CT) ; null si inconnu.
 export function itemIconFile(key) {
-  const f = FIXED[key] || (D.TMS[key] ? 'tm-' + (TYPE_EN[D.TMS[key].type] || 'normal') : null);
+  const f = FIXED[key] || (D.HELD[key] && D.HELD[key].icon) || (D.TMS[key] ? 'tm-' + (TYPE_EN[D.TMS[key].type] || 'normal') : null);
   return f ? BASE + f + '.png' : null;
 }
 export function iconImg(key, cls = 'itemico') { const s = itemIconFile(key); return s ? `<img class="${cls}" src="${s}" alt="">` : ''; }
@@ -16,6 +16,6 @@ export function iconImg(key, cls = 'itemico') { const s = itemIconFile(key); ret
 const CACHE = {};
 export function itemImage(key) { return CACHE[itemIconFile(key)] || null; }
 export async function loadItemIcons() {
-  const files = new Set([...Object.keys(FIXED), ...Object.keys(D.TMS)].map(itemIconFile).filter(Boolean));
+  const files = new Set([...Object.keys(FIXED), ...Object.keys(D.HELD), ...Object.keys(D.TMS)].map(itemIconFile).filter(Boolean));
   await Promise.all([...files].map(f => new Promise(res => { const i = new Image(); i.onload = () => { CACHE[f] = i; res(); }; i.onerror = res; i.src = f; })));
 }

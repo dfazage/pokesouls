@@ -734,3 +734,8 @@ body.touch .pth{height:64px}
 #tut .tt-g{font-size:12px;padding:5px 8px;border-left-width:3px}
 #tut .tt-d{margin-top:6px}#tut .tt-d i{height:4px}
 body.touch #tut{left:10px;top:10px;width:240px;font-size:11px}
+
+/* objets tenus (onglet Objets, icône sur la carte du Pokémon) */
+.c-held .ico{color:#ffe27a}.ic.eq{border-color:var(--gold);box-shadow:0 0 10px rgba(255,226,122,.2)}
+.ib .tg{display:block;color:#9fe8a8;font-size:10px;margin-top:2px}.ib .tg.free{color:var(--dim)}
+.bn .itemico.hold{width:18px;height:18px;margin-left:4px;vertical-align:-4px}

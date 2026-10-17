@@ -50,7 +50,7 @@ const KANTO = [
     },
     areas: ['Rivage gelé', 'Grotte des phoques', 'Bassin glacé', 'Galerie de givre', 'Caverne de cristal', 'Lac souterrain', 'Antichambre du blizzard'], sanctuary: "Nid d'Artikodin",
     mobs: { mini: ['seel', 'shellder', 'krabby'], mid: ['dewgong', 'starmie', 'cloyster'], big: 'lapras' },
-    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_aquaring'], reward: ['ct_icebeam', 'candy'] },
+    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_aquaring'], reward: ['ct_icebeam', 'candy', 'mystic'] },
   { id: 'm2', name: 'Centrale abandonnée', sub: 'Sous haute tension', theme: 'plant', mus: 2, lv: 15, seed: 23, boss: 'zapdos',
     // zones libres : le hall (0) donne sur les câbles (1) et la sous-station (7) ; deux routes mènent au poste de commande (5) ; la porte relie les câbles à l'antichambre (6)
     free: {
@@ -67,7 +67,7 @@ const KANTO = [
     },
     areas: ['Hall des turbines', 'Salle des câbles', 'Atelier rouillé', 'Salle des générateurs', 'Couloir des relais', 'Poste de commande', 'Antichambre du transformateur'], sanctuary: "Cœur de la Centrale",
     mobs: { mini: ['magnemite', 'voltorb', 'pikachu'], mid: ['magneton', 'electrode', 'raichu'], big: 'electabuzz' },
-    loot: ['candy', 'iron', 'ct_bodyslam', 'calcium', 'maxberry', 'ct_synthesis'], reward: ['ct_thunder', 'candy'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0, 2] } },
+    loot: ['candy', 'iron', 'ct_bodyslam', 'calcium', 'maxberry', 'ct_synthesis'], reward: ['ct_thunder', 'candy', 'band'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0, 2] } },
   { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', mus: 3, lv: 22, seed: 37, boss: 'moltres',
     // zones libres : le flanc (0) descend vers le tunnel (1) ; trois routes se croisent au carrefour (2) ; la porte relie la caverne (2) au pont de basalte (5)
     free: {
@@ -84,7 +84,7 @@ const KANTO = [
     },
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
     mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'dragoniteK' },
-    loot: ['candy', 'carbos', 'ct_hydro', 'hpup', 'zinc', 'revive'], reward: ['ct_fireblast', 'candy'] },
+    loot: ['candy', 'carbos', 'ct_hydro', 'hpup', 'zinc', 'revive'], reward: ['ct_fireblast', 'candy', 'charcoal'] },
   { id: 'm5', name: 'Laboratoire oublié', sub: 'Là où Mewtwo est né', theme: 'lab', mus: 5, lv: 38, seed: 5, boss: 'mewtwo', final: true,
     // zones libres : le hall (0) s'ouvre sur l'observation (1) et les archives (7) ; les cuves (2) mènent au poste de contrôle (3), puis à l'antichambre (5) ; la porte relie l'observation à la galerie des miroirs (4), qu'on atteint aussi par le quai (9)
     free: {
@@ -100,7 +100,7 @@ const KANTO = [
     },
     areas: [], sanctuary: 'Sanctuaire de Mewtwo',
     mobs: { mini: ['magnemite', 'koffing', 'voltorb'], mid: ['porygon', 'weezing'], big: 'electrodeA' },
-    loot: ['candy', 'calcium', 'ct_psychic', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy'] },
+    loot: ['candy', 'calcium', 'ct_psychic', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy', 'leftovers'] },
   { id: 'm6', name: 'Île Mystère', sub: 'Le refuge de Mew', theme: 'mystic', mus: 6, lv: 45, seed: 59, boss: 'mew', secret: true,
     // zones libres : la plage (0) descend le long de l'île ; deux routes mènent aux ruines (5) ; la porte relie le bosquet (1) à l'antichambre (6)
     free: {
@@ -116,7 +116,7 @@ const KANTO = [
     },
     areas: ['Plage secrète', 'Bosquet lumineux', 'Clairière des rêves', 'Ruines couvertes de lierre', 'Jardin suspendu', 'Source scintillante', 'Antichambre du mythe'], sanctuary: 'Cœur de l’île',
     mobs: { mini: ['exeggcute', 'abra', 'haunter'], mid: ['kadabra', 'gengar', 'mrmime'], big: 'exeggutor' },
-    loot: ['candy', 'protein', 'ct_softboiled', 'hpup', 'maxberry', 'maxether', 'revive'], reward: ['ct_hyper', 'candy', 'candy'] },
+    loot: ['candy', 'protein', 'ct_softboiled', 'hpup', 'maxberry', 'maxether', 'revive'], reward: ['ct_hyper', 'candy', 'candy', 'coin'] },
 ];
 
 // ---------- chapitres : chaque génération a ses cartes ; MAPS contient celles du chapitre actif (remplacées sur place, toutes les références la voient) ----------
@@ -136,7 +136,7 @@ const JOHTO = [
     },
     areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
     mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos', pseudo: 'metagrossK' },
-    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_earthquake'], reward: ['ct_thunder', 'candy'] },
+    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_earthquake'], reward: ['ct_thunder', 'candy', 'seed'] },
   // ---------- Tour Brûlée : pagode calcinée. Trois ouvertures depuis le parvis (ouest : jardin, nord : allée, est : cour des tuiles) ; la porte de l'escalier rouvre les remparts, d'où l'on redescend vers le parvis
   { id: 'j2', name: 'Tour Brûlée', sub: 'Ce que le feu a épargné', theme: 'ember', mus: 'J2', lv: 15, seed: 83, boss: 'entei',
     free: {
@@ -151,7 +151,7 @@ const JOHTO = [
     },
     areas: ['Parvis calciné', 'Allée des cendres', 'Cour du temple effondré', 'Escalier de la tour', 'Étage effondré'], sanctuary: "Sanctuaire d'Entei",
     mobs: { mini: ['houndour', 'slugma', 'magby'], mid: ['houndoom', 'magcargo', 'magmarJ'], big: 'houndoomA', pseudo: 'tyranitarK' },
-    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_aquaring', 'zinc'], reward: ['ct_flamethrower', 'candy'] },
+    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_aquaring', 'zinc'], reward: ['ct_flamethrower', 'candy', 'egg'] },
   // ---------- Lac du Miroir : archipel de zones reliées par des ponts ; l'arène se voit depuis le ponton d'arrivée
   { id: 'j3', name: 'Lac du Miroir', sub: 'Là où le ciel se regarde', theme: 'mirror', mus: 'J3', lv: 22, seed: 97, boss: 'suicune',
     free: {

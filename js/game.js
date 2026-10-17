@@ -15,6 +15,7 @@ import { installBossOutro } from './outro.js';
 import { ENDINGS } from './endings.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
+import { installHeld } from './held.js';
 import { makeDodge, dodgeTravel, dodgeInvEnd, dodgeInvuln } from './dodge.js';
 
 const { TS } = M;
@@ -67,7 +68,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.pity = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.pity = 0; this.helds = []; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.loot = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -81,7 +82,7 @@ export class Game {
   chief() { return this.team[this.chiefIdx]; }
   makeMember(key, i) {
     const e0 = poolEntry(key), mod = key === FALA_KEY ? DEFAULT_MODULE : null, e = mod ? { ...e0, type: MODULES[mod].type } : e0;   // Fala : l'élément vient du Module équipé
-    return { key, mod, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
+    return { key, mod, held: null, type: e.type, gab: e.gab, line: e.line, i, lvl: D.START_LEVEL, vit: Object.fromEntries(VIT_KEYS.map(k => [k, 0])), tm: startTm(e), stage: 0,
       hp: 1, maxhp: 1, exh: false, x: 0, y: 0, face: { x: 0, y: 1 }, dir: 0, anim: 'Idle', at: 0, loop: true, atk: null, dodge: null, hurtT: 0, inv: 0, flash: 0, cd: 0, acd: rand(0.3, 1), kx: 0, ky: 0, drink: 0, dash: null, deadT: 0, fx: null, regen: null, frzImm: 0 };
   }
   computeDef(m) {
@@ -108,7 +109,7 @@ export class Game {
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     for (const m of this.team) m.lvl = D.EVOLVE_AT[1];
-    this.bench = []; this.chiefIdx = 0; this.essence = 0; this.pity = 0; this.link = 0; this.souvenir = null;
+    this.bench = []; this.helds = []; this.chiefIdx = 0; this.essence = 0; this.pity = 0; this.link = 0; this.souvenir = null;
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 };
     this.berries = this.maxBerries = 5; this.ethers = this.maxEthers = 3;
     const lab = M.MAPS.findIndex(d => d.boss === boss);   // le Laboratoire oublié : carte 4 de Kanto (index 3)
@@ -121,7 +122,7 @@ export class Game {
   }
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
-    return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
+    return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), held: this.team.map(m => m.held || null), helds: this.helds, bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null, held: m.held || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
       playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, pity: Math.round(this.pity * 1e4) / 1e4, tips: this.tips, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { if (this.noSave) return; try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
@@ -136,12 +137,14 @@ export class Game {
     const restore = (key, i, o) => {
       const m = this.makeMember(key, i);
       if (key === FALA_KEY && MODULES[o.mod]) { m.mod = o.mod; m.type = MODULES[o.mod].type; }
+      if (D.HELD[o.held] && !m.mod) m.held = o.held;
       m.lvl = o.lvl || D.START_LEVEL; if (o.vit) Object.assign(m.vit, o.vit);
       if (o.tm && D.TMS[o.tm]) { const st = stageOf(m.lvl); if (D.tmCompat(o.tm, m.type, m.line[st], st).ok) m.tm = o.tm; }
       return m;
     };
-    this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i] }));
+    this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i], held: (s.held || [])[i] }));
     this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
+    this.helds = (s.helds || []).filter(k => D.HELD[k]); for (const m of this.team.concat(this.bench)) if (m.held && !this.helds.includes(m.held)) this.helds.push(m.held);   // objets tenus possédés (les anciennes sauvegardes n'en ont pas)
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.pity = s.pity || 0; this.link = s.link || 0;
     this.tips = s.tips || (s.playT > 300 || s.essence > 0 ? { essence: true } : {});   // anciennes sauvegardes déjà bien avancées : pas de conseil de débutant
     if (s.mv !== 2) {   // l'ancienne carte 4 (Route Victoire) n'existe plus : Labo et Île Mystère reculent d'un cran
@@ -271,6 +274,7 @@ export class Game {
     this.updateRings(dt);
     this.updateZones(dt);
     this.updateExtras(dt);
+    this.updateHeld(dt);
     this.updateElements(dt);
     this.updateTutorial(dt);
     this.updateFx(dt);
@@ -707,7 +711,7 @@ export class Game {
       'Attention : si tu meurs, l’essence que tu portes tombe avec toi. Retourne là où tu es mort pour la récupérer.'] });
   }
   // ---------- drops d'ennemis (fiche drops_et_coffres.md) ----------
-  dropLuck() { return 1; }   // crochet : objet tenu ou trait passif « Chanceux » à venir (actif seulement)
+  dropLuck() { return this.chiefHeld('coin') ? 1.5 : 1; }   // Amulette Pièce (Pokémon en jeu) ; un trait passif « Chanceux » pourrait s'y ajouter
   rollDrops(e) {
     const T = D.DROP_TABLES[e.def.tier];
     if (!T || e.boss || e.clone || e.tutDummy || this.tut || e.def.pseudo) return;   // boss, mini-boss et leurres : récompenses fixes
@@ -725,7 +729,7 @@ export class Game {
     const p = again ? T.rare * this.dropLuck() * D.DROP_AGAIN_MULT : Math.min(D.DROP_PITY_MAX, T.rare * this.dropLuck() + this.pity);
     let rare = false;
     if (Math.random() < p) {
-      let pool = D.DROP_RARE; if (e.def.tier === 'big') pool = pool.concat((this.world.def.loot || []).filter(k => D.TMS[k]));
+      let pool = D.DROP_RARE; if (e.def.tier === 'big') pool = pool.concat((this.world.def.loot || []).filter(k => D.TMS[k]), this.heldMissing());   // les gros mobs peuvent aussi lâcher un objet tenu pas encore possédé
       got.push(pool[(Math.random() * pool.length) | 0]); rare = true; if (!again) this.pity = 0;
     } else if (!again) this.pity = Math.min(D.DROP_PITY_MAX, this.pity + D.DROP_PITY_STEP);
     if (got.length) got.forEach((k, i) => this.spawnLoot(e.x, e.y, k, rare && i === got.length - 1, i, got.length));
@@ -762,7 +766,7 @@ export class Game {
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
     if (this.lock === e) this.lock = null;
-    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); if (!this.tips.essence && !this.tut && !e.tutDummy && !(this.tipT > 0)) this.tipT = 1.2; }   // premier gain d'essence : conseil expliqué une fois
+    if (e.essence) { const ess = this.chiefHeld('egg') ? Math.round(e.essence * 1.2) : e.essence; this.essence += ess; this.floatText(e.x, e.y - 28, '+' + ess, '#ffd37a'); if (!this.tips.essence && !this.tut && !e.tutDummy && !(this.tipT > 0)) this.tipT = 1.2; }   // premier gain d'essence : conseil expliqué une fois
     this.rollDrops(e);
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
@@ -798,7 +802,7 @@ export class Game {
       SFX.hurt(); if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }
-    m.hp -= dmg; m.flash = 0.12; m.inv = 0.45;
+    m.hp -= dmg; m.hitAt = this.t; m.flash = 0.12; m.inv = 0.45;
     this.floatText(m.x, m.y - 22, String(dmg), '#ff6a6a'); this.burst(m.x, m.y - 6, '#ff6a6a', 4); this.fx('tackle', m.x, m.y, { scale: 0.5, z: 12, add: true, dur: 0.3 });
     if (sx && m.hp > 0 && Math.random() < sx[1]) this.inflict(m, sx[0]);
     this.elemOnHurt(m, dmg, o, src);
@@ -1344,6 +1348,7 @@ export class Game {
   }
   give(item) {
     if (item === 'candy' || VIT_KEYS.includes(item)) { this.bag[item] = (this.bag[item] || 0) + 1; return D.ITEM_NAMES[item]; }
+    if (D.HELD[item]) { if (this.helds.includes(item)) return D.ITEM_NAMES[item] + ' (déjà possédé)'; this.helds.push(item); return D.ITEM_NAMES[item] + ' (objet tenu)'; }
     if (item === 'berrypack') { this.berries += 2; return 'Baies ×2'; }
     if (item === 'etherpack') { this.ethers += 2; return 'Huile ×2'; }
     if (item === 'maxether') { this.maxEthers++; this.ethers++; return 'Huile Max (fioles max +1)'; }
@@ -1405,7 +1410,7 @@ export class Game {
     if (k === 'F7') { this.link = 100; this.emit('toast', 'Lien plein'); }
     if (k === 'F8') this.fxCycle(false);
     if (k === 'F9') this.fxCycle(true);
-    if (k === 'F6') { this.ethers = this.maxEthers = 5; this.bag.revive = (this.bag.revive || 0) + 2; this.unlocked = M.MAPS.length - 1; for (const t of Object.keys(D.TMS)) if (!this.tms.includes(t)) this.tms.push(t); this.bag.candy = (this.bag.candy || 0) + 20; for (const v of VIT_KEYS) this.bag[v] = (this.bag[v] || 0) + 3; this.emit('toast', 'Tout débloqué'); }
+    if (k === 'F6') { for (const h of Object.keys(D.HELD)) if (!this.helds.includes(h)) this.helds.push(h); this.ethers = this.maxEthers = 5; this.bag.revive = (this.bag.revive || 0) + 2; this.unlocked = M.MAPS.length - 1; for (const t of Object.keys(D.TMS)) if (!this.tms.includes(t)) this.tms.push(t); this.bag.candy = (this.bag.candy || 0) + 20; for (const v of VIT_KEYS) this.bag[v] = (this.bag[v] || 0) + 3; this.emit('toast', 'Tout débloqué'); }
   }
 }
 
@@ -1416,6 +1421,7 @@ installBossCine(Game, { Input, TS, vw: () => W, H, clamp, hyp, setAnim, SFX, M }
 installBossOutro(Game, { ASH, setAnim, hasAnim, SFX, M, TS, vw: () => W, H, clamp, bossCamOf });
 installFala(Game, { M, TS, SFX, hyp });
 installReserve(Game, { D, stageOf });
+installHeld(Game, { D, hyp, SFX });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });
 
 // noms des feux d'une autre carte (menu de voyage) : déterminés par la génération

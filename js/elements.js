@@ -157,6 +157,7 @@ export function installElements(G, d) {
     if (o.noElem) return m;
     const el = o.elem || this.curElem;
     if (src && src.def && el) m *= typeMult(el, typesOfEnemy(e));
+    if (el && src && src.held) m *= this.heldElemMult(src, el);   // objet tenu : Charbon, Eau Mystique, Graine Miracle
     if (el === 'fire' && this.hasMark(e, 'wet')) m *= 0.75;
     if (e.shell && e.shell.hp > 0) m *= 0.6;
     return m;
