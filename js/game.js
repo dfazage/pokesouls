@@ -831,7 +831,7 @@ export class Game {
   }
   bossPhase(b, ph) {
     this.bossCry(b, 6, 1.3); b.phase = ph; b.state = 'phase'; b.st = 2.4; b.invuln = 2.4; b.tele = false; this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = [];
-    this.shake = 8; SFX.boom(); this.burst(b.x, b.y - 10, b.def.color, 30);
+    this.shake = 8; SFX.bossPhase(b.sprite); this.burst(b.x, b.y - 10, b.def.color, 30);
     this.fx('plasmaburst', b.x, b.y, { scale: 2.2, z: 24, add: true, dur: 0.9, glow: b.def.color }); this.fx('novablaster', b.x, b.y, { scale: 1.6, z: 8, delay: 0.25, add: true, dur: 0.8 });
     if (ph === 3 && b.def.summon) this.spawnSummons(b);
     this.emit('bossPhase', b, ph);
@@ -897,48 +897,48 @@ export class Game {
         type = pool[0][0]; for (const l of pool) { r -= l[1]; if (r <= 0) { type = l[0]; break; } }
       }
     }
-    b.lastAtk = type; b.atkType = type; b.state = 'windup'; SFX.telegraph(); b.lockDir = null;
-    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6;
+    b.lastAtk = type; b.atkType = type; b.state = 'windup'; b.lockDir = null;
+    b.st = { ball: 0.6, volley: 0.7, nova: 0.85, swing: 0.5, pulse: 0.95, dash: 0.85, rain: 0.7, beam: 1.0, summon: 1.0 }[type] || 0.6; SFX.bossTele(b.sprite, b.st);
     if (type === 'ball' && b.phase >= 2 && !force) b.queue = 1;
   }
   bossStrike(b, u, tg) {
     const T = b.atkType, d = b.dmg, col = b.def.color, id = b.sprite;
     const rec = (st, cd) => { b.state = 'recover'; b.st = st; b.cd = cd * (b.phase === 3 ? 0.75 : b.phase === 2 ? 0.9 : 1); };
     if (T === 'ball') {
-      this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.shoot();
+      this.fireProj({ x: b.x, y: b.y, ang: Math.atan2(tg.y - b.y, tg.x - b.x), speed: 140, dmg: d * 1.6, r: 6, life: 3.5, team: 'e', color: col, owner: b, big: true }); SFX.bossBall(id);
       setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.5, 1.5);
     } else if (T === 'volley') {
       const n = b.phase >= 2 ? 5 : 3, ang = Math.atan2(tg.y - b.y, tg.x - b.x);
       for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: ang + (i - (n - 1) / 2) * 0.22, speed: 165, dmg: d * 0.9, r: 3.5, life: 3, team: 'e', color: col, owner: b });
-      SFX.shoot(); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.4);
+      SFX.bossVolley(id); setAnim(b, pickAnim(id, ['Shoot', 'Attack']), false); rec(0.6, 1.4);
     } else if (T === 'nova') {
       const n = b.phase === 3 ? 18 : 14, off = rand(0, 6.28);
       for (let i = 0; i < n; i++) this.fireProj({ x: b.x, y: b.y, ang: off + i * 6.283 / n, speed: 105, dmg: d * 0.8, r: 3.5, life: 3.2, team: 'e', color: col, owner: b });
-      SFX.boom(); this.shake = 3; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.6);
+      SFX.bossNova(id); this.shake = 3; setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.8, 1.6);
     } else if (T === 'swing') {
-      setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.swing();
+      setAnim(b, pickAnim(id, ['Swing', 'Attack']), false); SFX.bossSwing(id);
       for (const m of this.actors()) {
         if (m.exh) continue; const dx = m.x - b.x, dy = m.y - b.y, dist = hyp(dx, dy);
         if (dist < 46 && (dx * b.face.x + dy * b.face.y) / (dist || 1) > 0.0) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true }); if (r === 'parry') { rec(1.0, 0.6); return; } }
       }
       this.ringFx(b.x + b.face.x * 20, b.y + b.face.y * 20, 30, col); rec(0.6, 1.2);
     } else if (T === 'pulse') {
-      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.boom(); this.shake = 4;
+      setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); SFX.bossPulse(id); this.shake = 4;
       for (let i = 0; i < 3; i++) this.rings.push({ x: b.x, y: b.y, r: 4 - i * 40, speed: 95, max: 250, hit: new Set(), dmg: d * 1.5, color: col, owner: b });
       rec(0.9, 1.4);
     } else if (T === 'dash') {
-      b.state = 'dash'; b.st = 0.5; b.rollHit = new Set(); SFX.swing();
+      b.state = 'dash'; b.st = 0.5; b.rollHit = new Set(); SFX.bossDash(id);
     } else if (T === 'rain') {
-      const n = 5 + b.phase * 2; SFX.boom();
+      const n = 5 + b.phase * 2; SFX.bossRain(id);
       for (let i = 0; i < n; i++) { const p = i === 0 ? { x: tg.x, y: tg.y } : { x: tg.x + rand(-85, 85), y: tg.y + rand(-65, 65) }; this.zones.push({ x: p.x, y: p.y, r: 20, t: 0, delay: 0.85 + i * 0.13, dmg: d * 1.2, color: b.def.rainColor || col, owner: b }); }
       setAnim(b, pickAnim(id, ['SpAttack', 'Shoot']), false); rec(0.6, 1.5);
     } else if (T === 'beam') {
       const v = b.lockDir || u, ang = Math.atan2(v.y, v.x), len = this.rayObs(b.x, b.y, v, 260);
-      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.boom(); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
+      this.beams.push({ x: b.x, y: b.y - 6, ang, len, t: 0, max: 0.35, color: col, w: 9 }); SFX.bossBeam(id); this.shake = 5; if (len < 260) this.hitObs(b.x + v.x * len, b.y + v.y * len, 6, 40, 'boss');
       for (const m of this.actors()) { if (m.exh) continue; const rx = m.x - b.x, ry = m.y - b.y, al = rx * v.x + ry * v.y, pd = Math.abs(rx * v.y - ry * v.x); if (al > 0 && al < len && pd < 11) { const r = this.hurtMember(m, d * 2, b, { owner: b, heavy: true, parry: false }); if (r) { /* touché */ } } }
       setAnim(b, pickAnim(id, ['Shoot', 'SpAttack']), false); rec(0.9, 1.6);
     } else if (T === 'summon') {
-      if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
+      SFX.bossSummon(id); if (b.def.summon && this.enemies.filter(e => e.clone && !e.dead).length < 3) this.spawnSummons(b);
       setAnim(b, pickAnim(id, ['Appeal', 'SpAttack']), false); rec(1.0, 1.4);
     }
   }
@@ -1001,7 +1001,7 @@ export class Game {
     for (const z of this.zones) {
       z.t += dt;
       if (!z.done && z.t >= z.delay) {
-        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); SFX.boom();
+        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
         for (const m of this.actors()) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true, owner: z.owner });
       }
     }
