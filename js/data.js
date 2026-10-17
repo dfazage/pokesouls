@@ -263,7 +263,7 @@ export const BOSSES = {
   suicune: { sprite: 'suicune', phases: ['L’eau s’éveille', 'Le reflet se brise'], status: ['freeze', 0.2], name: 'SUICUNE', sub: 'Le Miroir', scale: 2.3, hp: 700, dmg: 15, r: 18, speed: 72, color: '#5ac8f0', glow: [110, 210, 255], rainColor: '#bfeaff', summon: 'reflet',
     moves: [[['geyser', 3], ['mirror', 3], ['dash', 2]], [['geyser', 3], ['mirror', 3], ['dash', 1], ['summon', 2]], [['geyser', 3], ['mirror', 3], ['nova', 2], ['beam', 2], ['summon', 2]]] },
   lugia: { sprite: 'lugia', phases: ['La tempête gronde', 'Le souffle des abysses'], status: ['confuse', 0.25], name: 'LUGIA', sub: 'Gardien des mers', scale: 2.07, hp: 900, dmg: 17, r: 19, speed: 58, color: '#cfe2ff', glow: [190, 215, 255], hover: true, rainColor: '#dcecff',
-    moves: [[['whirl', 3], ['wall', 3], ['ball', 2]], [['wall', 3], ['whirl', 3], ['beam', 2], ['rain', 2]], [['wall', 3], ['whirl', 3], ['nova', 2], ['beam', 3], ['pulse', 2]]] },
+    moves: [[['whirl', 3], ['tide', 3], ['ball', 2]], [['tide', 3], ['whirl', 3], ['beam', 2], ['rain', 2]], [['tide', 3], ['whirl', 3], ['nova', 2], ['beam', 3], ['pulse', 2]]] },
   celebi: { sprite: 'celebi', phases: ['Le temps vacille', 'Tous les printemps'], status: ['confuse', 0.25], name: 'CELEBI', sub: 'Le Voyageur du temps', scale: 1.15, hp: 960, dmg: 17, r: 8, speed: 64, color: '#8ae88a', glow: [140, 255, 150], hover: true, rainColor: '#c8ffb0', summon: 'reve', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
   raikou: { sprite: 'raikou', phases: ['Le tonnerre approche', 'Foudre de bronze'], status: ['para', 0.3], name: 'RAIKOU', sub: 'Le Tonnerre', scale: 2.3, hp: 420, dmg: 13, r: 18, speed: 68, color: '#f2c84a', glow: [255, 205, 80], rainColor: '#fff0a0',
@@ -404,16 +404,16 @@ const STYLES = {
      cb('Aurore', 'any', 1, [['mirror', .7, .3], ['geyser', .8, .25], ['mirror', .7, .25], ['beam', 1.1, 0, .3]], 2.5, 3)]] },
   lugia: { style: 'Seigneur du ciel', want: 96, bands: [72, 170], combos: [   // phase 3 « ciel dégagé » : le combat change de nature
     [cb('Battement', 'near', 2, [['swing', .6, .5], ['swing', .6]], 1.8),
-     cb('Aéropique', 'mid far', 3, [['wall', 1.0, .5], ['wall', 1.0]], 2.0),
+     cb('Marée', 'mid far', 3, [['tide', 1.3]], 2.4),
      cb('Tourbillon', 'mid far', 3, [['whirl', .9]], 2.0)],
     [cb('Battement', 'near', 2, [['swing', .55, .4], ['swing', .55, 0, .3]], 1.7),
-     cb('Aéropique', 'mid', 3, [['wall', 1.0, .4], ['whirl', .9, .4], ['wall', 1.0, 0, .3]], 2.0),
+     cb('Marée', 'mid', 3, [['tide', 1.2, .5], ['whirl', .9]], 2.2),
      cb('Tourbillon', 'far', 2, [['whirl', .9, .5], ['ball', .7]], 1.9),
      cb('Rayon des abysses', 'mid far', 2, [['beam', 1.1, .5], ['ball', .7]], 1.9)],
     [cb('Battement', 'near', 2, [['swing', .5, .3], ['swing', .5, 0, .3]], 1.6),
-     cb('Aéropique', 'mid', 2, [['wall', .95, .3], ['whirl', .85, .3], ['wall', .95, 0, .3]], 1.9),
+     cb('Grande marée', 'mid', 2, [['tide', 1.1, .4], ['tide', 1.1]], 2.0),
      cb('Rayon des abysses', 'far', 2, [['beam', 1.0, .4], ['ball', .65]], 1.8),
-     cb('Grand Aéropique', 'any', 1, [['wall', .9, .25], ['whirl', .85, .2], ['beam', 1.0, .2], ['nova', .8, 0, .3]], 2.5, 3)]] },
+     cb('Raz-de-marée', 'any', 1, [['tide', 1.0, .3], ['whirl', .85, .2], ['beam', 1.0, .2], ['nova', .8, 0, .3]], 2.5, 3)]] },
 };
 for (const k in STYLES) Object.assign(BOSSES[k], STYLES[k]);
 export const BOSS_STYLES = STYLES;
