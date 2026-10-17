@@ -187,13 +187,14 @@ export function installExtras(G, d) {
     const proj = (an, sp, mult, extra) => this.fireProj({ x: m.x, y: m.y, ang: an, speed: sp, dmg: dmg * mult, r: 4, life: 1.1, team: 'p', color: col, owner: m, status: sg.st, sig: true, heavy: true, ...extra });
     this.shake = Math.max(this.shake, 3);
     this.fxSig(m, a, sg);
+    const sfx = SFX.sig(sg.kind) ? SFX.silent : SFX;   // son B/W de la signature (sinon version synthétisée)
     switch (sg.kind) {
       case 'cross': {
         arc(aim, 0.55, m.def.range + 12, 0.0);
         const v2 = { x: Math.cos(ang + 1.0), y: Math.sin(ang + 1.0) };
-        this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.14, fn: () => { if (m.exh) return; arc(aim, 0.6, m.def.range + 14, -0.2); this.burst(m.x + aim.x * 20, m.y - 8, col, 10); SFX.boom(); } });
+        this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.14, fn: () => { if (m.exh) return; arc(aim, 0.6, m.def.range + 14, -0.2); this.burst(m.x + aim.x * 20, m.y - 8, col, 10); sfx.boom(); } });
         for (let i = 0; i < 16; i++) { const k = i / 15 - 0.5; this.parts.push({ x: m.x + aim.x * 20 + v2.x * k * 40, y: m.y - 6 + v2.y * k * 24, z: 8, vx: v2.x * 30, vy: v2.y * 20, vz: 0, life: 0.3, max: 0.3, c: i % 2 ? '#fff' : col, size: 2 }); }
-        SFX.boom(); break;
+        sfx.boom(); break;
       }
       case 'whirl': {
         const R = sg.radius;
@@ -201,12 +202,12 @@ export function installExtras(G, d) {
         hit(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.18, fn: () => { if (!m.exh) { hit(); this.ringFx(m.x, m.y, R * 0.7, col); } } });
         this.ringFx(m.x, m.y, R, col); this.ringFx(m.x, m.y, R * 0.55, '#ffffff');
         for (let i = 0; i < 26; i++) { const an = i / 26 * 6.28; this.parts.push({ x: m.x, y: m.y - 6, z: 6, vx: Math.cos(an + 1.6) * 90, vy: Math.sin(an + 1.6) * 60, vz: rand(-5, 12), life: 0.4, max: 0.4, c: i % 2 ? col : '#ffffff', size: 2 }); }
-        SFX.boom(); this.shake = Math.max(this.shake, 4); break;
+        sfx.boom(); this.shake = Math.max(this.shake, 4); break;
       }
       case 'blast': {
         for (let i = -1; i <= 1; i++) proj(ang + i * 0.26, 175, 0.45, { explode: 32, r: 5, life: 1.2 });
         for (let i = 0; i < 24; i++) { const aa = ang + rand(-0.4, 0.4), s = rand(60, 190); this.parts.push({ x: m.x, y: m.y, z: 8, vx: Math.cos(aa) * s, vy: Math.sin(aa) * s * 0.7, vz: rand(-5, 15), life: rand(0.25, 0.5), max: 0.5, c: Math.random() < 0.5 ? col : '#ffd36a', size: 3 }); }
-        SFX.shoot(); SFX.boom(); break;
+        sfx.shoot(); sfx.boom(); break;
       }
       case 'rush': {
         const L = 96; m.dash = { vx: aim.x * 360, vy: aim.y * 360, t: 0.26 }; m.inv = Math.max(m.inv, 0.3);
@@ -214,7 +215,7 @@ export function installExtras(G, d) {
         for (const e of this.enemies) { if (e.dead) continue; const rx = e.x - m.x, ry = e.y - m.y, al = rx * aim.x + ry * aim.y, pd = Math.abs(rx * aim.y - ry * aim.x); if (al > -8 && al < L + e.r && pd < e.r + 10) if (this.damageEnemy(e, dmg, m, { ...o, stagger: 1.0, knock: 120 })) hit = true; }
         for (let k = 0; k <= 6; k++) this.hitObs(m.x + aim.x * L * k / 6, m.y + aim.y * L * k / 6, 8, dmg * 0.4, this.curElem);
         for (let i = 0; i < 22; i++) this.parts.push({ x: m.x + aim.x * rand(0, L), y: m.y + aim.y * rand(0, L) - 6, z: 6, vx: -aim.x * 40, vy: -aim.y * 25, vz: rand(0, 18), life: 0.35, max: 0.35, c: i % 2 ? col : '#ffffff', size: 2 });
-        if (hit) this.hitstop = 0.06; SFX.boom(); break;
+        if (hit) this.hitstop = 0.06; sfx.boom(); break;
       }
       case 'storm': {
         const base = a.tgt && !a.tgt.dead ? { x: a.tgt.x, y: a.tgt.y } : { x: m.x + aim.x * 70, y: m.y + aim.y * 70 };
@@ -222,7 +223,7 @@ export function installExtras(G, d) {
           const p = i === 0 ? base : { x: base.x + rand(-58, 58), y: base.y + rand(-42, 42) };
           this.ringFx(p.x, p.y, 10, col);
           this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.3 + i * 0.11, fn: () => {
-            this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); SFX.boom(); this.fx('whirlpool', p.x, p.y, { scale: 0.7, z: 0, ground: true, dur: 0.5, add: true }); this.fx('brine', p.x, p.y, { scale: 0.9, z: 10, dur: 0.45, add: true, glow: col });
+            this.ringFx(p.x, p.y, 28, col); this.burst(p.x, p.y - 4, col, 10); sfx.boom(); this.fx('whirlpool', p.x, p.y, { scale: 0.7, z: 0, ground: true, dur: 0.5, add: true }); this.fx('brine', p.x, p.y, { scale: 0.9, z: 10, dur: 0.45, add: true, glow: col });
             for (const e of this.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 26 + e.r) this.damageEnemy(e, dmg * 0.22, m, { ...o, stagger: 0.5, knock: 50 });
             this.hitObs(p.x, p.y, 26, dmg * 0.4, 'water');
           } });
@@ -231,12 +232,12 @@ export function installExtras(G, d) {
       }
       case 'fan': {
         for (let i = -2; i <= 2; i++) proj(ang + i * 0.2, 235, 0.2, { r: 3.5 });
-        SFX.shoot(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.17, { r: 3.5 }); SFX.shoot(); } }); break;
+        sfx.shoot(); this.later.push({ el: this.curElem, tr: this.curTrig, t: 0.12, fn: () => { if (m.exh) return; for (let i = -1; i <= 1; i++) proj(ang + i * 0.34, 215, 0.17, { r: 3.5 }); sfx.shoot(); } }); break;
       }
       case 'leaves': {
         const off = rand(0, 6.28);
         for (let i = 0; i < 12; i++) proj(off + i * 6.283 / 12, 150, 0.14, { r: 3.5, life: 0.95 });
-        this.ringFx(m.x, m.y, 30, col); SFX.shoot(); SFX.boom(); break;
+        this.ringFx(m.x, m.y, 30, col); sfx.shoot(); sfx.boom(); break;
       }
       case 'sun': {
         const len = 230; this.beams.push({ x: m.x, y: m.y - 6, ang, len, t: 0, max: 0.42, color: col, w: 11 });
@@ -244,7 +245,7 @@ export function installExtras(G, d) {
         for (const e of this.enemies) { if (e.dead) continue; const rx = e.x - m.x, ry = e.y - m.y, al = rx * aim.x + ry * aim.y, pd = Math.abs(rx * aim.y - ry * aim.x); if (al > 0 && al < len + e.r && pd < e.r + 9) if (this.damageEnemy(e, dmg, m, { ...o, stagger: 0.9, knock: 70 })) hit = true; }
         for (let k = 1; k <= 8; k++) this.hitObs(m.x + aim.x * len * k / 8, m.y + aim.y * len * k / 8, 8, dmg * 0.4, 'grass');
         for (const q of this.team) if (!q.exh) q.hp = Math.min(q.maxhp, q.hp + q.maxhp * 0.06);
-        this.healFx(m); if (hit) this.hitstop = 0.06; SFX.boom(); this.shake = Math.max(this.shake, 5); break;
+        this.healFx(m); if (hit) this.hitstop = 0.06; sfx.boom(); this.shake = Math.max(this.shake, 5); break;
       }
     }
   };

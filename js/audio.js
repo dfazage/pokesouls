@@ -116,6 +116,9 @@ function playCry(id) {
 }
 // effets en fichier : assets/audio/sfx/<nom>.ogg (ou .mp3 / .wav) ; absent = on retombe sur la version synthétisée, sans erreur
 const sfxFiles = {};
+// anti-spam des sons fichiers : cooldown par catégorie, 4 sons simultanés au plus, les sons importants coupent les coups normaux
+const SFX_CD = [[/^hit$/, 120, 0], [/^(super_effective|resisted)$/, 250, 2], [/^status_/, 400, 1], [/^(sig_|ct_)/, 150, 2], [/^(faint|heal)$/, 300, 2]];
+const sfxLast = {}, sfxLive = [];
 function playSfxFile(name, vol = 0.55) {
   let f = sfxFiles[name];
   if (f === undefined) {
@@ -124,16 +127,25 @@ function playSfxFile(name, vol = 0.55) {
     tryNext();
   }
   if (!f) return false;
-  try { const c = f.cloneNode(); c.volume = vol; const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
+  const rule = SFX_CD.find(r => r[0].test(name)) || [0, 0, 1], now = performance.now(), pr = rule[2];
+  if (now - (sfxLast[name] ?? -1e9) < rule[1]) return true;   // en cooldown : le son est géré (on ne joue pas la version synthétisée)
+  for (let i = sfxLive.length - 1; i >= 0; i--) if (sfxLive[i].a.ended || sfxLive[i].a.paused) sfxLive.splice(i, 1);
+  if (pr === 2) for (const s of sfxLive) if (s.pr === 0) s.a.pause();   // un son important coupe les coups normaux en cours
+  for (let i = sfxLive.length - 1; i >= 0; i--) if (sfxLive[i].a.paused) sfxLive.splice(i, 1);
+  if (sfxLive.length >= 4 && pr < 2) return true;
+  sfxLast[name] = now;
+  try { const c = f.cloneNode(); c.volume = vol; sfxLive.push({ a: c, pr }); const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
 }
 export const SFX = {
   // son de CT (assets/audio/sfx/<id>.ogg) ; renvoie true s'il existe, sinon la version synthétisée reste active
+  status(k) { return playSfxFile('status_' + k, 0.5); },
+  sig(kind) { return playSfxFile('sig_' + kind, 0.5); },
   ct(id) { return playSfxFile(id, 0.5); },
   silent: new Proxy({}, { get: () => () => {} }),
   resisted() { const t = performance.now(); if (t - (SFX._res ?? -1e9) < 90) return true; SFX._res = t; return playSfxFile('resisted', 0.5); },
   cry(id) { playCry(id); },
   swing() { band(1800, 0.7, 0.16, 0.07); band(900, 0.6, 0.12, 0.04, 0.03); },
-  hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
+  hit() { const n = performance.now(); if (n - (SFX._hit ?? -1e9) < 60) return; SFX._hit = n; if (playSfxFile('hit', 0.45)) return; band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
   // coup super efficace : impact plus lourd que le coup normal (claquement sec, boum grave, craquement, résonance métallique) ; au plus un toutes les 90 ms quand une zone touche plusieurs cibles
   superHit() {
     const now = performance.now(); if (now - (SFX._sup ?? -1e9) < 90) return; SFX._sup = now;
@@ -144,7 +156,7 @@ export const SFX = {
     band(4300, 7, 0.4, 0.04, 0.05); band(3100, 9, 0.5, 0.03, 0.08);
   },
   crit() { band(2200, 0.8, 0.12, 0.17); tone(90, 40, 0.25, 'sine', 0.14); band(250, 0.6, 0.2, 0.1); band(5000, 1.5, 0.18, 0.05, 0.02); },
-  hurt() { tone(80, 38, 0.28, 'sine', 0.13); band(500, 0.7, 0.18, 0.12); band(2500, 1, 0.06, 0.06); },
+  hurt() { if (playSfxFile('hit', 0.5)) return; tone(80, 38, 0.28, 'sine', 0.13); band(500, 0.7, 0.18, 0.12); band(2500, 1, 0.06, 0.06); },
   dodge() { band(3500, 0.6, 0.18, 0.04); },
   parry() { band(3200, 3, 0.25, 0.12); band(4800, 4, 0.18, 0.07, 0.01); band(2300, 4, 0.3, 0.06, 0.02); tone(1900, 1850, 0.22, 'sine', 0.015); },
   block() { band(900, 1.5, 0.1, 0.1); tone(120, 70, 0.12, 'sine', 0.09); },
@@ -153,10 +165,10 @@ export const SFX = {
   // allumage du feu : souffle de flamme puis quelques crépitements, aucune note
   bonfire() { whoosh(1.0, 0.12, 250, 2200); [0.12, 0.26, 0.33, 0.5, 0.62, 0.8].forEach(d => noise(0.03 + Math.random() * 0.03, 0.05 + Math.random() * 0.04, 3000 + Math.random() * 2500, d + Math.random() * 0.05)); },
   // K.O. d'un allié : coup sourd, sans note ni dent de scie
-  death() { tone(110, 45, 0.5, 'sine', 0.08); noise(0.5, 0.05, 350); },
+  death() { if (playSfxFile('faint', 0.5)) return; tone(110, 45, 0.5, 'sine', 0.08); noise(0.5, 0.05, 350); },
   // ramassage de la récompense : deux notes douces et longues (une quinte), sans arpège
   victory() { tone(523, 523, 1.2, 'sine', 0.04); tone(784, 784, 1.4, 'sine', 0.035, 0.12); },
-  heal() { tone(440, 520, 0.5, 'sine', 0.035); tone(660, 700, 0.6, 'sine', 0.025, 0.05); },
+  heal() { if (playSfxFile('heal', 0.45)) return; tone(440, 520, 0.5, 'sine', 0.035); tone(660, 700, 0.6, 'sine', 0.025, 0.05); },
   blip(pitch = 1) { tone((420 + Math.random() * 60) * pitch, (400 + Math.random() * 50) * pitch, 0.04, 'sine', 0.03); },
   pick() { band(2500, 2, 0.08, 0.05); tone(600, 640, 0.15, 'sine', 0.03); },
   // ───── attaques de boss : annonce qui monte, puis impact lourd ─────
