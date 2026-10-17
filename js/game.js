@@ -8,6 +8,7 @@ import * as D from './data.js';
 import { poolEntry, archOf, startTm } from './pool.js';
 import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
+import { zoneImpactFx, zoneLives } from './zonefx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
 import { ASH, bossAshState, installBossCine, bossCamOf } from './bosscine.js';
@@ -1267,11 +1268,11 @@ export class Game {
     for (const z of this.zones) {
       z.t += dt;
       if (!z.done && z.t >= z.delay) {
-        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
+        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); if (!zoneImpactFx(this, z)) this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
         for (const m of this.actors()) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true, owner: z.owner });
       }
     }
-    this.zones = this.zones.filter(z => z.t < z.delay + 0.15);
+    this.zones = this.zones.filter(z => z.t < z.delay + zoneLives(z));
   }
   spark(x, y, c, n = 1) { for (let i = 0; i < n; i++) this.parts.push({ x, y, z: 4, vx: rand(-30, 30), vy: rand(-20, 20), vz: rand(10, 40), life: 0.35, max: 0.35, c, size: 2 }); }
   burst(x, y, c, n) { for (let i = 0; i < n; i++) { const a = rand(0, 6.28), s = rand(20, 80); this.parts.push({ x, y, z: 6, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: rand(10, 60), life: rand(0.25, 0.5), max: 0.5, c, size: 2, g: 160 }); } }
