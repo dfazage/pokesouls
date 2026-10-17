@@ -46,6 +46,12 @@ export const BOSS_CAM = {
 export const BOSS_CAM_MIN_PITCH = Math.min(...Object.values(BOSS_CAM).map(c => c.pitch), BOSS_CAM_DEFAULT.pitch);
 export const bossCamOf = b => ({ ...BOSS_CAM_DEFAULT, ...(BOSS_CAM[b && b.def && b.def.sprite] || {}), big: !!(b && b.def && b.def.scale > 2) });
 const sm = x => x * x * (3 - 2 * x);
+// Mort d'un boss : il reprend d'abord sa taille normale (÷2 pour les géants), marque une pause, puis se désagrège en cendres qui s'envolent.
+export const ASH = { shrink: 1.0, hold: 0.7, dissolve: 2.8 };
+export function bossAshState(e) {
+  const sc0 = e.def.scale || 1, T = e.deadT, k = sm(Math.max(0, Math.min(1, T / ASH.shrink)));
+  return { sc: sc0 > 2 ? sc0 * (1 - 0.5 * k) : sc0, k, d: Math.max(0, Math.min(1, (T - ASH.shrink - ASH.hold) / ASH.dissolve)) };
+}
 const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 // bc : réglage de duel du boss ; l'intro se termine exactement dessus, sans saut quand les commandes sont rendues
 export function cineKey(t, bc) {

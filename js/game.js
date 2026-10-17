@@ -10,7 +10,7 @@ import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
-import { installBossCine, bossCamOf } from './bosscine.js';
+import { ASH, bossAshState, installBossCine, bossCamOf } from './bosscine.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
 
@@ -207,7 +207,7 @@ export class Game {
     let d, lv = lv0, hp, dmg, r, ess;
     if (type === 'boss') {
       const B = D.BOSSES[this.world.def.boss]; d = { ...B, boss: true, kind: 'boss', sight: 999, anim: 'Shoot', tier: 'boss' };
-      hp = B.hp; dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
+      hp = Math.round(B.hp * D.BOSS_HP_MULT); dmg = B.dmg * D.dmgMult(lv0); r = B.r; ess = D.essenceOf(lv0, 40);
     } else {
       d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
       hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;
@@ -705,7 +705,7 @@ export class Game {
   updateEnemies(dt) {
     const ch = this.chief();
     for (const e of this.enemies) {
-      if (e.dead) { e.deadT += dt; e.at += dt; continue; }
+      if (e.dead) { e.deadT += dt; e.at += dt; if (e.boss) this.bossAshTick(e, dt); continue; }
       e.at += dt; e.flash -= dt; e.cd -= dt; e.invuln = Math.max(0, e.invuln - dt);
       this.tickEnemyFx(e, dt); if (e.dead) continue;
       if (hyp(e.x - ch.x, e.y - ch.y) > 320 && e.state === 'idle' && !e.boss) continue;
@@ -899,6 +899,17 @@ export class Game {
     for (let t = 0; t < 12; t++) {
       const an = rand(0, 6.28), dist = rand(50, 95), x = tg.x + Math.cos(an) * dist, y = tg.y + Math.sin(an) * dist;
       if (hyp(x - a.cx * TS, y - a.cy * TS) < (a.r - 1.5) * TS && M.boxFree(this.world, x, y, 6, 4)) { for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, b.def.color, 1.5); b.x = x; b.y = y; for (let i = 0; i < 12; i++) this.spark(b.x, b.y - 8, b.def.color, 1.5); SFX.dodge(); return; }
+    }
+  }
+  // boss vaincu : cendres grises et braises qui s'envolent depuis la ligne de désagrégation (voir drawBossAsh dans render.js)
+  bossAshTick(e, dt) {
+    const sp = A.db[e.sprite]; if (!sp) return; const { sc, d } = bossAshState(e), T = e.deadT, t0 = ASH.shrink + ASH.hold;
+    if (T > t0 - 0.1 && T < t0 + ASH.dissolve + 0.4) {
+      const H = sp.anchor.h * sc + 8, w = (sp.anchor.fw || sp.anchor.h) * sc * 0.45, n = Math.ceil(dt * (T < t0 ? 40 : 110)), wind = windNow() * 0.6;
+      for (let i = 0; i < n; i++) {
+        const life = rand(1.6, 3.4), col = Math.random() < 0.12 ? '#ffb060' : Math.random() < 0.5 ? '#c9c2ba' : '#7d7771';
+        this.parts.push({ x: e.x + rand(-w, w), y: e.y + rand(-5, 5), z: Math.max(0, H * (1 - d) + rand(-10, 6)), vx: rand(10, 38) + wind, vy: rand(-10, 10), vz: rand(10, 34), g: -2, life, max: life, c: col, size: Math.random() < 0.3 ? 3 : 2 });
+      }
     }
   }
   bossChoose(b, td, force) {

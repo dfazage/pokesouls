@@ -268,3 +268,4 @@ export const BOSSES = {
     moves: [[['dash', 3], ['ball', 2], ['rain', 2]], [['dash', 2], ['volley', 2], ['rain', 3], ['nova', 2]], [['dash', 3], ['rain', 3], ['nova', 3], ['beam', 2]]] },
 };
 export const BOSS_THRESHOLDS = [0.6, 0.25];
+export const BOSS_HP_MULT = 1.15;   // léger surplus de PV : parades, liens et combos abattaient les boss trop vite
