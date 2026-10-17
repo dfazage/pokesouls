@@ -33,7 +33,7 @@ export function padLabel(a) {
     case 'up': case 'down': case 'left': case 'right': return 'Stick G';
     case 'link': return PADACT.link === PADDEF.link ? padBtnName(4) + '+' + padBtnName(PADACT.mod) : padBtnName(PADACT.link);
     case 'run': return padBtnName(PADACT.dodge) + ' (maintenu)';
-    case 'berry': return w + '+' + padBtnName(3); case 'candy': return w + '+' + padBtnName(2); case 'ether': return w + '+' + padBtnName(1); case 'revive': return w + '+' + padBtnName(0);
+    case 'berry': case 'candy': case 'ether': case 'revive': return w + '+' + padBtnName(padItemPos(a));
     default: return a in PADACT ? padBtnName(PADACT[a]) : '';
   }
 }
@@ -122,11 +122,14 @@ addEventListener('contextmenu', e => e.preventDefault());
 // R maintenu + bouton de face = objets rapides (haut = baie, gauche = bonbon, droite = Éther, bas = Rappel : la croix du HUD).
 // R relâché : un coup de stick droit à gauche / droite change de cible verrouillée ; le clic du stick droit verrouille.
 const PADDEF = { dodge: 1, interact: 0, light: 2, heavy: 3, guard: 7, ability: 4, next: 6, bag: 12, link: 10, lock: 11, pause: 9, map: 8, mod: 5 };
+// R + bouton de face = objet. Rappel sur Y (gauche sur Switch, haut sur Xbox / PlayStation) ; l'objet qui y était passe sur le bouton du bas.
+const padItems = () => { const m = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' }, y = padKind === 'nin' ? 2 : 3; [m[0], m[y]] = [m[y], m[0]]; return m; };
+const padItemPos = it => { const m = padItems(); return +Object.keys(m).find(k => m[k] === it); };
 const PADSTORE = 'pokesouls.padmap.v2';
 const PADACT = { ...PADDEF };   // action → indice de bouton (réassignable dans l'écran Commandes)
 try { const sv = JSON.parse(localStorage.getItem(PADSTORE) || 'null'); if (sv) for (const a of Object.keys(PADDEF)) if (Number.isInteger(sv[a]) && sv[a] >= 0 && sv[a] < 32) PADACT[a] = sv[a]; } catch (e) { /* défauts */ }
 const padPersist = () => { try { localStorage.setItem(PADSTORE, JSON.stringify(PADACT)); } catch (e) { /* rien */ } };
-let PAD = {}, PAD_ITEM = { 3: 'berry', 2: 'candy', 1: 'ether', 0: 'revive' }, padLearn = null, padInfo = { id: '', mapping: '' };
+let PAD = {}, padLearn = null, padInfo = { id: '', mapping: '' };
 const padRebuild = () => { PAD = {}; for (const [a, i] of Object.entries(PADACT)) if (a !== 'mod') PAD[i] = a; };
 padRebuild();
 // R tenu + bouton de face = objet : haut (lourd) = baie, gauche (léger) = bonbon, droite (interagir) = Éther, bas (esquive) = Rappel. Suit les boutons réassignés.
@@ -173,12 +176,12 @@ function pollPad() {
   const mod = !!btnPrev[PADACT.mod];   // R tenu : les boutons de face deviennent des objets
   for (const [b, act] of Object.entries(PAD)) {
     if (act === 'link' && PADACT.link === PADDEF.link) continue;   // par défaut le Lien se lance par L + R (voir plus bas)
-    const item = mod && PAD_ITEM[b], ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant R
+    const item = mod && padItems()[b], ign = mod && act === 'lock';   // le clic du stick droit ne verrouille pas pendant R
     if (padEdge.has(+b) && !ign && !item && !(act === 'ability' && mod)) pressedNow.add(act);   // L pendant R = Lien, pas la capacité
     if (btnPrev[b] && !ign && !item) padDown.add(act); else padDown.delete(act);
   }
   if ((padEdge.has(PADACT.mod) && btnPrev[4]) || (padEdge.has(4) && mod)) pressedNow.add('link');   // Lien : L + R
-  if (mod) for (const [b, item] of Object.entries(PAD_ITEM)) if (padEdge.has(+b)) pressedNow.add(item);   // R + bouton de face fixe : haut baie, gauche bonbon, droite (A) huile, bas rappel
+  if (mod) for (const [b, item] of Object.entries(padItems())) if (padEdge.has(+b)) pressedNow.add(item);   // R + bouton de face fixe (voir padItems)
   { // stick droit, R relâché : un coup de stick à gauche / droite change de cible verrouillée
     const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, mag = Math.hypot(rx, ry);
     padCam = !mod && mag > 0.2 ? [dz(rx), dz(ry)] : [0, 0];   // pivot de caméra (le jeu l'ignore pendant un verrouillage)
@@ -198,6 +201,7 @@ export const Input = {
   padResetPhys() { for (let i = 0; i < 17; i++) physIdx[i] = i; try { localStorage.removeItem(PHYSSTORE); } catch (e) { /* rien */ } },
   padPhysCustom: () => physIdx.some((v, i) => v !== i),
   // menus : convention Nintendo (A, à droite, valide ; B, en bas, retour) ; Xbox / PlayStation : bouton du bas valide
+  padItemPos,
   padOk: () => (padKind === 'nin' ? 1 : 0), padNo: () => (padKind === 'nin' ? 0 : 1),
   padNswap: () => nswap, padSetNswap(v) { nswap = !!v; try { localStorage.setItem(NSWAPSTORE, v ? '1' : '0'); } catch (e) { /* rien */ } },
   padIndex: a => PADACT[a],
