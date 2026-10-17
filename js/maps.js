@@ -12,8 +12,8 @@ export const THEMES = {
   plant: { floor: [58, 58, 70], arena: [66, 60, 56], wallA: '#444458', wallB: '#40405a', face: '#27273a', faceTop: '#62627c', accent: [255, 232, 80], accent2: [120, 230, 255], fx: 'circuit', amb: [160, 160, 180], ambArena: [150, 140, 150], decor: ['generator', 'pillar', 'console'] },
   lava: { floor: [66, 40, 38], arena: [78, 42, 34], wallA: '#5a3430', wallB: '#56302c', face: '#321a18', faceTop: '#8a5040', accent: [255, 130, 50], accent2: [255, 200, 90], fx: 'lava', amb: [200, 150, 130], ambArena: [210, 130, 100], decor: ['brazier', 'rock', 'crystal'] },
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
-  // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : charpente de temple sous l'orage
-  bell: { floor: [62, 46, 40], arena: [74, 54, 44], wallA: '#4e3c38', wallB: '#4a3834', face: '#2a1f1d', faceTop: '#80604c', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'wood', amb: [182, 162, 150], ambArena: [205, 172, 126], decor: ['lantern', 'pillar', 'bell', 'torii'] },
+  // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
+  bell: { floor: [92, 88, 80], arena: [128, 122, 108], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
@@ -394,6 +394,13 @@ export function bakeFloor(world) {
       g.fillStyle = 'rgba(255,225,170,.06)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 9, TS, 1);
       if (r > 0.86) { g.fillStyle = 'rgba(210,170,90,.5)'; g.fillRect(x + 3, y + 3, 1, 1); g.fillRect(x + TS - 4, y + 12, 1, 1); }
       if (r < 0.07) { g.strokeStyle = 'rgba(120,200,255,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 3); g.lineTo(x + 10, y + 10); g.lineTo(x + 8, y + 13); g.lineTo(x + 17, y + 21); g.stroke(); ge.strokeStyle = '#8fd0ff'; ge.lineWidth = 1; ge.beginPath(); ge.moveTo(x + 4, y + 3); ge.lineTo(x + 10, y + 10); ge.lineTo(x + 8, y + 13); ge.lineTo(x + 17, y + 21); ge.stroke(); }
+    } else if (fx === 'garden') {   // dalles de pierre, mousse, gravier ; l'arène est un lit de gravier ratissé
+      if (!inA) {
+        g.fillStyle = 'rgba(0,0,0,.26)'; g.fillRect(x, y + 12, TS, 1); g.fillRect(x + (((tx + ty) & 1) ? 7 : 16), y, 1, 12); g.fillRect(x + (((tx + ty) & 1) ? 17 : 6), y + 13, 1, 11);
+        g.fillStyle = 'rgba(255,250,235,.07)'; g.fillRect(x, y + 1, TS, 1);
+        if (r < 0.3) { g.fillStyle = 'rgba(86,128,64,.38)'; g.beginPath(); g.ellipse(x + 5 + r * 40 % 14, y + 8 + r * 25 % 10, 5, 3, 0, 0, 7); g.fill(); }
+        if (r > 0.9) { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(x + 4 + r * 30 % 14, y + 5, 3, 2); }
+      } else if (r > 0.7) { g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + r * 50 % 20, y + r * 70 % 20, 2, 1); }
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
       if (r > 0.92) { g.fillStyle = ac; g.fillRect(x + 8 + r * 20 % 8, y + 8, 2, 2); ge.fillStyle = ac; ge.fillRect(x + 7.5 + r * 20 % 8, y + 7.5, 3, 3); }
@@ -401,9 +408,10 @@ export function bakeFloor(world) {
   }
   // anneaux de l'arène
   const A = world.arena; g.save(); g.translate(A.cx * TS, A.cy * TS); ge.save(); ge.translate(A.cx * TS, A.cy * TS);
-  for (const [rad, col, lw] of [[A.r * TS - 6, th.accent2, 2], [A.r * TS * 0.62, th.accent2, 1], [A.r * TS * 0.3, th.accent, 1]]) { g.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.stroke(); ge.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; ge.lineWidth = lw; ge.beginPath(); ge.arc(0, 0, rad, 0, Math.PI * 2); ge.stroke(); }
+  if (th.fx !== 'garden') for (const [rad, col, lw] of [[A.r * TS - 6, th.accent2, 2], [A.r * TS * 0.62, th.accent2, 1], [A.r * TS * 0.3, th.accent, 1]]) { g.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.stroke(); ge.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},.5)`; ge.lineWidth = lw; ge.beginPath(); ge.arc(0, 0, rad, 0, Math.PI * 2); ge.stroke(); }
   g.strokeStyle = `rgba(${th.accent2[0]},${th.accent2[1]},${th.accent2[2]},.25)`; g.lineWidth = 1;
-  for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6; g.beginPath(); g.moveTo(Math.cos(an) * A.r * TS * 0.3, Math.sin(an) * A.r * TS * 0.3); g.lineTo(Math.cos(an) * (A.r * TS - 6), Math.sin(an) * (A.r * TS - 6)); g.stroke(); }
+  if (th.fx !== 'garden') for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6; g.beginPath(); g.moveTo(Math.cos(an) * A.r * TS * 0.3, Math.sin(an) * A.r * TS * 0.3); g.lineTo(Math.cos(an) * (A.r * TS - 6), Math.sin(an) * (A.r * TS - 6)); g.stroke(); }
+  if (th.fx === 'garden') { g.strokeStyle = 'rgba(40,34,28,.55)'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, A.r * TS - 5, 0, Math.PI * 2); g.stroke(); g.strokeStyle = 'rgba(255,250,235,.16)'; g.lineWidth = 1; g.lineWidth = 1; for (let k = 1; k < 10; k++) { g.beginPath(); g.arc(0, 0, k * (A.r * TS - 8) / 10, 0, Math.PI * 2); g.stroke(); } }
   g.restore(); ge.restore();
   // ombres au pied des murs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
@@ -531,7 +539,7 @@ export function drawDecor(ctx, world, d, time, opened) {
     ctx.fillStyle = '#26263a'; ctx.fillRect(x + w / 2 - 3, base - 46, 6, 10); ctx.fillStyle = on ? ac : '#555'; ctx.fillRect(x + w / 2 - 2, base - 48, 4, 3);
   } else if (K === 'tree') {
     ctx.fillStyle = '#4a3828'; ctx.fillRect(x + w / 2 - 4, base - 28, 8, 24); ctx.fillStyle = '#3a2a1e'; ctx.fillRect(x + w / 2 + 1, base - 28, 3, 24);
-    for (const [ox, oy, rr, c] of [[-10, -42, 13, '#2e7a5e'], [8, -46, 14, '#3a9a72'], [0, -56, 13, '#4ab08a'], [-4, -36, 11, '#2a6a52']]) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + w / 2 + ox, base + oy, rr, 0, 7); ctx.fill(); }
+    for (const [ox, oy, rr, c] of (th.open ? [[-10, -42, 13, '#9a2e28'], [8, -46, 14, '#c0452a'], [0, -56, 13, '#d8662e'], [-4, -36, 11, '#7e2624']] : [[-10, -42, 13, '#2e7a5e'], [8, -46, 14, '#3a9a72'], [0, -56, 13, '#4ab08a'], [-4, -36, 11, '#2a6a52']])) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + w / 2 + ox, base + oy, rr, 0, 7); ctx.fill(); }
     const tw = 0.5 + 0.5 * Math.sin(time * 2 + d.seed); ctx.fillStyle = `rgba(${th.accent},${0.5 + 0.4 * tw})`; for (let i = 0; i < 4; i++) ctx.fillRect(x + 8 + i * 9 + d.seed % 5, base - 46 - (i % 2) * 8, 2, 2);
   } else if (K === 'statue') {
     ctx.fillStyle = '#5a7a76'; ctx.fillRect(x + 4, base - 8, w - 8, 8); ctx.fillStyle = '#7a9a96'; ctx.fillRect(x + 7, base - 34, w - 14, 28); ctx.fillStyle = '#9ab8b4'; ctx.fillRect(x + 7, base - 34, 3, 28);

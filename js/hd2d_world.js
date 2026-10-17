@@ -4,7 +4,7 @@ import * as M from './maps.js';
 import * as S from './hd2d_shaders.js';
 
 const { TS, MW, MH, FACE, T } = M;
-export const DEPTH = 3.4;           // profondeur de l'abîme sous le sol (en tuiles)
+export const DEPTH = 3.4, OPEN_DEPTH = 0.45;           // profondeur de l'abîme sous le sol (en tuiles)
 export const WALL_TALL = 1.8, WALL_LOW = 0.28, WALL_SIDE = 1.3, WALL_MID = 1.0;
 
 // ---------- réglages par thème ----------
@@ -25,7 +25,7 @@ export const HD = {
   rock: { type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },
-  bell: { type: 2, fog: [.075, .05, .085], fogD: .022, mist: .55, abyss: [[.04, .025, .05], [.15, .09, .12], [1., .78, .35]], prop: 'tower', propCol: [.26, .18, .17], emis: [1., .75, .3], light: [1.04, .98, .95], bob: 0,
+  bell: { type: 5, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.1, .13, .1], [.27, .32, .24], [1., .8, .42]], prop: 'tree', propCol: [.05, .14, .09], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .42 } },
   mystic: { type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
@@ -85,11 +85,10 @@ function sideDetails(g, ge, x0, vi, th, key) {
   } else if (key === 'rock') {
     for (let i = 0; i < 3; i++) { g.fillStyle = `rgba(${i % 2 ? '255,230,190' : '0,0,0'},.13)`; g.fillRect(x0, 3 + i * 8 + vi, TS, 2); }
     for (let i = 0; i < 4; i++) { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x0 + 2 + r(i) * 20, 2 + r(i + 4) * 20, 2, 2); }
-  } else if (key === 'bell') {   // charpente de temple : poutres, panneaux de papier (shōji), ex-voto
-    g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x0, 0, TS, TS); g.fillStyle = 'rgba(255,230,180,.07)'; g.fillRect(x0, 2, TS, 1);
-    if (vi === 1) { g.fillStyle = '#2a1e1a'; g.fillRect(x0 + 3, 3, 18, 17); g.fillStyle = '#e8d4a0'; g.fillRect(x0 + 4, 4, 16, 15); g.fillStyle = '#3a2a22'; g.fillRect(x0 + 11, 4, 2, 15); g.fillRect(x0 + 4, 11, 16, 2); ge.fillStyle = 'rgba(255,200,110,.55)'; ge.fillRect(x0 + 4, 4, 16, 15); ge.fillStyle = '#000'; ge.fillRect(x0 + 11, 4, 2, 15); ge.fillRect(x0 + 4, 11, 16, 2); }
-    else if (vi === 2) { g.fillStyle = '#24180f'; g.fillRect(x0, 8, TS, 5); g.fillStyle = '#5a4030'; g.fillRect(x0, 8, TS, 1); g.fillStyle = '#c8a050'; for (let i = 0; i < 3; i++) g.fillRect(x0 + 3 + i * 8, 10, 2, 1); }
-    else if (vi === 3) { g.fillStyle = '#6a4a34'; g.fillRect(x0 + 5, 5, 6, 8); g.fillRect(x0 + 13, 7, 6, 8); g.fillStyle = '#2a1c14'; g.fillRect(x0 + 7, 7, 2, 1); g.fillRect(x0 + 15, 9, 2, 1); g.fillStyle = css(ac2, 1, .7); ge.fillStyle = css(ac2, 1, .55); g.fillRect(x0 + 8, 5, 1, 1); ge.fillRect(x0 + 8, 5, 1, 1); }
+  } else if (key === 'bell') {   // muret de pierre moussue ; poteaux de bois laqué et ex-voto
+    g.fillStyle = 'rgba(86,128,64,.45)'; for (let i = 0; i < 2; i++) { g.beginPath(); g.ellipse(x0 + 4 + r(i) * 16, 21 - i * 2, 5, 3, 0, 0, 7); g.fill(); }
+    if (vi === 1) { g.fillStyle = '#6a2a22'; g.fillRect(x0 + 8, 0, 8, TS); g.fillStyle = '#8a3a2c'; g.fillRect(x0 + 8, 0, 2, TS); g.fillStyle = '#2a1410'; g.fillRect(x0 + 6, 2, 12, 3); }
+    else if (vi === 3) { g.fillStyle = '#c8a050'; g.fillRect(x0 + 10, 9, 4, 6); g.fillStyle = '#3a2418'; g.fillRect(x0 + 11, 7, 2, 2); ge.fillStyle = 'rgba(255,200,110,.5)'; ge.fillRect(x0 + 10, 9, 4, 6); }
   } else if (key === 'mystic') {
     g.fillStyle = 'rgba(70,170,110,.5)';
     for (let i = 0; i < 3; i++) { g.beginPath(); g.ellipse(x0 + 3 + r(i) * 18, 2 + (i * 7 + vi * 3) % 20, 4 + r(i + 3) * 3, 2.5, 0, 0, 7); g.fill(); }
@@ -128,7 +127,7 @@ export function makeWallTextures(th, key) {
     if (key === 'ice') { gt.fillStyle = 'rgba(240,250,255,.35)'; for (let i = 0; i < 6; i++) gt.fillRect(x0 + rndI(vi, i, 3) * 22, rndI(vi, i, 4) * 22, 2, 1); }
     if (key === 'lava') { gte.fillStyle = css(th.accent2); for (let i = 0; i < 2; i++) { const x = x0 + 3 + rndI(vi, i, 8) * 17, y = 3 + rndI(vi, i, 9) * 17; gte.fillRect(x, y, 2, 2); gt.fillStyle = css(th.accent2); gt.fillRect(x, y, 2, 2); } }
     if (key === 'mystic') { gt.fillStyle = 'rgba(70,180,110,.45)'; gt.beginPath(); gt.ellipse(x0 + 6 + vi * 3, 8 + vi * 2, 7, 5, 0, 0, 7); gt.fill(); }
-    if (key === 'bell') { gt.fillStyle = 'rgba(0,0,0,.2)'; for (let i = 0; i < 3; i++) gt.fillRect(x0, 4 + i * 8, TS, 1); if (vi === 2) { gt.fillStyle = css(th.accent); gt.fillRect(x0 + 10, 10, 4, 4); gte.fillStyle = css(th.accent); gte.fillRect(x0 + 10, 10, 4, 4); } }
+    if (key === 'bell') { gt.fillStyle = 'rgba(86,128,64,.4)'; gt.beginPath(); gt.ellipse(x0 + 7 + vi * 3, 9 + vi * 2, 7, 4, 0, 0, 7); gt.fill(); gt.fillStyle = 'rgba(255,250,235,.1)'; gt.fillRect(x0, 0, TS, 2); }
     if (key === 'plant' && vi === 2) { gt.fillStyle = '#20202e'; gt.fillRect(x0 + 8, 8, 8, 8); gt.fillStyle = '#ffd24a'; gt.fillRect(x0 + 11, 11, 2, 2); gte.fillStyle = '#ffd24a'; gte.fillRect(x0 + 11, 11, 2, 2); }
     if (key === 'lab' && vi === 1) { gte.fillStyle = css(th.accent); gte.fillRect(x0 + 4, 11, 16, 2); gt.fillStyle = css(th.accent); gt.fillRect(x0 + 4, 11, 16, 2); }
   }
@@ -161,6 +160,7 @@ const floorLike = (w, tx, ty) => gridAt(w, tx, ty) !== T.VOID;
 
 export function wallHeight(w, tx, ty) {
   const S = floorLike(w, tx, ty + 1), N = floorLike(w, tx, ty - 1), E = floorLike(w, tx + 1, ty), Wd = floorLike(w, tx - 1, ty);
+  if (w.theme && w.theme.open) return S ? 0.74 : N ? 0.36 : 0.52;   // thèmes de plein air : murets et balustrades, on voit par-dessus
   return S ? WALL_TALL : N ? WALL_LOW : (E || Wd) ? WALL_SIDE : WALL_MID;
 }
 
@@ -191,7 +191,7 @@ export function buildWalls(w) {
       let base;
       if (wh !== null) { if (wh >= h) return; base = wh; }
       else if (floorLike(w, tn[0], tn[1])) base = 0;
-      else base = -DEPTH;
+      else base = -(w.theme && w.theme.open ? OPEN_DEPTH : DEPTH);
       const u0 = (vi + 0.02) / (NV + 1), u1 = (vi + 0.98) / (NV + 1);
       bs.quad([A[0], base, A[1]], [B2[0], base, B2[1]], [B2[0], h, B2[1]], [A[0], h, A[1]], [nx, 0, nz], [u0, -base], [u1, -base], [u1, -h], [u0, -h]);
     };
@@ -287,12 +287,13 @@ export function buildProps(w, key, seed, shared) {
   const mesh = new THREE.InstancedMesh(geo, mat, n);
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   items.forEach(([x, z, a, b2, c], i) => {
-    let sx, sy, sz, y = -DEPTH;
+    let sx, sy, sz, y = -(cfg.open ? OPEN_DEPTH : DEPTH);
     if (cfg.prop === 'mono') { sx = 0.5 + a * 0.8; sy = 1.5 + b2 * 4.5; sz = 0.5 + c * 0.8; y = -2 + a * 5.5; }
     else if (cfg.prop === 'tower') { sx = 0.9 + a * 1.4; sz = 0.9 + c * 1.4; sy = DEPTH + 0.2 + b2 * 1.3; }   // sommets entre le sol et ~1,5 tuile au-dessus : les tours ne cachent plus le jeu
     else if (cfg.prop === 'spire') { sx = sz = 0.5 + a * 0.9; sy = 5.5 + b2 * 7; }
     else if (cfg.prop === 'column') { sx = sz = 0.7 + a * 0.8; sy = 3.8 + b2 * 4.5; }
     else if (cfg.prop === 'stalag') { sx = sz = 0.7 + a * 1.1; sy = 5 + b2 * 6; }
+    else if (cfg.open) { sx = sz = 1.0 + a * 0.9; sy = 2.2 + b2 * 2.4; }   // cèdres de jardin : bas, ils ne cachent jamais le jeu
     else { sx = sz = 1.5 + a * 1.2; sy = 6 + b2 * 5.5; }
     const rot = c * 6.283;
     m4.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(sx, sy, sz));
@@ -328,7 +329,7 @@ export function buildAbyss(key, shared) {
     vertexShader: S.ABYSS_VERT, fragmentShader: S.ABYSS_FRAG,
     uniforms: { uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: { value: 0 }, uCam: shared.uCam, uType: { value: cfg.type }, uCol1: { value: new THREE.Vector3(...cfg.abyss[0]) }, uCol2: { value: new THREE.Vector3(...cfg.abyss[1]) }, uCol3: { value: new THREE.Vector3(...cfg.abyss[2]) } },
   });
-  const m = new THREE.Mesh(geo, mat); m.position.set(MW / 2, -DEPTH, MH / 2); m.frustumCulled = false;
+  const m = new THREE.Mesh(geo, mat); m.position.set(MW / 2, -(cfg.open ? OPEN_DEPTH : DEPTH), MH / 2); m.frustumCulled = false;
   return m;
 }
 
