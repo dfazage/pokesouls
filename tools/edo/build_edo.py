@@ -9,7 +9,19 @@ SRC, OUT = sys.argv[1], sys.argv[2]; os.makedirs(OUT, exist_ok=True)
 F = {'c4': 'pokemon_tileset_from_public_tiles_by_chaoticcherrycake_d5xdb0y.png',
      'jh': 'dppt_and_hgss_tileset_by_justin8964_dg9nal7.png',
      'red': 'red_autumn_forest_tileset_pokemon_essentials_gen_3_by_certifieddontheshark_dl706n1.png'}
-A = {k: seg.load(os.path.join(SRC, v)) for k, v in F.items()}
+F['sh'] = 'shinto_temple_buildings_by_unusable_djfv2wn.png'
+def find(v):
+    for d in ('', 'japanese-tileset'):
+        p = os.path.join(SRC, d, v)
+        if os.path.exists(p): return p
+    raise FileNotFoundError(v)
+def load_flat(path, bg=(128, 125, 120), tol=3):
+    # planche à fond uni opaque : le fond est ôté par remplissage depuis les bords
+    from scipy import ndimage as ndi
+    a = np.array(Image.open(path).convert('RGBA')); m = (np.abs(a[..., :3].astype(int) - np.array(bg)).max(axis=2) <= tol)
+    lab, n = ndi.label(m); border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    a[np.isin(lab, list(border))] = 0; return a
+A = {k: (load_flat(find(v)) if k == 'sh' else seg.load(find(v))) for k, v in F.items()}
 
 def rgb2hsv(a):
     r, g, b = [a[..., i].astype(np.float32) / 255 for i in range(3)]
@@ -91,6 +103,15 @@ add('ruin_pillar_a', crop('c4', (864, 893, 897, 960)), 'pilier brisé')
 add('ruin_pillar_b', crop('c4', (864, 960, 897, 1026)), 'pilier brisé haut')
 add('bridge_red',   crop('c4', (10, 1170, 530, 1350)), 'pont rouge en arc')
 
+
+# ---------- sanctuaire shinto (planche d'Unusable) : toits olive -> vin, piliers vermillon conservés ----------
+def wine(a): return recolor(a, 30, 95, 352, keep=0.35, sat=0.95, val=0.82, smin=0.12)
+add('torii_vermilion', wine(crop('sh', (835, 83, 1049, 248), True)), 'torii vermillon, toit vin')
+add('pagoda_shinto',   wine(crop('sh', (512, 63, 769, 510), True)), 'pagode shinto 3 étages, toits vin')
+add('shrine_hall',     wine(crop('sh', (81, 190, 452, 511), True)), 'grand sanctuaire, toits vin')
+add('shrine_small',    wine(crop('sh', (858, 284, 1044, 510), True)), 'petit sanctuaire, toits vin')
+add('pagoda_shinto_o', crop('sh', (512, 63, 769, 510), True), 'pagode shinto, toits d\'origine (olive)')
+
 # ---------- planche de contrôle ----------
 names = list(S); cols = 6; sc = 2; pad = 10
 cw = max(max(S[n][0].shape[1] for n in names), 120) * sc + pad; ch = 0
@@ -113,15 +134,30 @@ for n, (arr, note) in S.items(): Image.fromarray(arr).save(os.path.join(OUT, 'sp
 json.dump({n: {'w': int(S[n][0].shape[1]), 'h': int(S[n][0].shape[0]), 'note': S[n][1]} for n in S}, open(os.path.join(OUT, 'sprites.json'), 'w'), ensure_ascii=False, indent=1)
 print(len(S), 'sprites', sheet.size)
 
-# ---------- feuille de jeu : arbres de la Tour Carillon (props.json -> tree_bell) ----------
+# ---------- feuilles de jeu (assets/props/edo_*.png) + entrées props.json ----------
+# Chaque feuille : cellules uniformes, sprites centrés, pieds en bas, réduits à l'échelle donnée (l'empreinte d'un décor est en cases de 24 px).
+PACKS = {
+  'trees':  ('tree_bell',   6, [('momiji_gold', 1), ('momiji_vermilion', 1), ('momiji_red', 1), ('momiji_carmine', 1), ('tree_autumn0', 1), ('tree_autumn1', 1),
+                                ('tree_red_a', .5), ('tree_red_b', .5), ('momiji_big', .5), ('momiji_big2', .5), ('tree_cypress', 1)]),
+  'torii':  ('torii_bell',  1, [('torii_vermilion', .28)]),
+  'pagoda': ('pagoda_bell', 3, [('pagoda_shinto', .27), ('pagoda_purple', .5), ('pagoda_blue', .55)]),
+  'shrine': ('shrine_bell', 2, [('shrine_hall', .26), ('temple_purple', .68)]),
+  'chapel': ('chapel_bell', 3, [('shrine_small', .31), ('house_purple', 1), ('hut_thatch', 1), ('shrine_red', .75)]),
+  'fence':  ('fence_bell',  2, [('fence_picket', .5), ('fence_slat', .5)]),
+  'ruin':   ('ruin_bell',   2, [('ruin_pillar_a', .6), ('ruin_pillar_b', .6)]),
+}
+def scaled(n, k):
+    im = Image.fromarray(S[n][0])
+    if k != 1: im = im.convert('RGBa').resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS).convert('RGBA')
+    return im
 if len(sys.argv) > 3:
-    PACK = [('momiji_gold', 1), ('momiji_vermilion', 1), ('momiji_red', 1), ('momiji_carmine', 1), ('tree_autumn0', 1), ('tree_autumn1', 1),
-            ('tree_red_a', .5), ('tree_red_b', .5), ('momiji_big', .5), ('momiji_big2', .5), ('tree_cypress', 1)]   # (sprite, échelle) : l'empreinte d'un arbre fait 2x2 cases (48 px)
-    CW, CH = 56, 64; COLS = 6; rows_n = (len(PACK) + COLS - 1) // COLS
-    sheet2 = Image.new('RGBA', (CW * COLS, CH * rows_n), (0, 0, 0, 0))
-    for i, (n, k) in enumerate(PACK):
-        im = Image.fromarray(S[n][0])
-        if k != 1: im = im.convert('RGBa').resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS).convert('RGBA')
-        assert im.width <= CW and im.height <= CH, (n, im.size)
-        sheet2.alpha_composite(im, ((i % COLS) * CW + (CW - im.width) // 2, (i // COLS) * CH + CH - im.height))   # centré, pieds en bas
-    sheet2.save(sys.argv[3]); print('arbres', sheet2.size, 'frames', len(PACK), 'cellule', CW, CH)
+    ASSET = sys.argv[3]; db = {}
+    for name, (key, cols, items) in PACKS.items():
+        ims = [scaled(n, k) for n, k in items]; cw = max(i.width for i in ims) + 2; ch = max(i.height for i in ims) + 1
+        cols = min(cols, len(ims)); rows_n = (len(ims) + cols - 1) // cols
+        sheet2 = Image.new('RGBA', (cw * cols, ch * rows_n), (0, 0, 0, 0))
+        for i, im in enumerate(ims): sheet2.alpha_composite(im, ((i % cols) * cw + (cw - im.width) // 2, (i // cols) * ch + ch - im.height))
+        fn = 'edo_%s.png' % name; sheet2.save(os.path.join(ASSET, fn))
+        db[key] = {'file': 'props/' + fn, 'fw': cw, 'fh': ch, 'cols': cols, 'frames': list(range(len(ims))), 'vary': True}
+        print(fn, sheet2.size, 'cellule', cw, ch, [i.size for i in ims])
+    json.dump(db, open(os.path.join(OUT, 'props_edo.json'), 'w'), indent=1)

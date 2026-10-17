@@ -13,7 +13,8 @@ export const THEMES = {
   lava: { floor: [66, 40, 38], arena: [78, 42, 34], wallA: '#5a3430', wallB: '#56302c', face: '#321a18', faceTop: '#8a5040', accent: [255, 130, 50], accent2: [255, 200, 90], fx: 'lava', amb: [200, 150, 130], ambArena: [210, 130, 100], decor: ['brazier', 'rock', 'crystal'] },
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
   // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
-  bell: { floor: [92, 88, 80], arena: [128, 122, 108], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
+  bell: { floor: [92, 88, 80], arena: [128, 122, 108], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'],
+    scenery: { rooms: { 1: ['chapel'], 2: ['pagoda'], 3: ['shrine'], 4: ['chapel'], 5: ['pagoda'], 6: ['shrine'] }, fence: 1, ruin: 1 } },   // bâtiments adossés au bord nord des salles, clôtures et piliers brisés (posés après tout le reste)
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
@@ -67,7 +68,7 @@ setChapter('kanto');
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 const rnd = (x, y, s = 0) => { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
 
-const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1], lantern: [1, 1], bell: [2, 2], torii: [2, 1] };
+const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1], console: [2, 1], rock: [1, 1], crystal: [1, 1], brazier: [1, 1], generator: [2, 2], tree: [2, 2], statue: [1, 1], chest: [1, 1], lantern: [1, 1], bell: [2, 2], torii: [2, 1], pagoda: [3, 1], shrine: [4, 1], chapel: [3, 1], fence: [1, 1], ruin: [1, 1] };
 
 // ---------- carte du laboratoire (dessinée à la main) ----------
 const LAB = (() => {
@@ -266,6 +267,21 @@ function generate(def) {
       }
     }
   }
+  // Décors Edo (th.scenery) : posés en dernier, avec un tirage aléatoire à part et sans toucher à ce qui existe déjà (décors, coffres, feux, ennemis restent identiques).
+  // Bâtiments adossés au bord nord des salles (le sprite déborde vers le haut, derrière le joueur), clôtures en petites rangées sur les bords, piliers brisés.
+  if (def.scenery) {
+    const S = def.scenery, R2 = rng((def.seed * 7 + 977) >>> 0);
+    if (secret) secret.gap.forEach(([gx, gy]) => reserve(gx, gy, 1, 1, 1));   // l'entrée de la salle secrète reste dégagée
+    const put = (kind, x, y, k, pad, vseed) => { const [w, h] = FOOT[kind]; if (!free(x, y, w, h)) return false; reserve(x, y, w, h, pad); decor.push({ kind, tx: x, ty: y, room: k, vseed }); return true; };   // vseed : variante imposée (une rangée de clôture garde le même modèle)
+    rooms.forEach((r, k) => {
+      for (const kind of (S.rooms[k] || [])) { const w = FOOT[kind][0]; for (let t = 0; t < 40; t++) if (put(kind, r.x + 1 + Math.floor(R2() * Math.max(1, r.w - 2 - w + 1)), r.y, k, 1)) break; }
+      for (let n = 0; n < (S.fence || 0) && k > 0; n++) {   // rangée de 2 à 4 morceaux sur le bord nord ou sud
+        const len = 2 + Math.floor(R2() * 3), y = R2() < 0.5 ? r.y : r.y + r.h - 1, vs = Math.floor(R2() * 2);
+        for (let t = 0; t < 20; t++) { const x = r.x + 1 + Math.floor(R2() * Math.max(1, r.w - 2 - len + 1)); if (!free(x, y, len, 1)) continue; for (let i = 0; i < len; i++) put('fence', x + i, y, k, 0, vs); break; }
+      }
+      for (let n = 0; n < (S.ruin || 0) && k > 0; n++) for (let t = 0; t < 30; t++) if (put('ruin', r.x + 1 + Math.floor(R2() * (r.w - 2)), r.y + 1 + Math.floor(R2() * (r.h - 2)), k, 1)) break;
+    });
+  }
   return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret, modules };
 }
 
@@ -283,12 +299,12 @@ export function buildWorld(idx) {
     for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
     LAB.door.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.DOOR; }); LAB.fog.tiles.forEach(([x, y]) => { grid[y * MW + x] = T.FOG; });
   } else {
-    const g = generate({ ...def, decorKinds: th.decor });
+    const g = generate({ ...def, decorKinds: th.decor, scenery: th.scenery });
     L = g;
     for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
   }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
-  for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
+  for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = d.vseed ?? (d.tx * 31 + d.ty * 17) % 97; }
   Object.assign(world, { grid: L.grid, roomOf: L.roomOf, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
   computeWall(world);
   return world;
@@ -561,6 +577,7 @@ export function decorLight(world, d, opened) {
   if (d.kind === 'brazier') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.1) * TS, r: 70, c: [255, 150, 60] };
   if (d.kind === 'lantern') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.1) * TS, r: 74, c: [255, 190, 90] };
   if (d.kind === 'bell') return { x: (d.tx + 1) * TS, y: (d.ty + 0.4) * TS, r: 48, c: [130, 180, 255] };
+  if (d.kind === 'chapel' || d.kind === 'shrine') return { x: (d.tx + d.w / 2) * TS, y: (d.ty + 0.6) * TS, r: 64, c: [255, 170, 100] };
   if (d.kind === 'generator') return { x: (d.tx + 1) * TS, y: (d.ty + 0.3) * TS, r: 50, c: A };
   if (d.kind === 'tree') return { x: (d.tx + 1) * TS, y: (d.ty + 0.2) * TS, r: 56, c: A };
   if (d.kind === 'statue') return { x: (d.tx + 0.5) * TS, y: (d.ty + 0.3) * TS, r: 28, c: th.accent2 };

@@ -143,7 +143,7 @@
   "tree_bell": {
     "file": "props/edo_trees.png",
     "fw": 56,
-    "fh": 64,
+    "fh": 63,
     "cols": 6,
     "frames": [
       0,
@@ -157,6 +157,74 @@
       8,
       9,
       10
+    ],
+    "vary": true
+  },
+  "torii_bell": {
+    "file": "props/edo_torii.png",
+    "fw": 61,
+    "fh": 46,
+    "cols": 1,
+    "frames": [
+      0
+    ],
+    "vary": true
+  },
+  "pagoda_bell": {
+    "file": "props/edo_pagoda.png",
+    "fw": 70,
+    "fh": 121,
+    "cols": 3,
+    "frames": [
+      0,
+      1,
+      2
+    ],
+    "vary": true
+  },
+  "shrine_bell": {
+    "file": "props/edo_shrine.png",
+    "fw": 99,
+    "fh": 83,
+    "cols": 2,
+    "frames": [
+      0,
+      1
+    ],
+    "vary": true
+  },
+  "chapel_bell": {
+    "file": "props/edo_chapel.png",
+    "fw": 74,
+    "fh": 73,
+    "cols": 3,
+    "frames": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "vary": true
+  },
+  "fence_bell": {
+    "file": "props/edo_fence.png",
+    "fw": 28,
+    "fh": 25,
+    "cols": 2,
+    "frames": [
+      0,
+      1
+    ],
+    "vary": true
+  },
+  "ruin_bell": {
+    "file": "props/edo_ruin.png",
+    "fw": 21,
+    "fh": 39,
+    "cols": 2,
+    "frames": [
+      0,
+      1
     ],
     "vary": true
   }
