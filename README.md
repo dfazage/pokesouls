@@ -8,14 +8,14 @@ Jouer : https://dfazage.github.io/pokesouls/
 
 ## Quête secrète : Fala et la réserve du feu
 
-Un Genesect nommé **Fala** dort dans une salle cachée de la Lisière de la Centrale abandonnée (carte 2) : un « ? » flotte sur un mur qui scintille, un coup porté près de lui dissipe le faux mur. Fala demande de retrouver ses quatre **Modules** (Aqua, Pyro, Cryo, Choc), éparpillés dans quatre salles de la carte (sans marqueur : sa plaque « chauffe » à l'approche, la lueur du Module grandit). Chaque Module rapporté donne un petit objet. Le journal des quêtes est dans l'onglet **Quêtes** du menu Équipe.
+Un Genesect nommé **Fala** dort dans une salle cachée de la Lisière de la Centrale abandonnée (carte 2) : un « ? » flotte sur un mur qui scintille, un coup porté près de lui dissipe le faux mur. Fala demande de retrouver ses quatre **Modules** (Aqua, Pyro, Cryo, Choc), éparpillés dans quatre zones de la carte (sans marqueur : sa plaque « chauffe » à l'approche, la lueur du Module grandit). Chaque Module rapporté donne un petit objet. Le journal des quêtes est dans l'onglet **Quêtes** du menu Équipe.
 
 La quête terminée, **Fala rejoint la réserve du feu** : à chaque feu de camp, le bouton **Réserve** permet de l'échanger gratuitement contre l'un des trois compagnons. Celui qui sort garde niveau, vitamines et CT. Le Module équipé (Aqua, Pyro, Cryo ou Choc, changeable à la réserve ou au feu) donne l'élément de l'attaque de relais de Fala. Tout est dans la sauvegarde de la partie : une nouvelle partie recommence la quête. Les autres cartes pourront accueillir un Pokémon bonus (`EXTRA_BY_MAP` dans `js/reserve.js`).
-Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), génération de la salle dans `js/maps.js` (`generate`, `openSecret`).
+Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), génération de la cellule secrète dans `js/maps.js` (`generateFree`, `openSecret`).
 
 ## Le chapitre
 
-Chaque chapitre correspond à une génération. Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
+Chaque chapitre correspond à une génération. Les cartes sont des zones ouvertes (cavernes ou cours organiques reliées par de larges passages, boucles, un raccourci qui s'ouvre de l'autre côté, un seul passage de brume), générées avec une graine fixe ; seul le Laboratoire oublié de Kanto est dessiné à la main. Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
 
 | # | Carte | Boss | Gros mob |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Chaque chapitre correspond à une génération. Chaque chapitre compte quatre ca
 
 - **Lien (ulti)** : une jauge se remplit en touchant, esquivant à la dernière seconde et parant. Pleine, la touche V (ou LB + RB sur manette) fait apparaître les deux autres Pokémon pendant 8 s : invulnérables, ils attaquent seuls (moitié de dégâts contre les boss). Ensuite ils reviennent à 85 % de leurs PV et le Pokémon actif est essoufflé 3 s (endurance et esquive pénalisées). La jauge repart de zéro ; un feu la remonte à moitié.
 - **Combos** : léger, léger, lourd en moins de 0,65 s déclenche l'attaque signature du Pokémon (une par type et par stade d'évolution : Croix Ardente, Roue de Flammes, Grand Brasier, Jet Perforant, Tourbillon Marin, Déluge, Fouet Croisé, Tempête de Feuilles, Fléau Solaire). Elle coûte plus d'endurance, sans temps de recharge. Une parade relance le combo (riposte). Dégâts réduits contre les boss, effets de contrôle conservés.
-- **Entrée de boss** : l'arène se trouve toujours au nord de la dernière salle et s'aborde de face, par le sud, à travers la brume. Une cinématique d'environ 10 s (caméra qui se rapproche, éveil propre à chaque boss, carton-titre) précède le combat ; elle se passe avec la touche d'interaction, et seule la version courte est rejouée après une défaite.
+- **Entrée de boss** : l'arène se trouve toujours au nord de la dernière zone et s'aborde de face, par le sud, à travers la brume. Une cinématique d'environ 10 s (caméra qui se rapproche, éveil propre à chaque boss, carton-titre) précède le combat ; elle se passe avec la touche d'interaction, et elle est rejouée en entier à chaque tentative, après une défaite aussi.
 - **Phases de boss** : écran animé à 60 % et 25 % des PV (un motif et un titre par boss), puis des obstacles et éléments de terrain apparaissent, toujours annoncés par un cercle au sol : piliers de glace et sol givré (Artikodin), pylônes qui attirent la foudre (Électhor), rochers de basalte et lave (Sulfura), chutes de rochers et rafales (Dracolosse), cristaux et zones de gravité (Mewtwo), ronces et fleurs de soin (Mew). Les obstacles bloquent aussi les tirs du boss ; le feu fait fondre la glace et brûle les ronces, l'eau éteint la lave.
 
 ## Moteur d'éléments (branche `feature/moteur-elements`)

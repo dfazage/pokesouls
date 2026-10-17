@@ -153,6 +153,7 @@ export class Game {
     this.chestObjs = this.world.chests.map(c => ({ ...c, kind: 'chest', w: 1, h: 1, seed: (c.tx * 7 + c.ty) % 31 }));
     this.items = [];
     this.spawnAll(); this.buildItems();
+    { const sv = this.souvenir; if (sv && sv.map === idx && !M.boxFree(this.world, sv.x, sv.y, 6, 4)) { const f = this.world.bonfires[0]; sv.x = (f.tx + 0.5) * TS; sv.y = (f.ty + 2.5) * TS; } }   // carte remaniée depuis la sauvegarde : le souvenir ne doit pas finir dans un mur
     const b = dest && dest !== 'start' ? this.world.bonfires.find(q => q.id === dest) : null;
     const s = this.world.start;
     this.placeTeam(b ? (b.tx + 0.5) * TS : (s.tx + 0.5) * TS, b ? (b.ty + 1.6) * TS : (s.ty + 0.5) * TS);
