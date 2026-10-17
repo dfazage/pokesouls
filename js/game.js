@@ -736,12 +736,12 @@ export class Game {
     const a = (i / n) * 6.283 + Math.random() * 0.8;
     let lx = x, ly = y;
     for (let r = 14; r >= 0; r -= 7) { const px = x + Math.cos(a) * r * (n > 1 ? 1 : 0), py = y + Math.sin(a) * r * 0.6 * (n > 1 ? 1 : 0); if (M.boxFree(this.world, px, py, 5, 3)) { lx = px; ly = py; break; } }
-    this.loot.push({ x: lx, y: ly, key, rare: !!rare, age: 0, life: rare ? 180 : 75, ph: Math.random() * 6.28 });
+    this.loot.push({ x: lx, y: ly, ox: x, oy: y, key, rare: !!rare, age: 0, life: rare ? 180 : 75, ph: Math.random() * 6.28 });
   }
   updateLoot(dt) {
     if (!this.loot.length) return; const c = this.chief(); let taken = false;
     for (const l of this.loot) {
-      l.age += dt; l.life -= dt; if (l.age < 0.65) continue;   // petit délai : l'objet retombe et rebondit avant de pouvoir être ramassé
+      l.age += dt; l.life -= dt; if (l.age < 0.8) continue;   // l'objet est lancé (0,55 s), retombe et rebondit avant de pouvoir être ramassé
       const d = hyp(l.x - c.x, l.y - c.y);
       l.pull = d < 46 ? Math.min(1, (l.pull || 0) + dt * 6) : Math.max(0, (l.pull || 0) - dt * 6);   // soulèvement visuel pendant l'aimantation
       if (d < 46 && d > 1) { const s = Math.min(d, (70 + (46 - d) * 6) * dt); l.x += (c.x - l.x) / d * s; l.y += (c.y - l.y) / d * s; }   // aimantation
