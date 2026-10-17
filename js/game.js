@@ -1,5 +1,5 @@
 // Cœur du jeu : équipe de trois starters, combat temps réel, ennemis, boss, cartes, objets, sauvegarde.
-import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies } from './assets.js';
+import { TICK, A, hitTick, animTotal, dirFromVec, loadSpecies, setViewYaw } from './assets.js';
 import { Input } from './input.js';
 import { SFX } from './audio.js';
 import * as M from './maps.js';
@@ -47,6 +47,7 @@ export function speciesForMap(idx) {
   if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
+const CAM_YAW = 45, CAM_TILT = 45;   // amplitude du pivot de caméra (degrés) ; l'inclinaison finale est bornée par CFG.camPitchMin / camPitchMax (render3d.js)
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
@@ -60,7 +61,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0;
+    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -270,6 +271,8 @@ export class Game {
     this.stamPause -= dt;
     let [ax, ay] = Input.axis();
     if ((ax || ay) && m.fx && m.fx.k === 'confuse') { const a = Math.sin(this.t * 4) * 0.9 + Math.sin(this.t * 7.3) * 0.5, c = Math.cos(a), s = Math.sin(a); [ax, ay] = [ax * c - ay * s, ax * s + ay * c]; }
+    this.updateCamPivot(dt);
+    if (this.camYaw && (ax || ay)) { const a = this.camYaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); [ax, ay] = [ax * c + ay * s, -ax * s + ay * c]; }   // le déplacement suit la caméra
     const moving = !!(ax || ay);
     if (m.exh) { this.stamTick(dt, false); this.switchT -= dt; if (this.switchT <= 0) this.autoSwitch(); return; }
 
@@ -304,6 +307,16 @@ export class Game {
     else if (moving) m.face = unit(ax, ay);
     setAnim(m, moving ? 'Walk' : 'Idle'); m.at += dt * (run ? 1.5 : 1) * (guarding ? 0.5 : 1);
     this.stamTick(dt, run || guarding);
+  }
+  // pivot de caméra au stick droit (manette) : ±CAM_YAW° à gauche / droite, ±CAM_TILT° en haut / bas, retour au centre au relâchement.
+  // Pas de pivot pendant un verrouillage (le stick droit change alors de cible), une cinématique ou sans rendu HD-2D.
+  updateCamPivot(dt) {
+    const [sx, sy] = Input.camStick(), free = !this.lock && !this.camFx && !this.cine && !!window.hd2d;
+    const ty = free ? sx * CAM_YAW : 0, tt = free ? sy * CAM_TILT : 0, k = 1 - Math.exp(-dt * (free && (sx || sy) ? 9 : 5));
+    this.camYaw += (ty - this.camYaw) * k; this.camTilt += (tt - this.camTilt) * k;
+    if (Math.abs(this.camYaw) < 0.05 && !ty) this.camYaw = 0;
+    if (Math.abs(this.camTilt) < 0.05 && !tt) this.camTilt = 0;
+    setViewYaw(this.camYaw * Math.PI / 180);
   }
   stamTick(dt, hold) { if (!hold && this.stamPause <= 0) { const m = this.chief(); this.stam = Math.min(this.maxStam, this.stam + 35 * (m && m.fx && m.fx.k === 'para' ? 0.5 : 1) * (this.linkMalus > 0 ? 0.4 : 1) * (this.terrain.frost ? 0.5 : 1) * dt); } }
 
