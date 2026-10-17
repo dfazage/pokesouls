@@ -2,7 +2,8 @@
 // Cartes 1, 2, 3, 4 et 6 : disposition générée (graine fixe). Carte 5 (Laboratoire oublié) : dessinée à la main.
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
-export const TS = 24, MW = 124, MH = 64, FACE = 10;
+// PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
+export const TS = 24, MW = 124, MH = 73, PADY = 9, ARENA_R = 13.5, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
 
 const rgb = a => `rgb(${a[0]},${a[1]},${a[2]})`;
@@ -152,7 +153,7 @@ const FOOT = { tank: [2, 2], tankbroken: [2, 2], pillar: [1, 1], mirror: [1, 1],
 
 // ---------- carte du laboratoire (dessinée à la main) ----------
 const LAB = (() => {
-  const DY = 4;
+  const DY = 4 + PADY;
   const R = [
     ['R0', 3, 38, 12, 9, 'Lisière', "Hall d'entrée"], ['C0', 15, 41, 9, 3, 'Lisière', null], ['R1', 24, 36, 11, 12, 'Lisière', "Salle d'observation"],
     ['C1', 28, 29, 3, 7, 'Cœur', null], ['R2', 20, 12, 30, 17, 'Cœur', 'Salle des cuves'], ['C2v', 9, 26, 3, 12, 'Cœur', null], ['C2h', 12, 26, 8, 3, 'Cœur', null],
@@ -167,7 +168,7 @@ const LAB = (() => {
     ['koffing', 57, 21], ['koffing', 60, 17], ['electrodeA', 35, 4], ['porygon', 77, 18], ['porygon', 83, 19], ['weezing', 79, 12], ['magnemite', 84, 25], ['magnemite', 73, 25], ['koffing', 80, 22]]
     .map(([type, x, y]) => ({ type, tx: x, ty: y + DY }));
   return {
-    rooms: R, decor, spawns, arena: { cx: 113, cy: 14 + DY, r: 10 }, // l'arène est au nord de l'antichambre : on y entre par le sud
+    rooms: R, decor, spawns, arena: { cx: 113, cy: 14 + DY - 5, r: 15 }, // l'arène est au nord de l'antichambre : on y entre par le sud
     door: { tiles: [[9, 31 + DY], [10, 31 + DY], [11, 31 + DY]], dir: { x: 0, y: 1 } }, // s'ouvre depuis le côté nord
     fog: { tiles: [[112, 26 + DY], [113, 26 + DY], [114, 26 + DY]], dir: { x: 0, y: -1 } },
     bonfires: [{ id: 'b1', name: "Hall d'entrée", tx: 8, ty: 42 + DY }, { id: 'b2', name: 'Salle de contrôle', tx: 58, ty: 20 + DY }, { id: 'b3', name: 'Antichambre', tx: 113, ty: 34 + DY }],
@@ -183,7 +184,7 @@ function generate(def) {
   const rooms = [];
   const path = def.path;
   for (let i = 0; i < 7; i++) {
-    const [cx, cy] = path[i], ox = cx * cw, oy = cy * ch;
+    const [cx, cy] = path[i], ox = cx * cw, oy = cy * ch + PADY;
     let w = i === 0 ? ri(12, 15) : i === 6 ? ri(13, 17) : ri(14, 24), h = i === 0 ? ri(9, 11) : ri(10, 15);
     w = Math.min(w, cw - 4); h = Math.min(h, ch - 4);
     let x = ox + 2 + ri(0, cw - 4 - w); const y = oy + 2 + ri(0, ch - 4 - h);
@@ -192,7 +193,7 @@ function generate(def) {
     rooms.push({ id: 'G' + i, x, y, w, h, zone, name: def.areas[i] });
   }
   const [ax, ay] = path[7];
-  const arena = { cx: ax * cw + 15, cy: ay * ch + 10, r: 9 };
+  const arena = { cx: ax * cw + 15, cy: ay * ch + 10 + PADY - Math.ceil(ARENA_R - 9), r: ARENA_R };
   const mid = r => ({ x: Math.floor(r.x + r.w / 2), y: Math.floor(r.y + r.h / 2) });
   // couloirs : segments [x, y, w, h] (L : horizontal puis vertical), largeur 3
   const corrs = [];
@@ -364,13 +365,13 @@ function generateFree(def) {
     const a = v(0, 0) + (v(1, 0) - v(0, 0)) * sm(fx), b = v(0, 1) + (v(1, 1) - v(0, 1)) * sm(fx); return a + (b - a) * sm(fy);
   };
   const last = F.zones.length - 1;
-  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2), cy: z.cell[1] * ch + 10 + ri(-3, 2), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
+  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2), cy: z.cell[1] * ch + 10 + PADY + ri(-3, 2), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
   // l'arène et la zone qui y mène, puis le raccourci : on écarte les zones pour garder du vide (3 cases au moins) où poser la brume et la porte
-  const AC = F.arena.cell, arena = { cx: AC[0] * cw + 15, cy: AC[1] * ch + 10, r: 9 };
+  const AC = F.arena.cell, arena = { cx: AC[0] * cw + 15, cy: AC[1] * ch + 10 + PADY - Math.ceil(ARENA_R - 9), r: ARENA_R };
   const zf = zones[F.arena.from], vert = Math.abs(arena.cy - zf.cy) >= Math.abs(arena.cx - zf.cx);
   const sx = Math.sign(arena.cx - zf.cx) || 1, sy = Math.sign(arena.cy - zf.cy) || 1;
-  if (vert) { zf.ry = Math.min(zf.ry, 7); const e = arena.cy - sy * (arena.r + 4 + zf.ry); if ((zf.cy - e) * -sy < 0) zf.cy = e; }
-  else { zf.rx = Math.min(zf.rx, 10); const e = arena.cx - sx * (arena.r + 4 + zf.rx); if ((zf.cx - e) * -sx < 0) zf.cx = e; }
+  if (vert) { zf.ry = Math.min(zf.ry, 7); const e = Math.round(arena.cy - sy * (arena.r + 4 + zf.ry)); if ((zf.cy - e) * -sy < 0) zf.cy = e; }
+  else { zf.rx = Math.min(zf.rx, 10); const e = Math.round(arena.cx - sx * (arena.r + 4 + zf.rx)); if ((zf.cx - e) * -sx < 0) zf.cx = e; }
   if (F.door) {
     const I = zones[F.door[0]], J = zones[F.door[1]], v2 = Math.abs(J.cy - I.cy) >= Math.abs(J.cx - I.cx), sg2 = v2 ? (Math.sign(J.cy - I.cy) || 1) : (Math.sign(J.cx - I.cx) || 1);
     if (v2) { I.ry = Math.min(I.ry, 7); J.ry = Math.min(J.ry, 7); const gp = Math.abs(J.cy - I.cy) - I.ry - J.ry; if (gp < 5) I.cy -= sg2 * (5 - gp); }
