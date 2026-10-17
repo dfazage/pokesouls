@@ -9,6 +9,7 @@ import { W, H } from './game.js';
 import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
 import { bossAshState } from './bosscine.js';
+import { dodgeVisual } from './dodge.js';
 
 const { TS } = M;
 let lightC = null;
@@ -268,20 +269,47 @@ function drawSwap(ctx, g, s) {
 }
 function drawMember(ctx, g, m) {
   const id = m.id, ch = m === g.chief();
-  shadow(ctx, m.x, m.y, 8, m.exh ? 0.2 : 0.4);
+  const dv = m.dodge && !m.exh ? dodgeVisual(m.dodge, A.db[id].anchor.h, m.face.x < 0 ? -1 : 1) : null;
+  if (!dv || !dv.mound) shadow(ctx, m.x, m.y, 8 * (dv ? Math.max(0.6, 1 - dv.z / 30) : 1), (m.exh ? 0.2 : 0.4) * (dv ? dv.alpha : 1));
   // sortie de Poké Ball : invisible tant que la balle tombe, puis silhouette claire qui grandit et se remplit
   let ap = null;
   if (m.appear > 0 && !m.exh) { const t = SWAP_T - m.appear; if (t < SWAP_OPEN) return; const k = Math.min(1, (t - SWAP_OPEN) / 0.2); ap = { scale: 0.4 + 0.65 * k - (k >= 1 ? 0.05 : 0), flash: k < 0.7 }; }
-  let alpha = m.exh ? 0.55 : 1; if (ch && m.inv > 0 && !m.exh && !m.dodge) alpha = (Math.floor(g.t * 30) % 2) ? 0.5 : 1; if (m.dodge) alpha = 0.55;
+  let alpha = m.exh ? 0.55 : 1; if (ch && m.inv > 0 && !m.exh && !m.dodge) alpha = (Math.floor(g.t * 30) % 2) ? 0.5 : 1;
   const dir = m.atk ? m.dir : m.dir = dirFromVec(m.face.x, m.face.y);
   let anim = m.anim; if (!A.db[id].anims[anim]) anim = 'Idle';
   if (m.exh) { anim = hasAnim(id, 'Faint') ? 'Faint' : 'Hurt'; }
-  drawSprite(ctx, id, anim, m.at / TICK, m.loop && !m.exh, dir, m.x, m.y, { alpha, flash: m.flash > 0 || !!(ap && ap.flash), tint: statusTint(g, m.fx), scale: ap ? ap.scale : 1 });
+  if (dv) drawDodging(ctx, g, m, id, anim, dir, dv, alpha);
+  else drawSprite(ctx, id, anim, m.at / TICK, m.loop && !m.exh, dir, m.x, m.y, { alpha, flash: m.flash > 0 || !!(ap && ap.flash), tint: statusTint(g, m.fx), scale: ap ? ap.scale : 1 });
   if (m.fx && !m.exh) statusTag(ctx, g, m, m.fx, A.db[id].anchor.h);
   if (!m.exh) markPips(ctx, g, m, m.y - A.db[id].anchor.h - 16);
   if (m.regen && !m.exh) { ctx.strokeStyle = 'rgba(141,255,176,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(m.x, m.y, 12 + Math.sin(g.t * 6) * 1.5, 5, 0, 0, 7); ctx.stroke(); }
   if (ch && !m.exh) { const y = m.y - A.db[id].anchor.h - 4 + Math.sin(g.t * 5); ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.moveTo(m.x - 3, y - 4); ctx.lineTo(m.x + 3, y - 4); ctx.lineTo(m.x, y); ctx.fill(); }
   if (ch && g.guarding) { ctx.strokeStyle = g.guardT < g.parryWin ? 'rgba(160,240,255,.9)' : 'rgba(180,210,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(m.x + m.face.x * 8, m.y - 8 + m.face.y * 5, 11, Math.atan2(m.face.y, m.face.x) - 1.1, Math.atan2(m.face.y, m.face.x) + 1.1); ctx.stroke(); }
+}
+
+// esquive (js/dodge.js) : écrasement, rotation par pas de 90°, enfoncement coupé au ras du sol, fondu ; images fantômes pour la roulade et le battement
+function drawDodging(ctx, g, m, id, anim, dir, dv, alpha) {
+  const d = m.dodge, h = A.db[id].anchor.h, tint = statusTint(g, m.fx);
+  const pose = (x, y, v, a, tn) => {
+    ctx.save();
+    if (v.sink > 0) { ctx.beginPath(); ctx.rect(x - 400, y - 800, 800, 800); ctx.clip(); }   // tout ce qui passe sous le sol est coupé
+    const px = x + v.jx, py = v.pivot === 'mid' ? y - h / 2 - v.z : y - v.z;
+    ctx.translate(px, py); if (v.rot) ctx.rotate(v.rot); ctx.scale(v.sx, v.sy); ctx.translate(-px, -py);
+    drawSprite(ctx, id, anim, m.at / TICK, true, dir, x + v.jx, y, { alpha: a, z: v.z - v.sink, tint: tn, flash: m.flash > 0 });
+    ctx.restore();
+  };
+  if ((d.style === 'roll' || d.style === 'flutter') && d.trail) d.trail.forEach((q, i) => {
+    const ghost = dodgeVisual({ ...d, t: q.t }, h, m.face.x < 0 ? -1 : 1);
+    pose(q.x, q.y, ghost, [0.34, 0.2, 0.1][i] * alpha, 'brightness(1.6) saturate(.4)');
+  });
+  if (dv.alpha > 0.02) pose(m.x, m.y, dv, alpha * dv.alpha, tint);
+  if (dv.mound) {   // bosse de terre qui avance sous le sol
+    const x = Math.round(m.x), y = Math.round(m.y), b = (Math.floor(g.t * 28) % 2);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x, y, 12, 4, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4b4436'; ctx.fillRect(x - 10, y - 3 - b, 20, 3);
+    ctx.fillStyle = '#6f6450'; ctx.fillRect(x - 7, y - 5 - b, 14, 2);
+    ctx.fillStyle = '#8f846a'; ctx.fillRect(x - 3, y - 7 - b, 6, 2);
+  }
 }
 
 // boss vaincu : taille normale, pause, puis bandes de sprite qui partent en cendres de haut en bas (les particules sont émises par Game.updateEnemies)

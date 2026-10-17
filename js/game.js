@@ -15,6 +15,7 @@ import { installBossOutro } from './outro.js';
 import { ENDINGS } from './endings.js';
 import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
+import { makeDodge, dodgeTravel, dodgeInvEnd, dodgeInvuln } from './dodge.js';
 
 const { TS } = M;
 export let W = 400; export const H = 225;
@@ -318,8 +319,9 @@ export class Game {
     if (m.fx && m.fx.k === 'freeze') { m.atk = null; m.dodge = null; m.dash = null; setAnim(m, 'Hurt', false); busy = true; this.buf = null; }
     else if (m.hurtT > 0) { m.hurtT -= dt; move(this, m, m.kx * dt, m.ky * dt); m.kx *= 0.88; m.ky *= 0.88; setAnim(m, 'Hurt', false); m.at += dt; busy = true; }
     else if (m.dodge) {
-      const d = m.dodge; d.t += dt; const sp = d.dist / d.dur; move(this, m, d.dx * sp * dt, d.dy * sp * dt);
-      setAnim(m, 'Walk'); m.at += dt * 2.4; busy = true; if (d.t >= d.dur) m.dodge = null;
+      const d = m.dodge, t0 = d.t; d.t += dt; const k = (dodgeTravel(d, d.t) - dodgeTravel(d, t0)) * d.dist; move(this, m, d.dx * k, d.dy * k);
+      this.dodgeFx(m, d, t0);
+      setAnim(m, 'Walk'); m.at += dt * (d.style === 'flutter' && dodgeInvuln(d) ? 4.5 : 2.4); busy = true; if (d.t >= d.dur) m.dodge = null;
     } else if (m.drink > 0) { m.drink -= dt; setAnim(m, 'Idle'); m.at += dt; busy = true; }
     else if (m.atk) {
       this.tickAtk(m, dt); busy = true;
@@ -369,12 +371,37 @@ export class Game {
 
   tryDodge(m, ax, ay) {
     let d = (ax || ay) ? unit(ax, ay) : { x: -m.face.x, y: -m.face.y };
-    this.stam = Math.max(0, this.stam - 20 * (this.linkMalus > 0 ? 1.5 : 1)); this.stamPause = 0.8; this.comboHold(0.35);   // l'esquive garde le combo : la fenêtre ne s'écoule qu'après la roulade
-    m.dodge = { t: 0, dur: 0.35, iframes: 0.28, dist: m.fx && m.fx.k === 'para' ? 44 : 64, dx: d.x, dy: d.y }; m.atk = null;
+    m.dodge = makeDodge(m.id, m.fx && m.fx.k === 'para' ? 44 : 64, d.x, d.y); m.atk = null;   // style selon la morphologie (js/dodge.js)
+    this.stam = Math.max(0, this.stam - 20 * (this.linkMalus > 0 ? 1.5 : 1)); this.stamPause = 0.8; this.comboHold(dodgeInvEnd(m.dodge));   // l'esquive garde le combo : la fenêtre ne s'écoule qu'après la phase invincible
     if (!this.lock && (ax || ay)) m.face = d;
     SFX.dodge();
-    for (let i = 0; i < 4; i++) this.spark(m.x, m.y, '#9fb3ff', 1);
     return true;
+  }
+  // effets d'esquive, déclenchés quand le temps de l'esquive franchit un repère (t0 : temps avant cette image)
+  dodgeFx(m, d, t0) {
+    const at = x => t0 < x && d.t >= x, a = d.s0, b = dodgeInvEnd(d), mid = (q) => a + d.inv * q;
+    const dust = (n, c = '#b8bfd8') => { for (let i = 0; i < n; i++) this.parts.push({ x: m.x + rand(-7, 7), y: m.y + rand(-2, 2), z: 1, vx: rand(-25, 25), vy: rand(-8, 8), vz: rand(8, 26), life: 0.4, max: 0.4, c, size: 2 }); };
+    const rocks = (n) => { for (let i = 0; i < n; i++) this.parts.push({ x: m.x + rand(-6, 6), y: m.y, z: 2, vx: rand(-45, 45), vy: rand(-15, 15), vz: rand(50, 95), life: rand(0.4, 0.6), max: 0.6, c: ['#9aa0b4', '#6f7488', '#4b4f62'][i % 3], size: i % 3 ? 2 : 3, g: 260 }); };
+    const ghostTrail = () => { d.trailT -= 1; if (d.t >= a && d.t < b + 0.05 && (d.trailT <= 0)) { d.trail.unshift({ x: m.x, y: m.y, t: d.t }); d.trail.length = Math.min(d.trail.length, 3); d.trailT = 2; } };
+    switch (d.style) {
+      case 'roll': if (at(a)) dust(5); if (at(b)) dust(4); ghostTrail(); break;
+      case 'flutter': if (at(a)) dust(3, '#dfe6ff'); ghostTrail();
+        if (d.t >= a && d.t < b && Math.random() < 0.35) this.parts.push({ x: m.x + rand(-6, 6), y: m.y, z: rand(10, 18), vx: rand(-8, 8), vy: 0, vz: rand(-14, -6), life: 0.8, max: 0.8, c: Math.random() < 0.5 ? '#f2e6c8' : '#c9b48a', size: 2 }); break;
+      case 'burrow':
+        if (at(a * 0.8)) rocks(6);
+        if (d.t >= mid(0.29) && d.t < mid(0.71) && Math.random() < 0.6) this.parts.push({ x: m.x + rand(-4, 4), y: m.y + rand(-1, 1), z: 0, vx: 0, vy: 0, vz: 0, life: 0.7, max: 0.7, c: '#140f18', size: 3 });
+        if (at(mid(0.71))) { rocks(10); this.shake = Math.max(this.shake, 2.5); SFX.block(); }
+        break;
+      case 'heavy':
+        if (at(a)) dust(4);
+        if (at(b)) { this.ringFx(m.x, m.y, 26, '#c8d0f0'); this.ringFx(m.x, m.y, 40, 'rgba(200,208,240,.6)'); dust(8); this.shake = Math.max(this.shake, 3); SFX.block(); }
+        break;
+      case 'blink':
+        if (at(a)) for (let i = 0; i < 8; i++) this.spark(m.x, m.y - 8, i % 2 ? '#c8b0ff' : '#f0e8ff', 1);
+        if (d.t >= mid(0.29) && d.t < mid(0.71) && Math.random() < 0.7) this.parts.push({ x: m.x, y: m.y, z: rand(6, 14), vx: 0, vy: 0, vz: rand(-4, 4), life: 0.35, max: 0.35, c: '#c8b0ff', size: 2 });
+        if (at(mid(0.71))) for (let i = 0; i < 10; i++) this.spark(m.x, m.y - 8, i % 2 ? '#c8b0ff' : '#f0e8ff', 1);
+        break;
+    }
   }
   tryAttack(m, kind) {
     if (this.stam <= 0.5) return false;
@@ -682,7 +709,7 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6); this.comboN = Math.max(this.comboN, 2); this.comboAt = this.lastPD; this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
+    if (chief && dodgeInvuln(m.dodge)) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (dodgeInvEnd(m.dodge) - m.dodge.t); this.addLink(6); this.comboN = Math.max(this.comboN, 2); this.comboAt = this.lastPD; this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     dmg *= this.elemDefMult(m, o, src);
@@ -698,7 +725,7 @@ export class Game {
       this.burst(m.x + m.face.x * 8, m.y - 6, '#cfe6ff', 5);
       if (this.stam <= 0) { this.guarding = false; this.guardT = 9; m.hurtT = 0.4; m.kx = -dx / dl * 90; m.ky = -dy / dl * 90; this.emit('toast', 'Garde brisée'); }
     } else {
-      dmg = Math.round(dmg); m.hurtT = 0.28 + (o.heavy ? 0.15 : 0); m.kx = -dx / dl * (o.heavy ? 150 : 80); m.ky = -dy / dl * (o.heavy ? 150 : 80); m.atk = null; m.dash = null;
+      dmg = Math.round(dmg); m.hurtT = 0.28 + (o.heavy ? 0.15 : 0); m.kx = -dx / dl * (o.heavy ? 150 : 80); m.ky = -dy / dl * (o.heavy ? 150 : 80); m.atk = null; m.dash = null; m.dodge = null;   // touché au départ ou en récupération : l'esquive est interrompue
       SFX.hurt(); if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }

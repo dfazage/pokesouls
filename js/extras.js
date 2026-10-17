@@ -3,6 +3,7 @@
 
 import { TYPE_COLOR } from './pool.js';
 import { TYPE_FR } from './data.js';
+import { dodgeInvuln } from './dodge.js';
 
 // Couleur des anneaux du Lien (planches PMD) selon le type du Pokémon.
 export const LINKC = { fire: 'red', water: 'blue', grass: 'green', electric: 'yellow', psychic: 'pink', fairy: 'pink', ghost: 'purple', poison: 'purple', dark: 'purple', dragon: 'blue', ice: 'blue', flying: 'blue', fighting: 'red', rock: 'yellow', ground: 'yellow', steel: 'blue', bug: 'green', normal: 'yellow' };
@@ -339,7 +340,7 @@ export function installExtras(G, d) {
     return best;
   };
   P.dotMember = function (m, dmg, st) {
-    if (m.exh || this.god || (m.dodge && m.dodge.t < m.dodge.iframes)) return;
+    if (m.exh || this.god || dodgeInvuln(m.dodge)) return;
     dmg = Math.max(1, Math.round(dmg)); m.hp -= dmg; m.flash = 0.1;
     this.floatText(m.x, m.y - 22, String(dmg), '#ff9a50');
     if (st && m.hp > 0 && Math.random() < st[1]) this.inflict(m, st[0]);
