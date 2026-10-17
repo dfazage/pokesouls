@@ -41,3 +41,7 @@ Chaque zone nommée des 10 cartes a un profil : `tint` (voile de couleur fondu e
 ## Maisons d'Edo en 3D texturé (`house_tex.py`)
 Les maisons du pourtour des cartes ouvertes restent des modèles 3D instanciés (`geoEdoHouse` dans `js/hd2d_world.js` : socle, rez, auvent, étage, grand toit en croupe à rives relevées, faîtage, onigawara). Leur aspect vient d'un atlas pixel art (`assets/props/house.png` albédo + `house_e.png` : R = vitres émissives, G = masque plâtre teinté par instance) lu par `HOUSE_VERT/HOUSE_FRAG` (`js/hd2d_shaders.js`) : UV en unités d'objet × échelle de l'instance, donc 1 pixel = 1/24 de tuile. Sans atlas, repli sur l'ancien shader procédural.
 Régénérer : `python3 tools/props_gen/house_tex.py && python3 tools/props_gen/build_floor.py` (le second écrit les noms de fichiers dans `assets/floor.json`).
+
+## Forêt d'Ilex en 3D texturé (`forest_tex.py`)
+Arbres et buissons de la bordure de la Forêt d'Ilex : modèles 3D instanciés (`geoForest` : tronc effilé + couronne de blobs ; buisson = blobs bas), texturés par `assets/props/forest.png` (feuillage en gris teinté par la palette de l'instance, écorce en couleur) via `TREE_FRAG` : feuillage en projection triplanaire monde (24 px par tuile), reflets dorés et pollen lumineux. Sans atlas, repli sur l'ancien arbre à cônes.
+Régénérer : `python3 tools/props_gen/forest_tex.py && python3 tools/props_gen/build_floor.py`.

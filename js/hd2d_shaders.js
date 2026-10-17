@@ -386,6 +386,37 @@ void main(){
   gl_FragColor = vec4(applyFog(col, vW), 1.);
 }`;
 
+// ---------- arbres et buissons de la forêt d'Ilex (modèles 3D texturés en pixel art, assets/props/forest.png : voir tools/props_gen/forest_tex.py) ----------
+// Même vertex shader que les maisons (aMat : 0 écorce, 1 feuillage ; aUV pour l'écorce). Le feuillage est projeté en triplanaire sur les coordonnées monde :
+// la densité de pixels reste de 24 par tuile quelle que soit la taille de l'arbre, et deux arbres voisins ne montrent jamais exactement le même motif.
+export const TREE_FRAG = /* glsl */`
+uniform float uTime; uniform vec3 uEmisCol, uLightCol; uniform sampler2D uTex;
+varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vMat; varying vec2 vUV; varying float vInst;
+${GLSL_COMMON}
+${FOG_FRAG}
+const float AT = 72.;
+vec2 at(float ox, vec2 uv){ vec2 f = floor(fract(uv)*24.); return vec2(ox + f.x + .5, f.y + .5)/vec2(AT, 24.); }
+void main(){
+  vec3 n = normalize(vN);
+  float dif = max(dot(n, normalize(vec3(-.35, .8, .5))), 0.);
+  float up = smoothstep(-3.2, 4., vW.y);
+  vec3 alb; vec3 em = vec3(0.);
+  if(vMat < .5){                                         // écorce : u autour du tronc, v le long
+    alb = texture2D(uTex, at(48., vec2(vUV.x*1.7, vUV.y*.8))).rgb*1.15;
+  } else {                                               // feuillage : projection selon l'axe dominant de la normale
+    vec3 a = abs(n); vec2 p = a.y > max(a.x, a.z) ? vW.xz : (a.x > a.z ? vec2(vW.z, vW.y) : vec2(vW.x, vW.y));
+    p += vInst*13.;
+    float alt = step(.5, hash21(floor(p*.25) + vInst*7.));          // deux motifs, alternés par plaques
+    float g = texture2D(uTex, at(alt*24., p)).r;
+    alb = vCol*(.45 + g*1.15);
+    alb = mix(alb, vec3(.95, .85, .45)*g, step(.93, g)*.35);        // reflets dorés sur les sommets de touffes
+    vec2 sp = floor(p*24.);
+    em += uEmisCol*step(.9935, hash21(sp + floor(uTime*.25 + vInst*9.)*3.1))*(.5 + .5*sin(uTime*2. + sp.x))*.9*step(.3, up);   // lucioles / pollen
+  }
+  vec3 col = alb*(.30 + .78*dif)*uLightCol*(.78 + .32*up) + em;
+  gl_FragColor = vec4(applyFog(col, vW), 1.);
+}`;
+
 // ---------- particules d'ambiance ----------
 export const PART_VERT = /* glsl */`
 attribute vec4 aSeed;   // x,y,z : position initiale [0,1], w : taille/phase
