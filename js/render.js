@@ -343,14 +343,21 @@ function drawEnemy(ctx, g, e) {
   if (e.dead && e.boss) { drawBossAsh(ctx, g, e); return; }
   const id = e.sprite, def = e.def, sc = def.scale || 1, sp = A.db[id];
   const fly = def.fly || def.hover || e.clone; const lift = e.lift || 0; const big = e.boss && def.hover && sc > 2;   // grand boss en vol : houle lente (corps qui monte et descend, léger balancement)
-  const z = (big ? 14 + Math.sin(g.t * 1.7 + e.bob) * 7 + Math.sin(g.t * 0.9) * 3 : fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
+  let z = (big ? 14 + Math.sin(g.t * 1.7 + e.bob) * 7 + Math.sin(g.t * 0.9) * 3 : fly ? 6 + Math.sin(g.t * 3 + e.bob) * 1.5 : 0) + lift;
   let alpha = 1; if (e.dead && !e.boss) alpha = Math.max(0, 1 - e.deadT / 0.9);
   if (e.cineAlpha !== undefined && e.cineAlpha < 1) alpha *= e.cineAlpha;   // cinématique d'intro : apparition
   shadow(ctx, e.x, e.y, (e.boss ? 12 : 7) * sc * (e.boss ? 1.3 : 1) * (1 + Math.min(lift, 200) / 400), 0.35 * alpha * (1 - Math.min(0.7, lift / 260)));
   let anim = e.anim; if (!sp.anims[anim]) anim = 'Idle';
   if (e.dead && e.boss) anim = 'Faint';
+  // boss qui bat des ailes (def.flap = cadence) : Hover en boucle à la place de l'Idle posé / de la marche, sur l'horloge du jeu (pas de saut d'image quand l'état change),
+  // + montée à chaque battement et léger balancement latéral ; les attaques gardent leurs propres animations
+  let ex = e.x, flapT = null;
+  if (def.flap && !e.dead && sp.anims.Hover && (anim === 'Idle' || anim === 'Walk' || anim === 'Hover')) {
+    anim = 'Hover'; flapT = g.t * 60 * def.flap + e.bob * 7;
+    z += -Math.cos(flapT * Math.PI * 2 / 10) * 2.4; ex += Math.sin(g.t * 1.1 + e.bob) * 2.2;
+  }
   const tint = e.boss && e.reveal !== undefined && e.reveal < 1 ? `brightness(${(e.reveal * 0.85).toFixed(2)})` : e.fx ? statusTint(g, e.fx) : e.invuln > 0 && e.boss && !g.cine ? 'brightness(1.5) hue-rotate(40deg)' : e.clone ? 'hue-rotate(150deg) saturate(1.6) brightness(.9)' : e.state === 'dormant' ? null : null;
-  drawSprite(ctx, id, anim, e.at / TICK, e.loop && !(e.dead), e.dir, e.x, e.y, { scale: sc, z, alpha, flash: e.flash > 0, tint: tint || (e.sleeping && e.state === 'idle' ? 'brightness(.78)' : undefined) });
+  drawSprite(ctx, id, anim, flapT !== null ? flapT : e.at / TICK, flapT !== null || (e.loop && !(e.dead)), e.dir, ex, e.y, { scale: sc, z, alpha, flash: e.flash > 0, tint: tint || (e.sleeping && e.state === 'idle' ? 'brightness(.78)' : undefined) });
   if (e.dead) return;
   const top = e.y - z - sp.anchor.h * sc - 6;
   if (e.fx) statusTag(ctx, g, e, e.fx, sp.anchor.h * sc + z + 8);
