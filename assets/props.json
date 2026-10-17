@@ -139,5 +139,25 @@
     ],
     "vary": true,
     "scale": 0.26
+  },
+  "tree_bell": {
+    "file": "props/edo_trees.png",
+    "fw": 56,
+    "fh": 64,
+    "cols": 6,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "vary": true
   }
 }
