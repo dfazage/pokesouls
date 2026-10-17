@@ -169,6 +169,7 @@
       0,
       1
     ],
-    "vary": true
+    "vary": true,
+    "scale": 1.25
   }
 }
