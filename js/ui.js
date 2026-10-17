@@ -37,7 +37,7 @@ export function showWorlds(onPick, onBack) {
   el.innerHTML = `<h2>Choisissez un chapitre</h2><p class="sub">PokéSouls se raconte en cinq chapitres, un par région. Chaque chapitre a sa propre sauvegarde ; les suivants restent verrouillés jusqu’à leur tour.</p>
     <p class="wtag">▾ EN DÉVELOPPEMENT</p>
     <div class="wgrid">${CHAPTERS.map(c => isOpen(c)
-      ? `<button class="wcard open" id="w-${c.id}"><span class="wbg"></span>${idleOf(c.spr) ? `<i class="wspr" style="background-image:url(assets/${idleOf(c.spr)})"></i>` : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
+      ? `<button class="wcard open ${c.id}" id="w-${c.id}"><span class="wbg"></span>${idleOf(c.spr) ? (a => { const k = Math.max(2, Math.round(230 / a.fh)); return `<i class="wspr" style="--fw:${a.fw * k}px;--fh:${a.fh * k}px;--n:${a.frames};background-image:url(assets/${a.file})"></i>`; })(A.db[c.spr].anims.Idle) : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
       : `<div class="wcard locked">${lock}<img class="wsil" src="assets/ui/${c.sil}.png" alt="" aria-hidden="true"><span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
     <div class="act"><button id="w-back">← Retour</button></div>`;
   const back = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onBack(); };

@@ -7,7 +7,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import * as M from './maps.js';
 import { A } from './assets.js';
-import { W, H } from './game.js';
+import { W, H, setViewW } from './game.js';
 import { collectDrawList, groundFx, buildLights, radial, setShadowSink } from './render.js';
 import { drawFxs } from './fx.js';
 import * as S from './hd2d_shaders.js';
@@ -15,7 +15,7 @@ import * as WD from './hd2d_world.js';
 import { itemImage } from './items.js';
 
 const { TS } = M;
-const SW = 1280, SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
+let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
 export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5 };
 
 // ---------- lot de billboards : un atlas de cellules + une géométrie mise à jour à chaque image ----------
@@ -95,6 +95,18 @@ export class HD2D {
     this.world = null; this.group = null; this.sig = '';
     this.setScale(1);
     this.v3 = new THREE.Vector3();
+  }
+
+  // largeur logique de la scène (hauteur fixe 720) : suit le ratio de l'écran, sans bandes noires
+  resize(w) {
+    w = Math.round(w); if (w === SW) return;
+    SW = w; this.canvas.width = SW; this.camera.aspect = SW / SH; this.camera.updateProjectionMatrix();
+    setViewW(Math.round(225 * SW / SH));
+    for (const t of [this.sh.uLight.value, this.sh.uOvN.value, this.sh.uOvA.value]) t && t.dispose();
+    this.computeRegion(); this.initOverlays();
+    for (const a of [this.airN, this.airA]) { a.mesh.material.uniforms.uMap.value.dispose(); }
+    for (const c of [this.airNC, this.airAC]) { c.width = SW; c.height = SH; }
+    this.scale = 0; this.applyScale();
   }
 
   // ----- région du sol visible (en tuiles, relative à la cible) : sert de zone pour la carte de lumière et les décalques -----

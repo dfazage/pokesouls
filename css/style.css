@@ -2,8 +2,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#03040a;overflow:hidden;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink);user-select:none}
 #stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;background:#05060c;overflow:hidden}
-#game{position:absolute;inset:0;width:1280px;height:720px;image-rendering:pixelated;image-rendering:crisp-edges}
-#game3d{position:absolute;inset:0;width:1280px;height:720px}
+#game{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#game3d{position:absolute;inset:0;height:720px}
 body.hd2d #game,body.hd2d #tilt-top,body.hd2d #tilt-bot,body.hd2d #vignette{display:none}
 #vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(2,3,12,.65) 100%)}
 #tilt-top,#tilt-bot{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px)}
@@ -363,8 +363,9 @@ body.touch #skills .skill .cd{left:16px;right:16px;bottom:9px}
 body.touch #buff{bottom:auto;top:62px;right:auto;left:0}
 
 body.touch #linkbox{width:280px;margin-left:-140px;bottom:14px;height:44px}
-body.touch #boss,body.touch #boss.mini{left:405px;margin-left:0;width:290px;top:24px}
-body.touch #compass{left:540px}
+body.touch #boss,body.touch #boss.mini{left:calc(405px + var(--dx,0)*.5px);margin-left:0;width:290px;top:24px}
+body.touch #compass{left:calc(540px + var(--dx,0)*.5px)}
+#touch .tbtn{margin-left:calc(var(--dx,0)*1px)}
 body.touch #prompt{top:58%}
 body.touch #chief,body.touch .slot,body.touch #quick .qs,body.touch #linkbox,body.touch #combo,body.touch #skills .skill,body.touch #essence,body.touch #boss,body.touch #prompt,body.touch #toast,body.touch #compass{backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%)}
 
@@ -424,8 +425,6 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 .ptray{display:flex;gap:8px;align-items:center}
 .pslot{width:92px;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px dashed #3a4280;border-radius:14px;color:var(--dim);font-size:10px;padding:0;background:transparent}
 .pslot.full{border-style:solid;border-color:#7b84d0;background:var(--card)}.pslot img{width:52px;height:52px;object-fit:cover;image-rendering:pixelated;border-radius:10px}
-@media (max-width:900px){.pcols{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.pcols{grid-template-columns:1fr}#starters{padding:14px 12px}}
 
 /* tutoriel de combat */
 #tut{position:absolute;left:28px;top:96px;width:330px;padding:12px 14px;border-radius:16px;background:rgba(14,18,44,.88);border:1px solid rgba(255,255,255,.18);color:#fff;pointer-events:none;z-index:6;text-align:left;font-size:12px;line-height:1.5}
@@ -533,7 +532,6 @@ button.qc{display:block;width:100%;text-align:left;letter-spacing:.04em;font-siz
 .wspot{text-align:left;padding:8px 12px;font-size:11px;letter-spacing:.04em}
 .wspot.on{border-color:rgba(255,227,166,.8);background:rgba(217,164,65,.2)}
 .wgo{margin-top:auto;width:100%}
-@media (max-width:1000px){.wm-cols{grid-template-columns:1fr}.wm-list{display:none}}
 .wd-art.sealed img{filter:brightness(0) opacity(.55)}
 .wghost{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:16px;color:rgba(255,255,255,.55);border:2px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.04);pointer-events:none}
 .wr.ghost{cursor:default;opacity:.35}
@@ -589,10 +587,10 @@ svg.pad{max-height:330px}
 .wcard.open:hover,.wcard.open.padfocus,.wcard.open:focus-visible{transform:translateY(-3px);box-shadow:0 0 0 1px #000,0 0 56px 0 rgba(154,115,255,.85)}
 .wcard.open .wbg{position:absolute;inset:0;z-index:-2;background:url(../assets/ui/chap1-px.png) center/cover;image-rendering:pixelated;filter:saturate(1.2)}
 .wcard.open::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(transparent 38%,rgba(12,10,16,.96) 74%)}
-.wspr{position:absolute;left:50%;top:30%;translate:-50% -50%;width:128px;height:256px;background-repeat:no-repeat;background-size:1024px 2048px;background-position:0 0;image-rendering:pixelated;animation:wspr 1.1s steps(1) infinite;filter:drop-shadow(0 0 22px rgba(154,115,255,.7)) drop-shadow(0 14px 10px rgba(0,0,0,.6))}
+.wspr{position:absolute;left:50%;top:30%;translate:-50% -50%;width:var(--fw,128px);height:var(--fh,256px);background-repeat:no-repeat;background-size:calc(var(--fw,128px)*var(--n,8)) calc(var(--fh,256px)*8);background-position:0 0;image-rendering:pixelated;animation:wspr calc(var(--n,8)*.14s) steps(var(--n,8)) infinite;filter:drop-shadow(0 0 22px rgba(154,115,255,.7)) drop-shadow(0 14px 10px rgba(0,0,0,.6))}
 #worlds .act{margin-top:6px}
-@media (max-width:900px){.wgrid{grid-template-columns:repeat(2,1fr)}.wcard.open{grid-column:1/-1}.wcard{min-height:260px}}
-@keyframes wspr{0%{background-position:0 0}12.5%{background-position:-128px 0}25%{background-position:-256px 0}37.5%{background-position:-384px 0}50%{background-position:-512px 0}62.5%{background-position:-640px 0}75%{background-position:-768px 0}87.5%{background-position:-896px 0}}
+@keyframes wspr{to{background-position:calc(var(--fw,128px)*var(--n,8)*-1) 0}}
+.wcard.open.johto .wbg{background:radial-gradient(circle at 50% 27%,#ffe9b8 0 9%,rgba(255,200,130,.5) 10% 18%,transparent 34%),linear-gradient(#c2453a 0%,#7a2c3a 42%,#2a1a2c 72%,#120d18);image-rendering:auto;filter:none}
 
 /* fenêtre après parade / esquive : deux options bien visibles au-dessus du Pokémon */
 #opp{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;opacity:0;pointer-events:none;transition:opacity .1s;will-change:transform;background:rgba(18,15,12,.82);border:2px solid #ffe27a!important;padding:5px 9px 8px;font:700 11px ui-monospace,monospace;color:#ffe9b0;text-shadow:1px 1px 0 #000;clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
@@ -674,3 +672,6 @@ body.touch #tut .tt-h b{font-size:17px}body.touch #tut p{font-size:13px}
 /* Johto : en attendant l'illustration dédiée, la carte du monde est teintée */
 .wm-map.johto{filter:hue-rotate(-35deg) saturate(.9)}
 .wm-map.johto .wn,.wm-map.johto .wghost{filter:hue-rotate(35deg)}
+
+/* tutoriel : sous les boutons système tactiles */
+body.touch #tut{top:92px}
