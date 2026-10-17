@@ -20,14 +20,36 @@ const KF = [
   [8.2, 22, 10, 35, 1.6, 0.6],
   [9.8, 40, 13.5, 36, 0.5, 0],
 ];
+// Caméra de duel (HD-2D) : réglage propre à chaque boss, atteint à la fin de l'intro puis tenu pendant tout le combat.
+// pitch = tangage (° ; l'exploration est à 40°), dist = distance, fov = champ, look = hauteur visée (tuiles),
+// focus = part du trajet joueur → boss sur laquelle la caméra se décale (0 = suit le joueur seul).
+// Un tangage plus bas donne de la grandeur au boss ; vue presque « à la troisième personne » : en dessous de ~19° les zones au sol (télégraphes) s'aplatissent trop pour se lire.
+export const BOSS_CAM_DEFAULT = { pitch: 22, dist: 11, fov: 36, look: 1.4, focus: 0.2 };
+export const BOSS_CAM = {
+  articuno: { pitch: 23, dist: 11.5 },
+  zapdos:   { pitch: 23, dist: 11.5 },
+  moltres:  { pitch: 23, dist: 12 },
+  dragonite: { pitch: 21, dist: 13, look: 1.7, focus: 0.25 },
+  mewtwo:   { pitch: 22, dist: 11.5, look: 1.5 },
+  mew:      { pitch: 24, dist: 10.5, focus: 0.18 },
+  raikou:   { pitch: 23, dist: 11, look: 1.3 },
+  entei:    { pitch: 21, dist: 11.5, focus: 0.24 },
+  suicune:  { pitch: 23, dist: 11, look: 1.3 },
+  lugia:    { pitch: 20, dist: 14, look: 2.0, focus: 0.22 },
+  celebi:   { pitch: 24, dist: 10.5, focus: 0.18 },
+};
+export const BOSS_CAM_MIN_PITCH = Math.min(...Object.values(BOSS_CAM).map(c => c.pitch), BOSS_CAM_DEFAULT.pitch);
+export const bossCamOf = b => ({ ...BOSS_CAM_DEFAULT, ...(BOSS_CAM[b && b.def && b.def.sprite] || {}) });
 const sm = x => x * x * (3 - 2 * x);
 const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-export function cineKey(t) {
-  if (t <= KF[0][0]) return KF[0].slice(1);
-  for (let i = 1; i < KF.length; i++) {
-    if (t <= KF[i][0]) { const a = KF[i - 1], b = KF[i], k = sm((t - a[0]) / (b[0] - a[0])); return b.map((v, j) => j ? a[j] + (v - a[j]) * k : 0).slice(1); }
+// bc : réglage de duel du boss ; l'intro se termine exactement dessus, sans saut quand les commandes sont rendues
+export function cineKey(t, bc) {
+  const K = bc ? [...KF.slice(0, -1), [KF[KF.length - 1][0], bc.pitch, bc.dist, bc.fov, bc.look, bc.focus]] : KF;
+  if (t <= K[0][0]) return K[0].slice(1);
+  for (let i = 1; i < K.length; i++) {
+    if (t <= K[i][0]) { const a = K[i - 1], b = K[i], k = sm((t - a[0]) / (b[0] - a[0])); return b.map((v, j) => j ? a[j] + (v - a[j]) * k : 0).slice(1); }
   }
-  return KF[KF.length - 1].slice(1);
+  return K[K.length - 1].slice(1);
 }
 
 export function installBossCine(Game, d) {
@@ -81,7 +103,7 @@ export function installBossCine(Game, d) {
   // cri de fureur une fois l'éveil terminé, juste avant le carton-titre
   P.cineCry = function (q, tt) { if (tt >= Math.max(q.impact + 1.0, q.short ? CINE_SHORT + 0.8 : 0) && !q.fired.has('cry')) { q.fired.add('cry'); this.bossCry(q.b, 7.5, 1.6); } };
   P.cineCam = function (snap) {
-    const q = this.cine, b = q.b, c = this.chief(), [pitch, dist, fov, look, foc] = cineKey(q.t);
+    const q = this.cine, b = q.b, c = this.chief(), [pitch, dist, fov, look, foc] = cineKey(q.t, bossCamOf(b));
     this.camFx = { pitch, dist, fov, look };
     const fx = c.x + (b.x - c.x) * foc, fy = c.y + (b.y - c.y) * foc - 6 * (1 - foc);
     const W = vw(), tx = clamp(fx - W / 2, 0, M.MW * TS - W), ty = clamp(fy - H / 2, 0, M.MH * TS - H);
@@ -132,5 +154,6 @@ export function installBossCine(Game, d) {
     if (!q.fogClosed) this.closeFog();
     this.prog[this.mapIdx].introSeen = true; this.save();
     q.done = true; this.cine = null; this.camFx = null;
+    if (window.hd2d) { this.bossCam = bossCamOf(b); this.bossCamK = 1; }   // le duel reprend le réglage de fin d'intro
   };
 }
