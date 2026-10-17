@@ -3,6 +3,7 @@
 // Effets de cette première série : chance de drop, essence, dégâts d'un élément, régénération, fenêtre de relais.
 // Les effets « de chance » et la régénération ne comptent que pour le Pokémon actif.
 export const RELAY_WIN = 1.3, RELAY_WIN_BAND = 1.6;     // fenêtre de relais (s), sans et avec le Bandeau Relais
+export const ORB_MULT = 1.15, ORB_RECOIL = 0.02, ORB_GAP = 0.15;   // Orbe Vie : +15 % de dégâts, 2 % des PV max perdus par coup (au plus un coût toutes les 0,15 s, pour ne pas punir les zones à répétition)
 export const ELEM_BOOST = 1.1, LEFTOVERS_RATE = 0.005, LEFTOVERS_DELAY = 5;   // +10 % de dégâts ; 0,5 % des PV max par seconde, après 5 s sans coup reçu
 
 export function installHeld(Game, { D, hyp, SFX }) {
@@ -37,6 +38,20 @@ export function installHeld(Game, { D, hyp, SFX }) {
     const c = this.chief();
     if (c && c.held === 'leftovers' && !c.exh && c.hp > 0 && c.hp < c.maxhp && this.t - (c.hitAt ?? -99) > LEFTOVERS_DELAY) c.hp = Math.min(c.maxhp, c.hp + c.maxhp * LEFTOVERS_RATE * dt);
   };
+  // Orbe Vie : multiplicateur de dégâts du porteur, puis coût en PV de chaque coup porté (jamais sous 1 PV)
+  P.orbMult = function (src) { return src && src.held === 'orb' && !src.summoned ? ORB_MULT : 1; };
+  P.orbCost = function (src, o) {
+    if (!src || src.held !== 'orb' || src.summoned || src !== this.chief() || (o && o.react) || src.exh || src.hp <= 1 || this.t - (src.orbAt ?? -9) < ORB_GAP) return;
+    src.orbAt = this.t; src.hp = Math.max(1, src.hp - src.maxhp * ORB_RECOIL); src.hitAt = this.t;
+  };
+  // Ceinture Force : un coup mortel laisse le porteur à 1 PV, une fois par feu de camp. Renvoie les dégâts à appliquer.
+  P.beltSave = function (m, dmg) {
+    if (m.held !== 'belt' || m.beltUsed || dmg < m.hp) return dmg;
+    m.beltUsed = true; this.floatText(m.x, m.y - 34, 'CEINTURE FORCE !', '#ffe27a'); this.burst(m.x, m.y - 6, '#ffe27a', 10);
+    return Math.max(0, m.hp - 1);
+  };
+  // le feu de camp (ou la réapparition) recharge la Ceinture Force
+  P.resetHeld = function () { for (const m of this.team.concat(this.bench)) m.beltUsed = false; };
   // bonus de dégâts d'un élément (Charbon, Eau Mystique, Graine Miracle) : appelé par le calcul des dégâts
   P.heldElemMult = function (src, el) { const h = src && src.held && D.HELD[src.held]; return h && h.elem && h.elem === el ? ELEM_BOOST : 1; };
 }

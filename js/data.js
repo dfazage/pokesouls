@@ -133,6 +133,8 @@ export const HELD = {
   mystic: { name: 'Eau Mystique', desc: 'Attaques de type Eau +10 %.', icon: 'mystic-water', elem: 'water' },
   seed: { name: 'Graine Miracle', desc: 'Attaques de type Plante +10 %.', icon: 'miracle-seed', elem: 'grass' },
   leftovers: { name: 'Restes', desc: 'Régénère 0,5 % des PV max par seconde, sans coup reçu depuis 5 s (Pokémon en jeu).', icon: 'leftovers' },
+  belt: { name: 'Ceinture Force', desc: 'Survit une fois par feu de camp à un coup mortel, à 1 PV.', icon: 'focus-sash' },
+  orb: { name: 'Orbe Vie', desc: 'Dégâts +15 %, mais −2 % des PV max par coup porté (jamais sous 1 PV). Pokémon en jeu.', icon: 'life-orb' },
   band: { name: 'Bandeau Relais', desc: 'Fenêtre de relais de 1,3 s à 1,6 s (Pokémon en jeu).', icon: 'focus-band' },
 };
 // ---------- drops d'ennemis (fiche drops_et_coffres.md) ----------
