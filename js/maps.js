@@ -18,11 +18,11 @@ export const THEMES = {
   ember: { floor: [96, 88, 82], arena: [118, 96, 82], wallA: '#4a3a34', wallB: '#46362f', face: '#251a16', faceTop: '#7a5a48', accent: [255, 140, 60], accent2: [255, 205, 110], fx: 'garden', open: true, bridgeCol: [136, 96, 60], scorch: true, edge: 'ruin', leaf: ['#4a1a14', '#7a2a1a', '#b04a1e', '#34140f'],
     edo: [[104, 96, 90], [118, 78, 62], [88, 66, 50]], amb: [190, 150, 128], ambArena: [214, 128, 96], decor: ['lantern', 'tree', 'bell', 'torii', 'brazier'] },
   // Lac du Miroir : temple sur l'eau à l'aube de printemps ; le vide est de l'eau, les passages sont des ponts
-  mirror: { glowy: true, floor: [140, 158, 166], arena: [138, 166, 180], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
-    edo: [[138, 156, 164], [120, 142, 152], [176, 142, 100]], amb: [176, 196, 212], ambArena: [186, 220, 238], decor: ['lantern', 'tree', 'torii', 'rock', 'lantern'] },
+  mirror: { glowy: true, floor: [140, 158, 166], arena: [104, 138, 158], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
+    edo: [[138, 156, 164], [120, 142, 152], [176, 142, 100]], amb: [150, 180, 206], ambArena: [140, 178, 206], decor: ['lantern', 'tree', 'torii', 'rock', 'lantern'] },
   // Îles Tourbillon : archipel battu par la tempête, courants et tourbillons
-  storm: { floor: [86, 94, 106], arena: [112, 120, 134], wallA: '#5a6676', wallB: '#566272', face: '#2e3846', faceTop: '#8e9cb0', accent: [200, 225, 255], accent2: [150, 190, 255], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [110, 90, 68], leaf: ['#5a7a6a', '#6a8a7a', '#7a9a8a', '#4a6a5a'],
-    edo: [[88, 96, 108], [104, 108, 118], [104, 86, 64]], amb: [160, 176, 200], ambArena: [190, 205, 235], decor: ['lantern', 'rock', 'torii', 'rock', 'bell'] },
+  storm: { abyss: true, propSet: 'ice', floor: [52, 74, 88], arena: [66, 92, 108], wallA: '#3c5868', wallB: '#385464', face: '#1a2c38', faceTop: '#5e8a9c', accent: [110, 220, 245], accent2: [80, 170, 230], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [110, 90, 68], leaf: ['#5a7a6a', '#6a8a7a', '#7a9a8a', '#4a6a5a'],
+    edo: [[52, 74, 88], [60, 82, 92], [84, 76, 64]], amb: [120, 160, 196], ambArena: [150, 190, 225], decor: ['crystal', 'rock', 'pillar', 'rock', 'statue'] },
   // Forêt d'Ilex (secrète) : sanctuaire hors du temps, clairières et sous-bois dorés
   ilex: { floor: [96, 110, 86], arena: [128, 138, 108], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 225, 130], accent2: [160, 255, 200], fx: 'garden', open: true, meadow: true, edge: 'forest', leaf: ['#2e7a5e', '#3a9a72', '#4ab08a', '#2a6a52'],
     edo: [[96, 110, 88], [74, 112, 62], [112, 92, 62]], amb: [180, 200, 170], ambArena: [210, 215, 160], decor: ['tree', 'statue', 'lantern', 'tree', 'torii'] },
@@ -694,8 +694,18 @@ export function bakeFloor(world) {
         else if (r > 0.3 && r < 0.335) { g.strokeStyle = 'rgba(255,120,40,.65)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x + 3, y + 7 + r * 30 % 6); g.lineTo(x + 10, y + 12); g.lineTo(x + 15, y + 10); g.lineTo(x + 22, y + 17); g.stroke(); ge.strokeStyle = '#ff7a2a'; ge.lineWidth = 1.2; ge.beginPath(); ge.moveTo(x + 3, y + 7 + r * 30 % 6); ge.lineTo(x + 10, y + 12); ge.lineTo(x + 15, y + 10); ge.lineTo(x + 22, y + 17); ge.stroke(); }
       }
       if (th.water && isBr) { g.fillStyle = 'rgba(40,24,12,.35)'; g.fillRect(x, y + 11, TS, 1); }
+      if (th.water && th.abyss) {   // Îles Tourbillon : ruines englouties — pierre sombre, algues, coraux, runes bleues discrètes (le sol reste sombre pour que les télégraphes se lisent)
+        g.fillStyle = 'rgba(6,18,34,.32)'; g.fillRect(x, y, TS, TS);
+        if (!isBr && !inA) {
+          if (r < 0.3) { g.fillStyle = 'rgba(30,96,84,.45)'; g.beginPath(); g.ellipse(x + 6 + r * 50 % 14, y + 16 + r * 20 % 6, 7, 3, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(80,170,130,.3)'; for (let n = 0; n < 4; n++) g.fillRect(x + 3 + n * 5 + r * 9 % 3, y + 12 + (n & 1) * 2, 1, 5); }   // algues
+          if (r > 0.38 && r < 0.43) { for (let n = 0; n < 5; n++) { g.fillStyle = n & 1 ? 'rgba(220,120,110,.75)' : 'rgba(240,170,140,.7)'; g.fillRect(x + 6 + n * 3, y + 14 - (n % 3) * 3, 2, 5 + (n % 3) * 3); } }   // corail
+          if (r > 0.9 && r < 0.925) { g.strokeStyle = 'rgba(70,200,230,.7)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 12); g.lineTo(x + 12, y + 12); g.lineTo(x + 12, y + 6); g.moveTo(x + 12, y + 12); g.lineTo(x + 20, y + 18); g.stroke(); ge.strokeStyle = 'rgba(60,190,230,.5)'; ge.lineWidth = 1.2; ge.beginPath(); ge.moveTo(x + 4, y + 12); ge.lineTo(x + 12, y + 12); ge.lineTo(x + 12, y + 6); ge.moveTo(x + 12, y + 12); ge.lineTo(x + 20, y + 18); ge.stroke(); }   // glyphes atlantes
+          if (r > 0.5 && r < 0.56) { g.fillStyle = 'rgba(210,230,220,.5)'; for (let n = 0; n < 3; n++) g.fillRect(x + 4 + (r * 100 + n * 7) % 16, y + 4 + (r * 70 + n * 5) % 16, 2, 1); }   // balanes
+        }
+        if (inA) { g.fillStyle = 'rgba(0,10,24,.18)'; g.fillRect(x, y, TS, TS); if (r > 0.93) { g.strokeStyle = 'rgba(70,200,230,.55)'; g.beginPath(); g.moveTo(x + 4, y + 12); g.lineTo(x + 20, y + 12); g.stroke(); ge.strokeStyle = 'rgba(60,190,230,.4)'; ge.beginPath(); ge.moveTo(x + 4, y + 12); ge.lineTo(x + 20, y + 12); ge.stroke(); } }
+      }
       if (th.water && th.glowy) {   // Lac du Miroir : dalles mouillées, runes d'aube lumineuses, pétales et gouttes de rosée qui brillent
-        if (!isBr) {
+        if (!isBr && !inA) {
           const wet = g.createLinearGradient(x, y, x + TS, y + TS); wet.addColorStop(0, 'rgba(120,200,230,.16)'); wet.addColorStop(0.5, 'rgba(255,255,255,0)'); wet.addColorStop(1, 'rgba(90,170,210,.14)'); g.fillStyle = wet; g.fillRect(x, y, TS, TS);
           if (r < 0.2) { g.fillStyle = 'rgba(52,120,104,.38)'; g.beginPath(); g.ellipse(x + 5 + r * 60 % 14, y + 18 + r * 25 % 5, 6, 2.5, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(140,220,170,.22)'; g.fillRect(x + 4 + r * 60 % 14, y + 17, 5, 1); }   // algues et mousse humide
           if (r > 0.9 && r < 0.935) { g.strokeStyle = 'rgba(150,235,255,.85)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 8); g.lineTo(x + 11, y + 12); g.lineTo(x + 14, y + 9); g.lineTo(x + 21, y + 16); g.stroke();
@@ -703,8 +713,7 @@ export function bakeFloor(world) {
           if (r > 0.935 && r < 0.95) { const cx0 = x + 12, cy0 = y + 12; for (const [rr, al] of [[8, .5], [5, .8]]) { g.strokeStyle = `rgba(160,235,255,${al * 0.7})`; g.lineWidth = 1; g.beginPath(); g.ellipse(cx0, cy0, rr, rr * 0.55, 0, 0, 7); g.stroke(); ge.strokeStyle = `rgba(130,225,255,${al})`; ge.beginPath(); ge.ellipse(cx0, cy0, rr, rr * 0.55, 0, 0, 7); ge.stroke(); } }   // ondes concentriques
           if (r > 0.6 && r < 0.64) { const px = x + 5 + r * 300 % 14, py = y + 6 + r * 170 % 12; g.fillStyle = 'rgba(250,190,212,.92)'; g.beginPath(); g.ellipse(px, py, 2.6, 1.5, r * 20, 0, 7); g.fill(); ge.fillStyle = 'rgba(255,170,205,.55)'; ge.beginPath(); ge.ellipse(px, py, 3.4, 2.2, r * 20, 0, 7); ge.fill(); }   // pétales de cerisier
         }
-        if (r > 0.72 && r < 0.78) { const px = x + 4 + r * 211 % 16, py = y + 4 + r * 137 % 16; g.fillStyle = 'rgba(225,248,255,.8)'; g.fillRect(px, py, 2, 2); ge.fillStyle = 'rgba(170,235,250,.6)'; ge.beginPath(); ge.arc(px + 1, py + 1, 1.5, 0, 7); ge.fill(); }   // gouttes de rosée
-        if (inA && r > 0.45) { g.strokeStyle = 'rgba(190,240,255,.2)'; g.lineWidth = 1; g.beginPath(); g.ellipse(x + 12, y + 12, 5 + r * 5, 2.5 + r * 2, 0, 0, 7); g.stroke(); ge.strokeStyle = 'rgba(150,230,255,.22)'; ge.beginPath(); ge.ellipse(x + 12, y + 12, 5 + r * 5, 2.5 + r * 2, 0, 0, 7); ge.stroke(); }   // l'arène est une nappe d'eau : ondes lumineuses
+        if (!inA && r > 0.72 && r < 0.78) { const px = x + 4 + r * 211 % 16, py = y + 4 + r * 137 % 16; g.fillStyle = 'rgba(225,248,255,.8)'; g.fillRect(px, py, 2, 2); ge.fillStyle = 'rgba(170,235,250,.6)'; ge.beginPath(); ge.arc(px + 1, py + 1, 1.5, 0, 7); ge.fill(); }   // gouttes de rosée
       }
       if (!inA && r > 0.975) { g.fillStyle = 'rgba(232,184,84,.5)'; g.fillRect(x + 11, y + 11, 2, 2); ge.fillStyle = 'rgba(232,184,84,.6)'; ge.fillRect(x + 10.5, y + 10.5, 3, 3); }   // clous dorés qui accrochent la lumière des lanternes
     } else if (fx === 'moss') {
@@ -718,6 +727,17 @@ export function bakeFloor(world) {
   g.strokeStyle = `rgba(${th.accent2[0]},${th.accent2[1]},${th.accent2[2]},.25)`; g.lineWidth = 1;
   if (th.fx !== 'garden') for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6; g.beginPath(); g.moveTo(Math.cos(an) * A.r * TS * 0.3, Math.sin(an) * A.r * TS * 0.3); g.lineTo(Math.cos(an) * (A.r * TS - 6), Math.sin(an) * (A.r * TS - 6)); g.stroke(); }
   if (th.fx === 'garden') { g.strokeStyle = 'rgba(40,34,28,.55)'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, A.r * TS - 5, 0, Math.PI * 2); g.stroke(); g.strokeStyle = 'rgba(255,250,235,.16)'; g.lineWidth = 1; g.lineWidth = 1; for (let k = 1; k < 10; k++) { g.beginPath(); g.arc(0, 0, k * (A.r * TS - 8) / 10, 0, Math.PI * 2); g.stroke(); } }
+  if (th.glowy) {   // Lac du Miroir : disque de pierre gravé — dégradé de profondeur, anneaux biseautés, lotus aux huit pétales, reflets
+    const R = A.r * TS, gr = g.createRadialGradient(0, 0, R * 0.1, 0, 0, R); gr.addColorStop(0, 'rgba(210,240,255,.16)'); gr.addColorStop(0.55, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,20,40,.42)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, R, 0, 7); g.fill();
+    for (const [rad, lw] of [[R - 4, 5], [R * 0.74, 3], [R * 0.46, 3]]) { g.strokeStyle = 'rgba(8,30,48,.55)'; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, 7); g.stroke(); g.strokeStyle = 'rgba(200,235,250,.28)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, rad - lw / 2 - 1, 0, 7); g.stroke(); g.strokeStyle = 'rgba(4,16,30,.5)'; g.beginPath(); g.arc(0, 0, rad + lw / 2 + 1, 0, 7); g.stroke(); }
+    for (let i = 0; i < 8; i++) for (const [c, fill, rr, dd] of [[g, 'rgba(244,190,214,.22)', 1, 1]]) { c.save(); c.rotate(i * Math.PI / 4); c.fillStyle = fill; c.strokeStyle = c === g ? 'rgba(255,230,240,.4)' : 'rgba(255,190,225,.04)'; c.lineWidth = 1; c.beginPath(); c.ellipse(R * 0.3, 0, R * 0.17, R * 0.065, 0, 0, 7); c.fill(); c.stroke(); c.restore(); }
+    g.fillStyle = 'rgba(210,245,255,.3)'; g.beginPath(); g.arc(0, 0, R * 0.08, 0, 7); g.fill(); ge.fillStyle = 'rgba(150,230,255,.05)'; ge.beginPath(); ge.arc(0, 0, R * 0.08, 0, 7); ge.fill();
+    for (let i = 0; i < 24; i++) { const an = i * Math.PI / 12 + 0.1, d0 = R * (0.5 + (i % 3) * 0.14); g.fillStyle = 'rgba(60,130,110,.35)'; g.beginPath(); g.ellipse(Math.cos(an) * (R - 8), Math.sin(an) * (R - 8), 6, 3, an, 0, 7); g.fill(); }   // mousse au bord
+  }
+  if (th.abyss) {   // mosaïque atlante : anneaux, tridents et vagues gravés ; la lueur reste faible
+    for (const [rad, lw, al] of [[A.r * TS - 5, 3, .32], [A.r * TS * 0.78, 2, .2], [A.r * TS * 0.5, 2, .22], [A.r * TS * 0.22, 2, .26]]) { g.strokeStyle = `rgba(90,210,235,${al})`; g.lineWidth = lw; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.stroke(); ge.strokeStyle = `rgba(60,190,230,${al * 0.1})`; ge.lineWidth = lw; ge.beginPath(); ge.arc(0, 0, rad, 0, Math.PI * 2); ge.stroke(); }
+    for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; for (const [c, w] of [[g, .5], [ge, .1]]) { c.save(); c.rotate(an); c.strokeStyle = `rgba(90,210,235,${w * 0.6})`; c.lineWidth = 2; c.beginPath(); c.moveTo(A.r * TS * 0.22, 0); c.lineTo(A.r * TS * 0.78, 0); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, -9); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, 9); c.stroke(); c.restore(); } }
+  }
   g.restore(); ge.restore();
   // ombres au pied des murs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
@@ -789,7 +809,7 @@ export function drawDecor(ctx, world, d, time, opened) {
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, base - 3, w * 0.5, 5, 0, 0, 7); ctx.fill();
   const K = d.kind;
   // sprite du manifeste (assets/props.json) : clé par thème (ex. pillar_ice), puis clé générique ; chests : chest_open / chest_closed
-  const pk = K === 'chest' ? pickProp(opened ? 'chest_open' : 'chest_closed', 'chest') : pickProp(K + '_' + world.def.theme, K + '_' + th.fx, K);   // clé par thème (ex. pillar_plant), puis par effet, puis générique
+  const pk = K === 'chest' ? pickProp(opened ? 'chest_open' : 'chest_closed', 'chest') : pickProp(K + '_' + world.def.theme, K + '_' + (th.propSet || th.fx), K);   // clé par thème (ex. pillar_plant), puis par effet, puis générique
   if (pk && drawProp(ctx, pk, x + w / 2, base - 2, time, d.seed * 0.37, d.seed || 0)) return;
   if (K === 'tank' || K === 'tankbroken') {
     const broken = K === 'tankbroken';
