@@ -306,7 +306,7 @@ export function showDialogue(lines, done) {
   const next = () => { stop(); if (!q.length) { done(result); return; } cur = q.shift(); draw(); };
   const draw = () => {
     const mod = cur.module ? MODULES[cur.module] : null, hidden = cur.who === '???';
-    const m = open(`<div class="panel dlg ${cur.system ? 'sys' : ''}">${cur.system ? '' : `<div class="dpic ${hidden ? 'hid' : ''}"><img src="${portrait(FALA_KEY)}" alt=""></div>`}
+    const m = open(`<div class="panel dlg ${cur.system ? 'sys' : ''}">${cur.system ? '' : `<div class="dpic ${hidden ? 'hid' : ''}"><img src="${portrait(cur.key && A.db[cur.key] && A.db[cur.key].portrait ? cur.key : FALA_KEY)}" alt=""></div>`}
       <div class="dbody"><div class="dwho"><b>${esc(cur.who)}</b>${mod ? `<u style="background:${mod.color}">Module ${mod.name}</u>` : ''}</div>
       <p id="d-text"></p><div class="act"><button id="d-next" ${cur.choices ? 'hidden' : ''}>Suite</button></div></div></div>`);
     m.classList.add('dock');

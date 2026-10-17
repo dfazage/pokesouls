@@ -51,7 +51,7 @@ export function createHud(game) {
     <div id="bossline"><b></b><span></span></div><div id="toast"></div><div id="area"></div>
     <div id="compass"><div id="arrow">➤</div><span>Sanctuaire</span></div>
     <div id="phasescreen"><div class="pf"></div><div class="pr a"></div><div class="pr b"></div><svg class="pm" viewBox="-100 -100 200 200"></svg><canvas class="pm" width="200" height="200" hidden></canvas><div class="txt"><div class="sub"></div><div class="nm"></div><div class="say"></div></div><div class="bar t"></div><div class="bar b"></div></div>
-    <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="say"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="banner"></div><div id="fade"></div>`;
+    <div id="bossintro"><div class="veil"></div><div class="flash"></div><div class="bar t"></div><div class="bar b"></div><div class="card"><div class="tag"></div><div class="nm"></div><div class="ln"></div><div class="ep"></div><div class="say"></div><div class="lore"></div></div><button class="skip" type="button"><kbd></kbd><span>Passer</span><span class="lk"></span></button></div><div id="outro"><i class="t"></i><i class="b"></i></div><div id="banner"></div><div id="fade"></div>`;
   const E = {};
   for (const id of ['chief-p', 'chief-n', 'chief-c', 'chief-l', 'chief-hp', 'chief-hpt', 'chief-st', 'ab-n', 'ab-cd', 'buff', 'cb1', 'cb2', 'cb3', 'cb-bar', 'opp', 'op1', 'op2', 'op-bar', 'berries', 'candy', 'revive', 'ess', 'ethers', 'sbadge', 'boss', 'boss-n', 'boss-s', 'boss-ph', 'boss-hp', 'prompt', 'prompt-t', 'toast', 'area', 'compass', 'arrow', 'banner', 'fade', 'k-ab', 'k-berry', 'k-candy', 'k-revive', 'k-ether', 'k-link', 'link-f', 'link-t', 'linkbox', 'combo', 'combo-t', 'k-int', 'hints']) E[id] = document.getElementById(id);
   const slots = [...root.querySelectorAll('.slot')];
@@ -108,6 +108,7 @@ export function createHud(game) {
       if (!b) { b = game.enemies.find(e => e.big && !e.dead && e.state !== 'idle' && e.state !== 'dormant' && e.state !== 'return' && Math.hypot(e.x - c.x, e.y - c.y) < 230) || null; mini = !!b; }
       const cq = game.cine; E.boss.classList.toggle('show', !!b && !(cq && cq.t < 9.2)); E.boss.classList.toggle('mini', mini);
       cineHud(cq); root.classList.toggle('hasboss', !!b);
+      { const oe = $('#outro', root), on = !!game.outro; oe.classList.toggle('bars', on); if (on) root.classList.add('cine'); }
       if (b) { const nm = mini ? NAMES_FR[b.type].toUpperCase() : b.def.name; if (nm !== bossName) { bossName = nm; E['boss-n'].textContent = nm; E['boss-s'].textContent = mini ? 'Gros Pokémon' : b.def.sub; } E['boss-hp'].style.width = (100 * Math.max(0, b.hp) / b.maxhp) + '%'; const ph = mini ? '' : 'PHASE ' + ROMAN[b.phase || 1]; if (E['boss-ph'].textContent !== ph) E['boss-ph'].textContent = ph; }
       const p = game.prompt; E.prompt.classList.toggle('show', !!p); if (p) E['prompt-t'].textContent = p.text;
       const a = game.world.arena, dx = a.cx * M.TS - c.x, dy = a.cy * M.TS - c.y, near = Math.hypot(dx, dy) < 420;
