@@ -197,10 +197,24 @@ export class Game {
     for (const s of this.world.spawns) {
       const d = D.ENEMIES[s.type]; if (!d) continue;
       if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
-      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
+      const e = this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS);
+      if (e.big) this.unstick(e);   // gros sprite : on vérifie le dégagement réel dès la naissance
+      this.enemies.push(e);
     }
     this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null;
     this.closeFog();
+  }
+  // Gros mobs : boîte de collision réelle (le sprite est agrandi). Cherche la tuile dégagée la plus proche en spirale et y replace l'ennemi, point d'attache compris.
+  unstick(e) {
+    const hw = 12, hh = 8, W0 = this.world;
+    if (M.boxFree(W0, e.x, e.y, hw, hh)) return false;
+    const cx = Math.floor(e.x / TS), cy = Math.floor(e.y / TS);
+    for (let r = 1; r <= 10; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const x = (cx + dx + 0.5) * TS, y = (cy + dy + 0.5) * TS;
+      if (M.boxFree(W0, x, y, hw, hh)) { e.x = e.hx = x; e.y = e.hy = y; e.kx = e.ky = 0; return true; }
+    }
+    return false;
   }
   makeEnemy(type, x, y) {
     const lv0 = this.world.def.lv;
@@ -699,6 +713,7 @@ export class Game {
       e.at += dt; e.flash -= dt; e.cd -= dt; e.invuln = Math.max(0, e.invuln - dt);
       this.tickEnemyFx(e, dt); if (e.dead) continue;
       if (hyp(e.x - ch.x, e.y - ch.y) > 320 && e.state === 'idle' && !e.boss) continue;
+      if (e.big && !e.boss) { e.stuckT = M.boxFree(this.world, e.x, e.y, 6, 4) ? 0 : (e.stuckT || 0) + dt; if (e.stuckT > 0.5) { this.unstick(e); e.stuckT = 0; } }   // filet de sécurité : coincé dans un mur plus de 0,5 s
       if (Math.abs(e.kx) + Math.abs(e.ky) > 1) { move(this, e, e.kx * dt, e.ky * dt, Math.min(e.r, 6) * 0.8); e.kx *= 0.86; e.ky *= 0.86; }
       if (e.tutDummy && !(this.tut && this.tut.aggro)) { setAnim(e, 'Idle'); e.state = 'idle'; e.tele = false; continue; }
       if (e.boss) { this.bossAI(e, dt); continue; }

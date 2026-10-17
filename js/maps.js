@@ -416,7 +416,10 @@ function generateFree(def) {
   def.loot.forEach((item, ci) => { let p = spot(chestZ[ci % chestZ.length], 120); for (let k = 1; !p && k < zones.length; k++) p = spot(k, 200); if (p) { reserve(p[0], p[1], 1, 1, 1); chests.push({ tx: p[0], ty: p[1], item }); } });
   computeReach();
   const tiers = def.mobs, pick = a => a[Math.floor(R() * a.length)];
-  const place = (k, type) => { const p = spot(k, 120, farFromFire); if (p) { reserve(p[0], p[1], 1, 1, 1); spawns.push({ type, tx: p[0], ty: p[1], room: k }); } };
+  // gros mobs et mini-boss : un sprite agrandi (×1,5) a besoin de dégagement, pas d'une seule tuile libre (sinon il naît collé aux murs, toits ou décors)
+  const roomy = (x, y) => free(x - 2, y - 2, 5, 5) && inZ(roomOf[y * MW + x], x - 2, y - 2) && inZ(roomOf[y * MW + x], x + 2, y + 2);
+  const spotBig = (k, tries) => spot(k, tries, (x, y) => farFromFire(x, y) && roomy(x, y)) || spot(k, tries, (x, y) => farFromFire(x, y) && free(x - 1, y - 1, 3, 3)) || spot(k, tries);
+  const place = (k, type) => { const big = type === tiers.big || type === tiers.pseudo, p = big ? spotBig(k, 300) : spot(k, 120, farFromFire); if (p) { reserve(p[0], p[1], 1, 1, big ? 2 : 1); spawns.push({ type, tx: p[0], ty: p[1], room: k }); } };
   const bigZ = F.big ?? 4;
   zones.forEach(z => {
     const k = z.k; if (k === 0) return;
@@ -425,8 +428,8 @@ function generateFree(def) {
     if (k === bigZ) place(k, tiers.big);
     if (tiers.pseudo && k === (F.pseudo ?? 9)) place(k, tiers.pseudo);
   });
-  if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
-  if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
+  if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spotBig(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
+  if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spotBig(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
   return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret: null, modules: [] };
 }
