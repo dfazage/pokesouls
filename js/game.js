@@ -661,6 +661,7 @@ export class Game {
     const crit = Math.random() < 0.08; if (crit) dmg *= 1.5;
     const elemOn = !o.noElem && src.def;
     dmg *= this.elemMult(e, o, src);
+    dmg *= this.orbMult(src);
     if (o.sig && e.boss) dmg *= 0.55;
     if (e.boss) {
       // bonus empilés (critique, type, vulnérabilité, signature) plafonnés ; l'excédent est perdu
@@ -675,7 +676,7 @@ export class Game {
       tl[o.react ? 'react' : src.summoned ? 'ally' : 'chief'] += dmg; tl.hits++;
     }
     dmg = Math.max(1, Math.round(dmg));
-    e.hp -= dmg; e.flash = 0.12; e.aggro = true;
+    e.hp -= dmg; e.flash = 0.12; e.aggro = true; this.orbCost(src, o);
     if (src === this.chief() && !src.summoned) this.addLink(o.sig ? 5 : o.heavy ? 4.5 : 2.5);
     if (e.state === 'idle' || e.state === 'dormant') e.state = 'chase';
     this.floatText(e.x, e.y - 18, String(dmg), crit || back ? '#ffd24a' : '#ffffff');
@@ -802,6 +803,7 @@ export class Game {
       SFX.hurt(); if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }
+    dmg = this.beltSave(m, dmg);
     m.hp -= dmg; m.hitAt = this.t; m.flash = 0.12; m.inv = 0.45;
     this.floatText(m.x, m.y - 22, String(dmg), '#ff6a6a'); this.burst(m.x, m.y - 6, '#ff6a6a', 4); this.fx('tackle', m.x, m.y, { scale: 0.5, z: 12, add: true, dur: 0.3 });
     if (sx && m.hp > 0 && Math.random() < sx[1]) this.inflict(m, sx[0]);
@@ -825,7 +827,7 @@ export class Game {
   async respawn() {
     const l = this.last, map = l ? l.map : 0;
     this.bossActive = false;
-    for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.inv = 1; m.cd = 0; m.anim = 'Idle'; m.atk = null; m.dodge = null; m.fx = null; m.regen = null; }
+    this.resetHeld(); for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.inv = 1; m.cd = 0; m.anim = 'Idle'; m.atk = null; m.dodge = null; m.fx = null; m.regen = null; }
     this.chiefIdx = 0; this.berries = this.maxBerries; this.ethers = this.maxEthers; this.stam = this.maxStam; this.buffT = 0;
     await this.enterMap(map, l ? l.id : 'start');
   }
@@ -1336,7 +1338,7 @@ export class Game {
     this.lit.add(b.id); this.last = { map: this.mapIdx, id: b.id }; this.rest(true); SFX.bonfire(); this.hubAt = { x: (b.tx + 0.5) * TS, y: (b.ty + 0.5) * TS }; this.emit('banner', 'FEU ALLUMÉ', 'fire');
   }
   rest(quiet) {
-    for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; m.fx = null; m.regen = null; }
+    this.resetHeld(); for (const m of this.team) { m.exh = false; m.hp = m.maxhp; m.hurtT = 0; m.anim = 'Idle'; m.fx = null; m.regen = null; }
     this.berries = this.maxBerries; this.ethers = this.maxEthers; this.stam = this.maxStam; this.buffT = 0; if (this.linkT <= 0) this.link = Math.max(this.link, 50); this.spawnAll(); this.save();
     if (!quiet) SFX.bonfire();
   }

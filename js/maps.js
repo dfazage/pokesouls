@@ -166,7 +166,7 @@ const JOHTO = [
     },
     areas: ['Débarcadère', 'Ponts en zigzag', 'Île des cerisiers', 'Pavillon flottant', 'Gradins du lac'], sanctuary: 'Sanctuaire de Suicune',
     mobs: { mini: ['marill', 'wooper', 'remoraid'], mid: ['azumarill', 'quagsire', 'octillery'], big: 'mantineB', pseudo: 'salamenceK' },
-    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_healbell', 'maxberry'], reward: ['ct_surf', 'candy'] },
+    loot: ['candy', 'hpup', 'ct_swift', 'protein', 'ct_healbell', 'maxberry'], reward: ['ct_surf', 'candy', 'belt'] },
   // ---------- Îles Tourbillon : archipel de tempête ; le phare commande le détour vers l'antichambre de Lugia
   { id: 'j4', name: 'Îles Tourbillon', sub: 'Au cœur de la tempête', theme: 'storm', mus: 'J4', lv: 36, seed: 113, boss: 'lugia', final: true,
     free: {
@@ -180,7 +180,7 @@ const JOHTO = [
     },
     areas: ['Rivage naufragé', 'Atoll des cormorans', 'Île du phare', 'Antichambre du tourbillon'], sanctuary: 'Sanctuaire de Lugia',
     mobs: { mini: ['horsea', 'tentacool', 'remoraid'], mid: ['seadra', 'tentacruel', 'mantine'], big: 'kingdraB', pseudo: 'garchompK' },
-    loot: ['candy', 'hpup', 'ct_hydro', 'protein', 'ct_icebeam', 'revive'], reward: ['ct_psychic', 'candy'] },
+    loot: ['candy', 'hpup', 'ct_hydro', 'protein', 'ct_icebeam', 'revive'], reward: ['ct_psychic', 'candy', 'orb'] },
   // ---------- Forêt d'Ilex (secrète, ouverte après Lugia) : clairières et sous-bois ; la porte relie la clairière des rêves au bosquet d'entrée
   { id: 'j5', name: "Forêt d'Ilex", sub: 'Le temple hors du temps', theme: 'ilex', mus: 'J5', lv: 42, seed: 131, boss: 'celebi', secret: true,
     free: {
