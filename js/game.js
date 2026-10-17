@@ -792,7 +792,7 @@ export class Game {
     if (chief && dodgeInvuln(m.dodge)) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (dodgeInvEnd(m.dodge) - m.dodge.t); this.addLink(6); this.comboN = Math.max(this.comboN, 2); this.comboAt = this.lastPD; this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
-    dmg *= this.elemDefMult(m, o, src);
+    const dk = this.elemDefMult(m, o, src); dmg *= dk;
     const pre = chief && !this.guarding && o.parry !== false && this.stam > 0 && this.t - this.guardPressT <= this.parryPre;   // pré-appui : garde pressée juste avant l'impact
     if (chief && (this.guarding || pre) && (dx * m.face.x + dy * m.face.y) / dl > -0.15 && !m.atk) {
       if ((pre || this.guardT < this.parryWin) && o.parry !== false) {
@@ -806,7 +806,8 @@ export class Game {
       if (this.stam <= 0) { this.guarding = false; this.guardT = 9; m.hurtT = 0.4; m.kx = -dx / dl * 90; m.ky = -dy / dl * 90; this.emit('toast', 'Garde brisée'); }
     } else {
       dmg = Math.round(dmg); m.hurtT = 0.28 + (o.heavy ? 0.15 : 0); m.kx = -dx / dl * (o.heavy ? 150 : 80); m.ky = -dy / dl * (o.heavy ? 150 : 80); m.atk = null; m.dash = null; m.dodge = null;   // touché au départ ou en récupération : l'esquive est interrompue
-      SFX.hurt(); if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
+      if (dk > 1) SFX.superHit(); else if (dk < 1 && SFX.resisted()) { /* peu efficace */ } else SFX.hurt();   // même retour sonore que pour nos attaques
+      if (chief) { this.comboHit(m, dmg, o); this.shake = Math.max(this.shake, 3); this.hitstop = 0.05; }
       sx = o.status || this.statusOf(o.owner);
     }
     dmg = this.beltSave(m, dmg);
