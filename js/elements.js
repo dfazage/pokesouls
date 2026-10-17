@@ -41,7 +41,7 @@ export const ENEMY_TYPES = {
   koffing: ['poison'], porygon: ['normal'], weezing: ['poison'], electrodeA: ['electric'], dragoniteK: ['dragon', 'flying'],
   exeggcute: ['grass', 'psychic'], abra: ['psychic'], haunter: ['ghost', 'poison'], kadabra: ['psychic'], gengar: ['ghost', 'poison'], mrmime: ['psychic', 'fairy'], exeggutor: ['grass', 'psychic'],
   clone: ['psychic'], decoy: ['psychic', 'fairy'],
-  pichu: ['electric'], mareep: ['electric'], flaaffy: ['electric'], ampharos: ['electric'], chinchou: ['water', 'electric'], lanturn: ['water', 'electric'], togetic: ['fairy', 'flying'],
+  metagrossK: ['steel', 'psychic'], pichu: ['electric'], mareep: ['electric'], flaaffy: ['electric'], ampharos: ['electric'], chinchou: ['water', 'electric'], lanturn: ['water', 'electric'], togetic: ['fairy', 'flying'],
 };
 export const BOSS_TYPES = { articuno: ['ice', 'flying'], zapdos: ['electric', 'flying'], moltres: ['fire', 'flying'], dragonite: ['dragon', 'flying'], mewtwo: ['psychic'], mew: ['psychic'], raikou: ['electric'] };
 

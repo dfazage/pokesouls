@@ -42,14 +42,18 @@ function move(g, o, dx, dy, hw = 4, hh = 3) {
 }
 export function speciesForMap(idx) {
   const d = M.MAPS[idx], set = new Set();
-  for (const t of [...d.mobs.mini, ...d.mobs.mid, d.mobs.big]) set.add(D.spriteOfEnemy(t));
+  for (const t of [...d.mobs.mini, ...d.mobs.mid, d.mobs.big, ...(d.mobs.pseudo ? [d.mobs.pseudo] : [])]) set.add(D.spriteOfEnemy(t));
   const b = D.BOSSES[d.boss]; set.add(b.sprite); if (b.summon) set.add(D.spriteOfEnemy(b.summon));
   if (d.fala) set.add(FALA_KEY);   // quête de Fala
   if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
+<<<<<<< HEAD
+const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
+=======
 const CAM_YAW = 45, CAM_TILT = 0;   // pivot latéral seulement : l'inclinaison haut/bas a été testée et écartée (inconfortable)
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
+>>>>>>> main
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
@@ -196,7 +200,7 @@ export class Game {
     this.enemies = []; const pr = this.prog[this.mapIdx];
     for (const s of this.world.spawns) {
       const d = D.ENEMIES[s.type]; if (!d) continue;
-      if (d.tier === 'big' && pr.bigDead) continue;
+      if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
       this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS));
     }
     this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null;
@@ -626,7 +630,10 @@ export class Game {
     if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); }
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
-    if (e.big && !this.prog[this.mapIdx].bigDead) {
+    if (e.def.pseudo && !this.prog[this.mapIdx].pseudoDead) {   // mini-boss optionnel : deux Super Bonbons et une vitamine
+      this.prog[this.mapIdx].pseudoDead = true; ['candy', 'candy', 'hpup'].forEach((k, i) => { this.give(k); this.popItem(e.x + (i - 1) * 18, e.y - 8, k, i * 0.25); }); this.save();
+      this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+2 Super Bonbons · +1 Vitamine PV');
+    } else if (e.big && !e.def.pseudo && !this.prog[this.mapIdx].bigDead) {
       this.prog[this.mapIdx].bigDead = true; this.bag.candy = (this.bag.candy || 0) + 1; this.save();
       this.emit('banner', D.NAMES_FR[e.type].toUpperCase() + ' VAINCU', 'mini'); this.emit('toast', '+1 Super Bonbon');
     }
