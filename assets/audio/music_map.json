@@ -111,15 +111,33 @@
   "fallback_audio": "jingle_victory.ogg"
  },
  "MAP_J1": {
-  "title": "Provisoire (en attendant la musique Edo)",
+  "title": "Tour Carillon (Edo, Suno)",
   "start": 0,
   "end": null,
-  "fallback_audio": "map_2.ogg"
+  "fallback_audio": "map_j1.ogg"
+ },
+ "MAP_J2": {
+  "title": "Tour Brûlée (Edo, Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "map_j2.ogg"
  },
  "SUBBOSS_BEASTS": {
-  "title": "Provisoire (en attendant la musique Edo)",
+  "title": "Raikou (Edo, Suno), provisoire pour les trois bêtes",
   "start": 0,
   "end": null,
-  "fallback_audio": "subboss_birds.ogg"
+  "fallback_audio": "subboss_beasts.ogg"
+ },
+ "BOSS_LUGIA_P1": {
+  "title": "Lugia, la tempête (Edo, Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_lugia_p1.ogg"
+ },
+ "BOSS_LUGIA_P2": {
+  "title": "Lugia, le ciel dégagé (Edo, Suno)",
+  "start": 0,
+  "end": null,
+  "fallback_audio": "boss_lugia_p2.ogg"
  }
 }
