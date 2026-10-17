@@ -1,4 +1,4 @@
-// Pool de 39 lignées (Onix retiré, Lixy ajouté) (GDD v3, section 6), rangées par gabarit : A = Assaut, R = Rempart, D = Distance, S = Soutien.
+// Pool de 40 lignées (Onix retiré, Lixy et Charbambin ajoutés) (GDD v3, section 6), rangées par gabarit : A = Assaut, R = Rempart, D = Distance, S = Soutien.
 // key : stade 1 ; line : les trois stades (une lignée à 2 stades répète le dernier) ; gen : génération du stade 1.
 // types : types de chaque forme (le premier de la famille donne l'élément des attaques).
 import * as D from './data.js';
@@ -14,7 +14,7 @@ export const GABS = {
 const ROWS = [
   // Assaut
   ['A', 'torchic', 'combusken', 'blaziken', 3], ['A', 'chimchar', 'monferno', 'infernape', 4], ['A', 'tepig', 'pignite', 'emboar', 5], ['A', 'treecko', 'grovyle', 'sceptile', 3], ['A', 'snivy', 'servine', 'serperior', 5],
-  ['A', 'machop', 'machoke', 'machamp', 1], ['A', 'bagon', 'shelgon', 'salamence', 3], ['A', 'riolu', 'lucario', 'lucario', 4], ['A', 'meowth', 'persian', 'persian', 1], ['A', 'sneasel', 'weavile', 'weavile', 2], ['A', 'zorua', 'zoroark', 'zoroark', 5],
+  ['A', 'machop', 'machoke', 'machamp', 1], ['A', 'bagon', 'shelgon', 'salamence', 3], ['A', 'riolu', 'lucario', 'lucario', 4], ['A', 'meowth', 'persian', 'persian', 1], ['A', 'sneasel', 'weavile', 'weavile', 2], ['A', 'zorua', 'zoroark', 'zoroark', 5], ['A', 'charcadet', 'charcadet', 'charcadet', 9],
   // Rempart
   ['R', 'squirtle', 'wartortle', 'blastoise', 1], ['R', 'turtwig', 'grotle', 'torterra', 4], ['R', 'mudkip', 'marshtomp', 'swampert', 3], ['R', 'totodile', 'croconaw', 'feraligatr', 2],
   ['R', 'munchlax', 'snorlax', 'snorlax', 4], ['R', 'beldum', 'metang', 'metagross', 3], ['R', 'hippopotas', 'hippowdon', 'hippowdon', 4], ['R', 'scyther', 'scizor', 'scizor', 1],
@@ -27,6 +27,17 @@ const ROWS = [
 
 export const FORM_TYPES = D.FORM_TYPES;
 
+// Lignées à embranchement : l'évolution n'est pas automatique. Dès le niveau EVOLVE_AT[0], le menu Équipe propose une armure par forme ; en choisir une est définitif
+// (voir branch.js). Tant qu'aucune n'est choisie, le Pokémon reste au stade 1. gab : le gabarit de la forme choisie remplace celui du stade 1.
+export const EVO = {
+  charcadet: [
+    { id: 'armarouge', item: 'armor_fortune', name: 'Armure de Fortune', gab: 'D', desc: 'L’âme d’un guerrier juste. Carmadura (Feu / Psy) : canon d’armure et tirs à distance.' },
+    { id: 'ceruledge', item: 'armor_maudite', name: 'Armure Maudite', gab: 'A', desc: 'L’âme d’un guerrier rancunier. Malvalame (Feu / Spectre) : lames spectrales au corps à corps.' },
+  ],
+};
+// feuilles de sprites à charger pour un membre : sa lignée courante et, tant que le choix d'armure n'est pas fait, toutes les formes possibles
+export const spriteLine = m => (m.evo && !m.branch ? [...new Set([...m.line, ...m.evo.map(e => e.id)])] : m.line);
+
 const STARTER_FAMILY = {}; // stade 1 -> type de famille (fire / water / grass)
 for (const t of Object.keys(D.STARTERS)) for (const l of D.STARTERS[t]) STARTER_FAMILY[l[0]] = t;
 const GEN_FIX = { eevee: 1 };
@@ -35,7 +46,7 @@ const familyOf = key => STARTER_FAMILY[key] || (FORM_TYPES[key] || ['normal'])[0
 
 // Fala (Genesect secret) : hors du pool de 39 lignées, sélectionnable seulement après sa quête (voir fala.js). L'élément vient de son Module.
 export const FALA = { key: 'genesect', gab: 'D', line: ['genesect', 'genesect', 'genesect'], gen: 5, type: 'electric', starter: false, secret: true };
-export const POOL = ROWS.map(([gab, a, b, c, gen]) => ({ key: a, gab, line: [a, b, c], gen: GEN_FIX[a] || gen, type: familyOf(a), starter: !!STARTER_FAMILY[a] }));
+export const POOL = ROWS.map(([gab, a, b, c, gen]) => ({ key: a, gab, line: [a, b, c], gen: GEN_FIX[a] || gen, type: familyOf(a), starter: !!STARTER_FAMILY[a], evo: EVO[a] || null }));
 const byKey = Object.fromEntries(POOL.map(p => [p.key, p]));
 
 // Les starters des générations 6 à 9 ne sont plus proposés, mais d'anciennes sauvegardes peuvent les contenir.
@@ -60,7 +71,7 @@ const GAB_TM = { A: 'ct_bodyslam', R: 'ct_bodyslam', D: 'ct_swift', S: 'ct_softb
 const START_TM_BY = {
   torchic: 'ct_fireblast', chimchar: 'ct_flamethrower', tepig: 'ct_bodyslam', treecko: 'ct_solar', snivy: 'ct_teleport', machop: 'ct_bodyslam', bagon: 'ct_swift', riolu: 'ct_bodyslam', meowth: 'ct_teleport', sneasel: 'ct_icebeam', zorua: 'ct_psychic',
   squirtle: 'ct_surf', turtwig: 'ct_synthesis', mudkip: 'ct_aquaring', totodile: 'ct_hydro', munchlax: 'ct_swift', beldum: 'ct_swords', hippopotas: 'ct_swords', scyther: 'ct_swift',
-  charmander: 'ct_fireblast', cyndaquil: 'ct_flamethrower', piplup: 'ct_icebeam', oshawott: 'ct_hydro', weedle: 'ct_swords', remoraid: 'ct_surf', starly: 'ct_thunder', magnemite: 'ct_swords', abra: 'ct_psychic', pichu: 'ct_thunder', shinx: 'ct_thunder', litwick: 'ct_fireblast', gastly: 'ct_psychic',
+  charmander: 'ct_fireblast', cyndaquil: 'ct_flamethrower', piplup: 'ct_icebeam', oshawott: 'ct_hydro', weedle: 'ct_swords', remoraid: 'ct_surf', starly: 'ct_thunder', magnemite: 'ct_swords', abra: 'ct_psychic', pichu: 'ct_thunder', shinx: 'ct_thunder', litwick: 'ct_fireblast', gastly: 'ct_psychic', charcadet: 'ct_flamethrower',
   bulbasaur: 'ct_megadrain', chikorita: 'ct_synthesis', eevee: 'ct_teleport', happiny: 'ct_teleport', ralts: 'ct_softboiled', togepi: 'ct_softboiled', budew: 'ct_megadrain',
 };
 export function startTm(entry) {

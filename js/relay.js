@@ -29,6 +29,10 @@ export const RELAY = {
   meowth: { name: 'Jackpot', gab: 'A', shape: 'arc', mult: 1.05, range: 44, cos: 0.2, stagger: 0.5, knock: 60 },
   sneasel: { name: 'Tranche-glace', gab: 'A', shape: 'arc', mult: 1.1, range: 46, cos: 0.2, stagger: 0.6, knock: 60, status: ['freeze', 0.3] },
   zorua: { name: 'Leurre', gab: 'A', shape: 'ring', mult: 0.85, range: 56, stagger: 1.0, knock: 40, status: ['confuse', 0.5] },
+  // Charbambin : l'attaque d'entrée dépend de l'armure choisie (clé = forme), voir relayOf
+  charcadet: { name: 'Coup de braise', gab: 'A', shape: 'arc', mult: 1.0, range: 46, cos: 0.2, stagger: 0.6, knock: 70, status: ['burn', 0.4] },
+  armarouge: { name: 'Canon Armure', gab: 'D', shape: 'shot', mult: 1.1, explode: 30, speed: 280, status: ['burn', 0.4] },
+  ceruledge: { name: 'Lame Maudite', gab: 'A', shape: 'arc', mult: 1.2, range: 56, cos: 0.1, stagger: 0.7, knock: 70, status: ['burn', 0.3] },
   // Rempart
   munchlax: { name: 'Plaquage', gab: 'R', shape: 'ring', mult: 1.1, range: 52, stagger: 1.3, knock: 100, status: ['para', 0.25] },
   beldum: { name: 'Tête de fer', gab: 'R', shape: 'arc', mult: 1.1, range: 44, cos: 0.1, stagger: 1.4, knock: 90 },
@@ -55,7 +59,7 @@ export const RELAY = {
 };
 // lignées sans attaque propre (starters des générations 6 à 9, anciennes sauvegardes) : frappe circulaire de base
 export const RELAY_DEFAULT = { name: 'Frappe de relais', gab: 'A', shape: 'ring', mult: 1.0, range: 46, stagger: 0.7, knock: 90 };
-export const relayOf = n => (n.line && RELAY[n.line[0]]) || RELAY_DEFAULT;
+export const relayOf = n => (n.branch && RELAY[n.branch]) || (n.line && RELAY[n.line[0]]) || RELAY_DEFAULT;   // branch : forme choisie d'une lignée à embranchement
 
 // Libellés pour l'écran de choix des starters
 const GAB = { A: 'Assaut', R: 'Rempart', D: 'Distance', S: 'Soutien' };

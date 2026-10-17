@@ -2,7 +2,7 @@
 import * as D from './data.js';
 const BASE = 'assets/items/';
 const FIXED = { candy: 'rare-candy', berrypack: 'oran-berry', berry: 'oran-berry', maxberry: 'sitrus-berry', etherpack: 'ether', ether: 'ether', maxether: 'max-ether', revive: 'revive',
-  hpup: 'hp-up', protein: 'protein', iron: 'iron', calcium: 'calcium', carbos: 'carbos', zinc: 'zinc' };
+  hpup: 'hp-up', protein: 'protein', iron: 'iron', calcium: 'calcium', carbos: 'carbos', zinc: 'zinc', armor_fortune: 'auspicious-armor', armor_maudite: 'malicious-armor' };
 const TYPE_EN = { Feu: 'fire', Eau: 'water', Plante: 'grass', Normal: 'normal', Psy: 'psychic', 'Électrik': 'electric', Sol: 'ground', Glace: 'ice' };
 
 // Fichier d'icône d'un objet (clé du jeu : candy, revive, hpup…, ou id de CT) ; null si inconnu.
