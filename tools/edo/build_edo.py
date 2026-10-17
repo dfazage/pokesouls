@@ -143,7 +143,6 @@ PACKS = {
   'pagoda': ('pagoda_bell', 3, [('pagoda_shinto', .27), ('pagoda_purple', .5), ('pagoda_blue', .55)]),
   'shrine': ('shrine_bell', 2, [('shrine_hall', .26), ('temple_purple', .68)]),
   'chapel': ('chapel_bell', 3, [('shrine_small', .31), ('house_purple', 1), ('hut_thatch', 1), ('shrine_red', .75)]),
-  'fence':  ('fence_bell',  2, [('fence_picket', .5), ('fence_slat', .5)]),
   'ruin':   ('ruin_bell',   2, [('ruin_pillar_a', .6), ('ruin_pillar_b', .6)]),
 }
 def scaled(n, k):

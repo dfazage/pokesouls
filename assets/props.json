@@ -206,17 +206,6 @@
     ],
     "vary": true
   },
-  "fence_bell": {
-    "file": "props/edo_fence.png",
-    "fw": 28,
-    "fh": 25,
-    "cols": 2,
-    "frames": [
-      0,
-      1
-    ],
-    "vary": true
-  },
   "ruin_bell": {
     "file": "props/edo_ruin.png",
     "fw": 21,
