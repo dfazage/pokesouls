@@ -34,7 +34,7 @@ export const TRACKS = {
   BOSS_MEWTWO_P1: { title: 'Mewtwo, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 1' },
   BOSS_MEWTWO_P2: { title: 'Mewtwo, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 2' },
   BOSS_MEW: { title: 'Mew, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew' },
-  JINGLE_DEATH: { title: 'Mort (sobre)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mort', jingle: true },
+  JINGLE_DEATH: { title: 'Mort (The Final Chord)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mort', jingle: true },
   JINGLE_VICTORY: { title: 'Victoire (Hard-Won Victory)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Boss vaincu', jingle: true },
 };
 const STORE = 'pokesouls.options.v1';
