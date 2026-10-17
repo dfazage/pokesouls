@@ -1,5 +1,5 @@
 // Les cinq cartes du Chapitre Génération 1 (quatre cartes + une carte secrète) : définition, génération des salles, collisions et rendu du décor.
-// Cartes 1, 2, 3, 4 et 6 : disposition générée (graine fixe). Carte 5 (Laboratoire oublié) : dessinée à la main.
+// Toutes les cartes sauf le Laboratoire oublié (dessiné à la main) : zones libres générées avec une graine fixe (voir generateFree). L'ancien générateur à salles et couloirs (generate) n'est plus utilisé.
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp } from './props.js';
 // PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
@@ -31,19 +31,57 @@ export const THEMES = {
 };
 
 // ---------- définitions des cartes ----------
+// forme d'une zone libre : [décalage x, décalage y, rayon x, rayon y] par zone ; sert à sortir du quadrillage des cellules
+const shape = a => (z, i) => ({ ...z, ox: a[i][0], oy: a[i][1], rx: a[i][2], ry: a[i][3] });
 const KANTO = [
   { id: 'm1', name: 'Îles Écume', sub: 'Grottes gelées', theme: 'ice', mus: 1, lv: 8, seed: 11, boss: 'articuno',
-    path: [[0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 0]],
+    // zones libres : le rivage (0) s'ouvre vers les phoques (1) et la crevasse (7) ; deux routes mènent au lac (5) ; la porte relie la grotte des phoques à l'antichambre (6)
+    free: {
+      zones: [
+        { cell: [0, 2], name: 'Rivage gelé' }, { cell: [1, 2], name: 'Grotte des phoques' }, { cell: [2, 2], name: 'Bassin glacé' },
+        { cell: [3, 2], name: 'Galerie de givre' }, { cell: [3, 1], name: 'Caverne de cristal' }, { cell: [2, 1], name: 'Lac souterrain' },
+        { cell: [1, 1], name: 'Antichambre du blizzard' }, { cell: [0, 1], name: 'Crevasse bleue' }, { cell: [0, 0], name: 'Grotte du givre caché' }, { cell: [2, 0], name: 'Pic de cristal' },
+      ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i === 6 ? { ...z, zone: 'Approche' } : i > 6 ? { ...z, zone: 'Cœur' } : z)
+        .map(shape([[3, -2, 13, 7], [-2, 3, 11, 8], [4, -1, 13, 9], [-4, 3, 10, 7], [-3, -2, 9, 9], [-3, 2, 13, 9], [2, 0, 10, 6], [2, -1, 10, 8], [3, 2, 9, 6], [3, 2, 9, 6]])),
+      pow: 2.1, noise: 1.0,
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [2, 5], [0, 7], [7, 8], [5, 9]], thin: 0.75,
+      canyons: [{ z: 3, ax: 'h', off: 1 }, { z: 4, off: -2 }],
+      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 5, 6], big: 4, chests: [1, 2, 3, 7, 8, 9, 4],
+    },
     areas: ['Rivage gelé', 'Grotte des phoques', 'Bassin glacé', 'Galerie de givre', 'Caverne de cristal', 'Lac souterrain', 'Antichambre du blizzard'], sanctuary: "Nid d'Artikodin",
     mobs: { mini: ['seel', 'shellder', 'krabby'], mid: ['dewgong', 'starmie', 'cloyster'], big: 'lapras' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_aquaring'], reward: ['ct_icebeam', 'candy'] },
   { id: 'm2', name: 'Centrale abandonnée', sub: 'Sous haute tension', theme: 'plant', mus: 2, lv: 15, seed: 23, boss: 'zapdos',
-    path: [[3, 2], [2, 2], [1, 2], [0, 2], [0, 1], [1, 1], [2, 1], [2, 0]],
+    // zones libres : le hall (0) donne sur les câbles (1) et la sous-station (7) ; deux routes mènent au poste de commande (5) ; la porte relie les câbles à l'antichambre (6)
+    free: {
+      zones: [
+        { cell: [3, 2], name: 'Hall des turbines' }, { cell: [2, 2], name: 'Salle des câbles' }, { cell: [1, 2], name: 'Atelier rouillé' },
+        { cell: [0, 2], name: 'Salle des générateurs' }, { cell: [0, 1], name: 'Couloir des relais' }, { cell: [1, 1], name: 'Poste de commande' },
+        { cell: [2, 1], name: 'Antichambre du transformateur' }, { cell: [3, 1], name: 'Sous-station' }, { cell: [0, 0], name: 'Salle des cuves' }, { cell: [1, 0], name: 'Passerelle haute' },
+      ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i === 6 ? { ...z, zone: 'Approche' } : i > 6 ? { ...z, zone: 'Cœur' } : z)
+        .map(shape([[-3, -2, 12, 7], [3, 3, 11, 8], [-3, -1, 12, 8], [3, 2, 10, 8], [3, -2, 9, 9], [-3, 3, 13, 8], [2, 0, 10, 6], [-1, 3, 9, 7], [3, 2, 9, 6], [-2, 3, 11, 6]])),
+      pow: 2.3, noise: 0.8,
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [2, 5], [0, 7], [4, 8], [5, 9]], thin: 0.75,
+      canyons: [{ z: 2, ax: 'h', off: -1 }, { z: 5, off: 3 }],
+      door: [1, 6], arena: { cell: [2, 0], from: 6 }, bonfires: [0, 3, 6], big: 4, chests: [2, 3, 7, 8, 9, 5, 4, 1],
+    },
     areas: ['Hall des turbines', 'Salle des câbles', 'Atelier rouillé', 'Salle des générateurs', 'Couloir des relais', 'Poste de commande', 'Antichambre du transformateur'], sanctuary: "Cœur de la Centrale",
     mobs: { mini: ['magnemite', 'voltorb', 'pikachu'], mid: ['magneton', 'electrode', 'raichu'], big: 'electabuzz' },
-    loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0] } },
+    loot: ['candy', 'iron', 'ct_bodyslam', 'berrypack', 'calcium', 'maxberry', 'etherpack', 'ct_synthesis'], reward: ['ct_thunder', 'candy'], fala: { modules: { aqua: 1, pyro: 3, cryo: 5, choc: 6 }, hub: [1, 0, 2] } },
   { id: 'm3', name: 'Mont Braise', sub: 'Le volcan vivant', theme: 'lava', mus: 3, lv: 22, seed: 37, boss: 'moltres',
-    path: [[0, 0], [0, 1], [1, 1], [1, 2], [2, 2], [2, 1], [3, 1], [3, 0]],
+    // zones libres : le flanc (0) descend vers le tunnel (1) ; trois routes se croisent au carrefour (2) ; la porte relie la caverne (2) au pont de basalte (5)
+    free: {
+      zones: [
+        { cell: [0, 0], name: 'Flanc du volcan' }, { cell: [0, 1], name: 'Tunnel de lave' }, { cell: [1, 1], name: 'Caverne de braise' },
+        { cell: [1, 2], name: 'Pont de basalte' }, { cell: [2, 2], name: 'Forge abandonnée' }, { cell: [2, 1], name: 'Grotte des cendres' },
+        { cell: [3, 1], name: 'Antichambre du magma' }, { cell: [1, 0], name: 'Fumerolles' }, { cell: [0, 2], name: 'Galerie des scories' }, { cell: [3, 2], name: 'Coulée figée' },
+      ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i === 6 ? { ...z, zone: 'Approche' } : i > 6 ? { ...z, zone: 'Cœur' } : z)
+        .map(shape([[3, 3, 12, 7], [-2, -2, 10, 9], [-3, -3, 13, 8], [4, 2, 12, 8], [-3, 3, 12, 8], [3, -2, 10, 9], [0, 0, 10, 6], [3, 3, 10, 6], [3, 0, 9, 7], [-1, 3, 9, 6]])),
+      pow: 2.0, noise: 1.1,
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [2, 7], [3, 8], [4, 9], [0, 7]], thin: 0.75,
+      canyons: [{ z: 3, off: 1 }, { z: 1, ax: 'h', off: 2 }, { z: 4, off: -2 }],
+      door: [2, 5], arena: { cell: [3, 0], from: 6 }, bonfires: [0, 3, 6], big: 4, chests: [1, 2, 3, 7, 8, 9, 4, 5],
+    },
     areas: ['Flanc du volcan', 'Tunnel de lave', 'Caverne de braise', 'Pont de basalte', 'Forge abandonnée', 'Grotte des cendres', 'Antichambre du magma'], sanctuary: "Cratère de Sulfura",
     mobs: { mini: ['vulpix', 'growlithe', 'ponyta'], mid: ['ninetales', 'rapidash', 'arcanine'], big: 'dragoniteK' },
     loot: ['candy', 'carbos', 'ct_hydro', 'berrypack', 'hpup', 'zinc', 'etherpack', 'revive'], reward: ['ct_fireblast', 'candy'] },
@@ -52,7 +90,18 @@ const KANTO = [
     mobs: { mini: ['magnemite', 'koffing', 'voltorb'], mid: ['porygon', 'weezing'], big: 'electrodeA' },
     loot: ['candy', 'calcium', 'ct_psychic', 'etherpack', 'hpup', 'ct_teleport'], reward: ['ct_solar', 'candy'] },
   { id: 'm6', name: 'Île Mystère', sub: 'Le refuge de Mew', theme: 'mystic', mus: 6, lv: 45, seed: 59, boss: 'mew', secret: true,
-    path: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [1, 1], [1, 0]],
+    // zones libres : la plage (0) descend le long de l'île ; deux routes mènent aux ruines (5) ; la porte relie le bosquet (1) à l'antichambre (6)
+    free: {
+      zones: [
+        { cell: [0, 0], name: 'Plage secrète', rx: 10 }, { cell: [0, 1], name: 'Bosquet lumineux' }, { cell: [0, 2], name: 'Clairière des rêves' },
+        { cell: [1, 2], name: 'Ruines couvertes de lierre' }, { cell: [2, 2], name: 'Jardin suspendu' }, { cell: [2, 1], name: 'Source scintillante' },
+        { cell: [1, 1], name: 'Antichambre du mythe' }, { cell: [3, 2], name: 'Crique des songes' }, { cell: [3, 1], name: 'Bosquet lunaire' }, { cell: [2, 0], name: 'Falaise des songes' },
+      ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i === 6 ? { ...z, zone: 'Approche' } : i > 6 ? { ...z, zone: 'Cœur' } : z)
+        .map(shape([[0, 2, 10, 6], [2, -2, 11, 8], [-2, 2, 12, 8], [3, -2, 12, 8], [-2, 2, 12, 8], [-3, 2, 10, 9], [2, 0, 10, 6], [-3, -2, 9, 8], [2, 3, 10, 7], [3, 2, 9, 6]])),
+      pow: 2.0, noise: 1.2,
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [4, 7], [7, 8], [5, 9]], thin: 0.75,
+      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 3, 6], big: 4, chests: [1, 2, 3, 7, 8, 9, 4, 5],
+    },
     areas: ['Plage secrète', 'Bosquet lumineux', 'Clairière des rêves', 'Ruines couvertes de lierre', 'Jardin suspendu', 'Source scintillante', 'Antichambre du mythe'], sanctuary: 'Cœur de l’île',
     mobs: { mini: ['exeggcute', 'abra', 'haunter'], mid: ['kadabra', 'gengar', 'mrmime'], big: 'exeggutor' },
     loot: ['candy', 'protein', 'ct_softboiled', 'hpup', 'berrypack', 'maxberry', 'maxether', 'revive'], reward: ['ct_hyper', 'candy', 'candy'] },
@@ -365,7 +414,7 @@ function generateFree(def) {
     const a = v(0, 0) + (v(1, 0) - v(0, 0)) * sm(fx), b = v(0, 1) + (v(1, 1) - v(0, 1)) * sm(fx); return a + (b - a) * sm(fy);
   };
   const last = F.zones.length - 1;
-  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2), cy: z.cell[1] * ch + 10 + PADY + ri(-3, 2), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
+  const zones = F.zones.map((z, k) => ({ ...z, k, cx: z.cell[0] * cw + 15 + ri(-2, 2) + (z.ox || 0), cy: z.cell[1] * ch + 10 + PADY + ri(-3, 2) + (z.oy || 0), rx: z.rx || ri(11, 12), ry: z.ry || ri(7, 8), zone: z.zone || (k === 0 ? 'Lisière' : k === last ? 'Approche' : 'Cœur') }));
   // l'arène et la zone qui y mène, puis le raccourci : on écarte les zones pour garder du vide (3 cases au moins) où poser la brume et la porte
   const AC = F.arena.cell, arena = { cx: AC[0] * cw + 15, cy: AC[1] * ch + 10 + PADY - Math.ceil(ARENA_R - 9), r: ARENA_R };
   const zf = zones[F.arena.from], vert = Math.abs(arena.cy - zf.cy) >= Math.abs(arena.cx - zf.cx);
@@ -377,7 +426,8 @@ function generateFree(def) {
     if (v2) { I.ry = Math.min(I.ry, 7); J.ry = Math.min(J.ry, 7); const gp = Math.abs(J.cy - I.cy) - I.ry - J.ry; if (gp < 5) I.cy -= sg2 * (5 - gp); }
     else { I.rx = Math.min(I.rx, 10); J.rx = Math.min(J.rx, 10); const gp = Math.abs(J.cx - I.cx) - I.rx - J.rx; if (gp < 5) I.cx -= sg2 * (5 - gp); }
   }
-  const zdist = (z, x, y) => { const dx = Math.abs(x + 0.5 - z.cx) / z.rx, dy = Math.abs(y + 0.5 - z.cy) / z.ry; return dx ** 2.8 + dy ** 2.8 + (nz(x, y, 5, z.k + 1) - 0.5) * 0.55; };
+  const PW = F.pow ?? 2.8, NZ = F.noise ?? 0.55;   // pow : 2,8 = cours carrées (Johto) ; ~2 = ellipses ; noise : irrégularité des bords (grottes)
+  const zdist = (z, x, y) => { const dx = Math.abs(x + 0.5 - z.cx) / z.rx, dy = Math.abs(y + 0.5 - z.cy) / z.ry; return dx ** PW + dy ** PW + (nz(x, y, F.nsc ?? 5, z.k + 1) - 0.5) * NZ; };
   const inZone = (x, y) => zones.some(z => zdist(z, x, y) <= 1);
   // 1. zones : formes organiques (super-ellipse + bruit)
   for (const z of zones) for (let y = z.cy - z.ry - 2; y <= z.cy + z.ry + 2; y++) for (let x = z.cx - z.rx - 2; x <= z.cx + z.rx + 2; x++) {
@@ -521,18 +571,49 @@ function generateFree(def) {
   const bigZ = F.big ?? 4;
   zones.forEach(z => {
     const k = z.k; if (k === 0) return;
-    const nm = k === last ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
-    if (k >= 2) { const nd = k === last ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
+    const th_ = F.thin ?? 1, cnt = n => Math.max(1, Math.round(n * th_));   // thin : cartes plus vastes, rencontres moins serrées
+    const nm = cnt(k === last ? 2 : 2 + (k % 3)); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
+    if (k >= 2) { const nd = cnt(k === last ? 2 : 1 + (k % 2)); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
     if (k === bigZ) place(k, tiers.big);
   });
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
   if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
+  // quête de Fala : cellule secrète collée au bord d'une zone « hub » (deux tuiles de faux mur qui s'ouvrent) et emplacement des Modules
+  let secret = null; const modules = [];
+  if (def.fala) {
+    const SWd = 9, SHt = 7, PAD = 2, DIRS = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+    const voidBox = (x0, y0, x1, y1) => { for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) { if (i < 2 || j < 2 || i >= MW - 2 || j >= MH - 2 || grid[j * MW + i] !== T.VOID) return false; } return true; };
+    search: for (const hk of def.fala.hub) for (const side of ['N', 'E', 'W', 'S']) {
+      const [dx, dy] = DIRS[side], px = Math.abs(dy), py = Math.abs(dx), z = zones[hk], cand = [];
+      for (let y = z.cy - z.ry - 1; y <= z.cy + z.ry + 1; y++) for (let x = z.cx - z.rx - 1; x <= z.cx + z.rx + 1; x++) {
+        const at = (a, b) => inMap(a, b) && roomOf[b * MW + a] === hk && grid[b * MW + a] === T.FLOOR && !occ[b * MW + a], out = (a, b) => grid[b * MW + a] === T.VOID;
+        if (at(x, y) && at(x + px, y + py) && out(x + dx, y + dy) && out(x + px + dx, y + py + dy)) cand.push([x, y]);
+      }
+      cand.sort((a, b) => Math.hypot(a[0] - z.cx, a[1] - z.cy) - Math.hypot(b[0] - z.cx, b[1] - z.cy));
+      for (const [x, y] of cand) for (const off of [0, 1, -1, 2, -2]) {
+        const gap = [[x + dx, y + dy], [x + px + dx, y + py + dy]]; let sx, sy;
+        if (side === 'N' || side === 'S') { sx = x - (Math.floor(SWd / 2) - 1) + off; sy = side === 'N' ? y - 1 - SHt : y + 2; }
+        else { sy = y - (Math.floor(SHt / 2) - 1) + off; sx = side === 'W' ? x - 1 - SWd : x + 2; }
+        const x0 = sx - (side === 'E' ? 1 : PAD), x1 = sx + SWd - 1 + (side === 'W' ? 1 : PAD), y0 = sy - (side === 'S' ? 1 : PAD), y1 = sy + SHt - 1 + (side === 'N' ? 1 : PAD);
+        if (!voidBox(x0, y0, x1, y1)) continue;
+        const tiles = []; for (let j = sy; j < sy + SHt; j++) for (let i = sx; i < sx + SWd; i++) tiles.push([i, j]); gap.forEach(g_ => tiles.push(g_));
+        const far = { N: [sx + 1, sy + 1], S: [sx + 1, sy + SHt - 2], W: [sx + 1, sy + 1], E: [sx + SWd - 3, sy + 1] }[side];
+        const far2 = { N: [sx + SWd - 3, sy + 1], S: [sx + SWd - 3, sy + SHt - 2], W: [sx + 1, sy + SHt - 2], E: [sx + SWd - 3, sy + SHt - 2] }[side];
+        secret = { side, x: sx, y: sy, w: SWd, h: SHt, gap, tiles, name: 'Cellule de maintenance', npc: { tx: sx + Math.floor(SWd / 2), ty: sy + Math.floor(SHt / 2) }, decor: [{ kind: 'console', tx: far[0], ty: far[1] }, { kind: 'console', tx: far2[0], ty: far2[1] }] };
+        break search;
+      }
+    }
+    for (const [id, zk] of Object.entries(def.fala.modules)) {   // la zone voulue d'abord, puis les autres : un Module ne doit jamais manquer
+      let p = null, pk = zk; for (const k of [zk, ...zones.map((_, i) => i).filter(i => i !== zk && i !== last)]) { p = spot(k, k === zk ? 300 : 120); if (p) { pk = k; break; } }
+      if (p) { reserve(p[0], p[1], 1, 1, 1); modules.push({ id, tx: p[0], ty: p[1], room: pk }); }
+    }
+  }
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
   const bridge = new Uint8Array(MW * MH);   // tuiles de passage (hors des zones et de l'arène) : ponts sur l'eau
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (grid[y * MW + x] !== T.VOID && !inZone(x, y) && (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 > arena.r * arena.r) bridge[y * MW + x] = 1;
   if (F.canyons) bridge.fill(0);   // monde ouvert : seuls les ponts de gouffre sont en planches
   for (let i = 0; i < forced.length; i++) if (forced[i] && grid[i] !== T.VOID) bridge[i] = 1;
-  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, bridge, chasm, secret: null, modules: [] };
+  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, bridge, chasm, secret, modules };
 }
 
 // ---------- monde ----------
