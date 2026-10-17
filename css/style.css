@@ -456,6 +456,8 @@ body.touch #tut{left:12px;top:70px;width:260px;font-size:11px}
 body.padnav .padfocus{outline:3px solid var(--acc-2);outline-offset:3px;box-shadow:0 0 18px rgba(255,227,166,.6);position:relative;z-index:2}
 body.padnav input[type=range].padfocus{accent-color:var(--acc-2)}
 #hud.padmode #tut .tk kbd{white-space:nowrap}
+body.paused #tilt-top,body.paused #tilt-bot{display:none}   /* rendu 2D : pas de faux tilt-shift derrière le menu pause */
+
 
 /* ---- Quête de Fala : carte secrète de l'écran de départ, Modules, dialogues ---- */
 .psecret{display:flex;align-items:center;gap:12px;max-width:1200px;margin:12px auto 0;padding:8px 12px;background:var(--card);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:16px;text-align:left}
@@ -696,3 +698,39 @@ body.touch .pth{height:64px}
 #fin{z-index:31}#fin h1{font-size:120px;letter-spacing:.4em;margin:0 0 0 .4em;color:var(--gold);text-shadow:0 0 40px rgba(217,164,65,.55)}
 .chip{display:inline-block;padding:4px 14px;border:1px solid var(--gold);border-radius:99px;color:var(--gold);font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.3em;text-transform:uppercase;background:rgba(217,164,65,.1)}
 .chip[hidden]{display:none}
+
+/* voyage : bulle de foyers ancrée au cercle du lieu */
+.wm-map .wpop{position:absolute;z-index:5;width:208px;transform:translate(-50%,34px);padding:12px;border-radius:16px;background:rgba(14,12,10,.88);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border:1px solid rgba(255,227,166,.45);box-shadow:0 12px 34px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:6px;cursor:default}
+.wm-map .wpop.up{transform:translate(-50%,calc(-100% - 34px))}
+.wm-map .wpop h4{margin:0 0 2px;font-size:11px;letter-spacing:.14em;color:#ffe3a6;text-transform:uppercase}
+.wm-map .wpop .wspot{width:100%}
+.wm-map .wpop .wgo{margin-top:4px}
+.wm-det .whint{margin-top:10px;color:rgba(255,255,255,.7)}
+/* boîte d'information centrée (glassmorphisme) */
+.panel.info{width:min(460px,90vw);text-align:center;padding:26px 30px 22px}
+.panel.info .ihead{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:10px}
+.panel.info .idot{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--acc));box-shadow:0 0 18px var(--acc)}
+.panel.info h2{margin:0;font-size:18px;letter-spacing:.16em;text-transform:uppercase}
+.panel.info p{font-size:14px;line-height:1.6;margin:0 0 10px;color:rgba(255,255,255,.9)}
+.panel.info .act{display:flex;justify-content:center;margin-top:14px}
+
+/* tuto compact : coin haut gauche, ne cache ni le mannequin ni la zone de jeu */
+#tut{left:20px;top:20px;right:auto;transform:none;width:min(310px,30vw);padding:10px 12px 9px;font-size:12px;line-height:1.35}
+#tut .tt-h{margin-bottom:4px}
+#tut .tt-h span{font-size:10px}
+#tut .tt-h b{font-size:15px;margin:0 0 2px}
+#tut .tt-h button{font-size:11px;padding:2px 8px;border-width:1px}
+#tut .tt-h button kbd,#tut kbd.inl{font-size:10px;min-width:16px;padding:0 4px;border-width:1px}
+#tut p{font-size:12px;margin:0 0 6px}
+#tut p.ex{font-size:11px}
+#tut .tt-k,#tut .tt-s{gap:6px 10px;margin:2px 0 7px}
+#tut .tt-s{gap:5px}
+#tut .px kbd{min-width:24px;height:24px;padding:0 5px;font-size:11px;border-width:2px;box-shadow:0 2px 0 #6b5a46}
+#tut .px small{font-size:9px}
+#tut .sq{gap:6px}
+#tut .sq>b{min-width:62px;font-size:10px;letter-spacing:.08em}
+#tut .sq>i{font-size:16px;margin-top:-6px}
+#tut .sq>em{font-size:11px}
+#tut .tt-g{font-size:12px;padding:5px 8px;border-left-width:3px}
+#tut .tt-d{margin-top:6px}#tut .tt-d i{height:4px}
+body.touch #tut{left:10px;top:10px;width:240px;font-size:11px}
