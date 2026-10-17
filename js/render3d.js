@@ -17,6 +17,9 @@ import { itemImage } from './items.js';
 const { TS } = M;
 let SW = 1280; const SH = 720;                       // taille logique de la scène (la page est mise à l'échelle en CSS)
 export const CFG = { pitch: 40, dist: 13.5, fov: 36, look: 0.5 };
+// Tilt-shift : rayon de flou maximal (px) à 100 %. Réglage joueur 0 à 150 % (0 = désactivé, saute aussi la boucle de flou du shader).
+const TILT_BASE = 4.2, OPT_KEY = 'pokesouls.options.v1';
+const tiltPct = () => { try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null'); if (o && typeof o.tilt === 'number') return Math.max(0, Math.min(150, o.tilt)); } catch (e) { /* défaut */ } return 100; };
 
 // ---------- lot de billboards : un atlas de cellules + une géométrie mise à jour à chaque image ----------
 class Batch {
@@ -168,12 +171,14 @@ export class HD2D {
     this.mBlur = mk(S.BLUR_FRAG, { tMap: { value: null }, uDir: { value: new THREE.Vector2() } });
     this.mFinal = mk(S.FINAL_FRAG, {
       tScene: { value: null }, tBloomA: { value: null }, tBloomB: { value: null }, uRes: { value: new THREE.Vector2(SW, SH) },
-      uFocus: { value: 0.5 }, uBand: { value: 0.13 }, uBlur: { value: 3.2 }, uBloom: { value: 0.5 }, uSat: { value: 1.08 }, uCon: { value: 1.06 }, uVig: { value: 0.4 },
+      uFocus: { value: 0.5 }, uBand: { value: 0.13 }, uBlur: { value: TILT_BASE * tiltPct() / 100 }, uBloom: { value: 0.5 }, uSat: { value: 1.08 }, uCon: { value: 1.06 }, uVig: { value: 0.4 },
       uTime: { value: 0 }, uGrain: { value: 0.022 }, uFlash: { value: 0 }, uDark: { value: 0 },
       uTintS: { value: new THREE.Vector3(1, 1, 1) }, uTintH: { value: new THREE.Vector3(1, 1, 1) },
     });
     this.rt = {};
   }
+  // intensité du tilt-shift en % (0 à 150), appelée par le curseur « Flou » des réglages
+  setTilt(pct) { this.mFinal.uniforms.uBlur.value = TILT_BASE * Math.max(0, Math.min(150, pct)) / 100; }
   buildTargets() {
     const w = Math.round(SW * this.scale), h = Math.round(SH * this.scale);
     for (const k of Object.keys(this.rt)) this.rt[k].dispose();

@@ -18,8 +18,18 @@ const menu = () => $('#menu');
 export function hideMenu() { const m = menu(); m.classList.remove('show', 'dock'); m.innerHTML = ''; }
 function open(html) { const m = menu(); m.classList.add('show'); m.classList.remove('dock'); m.innerHTML = html; return m; }
 
-const volRow = () => `<div class="vol"><label>Musique <input type="range" id="vol-music" min="0" max="100" value="${Math.round(Music.getVolume() * 100)}"><b id="vol-v">${Math.round(Music.getVolume() * 100)} %</b></label></div>`;
-function bindVol() { const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; }; }
+const OPT_KEY = 'pokesouls.options.v1';
+const getTilt = () => { try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null'); if (o && typeof o.tilt === 'number') return Math.max(0, Math.min(150, o.tilt)); } catch (e) { /* défaut */ } return 100; };
+function setTilt(v) {
+  try { const o = JSON.parse(localStorage.getItem(OPT_KEY) || '{}') || {}; o.tilt = v; localStorage.setItem(OPT_KEY, JSON.stringify(o)); } catch (e) { /* rien */ }
+  if (window.hd2d && window.hd2d.setTilt) window.hd2d.setTilt(v);
+}
+const volRow = () => `<div class="vol"><label>Musique <input type="range" id="vol-music" min="0" max="100" value="${Math.round(Music.getVolume() * 100)}"><b id="vol-v">${Math.round(Music.getVolume() * 100)} %</b></label></div>
+<div class="vol"><label>Flou tilt-shift <input type="range" id="vol-tilt" min="0" max="150" step="10" value="${getTilt()}"><b id="tilt-v">${getTilt() ? getTilt() + ' %' : 'Désactivé'}</b></label></div>`;
+function bindVol() {
+  const r = $('#vol-music'); if (r) r.oninput = () => { Music.setVolume(r.value / 100); $('#vol-v').textContent = r.value + ' %'; };
+  const t = $('#vol-tilt'); if (t) t.oninput = () => { const v = +t.value; setTilt(v); $('#tilt-v').textContent = v ? v + ' %' : 'Désactivé'; };
+}
 
 // ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
