@@ -419,7 +419,7 @@ body.touch #title .tb{flex-wrap:wrap;justify-content:center;max-width:1100px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:5px}
 .pth{position:relative;padding:0;height:58px;background:#10143a;border:1px solid #2a3060;border-radius:12px;overflow:hidden}
 .pth img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-.pth.foc{border-color:#fff}.pth.on{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 70%,transparent)}
+.pth.foc{border-color:#fff}.pth .pbox{position:absolute;left:3px;right:3px;bottom:3px;padding:3px 0;border-radius:8px;background:#fff;color:#10143a;font-family:inherit;font-weight:700;font-size:10px;line-height:1;letter-spacing:0;text-transform:none;text-align:center;box-shadow:0 2px 8px #0009;animation:pboxIn .12s ease-out}@keyframes pboxIn{from{transform:translateY(6px);opacity:0}}.pth.on{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 70%,transparent)}
 .pth i{position:absolute;top:2px;right:3px;font-style:normal;font-size:11px;font-weight:700;background:var(--c);color:#000;border-radius:8px;padding:0 5px}
 .pbot{display:flex;gap:14px;align-items:stretch;justify-content:center;max-width:1200px;margin:0 auto;width:100%;flex-wrap:wrap}
 .pdetail{flex:1 1 360px;display:flex;gap:12px;padding:12px;background:var(--card);border:1px solid color-mix(in srgb,var(--c) 55%,transparent);border-radius:16px;text-align:left}
