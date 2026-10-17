@@ -234,7 +234,7 @@ export class HD2D {
     const T_ = c => WD.canvasTex(c, { repeatY: true });
     this.tex = [floorTex, emisTex, T_(tx.side), T_(tx.sideE), WD.canvasTex(tx.top, { repeatY: true }), WD.canvasTex(tx.topE, { repeatY: true })];
     const [fT, eT, sT, sE, tT, tE] = this.tex;
-    const tint = cfg.emisTint, pulse = (key === 'lava' || key === 'lab' || key === 'mystic' || key === 'bell') ? 1 : 0.4;
+    const tint = cfg.emisTint, pulse = (key === 'lava' || key === 'lab' || key === 'mystic' || key === 'bell' || key === 'ember') ? 1 : 0.4;
     this.mats = {
       ground: WD.terrainMaterial(sh, fT, [g.floor.width, g.floor.height], eT, [emis.width || 1, emis.height || 1], 0, { emisK: cfg.emisK, tint }),
       side: WD.terrainMaterial(sh, sT, [tx.side.width, tx.side.height], sE, [tx.sideE.width, tx.sideE.height], 1, { emisK: cfg.emisK * 1.1, tint, pulse }),
@@ -244,6 +244,7 @@ export class HD2D {
     grp.add(new THREE.Mesh(WD.buildGround(w), this.mats.ground));
     const wl = WD.buildWalls(w);
     if (!cfg.open) grp.add(new THREE.Mesh(wl.top, this.mats.top), new THREE.Mesh(wl.side, this.mats.side));
+    if (cfg.water) grp.add(new THREE.Mesh(WD.buildBanks(w, WD.WATER_DEPTH), this.mats.side));
     this.doorMeshes = [null, null]; this.mistMesh = null; this.sig = '';
     this.abyss = WD.buildAbyss(key, sh); grp.add(this.abyss);
     this.props = WD.buildProps(w, key, w.idx * 7 + 3, sh); grp.add(this.props);

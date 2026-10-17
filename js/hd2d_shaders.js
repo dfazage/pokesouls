@@ -196,10 +196,38 @@ void main(){
     col = mix(uCol1, uCol2, n);
     float d = fbm(p*.4 - vec2(t*.05, 0.));
     em += uCol3*smoothstep(.62, .9, d)*.12;
+  } else if(uType > 8.5){     // forêt : sous-bois, fleurs et lucioles
+    float n = fbm(p*.11), m = fbm(p*.85 + 3.);
+    col = mix(uCol1, uCol2, n*.65 + m*.35);
+    col *= .9 + .2*hash21(floor(p*4.));
+    vec2 gf = p*2.2; float hf = hash21(floor(gf));
+    em += mix(uCol3, vec3(1.,.55,.65), step(.5, hash21(floor(gf)+7.)))*step(.992, hf)*smoothstep(.22, .0, length(fract(gf)-.5))*.55;
+  } else if(uType > 7.5){     // mer de tempête : houle, écume et tourbillons
+    float n = fbm(p*.12 - vec2(t*.05, 0.));
+    col = mix(uCol1, uCol2, n);
+    float wv = sin(p.x*.7 + p.y*.35 + fbm(p*.2)*7. + t*1.3);
+    em += uCol3*smoothstep(.86, 1., wv)*fbm(p*.5 + t*.1)*.28;
+    vec2 cell = floor(p/34.); float hc = hash21(cell);
+    if(hc > .4){
+      vec2 ctr = (cell + .25 + vec2(hash21(cell + 3.1), hash21(cell + 7.7))*.5)*34.;
+      vec2 dd = p - ctr; float d = length(dd), a = atan(dd.y, dd.x);
+      float mask = smoothstep(11., 2., d), sp = sin(a*3. + d*.6 - t*1.8);
+      col = mix(col, uCol1*.45, mask*.7);
+      em += uCol3*smoothstep(.55, 1., sp)*mask*.55;
+    }
+  } else if(uType > 6.5){     // lac miroir : eau claire, ondulations et éclats d'aurore
+    float n = fbm(p*.08 + vec2(t*.01, 0.));
+    col = mix(uCol1, uCol2, n);
+    float rp = fbm(p*.55 + vec2(t*.12, t*.08));
+    col += (rp - .5)*.1;
+    float au = smoothstep(.45, 1., sin((p.x + p.y)*.05 + fbm(p*.04 + t*.02)*5.));
+    em += mix(vec3(.6,.9,1.), uCol3, au)*au*.1;
+    em += uCol3*step(.988, hash21(floor(p*3.)))*smoothstep(.3, 0., length(fract(p*3.) - .5))*(.5 + .5*sin(t*2.5 + p.x*3.))*.6;
   } else if(uType > 5.5){     // plein air : terre battue d'une ville d'Edo
     float n = fbm(p*.13), m = fbm(p*.9 + 3.);
     col = mix(uCol1, uCol2, n*.65 + m*.35);
     col *= .9 + .2*hash21(floor(p*4.));
+    em += uCol3*step(.995, hash21(floor(p*2.4)))*smoothstep(.3, 0., length(fract(p*2.4) - .5))*.35;
   } else {                    // mystique : brume bioluminescente
     float n = fbm(p*.09 + vec2(t*.015, -t*.01));
     col = mix(uCol1, uCol2, n);
@@ -228,7 +256,7 @@ void main(){
   gl_Position = projectionMatrix*viewMatrix*w;
 }`;
 export const PROP_FRAG = /* glsl */`
-uniform float uTime, uType; uniform vec3 uEmisCol, uLightCol;
+uniform float uTime, uType, uWinT; uniform vec3 uEmisCol, uLightCol, uRoofA, uRoofB;
 varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vH;
 ${GLSL_COMMON}
 ${FOG_FRAG}
@@ -238,13 +266,13 @@ void main(){
   vec3 col = vCol*(.32 + .75*dif)*uLightCol;
   vec3 em = vec3(0.);
   float up = smoothstep(-3.2, 4., vW.y);
-  if(uType > 5.5){
+  if(uType > 5.5 && uType < 7.5){
     float q = vW.x + vW.z;
     if(uType < 6.5){          // maison de ville (corps y<.5, toit au-dessus)
       if(vH > .505){          // toit de tuiles : rangées sombres, faîtage clair
         float row = smoothstep(.1, .55, abs(fract(vW.y*5.) - .5)*2.);
-        vec3 roof = mix(vec3(.1, .12, .16), vec3(.24, .27, .33), row);
-        roof = mix(roof, vec3(.34, .36, .4), smoothstep(.93, 1., vH));
+        vec3 roof = mix(uRoofA, uRoofB, row);
+        roof = mix(roof, uRoofB*1.4, smoothstep(.93, 1., vH));
         col = roof*(.32 + .85*dif)*uLightCol;
       } else {
         vec3 base = vCol;
@@ -253,11 +281,11 @@ void main(){
         base = mix(base, vec3(.13, .12, .11), step(vH, .1));                  // soubassement de pierre
         col = base*(.32 + .75*dif)*uLightCol;
         vec2 wc = floor(vec2(q*1.3, vW.y*3.4));
-        float win = step(.7, hash21(wc))*step(abs(n.y), .5)*step(.14, vH)*step(vH, .46)*(1. - post)*(1. - beam);
+        float win = step(uWinT, hash21(wc))*step(abs(n.y), .5)*step(.14, vH)*step(vH, .46)*(1. - post)*(1. - beam);
         em += uEmisCol*win*(.7 + .3*sin(uTime*.9 + hash21(wc)*20.))*.9;
       }
     } else {                  // muret de torchis : namako (losanges blancs sur noir) et chapeau de tuiles
-      if(vH > .82){ col = vec3(.12, .14, .18)*(.32 + .85*dif)*uLightCol*(.8 + .5*step(.5, fract(q*3.))); }
+      if(vH > .82){ col = uRoofA*1.2*(.32 + .85*dif)*uLightCol*(.8 + .5*step(.5, fract(q*3.))); }
       else {
         vec2 g2 = vec2(q*2.2, vW.y*2.6);
         float lat = step(.84, max(fract(g2.x + g2.y), fract(g2.x - g2.y)));

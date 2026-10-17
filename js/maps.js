@@ -14,6 +14,18 @@ export const THEMES = {
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
   // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
   bell: { floor: [112, 104, 92], arena: [138, 128, 110], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [150, 140, 142], ambArena: [180, 158, 134], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
+  // Tour Brûlée : pagode d'Écorcia calcinée, automne et cendres au couchant
+  ember: { floor: [96, 88, 82], arena: [118, 96, 82], wallA: '#4a3a34', wallB: '#46362f', face: '#251a16', faceTop: '#7a5a48', accent: [255, 140, 60], accent2: [255, 205, 110], fx: 'garden', open: true, scorch: true, edge: 'ruin', leaf: ['#4a1a14', '#7a2a1a', '#b04a1e', '#34140f'],
+    edo: [[104, 96, 90], [118, 78, 62], [88, 66, 50]], amb: [190, 150, 128], ambArena: [214, 128, 96], decor: ['lantern', 'tree', 'bell', 'torii', 'brazier'] },
+  // Lac du Miroir : temple sur l'eau à l'aube de printemps ; le vide est de l'eau, les passages sont des ponts
+  mirror: { floor: [168, 176, 176], arena: [196, 202, 198], wallA: '#9fb4bc', wallB: '#98aeb6', face: '#6a8088', faceTop: '#d8e6ea', accent: [150, 225, 255], accent2: [255, 190, 210], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [176, 142, 100], leaf: ['#e8a0b8', '#f4c0d0', '#fbd8e2', '#c97a96'],
+    edo: [[168, 176, 176], [150, 162, 168], [176, 146, 104]], amb: [196, 208, 216], ambArena: [200, 226, 236], decor: ['lantern', 'tree', 'torii', 'rock', 'lantern'] },
+  // Îles Tourbillon : archipel battu par la tempête, courants et tourbillons
+  storm: { floor: [86, 94, 106], arena: [112, 120, 134], wallA: '#5a6676', wallB: '#566272', face: '#2e3846', faceTop: '#8e9cb0', accent: [200, 225, 255], accent2: [150, 190, 255], fx: 'garden', open: true, water: true, edge: 'water', bridgeCol: [110, 90, 68], leaf: ['#5a7a6a', '#6a8a7a', '#7a9a8a', '#4a6a5a'],
+    edo: [[88, 96, 108], [104, 108, 118], [104, 86, 64]], amb: [160, 176, 200], ambArena: [190, 205, 235], decor: ['lantern', 'rock', 'torii', 'rock', 'bell'] },
+  // Forêt d'Ilex (secrète) : sanctuaire hors du temps, clairières et sous-bois dorés
+  ilex: { floor: [96, 110, 86], arena: [128, 138, 108], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 225, 130], accent2: [160, 255, 200], fx: 'garden', open: true, meadow: true, edge: 'forest', leaf: ['#2e7a5e', '#3a9a72', '#4ab08a', '#2a6a52'],
+    edo: [[96, 110, 88], [74, 112, 62], [112, 92, 62]], amb: [180, 200, 170], ambArena: [210, 215, 160], decor: ['tree', 'statue', 'lantern', 'tree', 'torii'] },
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
@@ -63,6 +75,63 @@ const JOHTO = [
     areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
     mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos', pseudo: 'metagrossK' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_earthquake'], reward: ['ct_thunder', 'candy'] },
+  // ---------- Tour Brûlée : pagode calcinée. Trois ouvertures depuis le parvis (ouest : jardin, nord : allée, est : cour des tuiles) ; la porte de l'escalier rouvre les remparts, d'où l'on redescend vers le parvis
+  { id: 'j2', name: 'Tour Brûlée', sub: 'Ce que le feu a épargné', theme: 'ember', mus: 'J2', lv: 15, seed: 83, boss: 'entei',
+    free: {
+      zones: [
+        { cell: [1, 2], name: 'Parvis calciné' }, { cell: [0, 2], name: 'Jardin des érables' }, { cell: [1, 1], name: 'Allée des cendres' },
+        { cell: [3, 2], name: 'Remparts effondrés' }, { cell: [2, 1], name: 'Cour du temple effondré' }, { cell: [3, 1], name: 'Escalier de la tour' },
+        { cell: [3, 0], name: 'Étage effondré' }, { cell: [2, 2], name: 'Cour des tuiles' }, { cell: [0, 1], name: 'Chapelle des cloches' }, { cell: [1, 0], name: 'Belvédère calciné' },
+      ].map((z, i) => i === 0 || i === 1 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
+      links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9]],
+      door: [3, 5], arena: { cell: [2, 0], from: 6 }, bonfires: [0, 4, 6], big: 5, pseudo: 8, chests: [1, 2, 3, 4, 8, 9, 7, 5],
+    },
+    areas: ['Parvis calciné', 'Allée des cendres', 'Cour du temple effondré', 'Escalier de la tour', 'Étage effondré'], sanctuary: "Sanctuaire d'Entei",
+    mobs: { mini: ['houndour', 'slugma', 'magby'], mid: ['houndoom', 'magcargo', 'magmarJ'], big: 'houndoomA', pseudo: 'tyranitarK' },
+    loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_aquaring', 'zinc'], reward: ['ct_flamethrower', 'candy'] },
+  // ---------- Lac du Miroir : archipel de zones reliées par des ponts ; l'arène se voit depuis le ponton d'arrivée
+  { id: 'j3', name: 'Lac du Miroir', sub: 'Là où le ciel se regarde', theme: 'mirror', mus: 'J3', lv: 22, seed: 97, boss: 'suicune',
+    free: {
+      zones: [
+        { cell: [0, 2], name: 'Débarcadère' }, { cell: [0, 1], name: 'Jardin de lotus' }, { cell: [1, 2], name: 'Ponts en zigzag' },
+        { cell: [1, 1], name: 'Île des cerisiers' }, { cell: [2, 1], name: 'Pavillon flottant' }, { cell: [2, 2], name: 'Îlot des pêcheurs' },
+        { cell: [3, 1], name: 'Gradins du lac' }, { cell: [3, 0], name: "Antichambre de l'aurore" }, { cell: [3, 2], name: 'Ponton des lanternes' },
+        { cell: [0, 0], name: 'Récif du dragon' }, { cell: [1, 0], name: 'Rocher du pêcheur' },
+      ].map((z, i) => i === 0 || i === 1 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
+      links: [[0, 1], [0, 2], [2, 3], [3, 4], [4, 5], [4, 6], [6, 7], [6, 8], [1, 9], [3, 10]], passW: 6,
+      door: [2, 5], arena: { cell: [2, 0], from: 7 }, bonfires: [0, 3, 7], big: 6, pseudo: 9, pits: 2, chests: [1, 3, 5, 8, 9, 10, 4, 6],
+    },
+    areas: ['Débarcadère', 'Ponts en zigzag', 'Île des cerisiers', 'Pavillon flottant', 'Gradins du lac'], sanctuary: 'Sanctuaire de Suicune',
+    mobs: { mini: ['marill', 'wooper', 'remoraid'], mid: ['azumarill', 'quagsire', 'octillery'], big: 'mantineB', pseudo: 'salamenceK' },
+    loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_healbell', 'maxberry'], reward: ['ct_surf', 'candy'] },
+  // ---------- Îles Tourbillon : archipel de tempête ; le phare commande le détour vers l'antichambre de Lugia
+  { id: 'j4', name: 'Îles Tourbillon', sub: 'Au cœur de la tempête', theme: 'storm', mus: 'J4', lv: 36, seed: 113, boss: 'lugia', final: true,
+    free: {
+      zones: [
+        { cell: [0, 1], name: 'Rivage naufragé' }, { cell: [0, 2], name: 'Épave échouée' }, { cell: [1, 1], name: 'Atoll des cormorans' },
+        { cell: [1, 2], name: 'Banc de corail' }, { cell: [2, 1], name: 'Île du phare' }, { cell: [2, 2], name: 'Récif des raies' },
+        { cell: [2, 0], name: 'Arche de pierre' }, { cell: [3, 1], name: 'Antichambre du tourbillon' }, { cell: [3, 2], name: 'Écueil des brumes' },
+      ].map((z, i) => i < 2 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
+      links: [[0, 1], [0, 2], [2, 3], [2, 4], [4, 5], [4, 6], [4, 7], [7, 8]], passW: 6,
+      door: [3, 5], arena: { cell: [3, 0], from: 7 }, bonfires: [0, 4, 7], big: 2, pseudo: 6, pits: 2, chests: [1, 3, 5, 6, 8, 2, 4],
+    },
+    areas: ['Rivage naufragé', 'Atoll des cormorans', 'Île du phare', 'Antichambre du tourbillon'], sanctuary: 'Sanctuaire de Lugia',
+    mobs: { mini: ['horsea', 'tentacool', 'remoraid'], mid: ['seadra', 'tentacruel', 'mantine'], big: 'kingdraB', pseudo: 'garchompK' },
+    loot: ['candy', 'berrypack', 'hpup', 'ct_hydro', 'protein', 'etherpack', 'ct_icebeam', 'revive'], reward: ['ct_psychic', 'candy'] },
+  // ---------- Forêt d'Ilex (secrète, ouverte après Lugia) : clairières et sous-bois ; la porte relie la clairière des rêves au bosquet d'entrée
+  { id: 'j5', name: "Forêt d'Ilex", sub: 'Le temple hors du temps', theme: 'ilex', mus: 'J5', lv: 42, seed: 131, boss: 'celebi', secret: true,
+    free: {
+      zones: [
+        { cell: [0, 2], name: "Entrée du sanctuaire" }, { cell: [1, 2], name: 'Bosquet doré' }, { cell: [1, 1], name: 'Clairière des rêves' },
+        { cell: [2, 2], name: 'Souche millénaire' }, { cell: [2, 1], name: 'Sentier de lierre' }, { cell: [3, 2], name: 'Source du temps' },
+        { cell: [0, 1], name: 'Verger perdu' }, { cell: [3, 0], name: 'Antichambre du printemps' }, { cell: [1, 0], name: 'Tronc creux' },
+      ].map((z, i) => i < 2 || i === 6 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
+      links: [[0, 1], [1, 3], [3, 4], [3, 5], [2, 4], [2, 8], [4, 7], [0, 6]],
+      door: [1, 2], arena: { cell: [2, 0], from: 7 }, bonfires: [0, 4, 7], big: 5, pseudo: 8, chests: [1, 2, 3, 5, 6, 8, 4, 7],
+    },
+    areas: ["Entrée du sanctuaire", 'Bosquet doré', 'Sentier de lierre', 'Antichambre du printemps'], sanctuary: 'Cœur de la forêt',
+    mobs: { mini: ['hoppip', 'sunkern', 'pineco'], mid: ['skiploom', 'sunflora', 'forretress'], big: 'meganiumB', pseudo: 'goodraK' },
+    loot: ['candy', 'berrypack', 'hpup', 'ct_synthesis', 'protein', 'maxether', 'ct_softboiled', 'revive'], reward: ['ct_swords', 'candy', 'candy'] },
 ];
 export const CHAPTER_MAPS = { kanto: KANTO, johto: JOHTO };
 export const CHAPTER_INFO = {
@@ -352,6 +421,8 @@ function generateFree(def) {
       if (d2 > arena.r * arena.r && d2 <= (arena.r + 2.5) ** 2 && !corr.has(y * MW + x) && grid[y * MW + x] !== T.VOID && grid[y * MW + x] !== T.DOOR) { grid[y * MW + x] = T.VOID; roomOf[y * MW + x] = -1; }
     }
   }
+  // couloir de brume : du vide de chaque côté depuis la brume jusqu'à l'arène (une zone voisine ne doit pas le contourner)
+  for (let i = fi; i < fpts.length; i++) { const q = fpts[i]; for (const o of [-3, -2, 2, 3]) { const x = q.x + (vert ? o : 0), y = q.y + (vert ? 0 : o); if (inMap(x, y) && (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 > arena.r * arena.r && grid[y * MW + x] !== T.DOOR) { grid[y * MW + x] = T.VOID; roomOf[y * MW + x] = -1; } } }
   for (const [x, y] of fogTiles) grid[y * MW + x] = T.FOG;
   // 5. fosses : trous dans les grandes zones (jamais sur un passage ni près du centre)
   const pits = [];
@@ -428,7 +499,9 @@ function generateFree(def) {
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
   if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 9, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
-  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret: null, modules: [] };
+  const bridge = new Uint8Array(MW * MH);   // tuiles de passage (hors des zones et de l'arène) : ponts sur l'eau
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (grid[y * MW + x] !== T.VOID && !inZone(x, y) && (x + 0.5 - arena.cx) ** 2 + (y + 0.5 - arena.cy) ** 2 > arena.r * arena.r) bridge[y * MW + x] = 1;
+  return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, bridge, secret: null, modules: [] };
 }
 
 // ---------- monde ----------
@@ -451,7 +524,7 @@ export function buildWorld(idx) {
   }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
-  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
+  Object.assign(world, { grid: L.grid, roomOf: L.roomOf, bridge: L.bridge || null, rooms: L.rooms, decor: L.decor, spawns: L.spawns, arena: L.arena, door: L.door, fog: L.fog, bonfires: L.bonfires, start: L.start, chests: L.chests.map((c, i) => ({ ...c, id: i })), secret: L.secret ? { ...L.secret, opened: false } : null, modules: L.modules || [] });
   computeWall(world);
   return world;
 }
@@ -532,8 +605,10 @@ export function bakeFloor(world) {
     const vn = (px, py) => { const ix = Math.floor(px), iy = Math.floor(py), fx0 = px - ix, fy0 = py - iy, sm = t => t * t * (3 - 2 * t), a0 = rnd(ix, iy), b0 = rnd(ix + 1, iy), c0 = rnd(ix, iy + 1), d0 = rnd(ix + 1, iy + 1), top = a0 + (b0 - a0) * sm(fx0), bot = c0 + (d0 - c0) * sm(fx0); return top + (bot - top) * sm(fy0); };
     // ville d'Edo : dalles de pierre, briques et planchers de bois répartis en grandes plaques
     const edo = th.fx === 'garden' && !inA;
-    const et = edo ? (() => { const z = vn(tx / 6 + 3, ty / 6) * 0.75 + vn(tx / 2.4, ty / 2.4 + 5) * 0.25; return z < 0.48 ? 0 : z < 0.72 ? 1 : 2; })() : 0;
-    const ebase = edo ? [[120, 112, 100], [128, 94, 78], [122, 88, 58]][et] : null;
+    const et0 = edo ? (() => { const z = vn(tx / 6 + 3, ty / 6) * 0.75 + vn(tx / 2.4, ty / 2.4 + 5) * 0.25; return z < 0.48 ? 0 : z < 0.72 ? 1 : 2; })() : 0;
+    const isBr = !!(edo && th.bridgeCol && world.bridge && world.bridge[ty * MW + tx]);
+    const et = isBr ? 2 : et0;
+    const ebase = edo ? (isBr ? th.bridgeCol : (th.edo || [[120, 112, 100], [128, 94, 78], [122, 88, 58]])[et]) : null;
     const fb = ebase || base;
     g.fillStyle = `rgb(${fb[0] + k + r * 6 | 0},${fb[1] + k + r * 6 | 0},${fb[2] + k + r * 8 | 0})`;
     g.fillRect(x, y, TS, TS);
@@ -563,7 +638,11 @@ export function bakeFloor(world) {
       if (r > 0.86) { g.fillStyle = 'rgba(210,170,90,.5)'; g.fillRect(x + 3, y + 3, 1, 1); g.fillRect(x + TS - 4, y + 12, 1, 1); }
       if (r < 0.07) { g.strokeStyle = 'rgba(120,200,255,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 3); g.lineTo(x + 10, y + 10); g.lineTo(x + 8, y + 13); g.lineTo(x + 17, y + 21); g.stroke(); ge.strokeStyle = '#8fd0ff'; ge.lineWidth = 1; ge.beginPath(); ge.moveTo(x + 4, y + 3); ge.lineTo(x + 10, y + 10); ge.lineTo(x + 8, y + 13); ge.lineTo(x + 17, y + 21); ge.stroke(); }
     } else if (fx === 'garden') {   // l'arène est un lit de gravier ratissé ; ailleurs : dalles, briques ou planches
-      if (!inA && et === 0) {   // grandes dalles de pierre, joints décalés, mousse, fissures
+      if (th.meadow && !inA && et === 1) {   // clairière : herbe, fleurs et lucioles
+        const pv = vn(tx / 3.2 + 11, ty / 3.2) * 18 + r * 5; g.fillStyle = `rgb(${64 + pv * 0.7 | 0},${100 + pv | 0},${50 + pv * 0.4 | 0})`; g.fillRect(x, y, TS, TS);
+        for (let n = 0; n < 7; n++) { const q = rnd(tx * 7 + n, ty * 3 + n * 5); g.fillStyle = q < 0.5 ? 'rgba(36,74,34,.5)' : 'rgba(160,200,100,.4)'; g.fillRect(x + (q * 977 % 1) * (TS - 2), y + (q * 313 % 1) * (TS - 4), 1, 2 + (q * 51 % 2) | 0); }
+        if (r > 0.955) { g.fillStyle = r > 0.98 ? '#f4eadc' : '#f2c860'; g.fillRect(x + 6 + r * 90 % 12, y + 6 + r * 70 % 12, 2, 2); }
+      } else if (!inA && et === 0) {   // grandes dalles de pierre, joints décalés, mousse, fissures
         g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(x, y + 12, TS, 1); g.fillRect(x + (((tx + ty) & 1) ? 7 : 16), y, 1, 12); g.fillRect(x + (((tx + ty) & 1) ? 17 : 6), y + 13, 1, 11);
         g.fillStyle = 'rgba(255,250,235,.08)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 13, TS, 1);
         if (r < 0.22) { g.fillStyle = 'rgba(86,128,64,.4)'; g.beginPath(); g.ellipse(x + 5 + r * 40 % 14, y + 8 + r * 25 % 10, 5, 3, 0, 0, 7); g.fill(); }
@@ -580,6 +659,11 @@ export function bakeFloor(world) {
         g.fillStyle = 'rgba(255,225,170,.07)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 9, TS, 1); g.fillRect(x, y + 17, TS, 1);
         if (r > 0.88) { g.fillStyle = 'rgba(40,24,12,.4)'; g.beginPath(); g.ellipse(x + 8 + r * 30 % 10, y + 12, 2.5, 1.6, 0, 0, 7); g.fill(); }
       } else if (r > 0.7) { g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + r * 50 % 20, y + r * 70 % 20, 2, 1); }
+      if (th.scorch && !inA && !isBr) {   // suie et fissures de braise
+        if (r < 0.28) { g.fillStyle = 'rgba(0,0,0,.26)'; g.beginPath(); g.ellipse(x + 6 + r * 50 % 12, y + 8 + r * 33 % 8, 8, 5, 0, 0, 7); g.fill(); }
+        else if (r > 0.3 && r < 0.335) { g.strokeStyle = 'rgba(255,120,40,.65)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x + 3, y + 7 + r * 30 % 6); g.lineTo(x + 10, y + 12); g.lineTo(x + 15, y + 10); g.lineTo(x + 22, y + 17); g.stroke(); ge.strokeStyle = '#ff7a2a'; ge.lineWidth = 1.2; ge.beginPath(); ge.moveTo(x + 3, y + 7 + r * 30 % 6); ge.lineTo(x + 10, y + 12); ge.lineTo(x + 15, y + 10); ge.lineTo(x + 22, y + 17); ge.stroke(); }
+      }
+      if (th.water && isBr) { g.fillStyle = 'rgba(40,24,12,.35)'; g.fillRect(x, y + 11, TS, 1); }
       if (!inA && r > 0.975) { g.fillStyle = 'rgba(232,184,84,.5)'; g.fillRect(x + 11, y + 11, 2, 2); ge.fillStyle = 'rgba(232,184,84,.6)'; ge.fillRect(x + 10.5, y + 10.5, 3, 3); }   // clous dorés qui accrochent la lumière des lanternes
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
@@ -605,7 +689,7 @@ export function bakeFloor(world) {
     if (dn) { const gr = g.createLinearGradient(0, y + TS, 0, y + TS - 8); gr.addColorStop(0, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x, y + TS - 8, TS, 8); }
   }
   // feuilles de momiji tombées au sol (quartier d'Edo) : par tas, surtout au pied des murs et des arbres ; les emplacements servent aussi aux rafales de vent
-  if (th.fx === 'garden') {
+  if (th.fx === 'garden' && !th.water && !th.meadow) {
     const LEAF = ['..#..', '#####', '.###.', '..#..', '..#..'], LC = ['#9e1019', '#b3121f', '#bf2a22', '#cc4a24', '#d9792a', '#d9a636'];
     const spots = []; world.leafSpots = spots;
     const near = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const v = world.grid[(ty + dy) * MW + tx + dx]; return v === T.VOID || v === T.SOLID; });
@@ -742,7 +826,7 @@ export function drawDecor(ctx, world, d, time, opened) {
     ctx.fillStyle = '#26263a'; ctx.fillRect(x + w / 2 - 3, base - 46, 6, 10); ctx.fillStyle = on ? ac : '#555'; ctx.fillRect(x + w / 2 - 2, base - 48, 4, 3);
   } else if (K === 'tree') {
     ctx.fillStyle = '#4a3828'; ctx.fillRect(x + w / 2 - 4, base - 28, 8, 24); ctx.fillStyle = '#3a2a1e'; ctx.fillRect(x + w / 2 + 1, base - 28, 3, 24);
-    for (const [ox, oy, rr, c] of (th.open ? [[-10, -42, 13, '#9a2e28'], [8, -46, 14, '#c0452a'], [0, -56, 13, '#d8662e'], [-4, -36, 11, '#7e2624']] : [[-10, -42, 13, '#2e7a5e'], [8, -46, 14, '#3a9a72'], [0, -56, 13, '#4ab08a'], [-4, -36, 11, '#2a6a52']])) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + w / 2 + ox, base + oy, rr, 0, 7); ctx.fill(); }
+    for (const [ox, oy, rr, c] of (th.open ? [[-10, -42, 13, (th.leaf || [])[0] || '#9a2e28'], [8, -46, 14, (th.leaf || [])[1] || '#c0452a'], [0, -56, 13, (th.leaf || [])[2] || '#d8662e'], [-4, -36, 11, (th.leaf || [])[3] || '#7e2624']] : [[-10, -42, 13, '#2e7a5e'], [8, -46, 14, '#3a9a72'], [0, -56, 13, '#4ab08a'], [-4, -36, 11, '#2a6a52']])) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + w / 2 + ox, base + oy, rr, 0, 7); ctx.fill(); }
     const tw = 0.5 + 0.5 * Math.sin(time * 2 + d.seed); ctx.fillStyle = `rgba(${th.accent},${0.5 + 0.4 * tw})`; for (let i = 0; i < 4; i++) ctx.fillRect(x + 8 + i * 9 + d.seed % 5, base - 46 - (i % 2) * 8, 2, 2);
   } else if (K === 'statue') {
     ctx.fillStyle = '#5a7a76'; ctx.fillRect(x + 4, base - 8, w - 8, 8); ctx.fillStyle = '#7a9a96'; ctx.fillRect(x + 7, base - 34, w - 14, 28); ctx.fillStyle = '#9ab8b4'; ctx.fillRect(x + 7, base - 34, 3, 28);

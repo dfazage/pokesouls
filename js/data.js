@@ -31,7 +31,7 @@ export const NAMES_FR = {
 Object.assign(NAMES_FR, { raikou: 'Raikou', entei: 'Entei', suicune: 'Suicune', lugia: 'Lugia', celebi: 'Celebi', mareep: 'Wattouat', flaaffy: 'Lainergie', ampharos: 'Pharamp', chinchou: 'Loupio', lanturn: 'Lanturn', slugma: 'Limagma', magcargo: 'Volcaropod', houndour: 'Malosse', houndoom: 'Démolosse', magby: 'Magby', marill: 'Marill', azumarill: 'Azumarill', wooper: 'Axoloto', quagsire: 'Maraiste', horsea: 'Hypotrempe', seadra: 'Hypocéan', tentacool: 'Tentacool', tentacruel: 'Tentacruel', mantine: 'Démanta', kingdra: 'Hyporoi', hoppip: 'Granivol', skiploom: 'Floravol', sunkern: 'Tournegrin', sunflora: 'Héliatronc', pineco: 'Pomdepik', forretress: 'Foretress' });   // Johto (chapitre II)
 NAMES_FR.genesect = 'Fala';   // Genesect secret, débloqué par sa quête dans la Centrale
 // noms des espèces du pool jouable (GDD v3)
-Object.assign(NAMES_FR, { metagrossK: 'Métalosse', bagon: 'Draby', shelgon: 'Drackhaus', salamence: 'Drattak', riolu: 'Riolu', lucario: 'Lucario', meowth: 'Miaouss', persian: 'Persian', sneasel: 'Farfuret', weavile: 'Dimoret', zorua: 'Zorua', zoroark: 'Zoroark', munchlax: 'Goinfrex', steelix: 'Steelix', beldum: 'Terhal', metang: 'Métang', metagross: 'Métalosse', hippopotas: 'Hippopotas', hippowdon: 'Hippodocus', scyther: 'Insécateur', scizor: 'Cizayox', weedle: 'Aspicot', kakuna: 'Coconfort', beedrill: 'Dardargnan', remoraid: 'Rémoraid', octillery: 'Octillery', starly: 'Étourmi', staravia: 'Étourvol', staraptor: 'Étouraptor', magnezone: 'Magnézone', alakazam: 'Alakazam', pichu: 'Pichu', litwick: 'Lugulabre', lampent: 'Funécire', chandelure: 'Chandelure', gastly: 'Fantominus', eevee: 'Évoli', happiny: 'Ptiravi', blissey: 'Leuphorya', ralts: 'Tarsal', kirlia: 'Kirlia', gardevoir: 'Gardevoir', togepi: 'Togepi', togetic: 'Togetic', togekiss: 'Togekiss', budew: 'Rozbouton', roselia: 'Rosélia', roserade: 'Roserade' });
+Object.assign(NAMES_FR, { tyranitarK: 'Tyranocif', salamenceK: 'Drattak', garchompK: 'Carchacrok', goodraK: 'Muplodocus', houndoomA: 'Démolosse Alpha', mantineB: 'Démanta', kingdraB: 'Hyporoi', meganiumB: 'Méganium', magmarJ: 'Magmar', reflet: 'Reflet', reve: 'Rêve', metagrossK: 'Métalosse', bagon: 'Draby', shelgon: 'Drackhaus', salamence: 'Drattak', riolu: 'Riolu', lucario: 'Lucario', meowth: 'Miaouss', persian: 'Persian', sneasel: 'Farfuret', weavile: 'Dimoret', zorua: 'Zorua', zoroark: 'Zoroark', munchlax: 'Goinfrex', steelix: 'Steelix', beldum: 'Terhal', metang: 'Métang', metagross: 'Métalosse', hippopotas: 'Hippopotas', hippowdon: 'Hippodocus', scyther: 'Insécateur', scizor: 'Cizayox', weedle: 'Aspicot', kakuna: 'Coconfort', beedrill: 'Dardargnan', remoraid: 'Rémoraid', octillery: 'Octillery', starly: 'Étourmi', staravia: 'Étourvol', staraptor: 'Étouraptor', magnezone: 'Magnézone', alakazam: 'Alakazam', pichu: 'Pichu', litwick: 'Lugulabre', lampent: 'Funécire', chandelure: 'Chandelure', gastly: 'Fantominus', eevee: 'Évoli', happiny: 'Ptiravi', blissey: 'Leuphorya', ralts: 'Tarsal', kirlia: 'Kirlia', gardevoir: 'Gardevoir', togepi: 'Togepi', togetic: 'Togetic', togekiss: 'Togekiss', budew: 'Rozbouton', roselia: 'Rosélia', roserade: 'Roserade' });
 // Archétypes par type (stade 1, niveau 5)
 export const ARCH = {
   fire: { cls: 'Brûleur', mode: 'melee', hp: 90, speed: 84, range: 26, dmg: 9, light: 'Attack', heavy: 'Swing', orb: '#ff9a40', color: '#ff7a30', typeName: 'Feu', tm: 'ct_flamethrower' },
@@ -110,6 +110,9 @@ export const ENEMY_STATUS = {
   koffing: ['poison', 0.3], weezing: ['poison', 0.35], porygon: ['para', 0.2], electrodeA: ['para', 0.4],
   exeggcute: ['confuse', 0.2], abra: ['confuse', 0.25], haunter: ['confuse', 0.25], kadabra: ['confuse', 0.3], gengar: ['poison', 0.3], mrmime: ['confuse', 0.3], exeggutor: ['confuse', 0.35],
   pichu: ['para', 0.2], mareep: ['para', 0.25], chinchou: ['para', 0.25], flaaffy: ['para', 0.3], lanturn: ['para', 0.3], togetic: ['confuse', 0.2], ampharos: ['para', 0.4],
+  houndour: ['burn', 0.2], slugma: ['burn', 0.2], magby: ['burn', 0.25], houndoom: ['burn', 0.3], magcargo: ['burn', 0.3], magmarJ: ['burn', 0.35], houndoomA: ['burn', 0.4],
+  remoraid: ['freeze', 0.15], octillery: ['freeze', 0.2], mantineB: ['freeze', 0.3], tentacool: ['poison', 0.3], tentacruel: ['poison', 0.35], seadra: ['poison', 0.2], mantine: ['freeze', 0.2], kingdraB: ['freeze', 0.3],
+  skiploom: ['poison', 0.2], sunflora: ['para', 0.2], pineco: ['poison', 0.2], meganiumB: ['poison', 0.3], reflet: ['freeze', 0.2], reve: ['confuse', 0.2],
   machoke: null, dragonair: ['para', 0.2], clone: ['confuse', 0.3], decoy: ['confuse', 0.3],
 };
 
@@ -191,10 +194,48 @@ export const ENEMIES = {
   lanturn: E('mid', 'slam', { range: 105, anim: 'Shoot', color: '#8ef0ff', blast: 36, hp: 90 }),
   togetic: E('mid', 'melee', { lunge: 190, range: 24, anim: 'Attack', fly: true, dmg: 11, hp: 80 }),
   ampharos: E('big', 'slam', { range: 115, anim: 'Shoot', color: '#ffe84a', blast: 46, scale: 1.25 }),
+
+  // ----- Johto : Tour Brûlée (feu, meutes) -----
+  houndour: E('mini', 'melee', { lunge: 190, range: 20, anim: 'Attack', speed: 70, hp: 24 }),
+  slugma: E('mini', 'ranged', { range: 85, proj: 90, anim: 'Shoot', color: '#ff7a30', hp: 30, speed: 30 }),
+  magby: E('mini', 'ranged', { range: 100, proj: 110, anim: 'Shoot', color: '#ff8a40', hp: 22, speed: 46 }),
+  houndoom: E('mid', 'melee', { lunge: 215, range: 24, anim: 'Attack', speed: 68, dmg: 12, hp: 82 }),
+  magcargo: E('mid', 'slam', { range: 100, anim: 'Attack', blast: 36, windup: 0.95, hp: 105, speed: 34 }),
+  magmarJ: E('mid', 'ranged3', { range: 108, proj: 120, anim: 'Shoot', color: '#ff6a30', sprite: 'magmar', hp: 85 }),
+  houndoomA: E('big', 'roller', { range: 95, anim: 'Attack', scale: 1.5, hp: 360, sprite: 'houndoom' }),
+  tyranitarK: E('big', 'slam', { range: 130, anim: 'Attack', color: '#a8b070', blast: 62, scale: 1.6, hp: 760, dmg: 21, windup: 0.7, speed: 42, k: 24, sprite: 'tyranitar', pseudo: true }),
+  // ----- Johto : Lac du Miroir (eau, apparitions depuis le bord) -----
+  marill: E('mini', 'melee', { lunge: 150, range: 20, anim: 'Attack', speed: 54, hp: 26 }),
+  wooper: E('mini', 'melee', { lunge: 130, range: 22, anim: 'Attack', speed: 46, hp: 30 }),
+  remoraid: E('mini', 'ranged', { range: 105, proj: 120, anim: 'Shoot', color: '#9fe8ff', hp: 22, speed: 48 }),
+  azumarill: E('mid', 'melee', { lunge: 190, range: 24, anim: 'Attack', speed: 58, dmg: 12, hp: 92 }),
+  quagsire: E('mid', 'slam', { range: 100, anim: 'Attack', blast: 38, windup: 0.9, hp: 110, speed: 40 }),
+  octillery: E('mid', 'ranged3', { range: 112, proj: 125, anim: 'Shoot', color: '#9fd8ff', hp: 84 }),
+  mantineB: E('big', 'slam', { range: 120, anim: 'Shoot', color: '#7fd0ff', blast: 50, scale: 1.4, hp: 390, fly: true, sprite: 'mantine' }),
+  salamenceK: E('big', 'slam', { range: 135, anim: 'Attack', color: '#ff9a70', blast: 64, scale: 1.55, hp: 900, dmg: 24, windup: 0.65, speed: 54, k: 28, sprite: 'salamence', fly: true, pseudo: true }),
+  // ----- Johto : Îles Tourbillon (mer, poisons et courants) -----
+  horsea: E('mini', 'ranged', { range: 100, proj: 115, anim: 'Shoot', color: '#9fe8ff', hp: 24, speed: 46 }),
+  tentacool: E('mini', 'ranged', { range: 90, proj: 95, anim: 'Shoot', color: '#c070ff', hp: 28, speed: 36 }),
+  seadra: E('mid', 'ranged3', { range: 112, proj: 130, anim: 'Shoot', color: '#7fd0ff', hp: 90 }),
+  tentacruel: E('mid', 'slam', { range: 110, anim: 'Shoot', color: '#c070ff', blast: 40, windup: 0.9, hp: 110, speed: 42 }),
+  mantine: E('mid', 'ranged3', { range: 115, proj: 125, anim: 'Shoot', color: '#9fe8ff', fly: true, hp: 100 }),
+  kingdraB: E('big', 'slam', { range: 125, anim: 'Shoot', color: '#7fd0ff', blast: 54, scale: 1.4, hp: 460, sprite: 'kingdra' }),
+  garchompK: E('big', 'slam', { range: 135, anim: 'Attack', color: '#9ab0e0', blast: 66, scale: 1.55, hp: 1100, dmg: 27, windup: 0.6, speed: 60, k: 32, sprite: 'garchomp', pseudo: true }),
+  // ----- Johto : Forêt d'Ilex (plantes, spores) -----
+  hoppip: E('mini', 'ranged', { range: 95, proj: 100, anim: 'Shoot', color: '#ffb0d8', hp: 20, speed: 50, fly: true }),
+  sunkern: E('mini', 'ranged', { range: 100, proj: 105, anim: 'Shoot', color: '#ffe84a', hp: 22, speed: 40 }),
+  pineco: E('mini', 'bomb', { blast: 44, range: 18, speed: 85, windup: 0.8, anim: 'Attack', dormant: true, sight: 60, hp: 28, dmg: 13 }),
+  skiploom: E('mid', 'ranged3', { range: 108, proj: 115, anim: 'Shoot', color: '#ffb0d8', fly: true, hp: 86 }),
+  sunflora: E('mid', 'ranged3', { range: 112, proj: 120, anim: 'Shoot', color: '#ffe84a', hp: 95 }),
+  forretress: E('mid', 'slam', { range: 100, anim: 'Attack', blast: 40, windup: 0.9, hp: 125, speed: 38 }),
+  meganiumB: E('big', 'slam', { range: 125, anim: 'Shoot', color: '#9be86a', blast: 52, scale: 1.4, hp: 480, sprite: 'meganium' }),
+  goodraK: E('big', 'slam', { range: 135, anim: 'Attack', color: '#d8a0ff', blast: 66, scale: 1.55, hp: 1250, dmg: 29, windup: 0.65, speed: 50, k: 36, sprite: 'goodra', pseudo: true }),
   // mini-boss optionnel (pseudo-légendaire) : une seule fois par carte, gros bloc d'acier qui martèle le sol
   metagrossK: E('big', 'slam', { range: 130, anim: 'Attack', color: '#a8c0e0', blast: 60, scale: 1.55, hp: 700, dmg: 20, windup: 0.7, speed: 44, k: 22, sprite: 'metagross', pseudo: true }),
   // Invocations de boss
   clone: { tier: 'mini', kind: 'ranged', hp: 30, dmg: 10, speed: 0, sight: 400, range: 400, windup: 0.9, anim: 'Shoot', proj: 120, color: '#c070ff', rec: 2.4, clone: true, k: 0, sprite: 'mewtwo' },
+  reflet: { tier: 'mini', kind: 'ranged', hp: 34, dmg: 8, speed: 56, sight: 400, range: 220, windup: 0.8, anim: 'Shoot', proj: 120, color: '#9fe8ff', rec: 1.6, clone: true, k: 0, sprite: 'suicune' },
+  reve: { tier: 'mini', kind: 'ranged', hp: 34, dmg: 8, speed: 50, sight: 400, range: 220, windup: 0.8, anim: 'Shoot', proj: 110, color: '#b8ffb0', rec: 1.6, clone: true, k: 0, sprite: 'celebi', fly: true },
   decoy: { tier: 'mini', kind: 'ranged', hp: 34, dmg: 8, speed: 50, sight: 400, range: 220, windup: 0.8, anim: 'Shoot', proj: 110, color: '#ffb0d8', rec: 1.6, clone: true, k: 0, sprite: 'mew', fly: true },
 };
 export const spriteOfEnemy = t => (ENEMIES[t] && ENEMIES[t].sprite) || t;
@@ -215,6 +256,14 @@ export const BOSSES = {
   mew: { sprite: 'mew', phases: ['Le mythe s’éveille', 'Tous les possibles'], status: ['confuse', 0.25], name: 'MEW', sub: 'Le Mythe', scale: 1.15, hp: 1000, dmg: 18, r: 8, speed: 66, color: '#ffb0e8', glow: [255, 150, 220], hover: true, rainColor: '#ffc0f0', summon: 'decoy', blink: true,
     moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
   // ----- Johto -----
+  entei: { sprite: 'entei', phases: ['Le volcan se réveille', 'Colère de la cendre'], status: ['burn', 0.3], name: 'ENTEI', sub: 'Le Volcan', scale: 1.15, hp: 560, dmg: 14, r: 11, speed: 60, color: '#e8602a', glow: [255, 120, 50], rainColor: '#ff9a50',
+    moves: [[['dash', 3], ['swing', 2], ['ball', 2]], [['dash', 2], ['swing', 2], ['pulse', 3], ['volley', 2]], [['dash', 3], ['pulse', 3], ['nova', 3], ['rain', 3], ['beam', 2]]] },
+  suicune: { sprite: 'suicune', phases: ['L’eau s’éveille', 'Le reflet se brise'], status: ['freeze', 0.2], name: 'SUICUNE', sub: 'Le Miroir', scale: 1.15, hp: 700, dmg: 15, r: 11, speed: 72, color: '#5ac8f0', glow: [110, 210, 255], rainColor: '#bfeaff', summon: 'reflet',
+    moves: [[['dash', 3], ['ball', 2], ['rain', 2]], [['dash', 2], ['volley', 2], ['rain', 2], ['summon', 2]], [['dash', 2], ['rain', 3], ['nova', 3], ['beam', 2], ['summon', 2]]] },
+  lugia: { sprite: 'lugia', phases: ['La tempête gronde', 'Le souffle des abysses'], status: ['confuse', 0.25], name: 'LUGIA', sub: 'Gardien des mers', scale: 1.15, hp: 900, dmg: 17, r: 13, speed: 58, color: '#cfe2ff', glow: [190, 215, 255], hover: true, rainColor: '#dcecff',
+    moves: [[['ball', 3], ['volley', 2], ['rain', 2], ['dash', 1]], [['volley', 2], ['rain', 3], ['nova', 2], ['beam', 2], ['dash', 1]], [['beam', 3], ['rain', 3], ['nova', 3], ['dash', 2], ['pulse', 2]]] },
+  celebi: { sprite: 'celebi', phases: ['Le temps vacille', 'Tous les printemps'], status: ['confuse', 0.25], name: 'CELEBI', sub: 'Le Voyageur du temps', scale: 1.15, hp: 960, dmg: 17, r: 8, speed: 64, color: '#8ae88a', glow: [140, 255, 150], hover: true, rainColor: '#c8ffb0', summon: 'reve', blink: true,
+    moves: [[['volley', 3], ['ball', 2], ['rain', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['summon', 2]], [['volley', 2], ['nova', 3], ['rain', 3], ['pulse', 2], ['summon', 2]]] },
   raikou: { sprite: 'raikou', phases: ['Le tonnerre approche', 'Foudre de bronze'], status: ['para', 0.3], name: 'RAIKOU', sub: 'Le Tonnerre', scale: 1.15, hp: 420, dmg: 13, r: 11, speed: 68, color: '#f2c84a', glow: [255, 205, 80], rainColor: '#fff0a0',
     moves: [[['dash', 3], ['ball', 2], ['rain', 2]], [['dash', 2], ['volley', 2], ['rain', 3], ['nova', 2]], [['dash', 3], ['rain', 3], ['nova', 3], ['beam', 2]]] },
 };
