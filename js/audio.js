@@ -40,6 +40,13 @@ function whoosh(dur, vol, lp0, lp1, delay = 0) {
   s.connect(f).connect(g); out(g); s.start(t);
 }
 
+// bande de bruit filtrée, enveloppe courte (coup, frottement, métal)
+function band(f, q, dur, vol, delay = 0, type = 'bandpass') {
+  if (!live()) return; const t = ac.currentTime + delay, n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const s = ac.createBufferSource(), g = ac.createGain(), fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; s.buffer = b;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(fl).connect(g); out(g, 0.08); s.start(t);
+}
 // ───── couches des attaques de boss ─────
 const NB = {};   // tampons de bruit réutilisés
 function nbuf(sec) { const k = sec; if (!NB[k]) { const n = Math.floor(ac.sampleRate * sec), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; NB[k] = b; } return NB[k]; }
@@ -109,24 +116,24 @@ function playCry(id) {
 }
 export const SFX = {
   cry(id) { playCry(id); },
-  swing() { noise(0.12, 0.05, 3000); },
-  hit() { noise(0.1, 0.12, 1500); tone(180, 60, 0.12, 'square', 0.06); },
-  crit() { noise(0.14, 0.14, 2500); tone(420, 120, 0.2, 'sawtooth', 0.07); },
-  hurt() { tone(160, 50, 0.25, 'sawtooth', 0.09); noise(0.15, 0.1, 900); },
-  dodge() { noise(0.16, 0.05, 5000); },
-  parry() { tone(900, 1400, 0.1, 'triangle', 0.09); tone(1400, 900, 0.14, 'triangle', 0.06, 0.05); },
-  block() { tone(220, 120, 0.1, 'square', 0.06); },
-  telegraph() { tone(520, 700, 0.12, 'square', 0.04); },
-  shoot() { tone(600, 200, 0.18, 'sawtooth', 0.04); },
+  swing() { band(1800, 0.7, 0.16, 0.07); band(900, 0.6, 0.12, 0.04, 0.03); },
+  hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
+  crit() { band(2200, 0.8, 0.12, 0.17); tone(90, 40, 0.25, 'sine', 0.14); band(250, 0.6, 0.2, 0.1); band(5000, 1.5, 0.18, 0.05, 0.02); },
+  hurt() { tone(80, 38, 0.28, 'sine', 0.13); band(500, 0.7, 0.18, 0.12); band(2500, 1, 0.06, 0.06); },
+  dodge() { band(3500, 0.6, 0.18, 0.04); },
+  parry() { band(3200, 3, 0.25, 0.12); band(4800, 4, 0.18, 0.07, 0.01); band(2300, 4, 0.3, 0.06, 0.02); tone(1900, 1850, 0.22, 'sine', 0.015); },
+  block() { band(900, 1.5, 0.1, 0.1); tone(120, 70, 0.12, 'sine', 0.09); },
+  telegraph() { band(1200, 1.2, 0.2, 0.04); },
+  shoot() { band(1500, 0.8, 0.2, 0.06); band(500, 0.7, 0.15, 0.04, 0.02); },
   // allumage du feu : souffle de flamme puis quelques crépitements, aucune note
   bonfire() { whoosh(1.0, 0.12, 250, 2200); [0.12, 0.26, 0.33, 0.5, 0.62, 0.8].forEach(d => noise(0.03 + Math.random() * 0.03, 0.05 + Math.random() * 0.04, 3000 + Math.random() * 2500, d + Math.random() * 0.05)); },
   // K.O. d'un allié : coup sourd, sans note ni dent de scie
   death() { tone(110, 45, 0.5, 'sine', 0.08); noise(0.5, 0.05, 350); },
   // ramassage de la récompense : deux notes douces et longues (une quinte), sans arpège
   victory() { tone(523, 523, 1.2, 'sine', 0.04); tone(784, 784, 1.4, 'sine', 0.035, 0.12); },
-  heal() { tone(500, 900, 0.3, 'sine', 0.07); },
-  blip(pitch = 1) { tone((700 + Math.random() * 120) * pitch, (640 + Math.random() * 100) * pitch, 0.035, 'square', 0.035); },
-  pick() { tone(700, 1000, 0.12, 'triangle', 0.06); },
+  heal() { tone(440, 520, 0.5, 'sine', 0.035); tone(660, 700, 0.6, 'sine', 0.025, 0.05); },
+  blip(pitch = 1) { tone((420 + Math.random() * 60) * pitch, (400 + Math.random() * 50) * pitch, 0.04, 'sine', 0.03); },
+  pick() { band(2500, 2, 0.08, 0.05); tone(600, 640, 0.15, 'sine', 0.03); },
   // ───── attaques de boss : annonce qui monte, puis impact lourd ─────
   bossTele(id, dur = 0.8) { sub(55, 110, dur, 0.22); sweep(180, 2600, dur, 0.13, { a: dur * 0.8, q: 2 }); growl(55, 110, dur, 0.07, { lp0: 300, lp1: 700, a: dur * 0.6 }); if (flv(id) === 'elec') zap(dur, 0.05, 0, 28); [0.55, 0.75].forEach(k => tone(220 + k * 400, 300 + k * 700, dur * 0.4, 'sawtooth', 0.018, dur * k * 0.8)); },
   bossBall(id) { sub(120, 40, 0.7, 0.35); growl(260, 70, 0.55, 0.16, { lp0: 2200, lp1: 200 }); sweep(1500, 200, 0.5, 0.13, { a: 0.02 }); crack(0.2); flavor(id, 1); },
