@@ -847,7 +847,7 @@ export class Game {
       if (hyp(e.x - ch.x, e.y - ch.y) > 320 && e.state === 'idle' && !e.boss) continue;
       if (Math.abs(e.kx) + Math.abs(e.ky) > 1) { move(this, e, e.kx * dt, e.ky * dt, Math.min(e.r, 6) * 0.8); e.kx *= 0.86; e.ky *= 0.86; }
       if (e.tutDummy && !(this.tut && this.tut.aggro)) { setAnim(e, 'Idle'); e.state = 'idle'; e.tele = false; continue; }
-      if (e.boss) { this.bossAI(e, dt); continue; }
+      if (e.boss) { this.bossAI(e, dt); if (e.def.flap && !e.dead) this.flapWake(e, dt); continue; }
       const def = e.def; const [tg, td] = this.nearestMember(e);
       if (!tg) continue;
       const dx = tg.x - e.x, dy = tg.y - e.y, u = unit(dx, dy);
@@ -989,6 +989,15 @@ export class Game {
   spawnSummons(b) {
     const a = this.world.arena; const type = b.def.summon;
     for (let i = 0; i < 3; i++) { const an = i * 2.094 + 0.5; const c = this.makeEnemy(type, (a.cx + Math.cos(an) * 7) * TS, (a.cy + Math.sin(an) * 7) * TS); c.state = 'chase'; c.cd = 1.5 + i * 0.8; this.enemies.push(c); }
+  }
+  // sillage d'un boss qui bat des ailes (def.flap) : des bouffées d'air partent du bout des ailes à chaque battement, plus nombreuses quand il se déplace
+  flapWake(b, dt) {
+    if (b.state === 'dormant' || (b.reveal !== undefined && b.reveal < 0.5)) return;
+    b.wakeT = (b.wakeT || 0) - dt; if (b.wakeT > 0) return;
+    b.wakeT = (10 / b.def.flap) * TICK;   // un battement = 10 ticks PMD, ralenti par la cadence
+    const span = 34 * (b.def.scale || 1), moving = b.state === 'move' || b.state === 'dash';
+    for (const s of [-1, 1]) for (let i = 0; i < (moving ? 3 : 2); i++)
+      this.parts.push({ x: b.x + s * span * rand(0.55, 1), y: b.y + rand(-4, 4), z: 20 + rand(-4, 8), vx: s * rand(8, 26), vy: rand(-6, 6), vz: rand(-6, 10), g: 0, life: 0.55, max: 0.55, c: i ? '#e8f4ff' : b.def.color, size: i ? 1 : 2 });
   }
   bossAI(b, dt) {
     const def = b.def; const [tg, td] = this.nearestMember(b); if (!tg) return;

@@ -256,7 +256,7 @@ void main(){
   gl_Position = projectionMatrix*viewMatrix*w;
 }`;
 export const PROP_FRAG = /* glsl */`
-uniform float uTime, uType, uWinT; uniform vec3 uEmisCol, uLightCol, uRoofA, uRoofB;
+uniform float uTime, uType, uWinT, uStone; uniform vec3 uEmisCol, uLightCol, uRoofA, uRoofB;
 varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vH;
 ${GLSL_COMMON}
 ${FOG_FRAG}
@@ -287,6 +287,16 @@ void main(){
     } else {                  // muret de torchis : namako (losanges blancs sur noir) et chapeau de tuiles
       vec2 tg = vec2(-n.z, n.x);   // le motif suit la face (murets en biais et couronne d'arène), pas seulement x + z
       if(dot(tg, tg) > .04) q = dot(vW.xz, normalize(tg));
+      if(uStone > .5){        // ruine de pierre (Lac du Miroir) : appareil de blocs décalés, joints sombres, mousse sur le dessus
+        vec2 bq = vec2(q*1.6, vW.y*3.2); bq.x += step(.5, fract(bq.y*.5))*.5;
+        float hv = hash21(floor(bq)), mortar = clamp(step(.92, fract(bq.x)) + step(.86, fract(bq.y)), 0., 1.);
+        vec3 base = vCol*(.82 + .3*hv);
+        if(vH > .82) base = vCol*1.12;                                       // dalle de chaperon
+        base = mix(base, base*.5, mortar*step(vH, .82));
+        float moss = smoothstep(.55, 1., vH)*step(.5, hash21(floor(bq*.7) + 3.));
+        base = mix(base, vec3(.24, .4, .3), moss*.55);
+        col = base*(.32 + .8*dif)*uLightCol;
+      } else
       if(vH > .82){ col = uRoofA*1.2*(.32 + .85*dif)*uLightCol*(.8 + .5*step(.5, fract(q*3.))); }
       else {
         vec2 g2 = vec2(q*2.2, vW.y*2.6);
