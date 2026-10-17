@@ -4,7 +4,7 @@ import { loadItemIcons, itemIconFile } from './items.js';
 import { Input } from './input.js';
 import { createPadNav } from './padnav.js';
 import { unlockAudio } from './audio.js';
-import { Game, W, H, lastChapter } from './game.js';
+import { Game, H, setViewW, lastChapter } from './game.js';
 import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
@@ -16,10 +16,14 @@ import { initTouch } from './touch.js';
 
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), canvas = $('#game'), ctx = canvas.getContext('2d');
-canvas.width = W; canvas.height = H;
+canvas.width = 400; canvas.height = H;
 let r3d = null; // rendu HD-2D (module chargé à la demande) ; null = rendu 2D classique
 function fit() {
-  const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+  // HD-2D : la scène épouse le ratio de l'écran (16:9 → ~21:9) ; 2D de secours et écrans plus carrés : 16:9 avec bandes
+  const aw = r3d ? Math.max(1280, Math.min(1560, Math.round(720 * innerWidth / innerHeight / 2) * 2)) : 1280;
+  if (r3d) r3d.resize(aw); else setViewW(400);
+  stage.style.width = aw + 'px'; stage.style.setProperty('--dx', aw - 1280);
+  const s = Math.min(innerWidth / aw, innerHeight / 720); stage.style.transform = `translate(-50%,-50%) scale(${s})`;
   if (r3d) r3d.setScale(Math.min(2, Math.max(1, Math.round(s * (window.devicePixelRatio || 1) * 2) / 2)));
 }
 addEventListener('resize', fit); addEventListener('orientationchange', fit); fit();

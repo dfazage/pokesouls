@@ -14,7 +14,8 @@ import { installFala, FALA_KEY, MODULES, DEFAULT_MODULE } from './fala.js';
 import { installReserve } from './reserve.js';
 
 const { TS } = M;
-export const W = 400, H = 225;
+export let W = 400; export const H = 225;
+export function setViewW(w) { W = w; }
 const saveKey = ch => (!ch || ch === 'kanto' ? 'pokesouls.gen1.v2' : 'pokesouls.' + ch + '.v1');   // une sauvegarde par chapitre
 const LAST_KEY = 'pokesouls.lastchapter';
 export const lastChapter = () => { try { const c = localStorage.getItem(LAST_KEY); return M.CHAPTER_MAPS[c] && M.CHAPTER_MAPS[c].length && localStorage.getItem(saveKey(c)) ? c : 'kanto'; } catch (e) { return 'kanto'; } };
@@ -1098,7 +1099,7 @@ export class Game {
 installFx(Game, { D });
 installElements(Game, { setAnim, rand, hyp, unit, SFX, M, D, TS });
 installTutorial(Game, { M, D, TS, SFX, hyp });
-installBossCine(Game, { Input, TS, W, H, clamp, hyp, setAnim, SFX, M });
+installBossCine(Game, { Input, TS, vw: () => W, H, clamp, hyp, setAnim, SFX, M });
 installFala(Game, { M, TS, SFX, hyp });
 installReserve(Game, { D, stageOf });
 installExtras(Game, { Input, move, rand, hyp, unit, setAnim, timing, pickAnim, SFX, M, D, TS, dirFromVec });

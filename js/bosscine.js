@@ -31,7 +31,7 @@ export function cineKey(t) {
 }
 
 export function installBossCine(Game, d) {
-  const { Input, TS, W, H, clamp, hyp, setAnim, SFX, M } = d;
+  const { Input, TS, vw, H, clamp, hyp, setAnim, SFX, M } = d;
   const P = Game.prototype;
 
   // t = instant de départ (0 = version complète, CINE_SHORT = version courte)
@@ -84,7 +84,7 @@ export function installBossCine(Game, d) {
     const q = this.cine, b = q.b, c = this.chief(), [pitch, dist, fov, look, foc] = cineKey(q.t);
     this.camFx = { pitch, dist, fov, look };
     const fx = c.x + (b.x - c.x) * foc, fy = c.y + (b.y - c.y) * foc - 6 * (1 - foc);
-    const tx = clamp(fx - W / 2, 0, M.MW * TS - W), ty = clamp(fy - H / 2, 0, M.MH * TS - H);
+    const W = vw(), tx = clamp(fx - W / 2, 0, M.MW * TS - W), ty = clamp(fy - H / 2, 0, M.MH * TS - H);
     if (snap) { this.cam.x = tx; this.cam.y = ty; } else { this.cam.x += (tx - this.cam.x) * 0.2; this.cam.y += (ty - this.cam.y) * 0.2; }
   };
 

@@ -12,9 +12,9 @@ const BTN = [
   [['link'], 'Lien', 1070, 395, 40, 'sm'],
   [['next'], 'Relève', 1195, 330, 42, 'sm'],
   [['berry'], 'Baie', 915, 500, 38, 'sm'],
-  [['ether'], 'Huile', 810, 545, 38, 'sm'],
+  [['ether'], 'Huile', 790, 575, 38, 'sm'],
   [['interact'], 'Agir', 880, 400, 44, 'sm gold'],
-  [['lock'], 'Cible', 770, 440, 36, 'sm'],
+  [['lock'], 'Cible', 735, 455, 36, 'sm'],
   [['pause'], 'II', 900, 44, 34, 'sm sys'],
   [['bag'], 'Sac', 820, 44, 34, 'sm sys'],
   [['map'], 'Carte', 740, 44, 34, 'sm sys'],
@@ -33,7 +33,7 @@ export function initTouch(stage) {
   }
   stage.appendChild(root);
 
-  const scale = () => stage.getBoundingClientRect().width / 1280 || 1;
+  const scale = () => stage.getBoundingClientRect().width / (stage.offsetWidth || 1280) || 1;
   const toStage = (cx, cy) => { const rc = stage.getBoundingClientRect(), s = scale(); return [(cx - rc.left) / s, (cy - rc.top) / s]; };
 
   // ---- boutons ----
