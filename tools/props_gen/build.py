@@ -50,6 +50,17 @@ REG = [
     ('console_plant',  lambda v, t: L.console('plant', t), 1, 6, 5, {}),
     ('mirror',         lambda v, t: L.mirror(t), 1, 8, 8, {}),
     ('generator',      lambda v, t: L.generator(t), 1, 6, 10, {}),
+    # ---- remplacements des anciens sprites externes (sans variante caméra basse) ----
+    ('tree_bell',      lambda v, t: E.tree('bell', v, t), 3, 4, 2.2, {'vary': True}),
+    ('torii_bell',     lambda v, t: E.torii('bell', t), 1, 4, 3, {}),
+    ('pillar_ice',     lambda v, t: S.pillar_nat('ice', v, t), 2, 4, 3, {'vary': True}),
+    ('crystal_ice',    lambda v, t: S.crystal('ice', v, t), 2, 4, 3, {'vary': True}),
+    ('rock_ice',       lambda v, t: S.rock('ice', v, t), 2, 4, 2.5, {'vary': True}),
+    ('pillar_lava',    lambda v, t: S.pillar_nat('lava', v, t), 2, 4, 3, {'vary': True}),
+    ('pillar_plant',   lambda v, t: L.pillar_tech('plant', v, t), 2, 4, 3, {'vary': True}),
+    ('pillar_lab',     lambda v, t: L.pillar_tech('lab', v, t), 2, 4, 3, {'vary': True}),
+    ('bonfire_lit',    lambda v, t: S.bonfire(True, t), 1, 6, 6, {}),
+    ('bonfire_unlit',  lambda v, t: S.bonfire(False, t), 1, 1, 1, {}),
 ]
 
 

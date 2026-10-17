@@ -26,3 +26,11 @@ Clés : `lantern_{bell,ember,mirror,ilex}`, `bell_{bell,ember}`, `torii_{ember,m
 
 Champs supplémentaires : `x0`/`y0` (origine dans l'atlas), `per` (images d'animation par variante ; avec `vary` la variante vient de la graine, l'animation du temps), `lo` (`{x0,y0}` : même mise en page dessinée pour la caméra basse ~22°). `drawProp` fond hi (40°) → lo selon `PROPS.pitch` (écrit par `render3d`), `k = clamp((40-pitch)/16, 0, 1)`.
 `--preview DIR` produit des planches de contrôle.
+
+### Sols, murs et décors de sol (`floor.png`, `floor_d.png`, `walls.png`, `assets/floor.json`)
+
+Générés par `python3 tools/props_gen/build_floor.py [--preview DIR]` (peintre de tuiles `tilekit.py` : carte de hauteur, joints creux, occlusion, rampes décalées, tramage).
+- `floor.png` / `floor_e.png` : tuiles de sol 24 px et masque d'émission (clé `<thème>:<rôle>` : `floor`, `lab`, `arena`, `s0` dalles, `s1` briques ou prairie, `s2` planches, `br` pont) ; plusieurs variantes pondérées (`pick`). `bakeFloor` les pose à la place du dessin procédural (repli si l'atlas manque).
+- `floor_d.png` / `floor_de.png` : décors posés au sol (débris, flaques, os, pétales…, `decals`) et tronçons de câbles continus (`runs`), tamponnés par `stampFloorDecals` (graine fixe, jamais sous un décor, un coffre, l'arène ni un pont).
+- `walls.png` / `walls_e.png` : 9 tuiles par thème (4 faces, porte, 4 dessus) lues par `makeWallTextures`.
+Les anciens sprites externes `tree_bell`, `torii_bell`, `pillar_{ice,lava,plant,lab}`, `crystal_ice`, `rock_ice`, `bonfire_*` sont remplacés par des versions `decor.png` à deux inclinaisons (`obs_basalt` et les coffres gardent leurs feuilles d'origine).

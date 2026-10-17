@@ -151,3 +151,39 @@ def generator(t=0.0, seed=1):
     c.line((cx - 6, 27), (cx - 19, 40), 3, body_d); c.line((cx - 19, 40), (cx - 19, 55), 3, body_d)   # câble
     c.occlude(50, 59, 0.3)
     return c.render()
+
+
+def pillar_tech(pal='lab', variant=0, t=0.0, seed=1):
+    """Pilier technique de 1 case (28x62) : lab = colonne lisse à anneaux lumineux et conduits ; plant = pylône d'acier boulonné, bande de sécurité, voyants ambre."""
+    rs = np.random.RandomState(variant * 19 + 3); c = Canvas(28, 64, variant + 61); cx = 14
+    if pal == 'lab':
+        steel = Mat('#5a6690', 5, grain=0.04, dither=0.05, light=(220, 235, 255)); steel_d = Mat('#2c3456', 5, grain=0.04); dark = Mat('#161a30', 4, grain=0.03)
+        glow = Mat('#5af0d8', 4, emissive=True, ramp=['#14524e', '#2aa898', '#5af0d8', '#e0fffa'])
+        c.box(4, 56, 20, 5, 4, steel_d, top=steel); c.box(6, 52, 16, 4.5, 3, steel, top=steel)
+        c.cylinder(cx, 12, 53, 6.0, steel, cap=steel, cap_ry=2.4, r_bot=6.6)
+        for dx in (-3.6, 0.2, 3.8): c.shade_mod((np.abs(c.X - (cx + dx)) < 0.5) & (c.Y > 14) & (c.Y < 52) & (c.mat >= 0), -0.12)
+        for k, y in enumerate((20, 31, 42)):   # anneaux lumineux
+            a = 0.55 + 0.3 * math.sin(2 * math.pi * (t + k / 3 + variant * 0.2)); c.rect(cx - 6.8, y, cx + 6.8, y + 3, dark); c.rect(cx - 6.2, y + 0.8, cx + 6.2, y + 2.2, glow, emit=a)
+        c.line((cx + 9, 52), (cx + 9, 18), 2.2, steel_d); c.line((cx + 9, 18), (cx + 6, 14), 2.2, steel_d)   # conduit extérieur
+        for y in (24, 36, 47): c.rect(cx + 7.6, y, cx + 10.6, y + 1.4, steel)
+        c.box(cx - 8, 6, 16, 5, 3, steel_d, top=steel); c.cylinder(cx, 8, 12, 7.4, steel, cap=steel, cap_ry=2.8)
+        c.rect(cx - 3, 8.5, cx + 3, 11, dark); c.rect(cx - 2, 9.2, cx + 2, 10.3, glow, emit=0.5 + 0.4 * math.sin(2 * math.pi * (t + 0.5)))
+        if variant == 1: c.crack([(cx - 4, 14), (cx - 2, 22), (cx - 5, 30)], -0.5)
+    else:
+        steel = Mat('#6a6a84', 5, grain=0.06, dither=0.1, light=(235, 235, 255)); steel_d = Mat('#34344a', 5, grain=0.05); dark = Mat('#14141e', 4, grain=0.03)
+        amber = Mat('#ffd24a', 4, emissive=True, ramp=['#7a5a10', '#d8a020', '#ffd24a', '#fff6c0'])
+        c.box(2, 56, 24, 6, 4, steel_d, top=steel); c.box(4, 51, 20, 5, 3.5, steel, top=steel)
+        c.box(cx - 6, 14, 12, 38, 3, steel, top=steel, side=steel_d)
+        for y in range(18, 50, 8): c.rect(cx - 6, y, cx + 6, y + 1.2, steel_d)
+        for y in range(16, 50, 8):
+            for x in (cx - 4.5, cx + 3.5): c.ellipsoid(x, y + 1.5, 0.9, 0.9, Mat('#aeb0c8', 3, grain=0.05))
+        # bande de sécurité jaune et noire
+        for i in range(-3, 10): c.poly([(cx - 6 + i * 3, 41), (cx - 3 + i * 3, 41), (cx - 3 + i * 3 + 2, 46), (cx - 6 + i * 3 + 2, 46)], Mat('#e8c020' if i % 2 else '#201c10', 3, grain=0.04), (0, 0, 1))
+        c.mat[(c.mat >= 0) & ((c.X < cx - 6) | (c.X > cx + 6.5)) & (c.Y > 40) & (c.Y < 47)] = -1
+        for k, y in enumerate((20, 28)):
+            on = (int(t * 3) + k + variant) % 3 != 0; c.rect(cx - 2.4, y, cx + 2.4, y + 3, dark); c.rect(cx - 1.6, y + 0.7, cx + 1.6, y + 2.3, amber, emit=0.8 if on else 0.15)
+        c.box(cx - 8, 8, 16, 6, 3, steel_d, top=steel); c.rect(cx - 1, 2, cx + 1, 8, steel_d); c.ellipsoid(cx, 2.5, 2.2, 2.2, amber, emit=0.5 + 0.4 * math.sin(2 * math.pi * t))
+        for k, pts in enumerate(([(cx + 6, 30), (cx + 11, 36), (cx + 10, 52)], [(cx - 6, 24), (cx - 11, 32), (cx - 10, 50)])): c.line(pts[0], pts[1], 1.6, dark); c.line(pts[1], pts[2], 1.6, dark)
+        if variant == 1: c.crack([(cx + 2, 16), (cx, 24), (cx + 3, 33)], -0.5)
+    c.occlude(52, 63, 0.33)
+    return c.render()

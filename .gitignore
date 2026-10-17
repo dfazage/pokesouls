@@ -1,3 +1,5 @@
 # musiques perso (reprises, usage privé) : jamais publiées
 assets/audio/music_perso/*
 !assets/audio/music_perso/README.md
+__pycache__/
+*.pyc

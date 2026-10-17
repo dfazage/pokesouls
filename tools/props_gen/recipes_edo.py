@@ -194,6 +194,7 @@ def tree(pal='ember', variant=0, t=0.0, seed=1):
     sway = math.sin(2 * math.pi * t)
     if pal == 'ember':   trunk = Mat('#2e2420', 5, grain=0.08, light=(180, 120, 90)); leaf_cols = ['#7a2a1a', '#a8421e', '#d8662e', '#f0903a'];
     elif pal == 'mirror': trunk = Mat('#5a4038', 5, grain=0.09); leaf_cols = ['#c9708e', '#e89ab4', '#f6bccf', '#fde0e8']
+    elif pal == 'bell':  trunk = Mat('#4a3228', 5, grain=0.09, light=(210, 160, 130)); leaf_cols = ['#5e0f18', '#9e1019', '#cc2a22', '#ec6a3a']
     elif pal == 'ilex':  trunk = Mat('#5a4430', 5, grain=0.09); leaf_cols = ['#1f5a40', '#2f7a50', '#4a9a58', '#8cc060']
     else:                trunk = Mat('#2a3a46', 5, grain=0.08, light=(150, 230, 220)); leaf_cols = ['#1a4a58', '#2a7a78', '#3aa890', '#8ae8c0']
     # racines et tronc
@@ -235,6 +236,10 @@ def tree(pal='ember', variant=0, t=0.0, seed=1):
         for k in range(5):
             ph = (t + k * 0.21) % 1; x = cx - 18 + k * 9 + sway * 2 + math.sin(ph * 6 + k) * 3; y = 30 + ph * 36
             c.pix(int(x), int(y), '#ffd9e4'); c.pix(int(x) + 1, int(y), '#f6a8c0')
+    if pal == 'bell':   # feuilles de momiji qui tombent
+        for k in range(5):
+            ph = (t + k * 0.21) % 1; x = cx - 18 + k * 9 + sway * 2 + math.sin(ph * 6 + k) * 3; y = 30 + ph * 36
+            c.pix(int(x), int(y), '#cc2a22'); c.pix(int(x) + 1, int(y), '#ec6a3a')
     if pal == 'ember':
         for k in range(4):
             ph = (t + k * 0.27) % 1; x = cx - 16 + k * 11 + math.sin(ph * 7 + k) * 2; y = 62 - ph * 40

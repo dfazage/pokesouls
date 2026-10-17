@@ -18,77 +18,141 @@
     "scale": 1.125
   },
   "bonfire_unlit": {
-    "file": "props/campfire.png",
-    "fw": 48,
-    "fh": 87,
+    "file": "props/decor.png",
+    "x0": 229,
+    "y0": 1794,
+    "fw": 38,
+    "fh": 33,
+    "cols": 1,
     "frames": [
-      7
+      0
     ],
-    "scale": 0.7
+    "lo": {
+      "x0": 268,
+      "y0": 1794
+    }
   },
   "bonfire_lit": {
-    "file": "props/campfire.png",
-    "fw": 48,
-    "fh": 87,
-    "frames": [
-      4,
-      5,
-      4,
-      6,
-      5
-    ],
-    "fps": 6,
-    "scale": 0.7
-  },
-  "pillar_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
+    "file": "props/decor.png",
+    "x0": 678,
+    "y0": 1665,
+    "fw": 38,
+    "fh": 44,
     "cols": 6,
-    "frames": [
-      0,
-      2,
-      3,
-      4
-    ],
-    "vary": true
-  },
-  "crystal_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
-    "cols": 6,
-    "frames": [
-      5,
-      6,
-      7
-    ],
-    "vary": true
-  },
-  "rock_ice": {
-    "file": "props/ice.png",
-    "fw": 31,
-    "fh": 50,
-    "cols": 6,
-    "frames": [
-      8,
-      9
-    ],
-    "vary": true
-  },
-  "pillar_lava": {
-    "file": "props/lava_pillars.png",
-    "fw": 64,
-    "fh": 128,
     "frames": [
       0,
       1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lo": {
+      "x0": 0,
+      "y0": 1794
+    },
+    "per": 6,
+    "fps": 6
+  },
+  "pillar_ice": {
+    "file": "props/decor.png",
+    "x0": 257,
+    "y0": 1550,
+    "fw": 26,
+    "fh": 57,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
       4,
       5,
-      6
+      6,
+      7
     ],
-    "vary": true,
-    "scale": 0.4
+    "lo": {
+      "x0": 362,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "crystal_ice": {
+    "file": "props/decor.png",
+    "x0": 467,
+    "y0": 1550,
+    "fw": 28,
+    "fh": 45,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 580,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "rock_ice": {
+    "file": "props/decor.png",
+    "x0": 693,
+    "y0": 1550,
+    "fw": 32,
+    "fh": 22,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 822,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 2.5,
+    "vary": true
+  },
+  "pillar_lava": {
+    "file": "props/decor.png",
+    "x0": 0,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 58,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 113,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
   },
   "obs_basalt": {
     "file": "props/lava_pillars.png",
@@ -114,37 +178,62 @@
     "scale": 0.36
   },
   "pillar_plant": {
-    "file": "props/plant_pillars.png",
-    "fw": 72,
-    "fh": 232,
-    "frames": [
-      0,
-      1,
-      2,
-      3
-    ],
-    "vary": true,
-    "scale": 0.24
-  },
-  "pillar_lab": {
-    "file": "props/lab_pillars.png",
-    "fw": 64,
-    "fh": 216,
+    "file": "props/decor.png",
+    "x0": 226,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 64,
+    "cols": 4,
     "frames": [
       0,
       1,
       2,
       3,
-      4
+      4,
+      5,
+      6,
+      7
     ],
-    "vary": true,
-    "scale": 0.26
+    "lo": {
+      "x0": 339,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
+  },
+  "pillar_lab": {
+    "file": "props/decor.png",
+    "x0": 452,
+    "y0": 1665,
+    "fw": 28,
+    "fh": 60,
+    "cols": 4,
+    "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "lo": {
+      "x0": 565,
+      "y0": 1665
+    },
+    "per": 4,
+    "fps": 3,
+    "vary": true
   },
   "tree_bell": {
-    "file": "props/edo_trees.png",
-    "fw": 56,
+    "file": "props/decor.png",
+    "x0": 277,
+    "y0": 1360,
+    "fw": 52,
     "fh": 63,
-    "cols": 6,
+    "cols": 4,
     "frames": [
       0,
       1,
@@ -156,21 +245,36 @@
       7,
       8,
       9,
-      10
+      10,
+      11
     ],
+    "lo": {
+      "x0": 486,
+      "y0": 1360
+    },
+    "per": 4,
+    "fps": 2.2,
     "vary": true
   },
   "torii_bell": {
-    "file": "props/edo_torii.png",
-    "fw": 66,
-    "fh": 49,
-    "cols": 2,
+    "file": "props/decor.png",
+    "x0": 695,
+    "y0": 1360,
+    "fw": 64,
+    "fh": 58,
+    "cols": 4,
     "frames": [
       0,
-      1
+      1,
+      2,
+      3
     ],
-    "vary": true,
-    "scale": 1.25
+    "lo": {
+      "x0": 0,
+      "y0": 1550
+    },
+    "per": 4,
+    "fps": 3
   },
   "lantern_bell": {
     "file": "props/decor.png",
@@ -401,8 +505,8 @@
     "file": "props/decor.png",
     "x0": 233,
     "y0": 427,
-    "fw": 54,
-    "fh": 63,
+    "fw": 58,
+    "fh": 59,
     "cols": 4,
     "frames": [
       0,
@@ -419,7 +523,7 @@
       11
     ],
     "lo": {
-      "x0": 450,
+      "x0": 466,
       "y0": 427
     },
     "per": 4,
@@ -428,9 +532,9 @@
   },
   "tree_ilex": {
     "file": "props/decor.png",
-    "x0": 667,
+    "x0": 699,
     "y0": 427,
-    "fw": 48,
+    "fw": 46,
     "fh": 62,
     "cols": 4,
     "frames": [
@@ -457,9 +561,9 @@
   },
   "tree_mystic": {
     "file": "props/decor.png",
-    "x0": 193,
+    "x0": 185,
     "y0": 629,
-    "fw": 52,
+    "fw": 54,
     "fh": 63,
     "cols": 4,
     "frames": [
@@ -486,7 +590,7 @@
   },
   "statue_ilex": {
     "file": "props/decor.png",
-    "x0": 611,
+    "x0": 619,
     "y0": 629,
     "fw": 28,
     "fh": 49,
@@ -498,7 +602,7 @@
       3
     ],
     "lo": {
-      "x0": 724,
+      "x0": 732,
       "y0": 629
     },
     "per": 4,
@@ -506,7 +610,7 @@
   },
   "statue_mystic": {
     "file": "props/decor.png",
-    "x0": 837,
+    "x0": 845,
     "y0": 629,
     "fw": 28,
     "fh": 49,

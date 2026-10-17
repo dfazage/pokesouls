@@ -1,7 +1,7 @@
 // Les cinq cartes du Chapitre Génération 1 (quatre cartes + une carte secrète) : définition, génération des salles, collisions et rendu du décor.
 // Toutes les cartes : zones libres générées avec une graine fixe (voir generateFree).
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
-import { pickProp, drawProp } from './props.js';
+import { pickProp, drawProp, FLOOR } from './props.js';
 // PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
 export const TS = 24, MW = 124, MH = 73, PADY = 9, ARENA_R = 12.15, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
@@ -532,6 +532,62 @@ export function lineClear(world, x0, y0, x1, y1) {
 }
 
 // ---------- rendu du sol (mis en cache) ----------
+// Tuile de sol pixel art : clé '<thème>:<rôle>' (arena, lab, floor ; s0 dalles, s1 briques/prairie, s2 planches, br pont pour les jardins).
+function drawFloorTile(g, ge, world, th, tx, ty, x, y, inA, lab, edo, et, isBr) {
+  const db = FLOOR.db; if (!db || !FLOOR.img) return false;
+  const key = world.def.theme;
+  let role = inA ? 'arena' : edo ? (isBr ? 'br' : 's' + et) : lab ? 'lab' : 'floor';
+  let m = db.tiles[key + ':' + role]; if (!m && role === 'br') m = db.tiles[key + ':s2'];
+  if (!m) return false;
+  const i = m.i0 + m.pick[Math.floor(rnd(tx, ty, 501) * m.pick.length) % m.pick.length], sx = (i % db.cols) * db.ts, sy = Math.floor(i / db.cols) * db.ts;
+  g.imageSmoothingEnabled = false; g.drawImage(FLOOR.img, sx, sy, db.ts, db.ts, x, y, TS, TS);
+  if (FLOOR.eimg) { ge.imageSmoothingEnabled = true; ge.drawImage(FLOOR.eimg, sx, sy, db.ts, db.ts, x, y, TS, TS); }
+  return true;
+}
+
+// Décors de sol pixel art (assets/floor.json : decals, runs) : débris, flaques, os, pétales… tirés par graine fixe, jamais sous un décor, un coffre, l'arène ni un pont ; câbles continus (labo, centrale).
+function stampFloorDecals(g, ge, world, th) {
+  const db = FLOOR.db, key = world.def.theme; if (!db || !FLOOR.dimg) return;
+  const list = (db.decals || {})[key] || [], runs = (db.runs || {})[key], A = world.arena;
+  const used = new Uint8Array(MW * MH);
+  for (const d of world.decor || []) for (let j = 0; j < d.h; j++) for (let i = 0; i < d.w; i++) used[(d.ty + j) * MW + d.tx + i] = 1;
+  for (const c of world.chests || []) used[c.ty * MW + c.tx] = 1;
+  for (const b of world.bonfires || []) used[(b.ty | 0) * MW + (b.tx | 0)] = 1;
+  const ok = (tx, ty) => tx > 0 && ty > 0 && tx < MW - 1 && ty < MH - 1 && world.grid[ty * MW + tx] === T.FLOOR && !used[ty * MW + tx] && !(world.bridge && world.bridge[ty * MW + tx]) && (tx + 0.5 - A.cx) ** 2 + (ty + 0.5 - A.cy) ** 2 > (A.r + 0.5) ** 2;
+  const nearWall = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const v = world.grid[(ty + dy) * MW + tx + dx]; return v === T.VOID || v === T.SOLID; });
+  const blit = (r, x, y) => { g.imageSmoothingEnabled = false; g.drawImage(FLOOR.dimg, r[0], r[1], r[2], r[3], x | 0, y | 0, r[2], r[3]); if (FLOOR.deimg) { ge.imageSmoothingEnabled = true; ge.drawImage(FLOOR.deimg, r[0], r[1], r[2], r[3], x | 0, y | 0, r[2], r[3]); } };
+  // câbles continus : tronçons rectilignes entre deux orifices, sur des tuiles libres consécutives
+  if (runs) {
+    const ncol = Math.max(...Object.keys(runs).map(k => +k.split(':')[0])) + 1;
+    for (let ty = 2; ty < MH - 2; ty++) for (let tx = 2; tx < MW - 2; tx++) {
+      for (const vert of [false, true]) {
+        if (rnd(tx, ty, vert ? 641 : 631) > 0.012) continue;
+        const len = 3 + Math.floor(rnd(tx, ty, 651) * 6), col = Math.floor(rnd(tx, ty, 661) * ncol), o = 6 + Math.floor(rnd(tx, ty, 671) * 12), tag = vert ? 'v' : 'h';
+        let good = true; for (let i = 0; i < len; i++) { const a = vert ? tx : tx + i, b = vert ? ty + i : ty; if (!ok(a, b)) { good = false; break; } }
+        if (!good) continue;
+        for (let i = 0; i < len; i++) {
+          const a = vert ? tx : tx + i, b = vert ? ty + i : ty; used[b * MW + a] = 1;
+          const part = i === 0 ? (vert ? 'endR' : 'endL') : i === len - 1 ? (vert ? 'endL' : 'endR') : 'mid';   // vertical : la pièce droite devient le haut après rotation
+          const r = runs[`${col}:${tag}:${part}`]; if (r) blit(r, a * TS + (vert ? o - r[2] / 2 : 0), b * TS + (vert ? 0 : o - r[3] / 2));
+        }
+      }
+    }
+  }
+  if (!list.length) return;
+  for (let ty = 1; ty < MH - 1; ty++) for (let tx = 1; tx < MW - 1; tx++) {
+    if (!ok(tx, ty)) continue;
+    const nw = nearWall(tx, ty);
+    if (rnd(tx, ty, 601) > (nw ? 0.16 : 0.05)) continue;
+    let tot = 0; const ws = list.map(d => { const w = d.near === 2 ? (nw ? d.w * 2 : 0) : d.near === 1 ? (nw ? d.w * 3 : d.w * 0.4) : d.w; tot += w; return w; });
+    if (tot <= 0) continue;
+    let q = rnd(tx, ty, 611) * tot, k = 0; while (k < ws.length - 1 && q > ws[k]) { q -= ws[k]; k++; }
+    const r = list[k].r, x = tx * TS + (TS - r[2]) / 2 + (rnd(tx, ty, 621) - 0.5) * Math.max(0, 14 - r[2] / 2), y = ty * TS + (TS - r[3]) / 2 + (rnd(tx, ty, 622) - 0.5) * Math.max(0, 14 - r[3] / 2);
+    const x0 = Math.floor(x / TS), x1 = Math.floor((x + r[2] - 1) / TS), y0 = Math.floor(y / TS), y1 = Math.floor((y + r[3] - 1) / TS);
+    if (!ok(x0, y0) || !ok(x1, y0) || !ok(x0, y1) || !ok(x1, y1)) continue;
+    blit(r, x, y); if (r[2] > 14 || r[3] > 14) used[ty * MW + tx] = 1;
+  }
+}
+
 export function bakeFloor(world) {
   const th = world.theme, c = document.createElement('canvas'); c.width = MW * TS; c.height = MH * TS;
   const g = c.getContext('2d');
@@ -556,11 +612,15 @@ export function bakeFloor(world) {
     const et = isBr ? 2 : et0;
     const ebase = edo ? (isBr ? th.bridgeCol : (th.edo || [[120, 112, 100], [128, 94, 78], [122, 88, 58]])[et]) : null;
     const fb = ebase || base;
-    g.fillStyle = `rgb(${fb[0] + k + r * 6 | 0},${fb[1] + k + r * 6 | 0},${fb[2] + k + r * 8 | 0})`;
-    g.fillRect(x, y, TS, TS);
-    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x, y + TS - 1, TS, 1); g.fillRect(x + TS - 1, y, 1, TS);
-    g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(x, y, TS, 1); g.fillRect(x, y, 1, TS);
-    const fx = th.fx;
+    // tuile pixel art (assets/floor.json) : joints, plaques, grilles, mousse… ; sinon repli sur le dessin procédural ci-dessous
+    const drew = drawFloorTile(g, ge, world, th, tx, ty, x, y, inA, lab, edo, et, isBr);
+    if (!drew) {
+      g.fillStyle = `rgb(${fb[0] + k + r * 6 | 0},${fb[1] + k + r * 6 | 0},${fb[2] + k + r * 8 | 0})`;
+      g.fillRect(x, y, TS, TS);
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x, y + TS - 1, TS, 1); g.fillRect(x + TS - 1, y, 1, TS);
+      g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(x, y, TS, 1); g.fillRect(x, y, 1, TS);
+    }
+    const fx = drew ? null : th.fx;
     if (fx === 'circuit') {
       if (r > 0.82) { g.fillStyle = 'rgba(0,0,0,.35)'; for (let i = 3; i < TS - 3; i += 4) g.fillRect(x + 4, y + i, TS - 8, 1); }
       if (r < 0.14) { g.strokeStyle = inA ? 'rgba(190,120,255,.55)' : `rgba(${th.accent},.45)`; g.lineWidth = 1; g.beginPath(); const aa = 4 + (r * 100 % 12) | 0; g.moveTo(x, y + aa); g.lineTo(x + 10, y + aa); g.lineTo(x + 10, y + 16); g.lineTo(x + TS, y + 16); g.stroke(); g.fillStyle = inA ? '#d0a0ff' : ac; g.fillRect(x + 9, y + aa - 1, 3, 3);
@@ -655,6 +715,7 @@ export function bakeFloor(world) {
     for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; for (const [c, w] of [[g, .5], [ge, .1]]) { c.save(); c.rotate(an); c.strokeStyle = `rgba(90,210,235,${w * 0.6})`; c.lineWidth = 2; c.beginPath(); c.moveTo(A.r * TS * 0.22, 0); c.lineTo(A.r * TS * 0.78, 0); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, -9); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, 9); c.stroke(); c.restore(); } }
   }
   g.restore(); ge.restore();
+  stampFloorDecals(g, ge, world, th);
   // ombres au pied des murs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
     if (world.grid[ty * MW + tx] === T.VOID) continue;

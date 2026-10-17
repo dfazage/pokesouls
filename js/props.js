@@ -4,13 +4,25 @@
 //   x0/y0 = origine de la zone dans la feuille (planche partagée decor.png) ; per = images d'animation par variante (vary choisit la variante, le temps choisit l'image).
 //   lo = { x0, y0 } : même zone dessinée pour la caméra basse des duels de boss (~22°) ; fondu avec la version d'exploration (40°) selon PROPS.pitch.
 // Si une clé manque ou si l'image n'est pas chargée, drawProp renvoie false et l'appelant garde son dessin procédural.
-export const PROPS = { db: {}, img: {}, pitch: 40 };   // pitch : inclinaison courante de la caméra en degrés (écrit par render3d)
+export const PROPS = { db: {}, img: {}, pitch: 40 };
+// Atlas de sol / décors de sol / murs pixel art (assets/floor.json, généré par tools/props_gen/build_floor.py) : db = manifeste, img = atlas, eimg = masque d'émission
+export const FLOOR = { db: null, img: null, eimg: null, dimg: null, deimg: null, wimg: null, weimg: null };   // pitch : inclinaison courante de la caméra en degrés (écrit par render3d)
 
 function loadImage(src) {
   return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image ' + src)); i.src = src; });
 }
 
+async function loadFloor() {
+  try {
+    const db = await (await fetch('assets/floor.json')).json();
+    const opt = f => f ? loadImage('assets/' + f).catch(() => null) : Promise.resolve(null);
+    const [img, eimg, dimg, deimg, wimg, weimg] = await Promise.all([loadImage('assets/' + db.file), opt(db.efile), opt(db.dfile), opt(db.defile), opt(db.wfile), opt(db.wefile)]);
+    FLOOR.db = db; FLOOR.img = img; FLOOR.eimg = eimg; FLOOR.dimg = dimg; FLOOR.deimg = deimg; FLOOR.wimg = wimg; FLOOR.weimg = weimg;
+  } catch (e) { FLOOR.db = null; FLOOR.img = FLOOR.eimg = FLOOR.dimg = FLOOR.deimg = FLOOR.wimg = FLOOR.weimg = null; /* repli : sol et murs dessinés par le code */ }
+}
+
 export async function loadProps() {
+  await loadFloor();
   try { PROPS.db = await (await fetch('assets/props.json')).json(); } catch (e) { PROPS.db = {}; return; }
   const files = [...new Set(Object.values(PROPS.db).map(p => p.file))];
   await Promise.all(files.map(async f => { try { PROPS.img[f] = await loadImage('assets/' + f); } catch (e) { /* image manquante : repli procédural */ } }));

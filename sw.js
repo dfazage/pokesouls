@@ -2,7 +2,7 @@
 // - Code et données (HTML, JS, CSS, JSON) : réseau d'abord, copie locale si hors ligne ou réseau lent, donc les mises à jour arrivent tout de suite.
 // - Médias (assets/ : sprites, effets, musiques) : copie locale d'abord, remplie au fil du jeu. Ce qui a déjà été joué reste disponible hors ligne.
 // Changer VERSION invalide toutes les copies locales.
-const VERSION = 'v129';
+const VERSION = 'v130';
 const SHELL = `pokesouls-shell-${VERSION}`;
 const MEDIA = `pokesouls-media-${VERSION}`;
 const SHELL_FILES = [
@@ -10,7 +10,7 @@ const SHELL_FILES = [
   'js/main.js', 'js/assets.js', 'js/audio.js', 'js/data.js', 'js/elements.js', 'js/relay.js', 'js/pool.js', 'js/fala.js', 'js/reserve.js', 'js/tutorial.js', 'js/extras.js', 'js/fx.js', 'js/game.js', 'js/dodge.js',
   'js/bosscine.js', 'js/outro.js', 'js/endings.js', 'js/hd2d_shaders.js', 'js/hd2d_world.js', 'js/hud.js', 'js/leaves.js', 'js/wind.js', 'js/worldscale.js', 'js/input.js', 'js/items.js', 'js/maps.js', 'js/music.js', 'js/props.js', 'js/render.js', 'js/render3d.js',
   'js/touch.js', 'js/padnav.js', 'js/ui.js', 'js/vendor/three.module.min.js',
-  'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/audio/music_map.json',
+  'assets/sprites.json', 'assets/fx.json', 'assets/props.json', 'assets/floor.json', 'assets/audio/music_map.json',
   'assets/logo.png', 'assets/title_mewtwo.jpg', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 
