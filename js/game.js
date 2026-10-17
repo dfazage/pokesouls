@@ -204,7 +204,7 @@ export class Game {
   canTravel() { return this.state === 'play' && !this.bossActive && !this.team.every(m => m.exh); }
   travel(idx, dest) { if (!this.canTravel() || idx > this.unlocked) return false; this.enterMap(idx, dest); return true; }
 
-  openFog() { for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; }
+  openFog() { if (this.world.fog.tiles.some(([x, y]) => this.world.grid[y * M.MW + x] === M.T.FOG)) this.fogBurst = this.t; for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FLOOR; }
   closeFog() {
     if (this.prog[this.mapIdx].bossDead) return;
     for (const [x, y] of this.world.fog.tiles) this.world.grid[y * M.MW + x] = M.T.FOG;
