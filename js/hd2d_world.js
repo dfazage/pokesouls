@@ -524,6 +524,73 @@ function propGeometry(kind) {
 
 const EDO_WALL = [[.78, .72, .58], [.7, .52, .32], [.4, .26, .16], [.74, .72, .66], [.58, .4, .24], [.8, .66, .46], [.5, .46, .4], [.34, .22, .14]];   // plâtre crème, ocre, bois sombre, torchis…
 
+// ---------- murets de Johto : tracé le long du bord du sol ----------
+// Le bord (arêtes entre une case de sol et une case vide) est parcouru en boucles ; on relie les milieux des arêtes : les lignes droites
+// restent droites, chaque marche d'escalier devient un pan coupé à 45° (comme un mur d'enceinte d'Edo). Le muret est posé sur ce tracé,
+// décalé d'une demi-case vers le vide. Arène : couronne de murets sur le cercle. Ruines (Tour Brûlée) : segments courts, brèches, hauteurs irrégulières.
+// Retourne des segments [x, z, a, b, c, rot, longueur, hauteur, épaisseur] pour le maillage des murets.
+function muretRuns(w, ruin) {
+  const out = [], TH = 0.9, OFF = 0.5;
+  const isFloor = (tx, ty) => gridAt(w, tx, ty) !== T.VOID;
+  const skipV = (tx, ty) => (w.chasm && inB(tx, ty) && w.chasm[ty * MW + tx]) || ringFlag(w, tx, ty) === 2;   // gouffre ouvert, anneau d'arène (couronne à part)
+  const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+  // arêtes orientées (le sol à droite en parcourant), indexées par leur coin de départ
+  const edges = [], byStart = new Map(), key = (x, z) => x * 1024 + z;
+  for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+    if (!isFloor(tx, ty)) continue;
+    for (const [nx, nz] of DIRS) {
+      if (isFloor(tx + nx, ty + nz)) continue;
+      const dx = -nz, dz = nx, cx = tx + 0.5 + nx * 0.5, cz = ty + 0.5 + nz * 0.5;
+      const ax = cx - dx * 0.5, az = cz - dz * 0.5, bx = cx + dx * 0.5, bz = cz + dz * 0.5;
+      const on = !skipV(tx + nx, ty + nz) && ringFlag(w, tx, ty) !== 1;
+      const e = { ax, az, bx, bz, mx: cx, mz: cz, nx, nz, on, used: false, low: nz > 0 };
+      edges.push(e); const k = key(ax, az); if (!byStart.has(k)) byStart.set(k, []); byStart.get(k).push(e);
+    }
+  }
+  const hash = (x, z, k) => rndI(Math.round(x * 4), Math.round(z * 4), k);
+  const seg = (p, q, low, on) => {
+    if (!on) return;
+    const dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1e-3) return;
+    const mx = (p[0] + q[0]) / 2, mz = (p[1] + q[1]) / 2, a = hash(mx, mz, 1), b = hash(mx, mz, 2), c = hash(mx, mz, 3);
+    if (ruin && !low && hash(mx, mz, 4) < 0.1) return;   // brèche
+    let h = low ? 0.78 + b * 0.12 : 1.0 + b * 0.45;
+    if (ruin) h = low ? 0.62 + b * 0.25 : (b < 0.25 ? 0.55 + b : 0.9 + b * 0.7);
+    out.push([mx, mz, a, b, c, -Math.atan2(dz, dx), L + TH * 0.45, h, TH]);   // allongé pour couvrir les raccords
+  };
+  for (const e0 of edges) {
+    if (e0.used) continue;
+    const loop = []; let e = e0;
+    while (e && !e.used) {
+      e.used = true; loop.push(e);
+      const nxt = byStart.get(key(e.bx, e.bz)) || [];
+      e = nxt.find(q => !q.used) || null;
+    }
+    // milieux des arêtes décalés vers le vide : tracé à pans coupés
+    const P = loop.map(q => [q.mx + q.nx * OFF, q.mz + q.nz * OFF]), n = loop.length, closed = n > 2;
+    let run = null;   // regroupe les segments alignés (murets longs) ; ruines : segments séparés
+    const flush = () => { if (run) { seg(run.p, run.q, run.low, true); run = null; } };
+    for (let i = 0; i < (closed ? n : n - 1); i++) {
+      const A = loop[i], B = loop[(i + 1) % n], p = P[i], q = P[(i + 1) % n];
+      const on = A.on && B.on, low = A.low && B.low, dir = Math.round(Math.atan2(q[1] - p[1], q[0] - p[0]) * 4 / Math.PI);
+      if (!on) { flush(); continue; }
+      if (!ruin && run && run.dir === dir && run.low === low && run.len < 4) { run.q = q; run.len += Math.hypot(q[0] - p[0], q[1] - p[1]); continue; }
+      flush(); run = { p, q, dir, low, len: Math.hypot(q[0] - p[0], q[1] - p[1]) };
+      if (ruin) flush();
+    }
+    flush();
+  }
+  // arène : couronne de murets sur le cercle (au milieu de l'anneau vide), ouverte à l'entrée
+  if (w.arenaRing) {
+    const a = w.arena, R = w.arenaRing.rc + OFF, segs = arenaSegs(w), P = ang => [a.cx + Math.cos(ang) * R, a.cy + Math.sin(ang) * R];
+    for (let i = 0; i < segs.length; i += 2) {
+      const s0 = segs[i], s1 = segs[(i + 1) % segs.length];
+      if (!s0.ring || !s1.ring) { if (s0.ring) seg(P(s0.a0), P(s0.a1), Math.sin((s0.a0 + s0.a1) / 2) > 0.45, true); continue; }
+      seg(P(s0.a0), P(s1.a1), Math.sin(s0.a1) > 0.45, true);
+    }
+  }
+  return out;
+}
+
 export function buildProps(w, key, seed, shared) {
   const cfg = HD[key], R = (() => { let s = (seed * 2654435761) >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; })();
   const MG = 24;
@@ -558,7 +625,7 @@ export function buildProps(w, key, seed, shared) {
           else { sx = 1.6 + a * 1.0; sy = low ? 2.4 + b * 1.4 : 3.4 + b * 2.4; }
           items.push([tx + px + (kind === 0 ? V(tx, ty, k + 80) * 0.5 - 0.25 : 0), ty + pz, a, b, c, kind, sx, sy, e]); return;
         }
-        if (kind === 0) { wallItems.push([tx + 0.5, ty + 0.5, a, b, c, 0, 1.02, low ? 0.78 + b * 0.12 : 1.0 + b * 0.5, e]); return; }   // muret en torchis coiffé de tuiles
+        if (kind === 0) return;   // murets en torchis : tracés le long du bord du sol (muretRuns), plus case par case
         let sx, sy;   // maisons de ville : corps de plâtre et de bois, toit de tuiles
         if (kind === 1) { sx = 1.7 + a * 0.7; sy = low ? 1.7 + b * 0.5 : 2.6 + b * 1.0; }
         else { sx = 2.0 + a * 0.9; sy = low ? 2.6 + b * 0.8 : 3.4 + b * 1.6; }
@@ -609,13 +676,15 @@ export function buildProps(w, key, seed, shared) {
   });
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   mesh.frustumCulled = false;
-  if (cfg.open && wallItems.length) {   // murets de torchis : boîte + chapeau de tuiles
+  if (cfg.open && !forest && !water) wallItems.push(...muretRuns(w, key === 'ember'));
+  if (cfg.open && wallItems.length) {   // murets de torchis : boîte + chapeau de tuiles (le chapeau déborde sur l'épaisseur, pas sur la longueur : les segments se raccordent)
     const wb = new THREE.BoxGeometry(1, 0.82, 1); wb.translate(0, 0.41, 0);
-    const cap = new THREE.BoxGeometry(1.14, 0.18, 1.14); cap.translate(0, 0.91, 0);
+    const cap = new THREE.BoxGeometry(1, 0.18, 1.16); cap.translate(0, 0.91, 0);
     const wmat = mat.clone(); wmat.uniforms = { ...mat.uniforms, uType: { value: 7 } };
     const wm = new THREE.InstancedMesh(mergeGeos([wb, cap]), wmat, wallItems.length);
-    wallItems.forEach(([x, z, a, b2, c, , sx, sy], i) => {
-      m4.compose(new THREE.Vector3(x, -OPEN_DEPTH, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sx)); wm.setMatrixAt(i, m4);
+    const qy = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0);
+    wallItems.forEach(([x, z, a, b2, c, rot, sx, sy, th], i) => {
+      m4.compose(new THREE.Vector3(x, -OPEN_DEPTH, z), qy.setFromAxisAngle(yAx, rot || 0), new THREE.Vector3(sx, sy, th || sx)); wm.setMatrixAt(i, m4);
       const pal = cfg.walls || EDO_WALL, pc = pal[Math.floor(c * 7.99) % pal.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
     });
     wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; wm.frustumCulled = false;

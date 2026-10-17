@@ -125,6 +125,18 @@ export const VITAMINS = {
   carbos: { name: 'Carbone', desc: 'Vitesse +3 % (5 fois)' },
   zinc: { name: 'Zinc', desc: 'Endurance max +6 (5 fois)' },
 };
+// Objets tenus (équipables, un par Pokémon ; fiche objets_equipables.md). `elem` : élément dont les attaques gagnent +10 % ; `icon` : fichier de assets/items/.
+export const HELD = {
+  coin: { name: 'Amulette Pièce', desc: 'Chance de drop rare ×1,5 (Pokémon en jeu).', icon: 'amulet-coin' },
+  egg: { name: 'Œuf Chance', desc: 'Essence gagnée +20 % (Pokémon en jeu).', icon: 'lucky-egg' },
+  charcoal: { name: 'Charbon', desc: 'Attaques de type Feu +10 %.', icon: 'charcoal', elem: 'fire' },
+  mystic: { name: 'Eau Mystique', desc: 'Attaques de type Eau +10 %.', icon: 'mystic-water', elem: 'water' },
+  seed: { name: 'Graine Miracle', desc: 'Attaques de type Plante +10 %.', icon: 'miracle-seed', elem: 'grass' },
+  leftovers: { name: 'Restes', desc: 'Régénère 0,5 % des PV max par seconde, sans coup reçu depuis 5 s (Pokémon en jeu).', icon: 'leftovers' },
+  belt: { name: 'Ceinture Force', desc: 'Survit une fois par feu de camp à un coup mortel, à 1 PV.', icon: 'focus-sash' },
+  orb: { name: 'Orbe Vie', desc: 'Dégâts +15 %, mais −2 % des PV max par coup porté (jamais sous 1 PV). Pokémon en jeu.', icon: 'life-orb' },
+  band: { name: 'Bandeau Relais', desc: 'Fenêtre de relais de 1,3 s à 1,6 s (Pokémon en jeu).', icon: 'focus-band' },
+};
 // ---------- drops d'ennemis (fiche drops_et_coffres.md) ----------
 // Valeurs de départ, à équilibrer en prototype. Mini-boss et boss gardent leurs récompenses fixes.
 export const DROP_TABLES = {
@@ -136,7 +148,7 @@ export const DROP_RARE = ['candy', 'candy', 'hpup', 'protein', 'iron', 'calcium'
 export const DROP_PITY_STEP = 0.0005;  // pitié : +0,05 % de chance de rare par kill sans rare (premiers kills d'un emplacement seulement)
 export const DROP_PITY_MAX = 0.10;     // plafond de la chance totale de rare
 export const DROP_AGAIN_MULT = 0.4;    // anti-farm : rare x0,4 sur un emplacement déjà vidé (ennemi qui réapparaît)
-export const ITEM_NAMES = { candy: 'Super Bonbon', berrypack: 'Baies ×2', maxberry: 'Baie Oran Plus', etherpack: 'Huile', maxether: 'Huile Max', revive: 'Rappel', ...Object.fromEntries(Object.entries(VITAMINS).map(([k, v]) => [k, v.name])), ...Object.fromEntries(Object.entries(TMS).map(([k, v]) => [k, 'CT : ' + v.name])) };
+export const ITEM_NAMES = { candy: 'Super Bonbon', berrypack: 'Baies ×2', maxberry: 'Baie Oran Plus', etherpack: 'Huile', maxether: 'Huile Max', revive: 'Rappel', ...Object.fromEntries(Object.entries(VITAMINS).map(([k, v]) => [k, v.name])), ...Object.fromEntries(Object.entries(HELD).map(([k, v]) => [k, v.name])), ...Object.fromEntries(Object.entries(TMS).map(([k, v]) => [k, 'CT : ' + v.name])) };
 
 // ---------- ennemis ----------
 // tier : mini | mid | big ; kind : melee | ranged | ranged3 | bomb | roller | slam

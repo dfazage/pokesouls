@@ -343,7 +343,7 @@ void main(){
     if (this.mistMesh) { this.scene.remove(this.mistMesh); this.mistMesh.geometry.dispose(); this.mistMesh = null; }
     this.doorMeshes = [null, null];
     if (nd) { const d = WD.buildDoors(w); this.doorMeshes = [new THREE.Mesh(d.top, this.mats.top), new THREE.Mesh(d.side, this.mats.side)]; this.doorMeshes.forEach(m => this.scene.add(m)); }
-    if (nf) { this.mistMesh = new THREE.Mesh(WD.buildMist(w, this.pitch), this.mats.mist); this.mistMesh.renderOrder = 8; this.mistMesh.frustumCulled = false; this.scene.add(this.mistMesh); }
+    if (false && nf) { this.mistMesh = new THREE.Mesh(WD.buildMist(w, this.pitch), this.mats.mist); this.mistMesh.renderOrder = 8; this.mistMesh.frustumCulled = false; this.scene.add(this.mistMesh); }
   }
 
   // projette un point du monde (pixels du jeu, hauteur z en pixels) vers l'écran logique 1280×720

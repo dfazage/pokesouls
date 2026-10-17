@@ -1,4 +1,5 @@
 // Rendu : sol, murs, entités triées en profondeur, effets, éclairage HD-2D (ambiance multiplicative + lueurs additives).
+import { fogItem } from './fog.js';
 import { CHAR_K, BOSS_K } from './worldscale.js';
 import { MARKS } from './elements.js';
 import { TICK, A, drawSprite, dirFromVec } from './assets.js';
@@ -84,6 +85,7 @@ export function collectDrawList(g, inView) {
   if (g.swapFx) for (const s of g.swapFx) list.push({ x: s.x, y: s.y + (s.k === 'ball' ? 1 : -1), f: c => drawSwap(c, g, s) });
   if (g.souvenir) list.push({ x: g.souvenir.x, y: g.souvenir.y, f: c => drawSouvenir(c, g) });
   if (g.loot) for (const l of g.loot) if (inView(l.x, l.y)) list.push({ x: l.x, y: l.y, f: c => drawLoot(c, g, l) });   // butin au sol (drops d'ennemis)
+  { const fi = fogItem(g, inView); if (fi) list.push(fi); }   // brume d'entrée du sanctuaire (js/fog.js)
   list.push(...g.falaDraw(inView));   // Fala et ses Modules (carte 2)
   return list;
 }
@@ -169,11 +171,6 @@ export function drawGates(ctx, g) {
     const v = g.world.grid[ty * M.MW + tx]; if (v !== M.T.DOOR) continue;
     const x = tx * TS, y = ty * TS; ctx.fillStyle = '#4d5780'; ctx.fillRect(x, y, TS, TS); ctx.fillStyle = '#2a3150'; ctx.fillRect(x + 2, y + 2, TS - 4, TS - 4);
     ctx.fillStyle = '#c690ff'; ctx.fillRect(x + 4, y + 10, TS - 8, 2); ctx.fillStyle = '#10142a'; ctx.fillRect(x, y + TS - 3, TS, 3);
-  }
-  for (const [tx, ty] of g.world.fog.tiles) {
-    if (g.world.grid[ty * M.MW + tx] !== M.T.FOG) continue;
-    const x = tx * TS, y = ty * TS;
-    for (let i = 0; i < 6; i++) { const a = 0.25 + 0.15 * Math.sin(g.t * 2 + i + ty); ctx.fillStyle = `rgba(190,130,255,${a})`; const ox = Math.sin(g.t * 1.3 + i * 2) * 5; ctx.beginPath(); ctx.ellipse(x + TS / 2 + ox, y + 4 + i * 4, 12, 6, 0, 0, 7); ctx.fill(); }
   }
 }
 
