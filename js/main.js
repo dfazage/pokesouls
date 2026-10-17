@@ -126,10 +126,10 @@ async function newGame(choice, chapter = 'kanto') {
   await launch(g);
 }
 async function resume() { const g = new Game(lastChapter()); if (!g.hasSave) return; await launch(g); }
-// ?dev : état de test, Dracaufeu / Florizarre / Tortank niv. 36 au dernier feu devant la brume de Lugia (Johto) ; ?dev=mewtwo : Laggron / Alakazam / Ectoplasma devant Mewtwo. Sans toucher à la sauvegarde
+// ?dev : état de test, Dracaufeu / Florizarre / Tortank niv. 36 au dernier feu (Antichambre), devant la brume de Mewtwo ; ?dev=lugia : même équipe devant Lugia (Johto) ; ?dev=psy : Laggron / Alakazam / Ectoplasma devant Mewtwo. Sans toucher à la sauvegarde
 async function devStart() {
-  const boss = (location.search.match(/[?&]dev=(\w+)/) || [])[1] === 'mewtwo' ? 'mewtwo' : 'lugia';   // ?dev = Lugia (Johto) ; ?dev=mewtwo = ancien état de test
-  const g = new Game(boss === 'lugia' ? 'johto' : 'kanto'); g.devPreset(boss);
+  const v = (location.search.match(/[?&]dev=(\w+)/) || [])[1], boss = v === 'lugia' ? 'lugia' : 'mewtwo';   // ?dev = Mewtwo (Kanto), équipe de départ ; ?dev=lugia = Lugia (Johto) ; ?dev=psy = équipe Psy devant Mewtwo
+  const g = new Game(boss === 'lugia' ? 'johto' : 'kanto'); g.devPreset(boss, v === 'psy');
   await loadPortraits(g.team.flatMap(m => m.line));
   await launch(g);
 }

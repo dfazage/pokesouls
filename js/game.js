@@ -101,11 +101,12 @@ export class Game {
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 }; this.ethers = this.maxEthers = 3; this.applyLevels(true);
     this.save();
   }
-  // état de test (?dev) : Laggron, Alakazam et Ectoplasma au niveau 36 (stade final), assis au dernier feu du Laboratoire, devant la brume de Mewtwo.
+  // état de test (?dev) : Dracaufeu, Florizarre et Tortank au niveau 36 (stade final), assis au dernier feu du Laboratoire, devant la brume de Mewtwo.
+  // ?dev=psy : Laggron, Alakazam, Ectoplasma ; ?dev=lugia : même équipe qu'en ?dev mais devant Lugia (Johto).
   // Il n'écrit jamais dans la sauvegarde : la vraie partie du joueur reste intacte (save() est neutralisé par noSave).
-  devPreset(boss = 'mewtwo') {
+  devPreset(boss = 'mewtwo', psy = false) {
     this.noSave = true;
-    this.picks = boss === 'lugia' ? ['charmander', 'bulbasaur', 'squirtle'] : ['mudkip', 'abra', 'gastly'];   // clés de lignée du pool : Dracaufeu, Florizarre, Tortank (Lugia) ; Laggron, Alakazam, Ectoplasma (Mewtwo)
+    this.picks = psy ? ['mudkip', 'abra', 'gastly'] : ['charmander', 'bulbasaur', 'squirtle'];   // clés de lignée du pool : Laggron, Alakazam, Ectoplasma (?dev=psy) ; Dracaufeu, Florizarre, Tortank (défaut)
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     for (const m of this.team) m.lvl = D.EVOLVE_AT[1];

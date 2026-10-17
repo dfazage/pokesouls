@@ -125,7 +125,7 @@ Code : `js/render3d.js` (caméra, sprites, lumière, post-traitement), `js/hd2d_
 ## Développement
 
 Site statique, sans build : `python3 -m http.server` puis ouvrir `http://localhost:8000/`.
-`?dev` seul lance directement un **état de test** : Laggron, Alakazam et Ectoplasma au niveau 36, au feu de l'Antichambre du Laboratoire, devant la brume de Mewtwo (gardiens vaincus, carte secrète fermée). Cet état n'écrit jamais dans la sauvegarde et « Nouvelle partie » depuis la pause n'efface pas la vraie partie. `?dev&menu` garde l'écran titre avec les touches dev ; `?dev&autostart&chapter=johto` fonctionne comme avant.
+`?dev` seul lance directement un **état de test** : Dracaufeu, Florizarre et Tortank au niveau 36, au feu de l'Antichambre du Laboratoire, devant la brume de Mewtwo (gardiens vaincus, carte secrète fermée). `?dev=psy` donne Laggron, Alakazam et Ectoplasma à la place ; `?dev=lugia` place la même équipe devant la brume de Lugia (Johto). Cet état n'écrit jamais dans la sauvegarde et « Nouvelle partie » depuis la pause n'efface pas la vraie partie. `?dev&menu` garde l'écran titre avec les touches dev ; `?dev&autostart&chapter=johto` fonctionne comme avant.
 
 Avec `?dev` : F1 invincible, F2 devant la brume du boss, F3 +1000 essence, F4 tue les ennemis proches, F5 boss à 27 %, F6 débloque tout.
 `?autostart` saute l'écran titre. `?2d` force le rendu 2D classique (voir « Rendu HD-2D »).
