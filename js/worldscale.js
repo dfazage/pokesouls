@@ -6,8 +6,8 @@
 //
 // Réglage : ?ws=1.25 (ou 1.5) dans l'URL, borné entre 1 et 2 ; sans paramètre, DEFAULT_WS ci-dessous.
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-// Valeur par défaut : 1 = rendu d'avant (aucun changement visible). Pour adopter le compromis décidé, passer à 1.25.
-const DEFAULT_WS = 1;
+// Valeur par défaut : 1.1 (+10 %, meilleur feeling retenu). ?ws=1 redonne le rendu d’origine.
+const DEFAULT_WS = 1.1;
 
 function read() {
   try {
