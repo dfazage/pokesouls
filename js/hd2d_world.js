@@ -25,7 +25,7 @@ export const HD = {
   rock: { type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },
-  bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .34, .16], [.3, .46, .21], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
+  bell: { type: 6, open: true, fog: [.2, .15, .18], fogD: .014, mist: .4, abyss: [[.2, .16, .12], [.3, .24, .17], [1., .8, .42]], prop: 'tree', propCol: [.1, .26, .12], emis: [1., .75, .3], light: [1.06, 1., .96], bob: 0,
     part: { n: 280, size: 32, color: [1., .85, .4], vel: [0, .28, 0], sway: 1.6, box: [44, 12, 40] }, emisTint: [1.15, .9, .55], emisK: 1.3,
     grade: { ts: [.95, .95, 1.05], th: [1.08, 1.02, .94], sat: 1.1, con: 1.08, bloom: .55, vig: .42 } },
   mystic: { type: 5, fog: [.03, .09, .09], fogD: .021, mist: .55, abyss: [[.01, .035, .04], [.05, .16, .15], [.55, 1., .85]], prop: 'tree', propCol: [.07, .22, .2], emis: [.6, 1., .85], light: [.95, 1.05, 1.02], bob: 0,
@@ -251,6 +251,11 @@ function propGeometry(kind) {
   if (kind === 'spire') return geoCone(5);
   if (kind === 'stalag') return geoCone(6);
   if (kind === 'column') { const g = new THREE.CylinderGeometry(0.9, 1, 1, 6); g.translate(0, 0.5, 0); return g; }
+  if (kind === 'edo') {   // maison de ville : corps (y 0→.5) + toit en croupe (y .5→1)
+    const body = new THREE.BoxGeometry(1, 0.5, 1); body.translate(0, 0.25, 0);
+    const roof = new THREE.CylinderGeometry(0.16, 0.8, 0.5, 4, 1); roof.rotateY(Math.PI / 4); roof.translate(0, 0.75, 0);
+    return mergeGeos([body, roof]);
+  }
   // arbre : tronc + trois cônes empilés
   const trunk = new THREE.CylinderGeometry(0.1, 0.14, 0.4, 6); trunk.translate(0, 0.2, 0);
   const c1 = new THREE.ConeGeometry(0.62, 0.42, 7); c1.translate(0, 0.38, 0);
@@ -258,6 +263,8 @@ function propGeometry(kind) {
   const c3 = new THREE.ConeGeometry(0.3, 0.38, 7); c3.translate(0, 0.84, 0);
   return mergeGeos([trunk, c1, c2, c3]);
 }
+
+const EDO_WALL = [[.78, .72, .58], [.7, .52, .32], [.4, .26, .16], [.74, .72, .66], [.58, .4, .24], [.8, .66, .46], [.5, .46, .4], [.34, .22, .14]];   // plâtre crème, ocre, bois sombre, torchis…
 
 export function buildProps(w, key, seed, shared) {
   const cfg = HD[key], R = (() => { let s = (seed * 2654435761) >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; })();
@@ -268,7 +275,7 @@ export function buildProps(w, key, seed, shared) {
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (w.grid[ty * MW + tx] !== T.VOID) {
     for (let j = -R_; j <= R_; j++) for (let i = -R_; i <= R_; i++) near[(ty + MG + j) * W2 + (tx + MG + i)] = 1;
   }
-  const items = [], target = Math.round(W2 * H2 / 34);
+  const items = [], wallItems = [], target = Math.round(W2 * H2 / 34);
   if (cfg.open) {   // plein air : plus de murs, les limites sont des haies et des arbres (la collision reste celle de la grille)
     const dist = new Uint8Array(MW * MH).fill(99);
     for (let i = 0; i < MW * MH; i++) if (w.grid[i] !== T.VOID) dist[i] = 0;
@@ -285,15 +292,15 @@ export function buildProps(w, key, seed, shared) {
       const low = floorAbove(tx, ty);   // côté sud d'une zone : haies basses, pour ne jamais cacher le joueur
       const put = (k, kind, px, pz) => {
         const a = V(tx, ty, k * 5 + 1), b = V(tx, ty, k * 5 + 2), c = V(tx, ty, k * 5 + 3), e = V(tx, ty, k * 5 + 4);
-        let sx, sy;
-        if (kind === 0) { sx = 1.5 + a * 0.7; sy = low ? 0.55 + b * 0.35 : 1.1 + b * 0.7; }              // haie / buisson taillé
-        else if (kind === 1) { sx = 1.4 + a * 0.9; sy = low ? 1.3 + b * 0.9 : 2.4 + b * 1.8; }        // arbre moyen
-        else { sx = 1.6 + a * 1.0; sy = low ? 2.4 + b * 1.4 : 3.4 + b * 2.4; }                         // grand arbre
+        if (kind === 0) { wallItems.push([tx + 0.5, ty + 0.5, a, b, c, 0, 1.02, low ? 0.78 + b * 0.12 : 1.0 + b * 0.5, e]); return; }   // muret en torchis coiffé de tuiles
+        let sx, sy;   // maisons de ville : corps de plâtre et de bois, toit de tuiles
+        if (kind === 1) { sx = 1.7 + a * 0.7; sy = low ? 1.7 + b * 0.5 : 2.6 + b * 1.0; }
+        else { sx = 2.0 + a * 0.9; sy = low ? 2.6 + b * 0.8 : 3.4 + b * 1.6; }
         items.push([tx + px, ty + pz, a, b, c, kind, sx, sy, e]);
       };
-      if (d === 1) for (let k = 0; k < 3; k++) put(k, 0, 0.15 + V(tx, ty, 40 + k) * 0.7, 0.15 + V(tx, ty, 50 + k) * 0.7);
-      else if (d === 2) { put(0, low ? 0 : 1, 0.2 + V(tx, ty, 60) * 0.6, 0.2 + V(tx, ty, 61) * 0.6); if (V(tx, ty, 62) < 0.5) put(1, 0, 0.5 + V(tx, ty, 63) * 0.4, 0.5 + V(tx, ty, 64) * 0.4); }
-      else if (d <= 4) { if (V(tx, ty, 65) < 0.78) put(0, low && d === 3 ? 1 : 2, 0.2 + V(tx, ty, 66) * 0.6, 0.2 + V(tx, ty, 67) * 0.6); }
+      if (d === 1) put(0, 0, 0.5, 0.5);
+      else if (d === 2) put(0, low ? 0 : 1, 0.3 + V(tx, ty, 60) * 0.4, 0.3 + V(tx, ty, 61) * 0.4);
+      else if (d <= 4) { if (V(tx, ty, 65) < 0.8) put(0, low && d === 3 ? 1 : 2, 0.2 + V(tx, ty, 66) * 0.6, 0.2 + V(tx, ty, 67) * 0.6); }
       else if (V(tx, ty, 68) < 0.5) put(0, 2, V(tx, ty, 69), V(tx, ty, 70));
     }
   }
@@ -303,7 +310,7 @@ export function buildProps(w, key, seed, shared) {
     // distance minimale entre deux accessoires
     items.push([x - MG, z - MG, R(), R(), R()]);
   }
-  const geo = propGeometry(cfg.prop), n = items.length;
+  const geo = propGeometry(cfg.open ? 'edo' : cfg.prop), n = items.length;
   const mat = new THREE.ShaderMaterial({
     vertexShader: S.PROP_VERT, fragmentShader: S.PROP_FRAG,
     uniforms: {
@@ -322,18 +329,29 @@ export function buildProps(w, key, seed, shared) {
     else if (cfg.prop === 'spire') { sx = sz = 0.5 + a * 0.9; sy = 5.5 + b2 * 7; }
     else if (cfg.prop === 'column') { sx = sz = 0.7 + a * 0.8; sy = 3.8 + b2 * 4.5; }
     else if (cfg.prop === 'stalag') { sx = sz = 0.7 + a * 1.1; sy = 5 + b2 * 6; }
-    else if (cfg.open) { sx = sz = 1.0 + a * 0.9; sy = 2.2 + b2 * 2.4; }   // cèdres de jardin : bas, ils ne cachent jamais le jeu
+    else if (cfg.open) { sx = sz = 2.2 + a * 1.2; sy = 3.4 + b2 * 2.4; }   // toits lointains de la ville
     else { sx = sz = 1.5 + a * 1.2; sy = 6 + b2 * 5.5; }
-    const rot = c * 6.283;
+    const rot = cfg.open ? Math.floor(c * 4) * Math.PI / 2 : c * 6.283;
     m4.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(sx, sy, sz));
     mesh.setMatrixAt(i, m4);
     const k = 0.75 + b2 * 0.5;
-    let pc = cfg.propCol;
-    if (cfg.open) { const q = items[i][8]; if (items[i].length > 5 && items[i][5] > 0) pc = q < 0.14 ? [.62, .3, .4] : q < 0.24 ? [.5, .15, .08] : pc; }   // cerisiers et érables parmi les cèdres
+    const pc = cfg.open ? EDO_WALL[Math.floor(c * 7.99) % EDO_WALL.length] : cfg.propCol;
     col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); mesh.setColorAt(i, col);
   });
   mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   mesh.frustumCulled = false;
+  if (cfg.open && wallItems.length) {   // murets de torchis : boîte + chapeau de tuiles
+    const wb = new THREE.BoxGeometry(1, 0.82, 1); wb.translate(0, 0.41, 0);
+    const cap = new THREE.BoxGeometry(1.14, 0.18, 1.14); cap.translate(0, 0.91, 0);
+    const wmat = mat.clone(); wmat.uniforms = { ...mat.uniforms, uType: { value: 7 } };
+    const wm = new THREE.InstancedMesh(mergeGeos([wb, cap]), wmat, wallItems.length);
+    wallItems.forEach(([x, z, a, b2, c, , sx, sy], i) => {
+      m4.compose(new THREE.Vector3(x, -OPEN_DEPTH, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sx)); wm.setMatrixAt(i, m4);
+      const pc = EDO_WALL[Math.floor(c * 7.99) % EDO_WALL.length], k = 0.8 + b2 * 0.4; col.setRGB(pc[0] * k, pc[1] * k, pc[2] * k); wm.setColorAt(i, col);
+    });
+    wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; wm.frustumCulled = false;
+    mesh.add(wm);
+  }
   return mesh;
 }
 

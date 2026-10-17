@@ -13,7 +13,7 @@ export const THEMES = {
   lava: { floor: [66, 40, 38], arena: [78, 42, 34], wallA: '#5a3430', wallB: '#56302c', face: '#321a18', faceTop: '#8a5040', accent: [255, 130, 50], accent2: [255, 200, 90], fx: 'lava', amb: [200, 150, 130], ambArena: [210, 130, 100], decor: ['brazier', 'rock', 'crystal'] },
   rock: { floor: [72, 64, 58], arena: [86, 72, 52], wallA: '#5e5248', wallB: '#5a4e44', face: '#38302a', faceTop: '#8a7a68', accent: [255, 200, 110], accent2: [200, 170, 120], fx: 'stone', amb: [175, 165, 155], ambArena: [185, 160, 120], decor: ['rock', 'pillar', 'brazier'] },
   // Johto : Japon d'Edo (bois sombre, papier, laque, lanternes). Tour Carillon : jardins et cours d'un temple en plein air, sous l'orage
-  bell: { floor: [92, 88, 80], arena: [128, 122, 108], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
+  bell: { floor: [112, 104, 92], arena: [138, 128, 110], wallA: '#6e675c', wallB: '#675f55', face: '#3a342e', faceTop: '#9a9080', accent: [255, 206, 96], accent2: [130, 200, 255], fx: 'garden', open: true, amb: [196, 184, 182], ambArena: [214, 190, 160], decor: ['lantern', 'tree', 'bell', 'torii', 'tree'] },
   mystic: { floor: [36, 68, 62], arena: [52, 50, 86], wallA: '#27494a', wallB: '#244446', face: '#142a2c', faceTop: '#3e7a76', accent: [255, 170, 230], accent2: [160, 255, 220], fx: 'moss', amb: [150, 180, 175], ambArena: [150, 130, 200], decor: ['tree', 'crystal', 'statue'] },
 };
 
@@ -526,15 +526,12 @@ export function bakeFloor(world) {
     const base = inA ? th.arena : lab ? th.floorLab : th.floor;
     const k = ((tx + ty) & 1) ? 6 : 0;
     const vn = (px, py) => { const ix = Math.floor(px), iy = Math.floor(py), fx0 = px - ix, fy0 = py - iy, sm = t => t * t * (3 - 2 * t), a0 = rnd(ix, iy), b0 = rnd(ix + 1, iy), c0 = rnd(ix, iy + 1), d0 = rnd(ix + 1, iy + 1), top = a0 + (b0 - a0) * sm(fx0), bot = c0 + (d0 - c0) * sm(fx0); return top + (bot - top) * sm(fy0); };
-    // plein air : prairie par défaut, avec des plaques de dalles et de terre battue
-    const grass = th.fx === 'garden' && !inA && (vn(tx / 5.5 + 3, ty / 5.5) * 0.7 + vn(tx / 2.2, ty / 2.2 + 5) * 0.3) < 0.6;
-    if (grass) {
-      const pv = vn(tx / 3.2 + 11, ty / 3.2) * 22 + r * 5; g.fillStyle = `rgb(${68 + pv * 0.7 | 0},${104 + pv | 0},${52 + pv * 0.4 | 0})`; g.fillRect(x, y, TS, TS);
-      for (let n = 0; n < 7; n++) { const q = rnd(tx * 7 + n, ty * 3 + n * 5); g.fillStyle = q < 0.5 ? 'rgba(40,78,36,.5)' : 'rgba(150,190,96,.4)'; g.fillRect(x + (q * 977 % 1) * (TS - 2), y + (q * 313 % 1) * (TS - 4), 1, 2 + (q * 51 % 2) | 0); }
-      if (r > 0.955) { g.fillStyle = r > 0.98 ? '#f4eadc' : '#f2c860'; g.fillRect(x + 6 + r * 90 % 12, y + 6 + r * 70 % 12, 2, 2); }
-      continue;
-    }
-    g.fillStyle = `rgb(${base[0] + k + r * 6 | 0},${base[1] + k + r * 6 | 0},${base[2] + k + r * 8 | 0})`;
+    // ville d'Edo : dalles de pierre, briques et planchers de bois répartis en grandes plaques
+    const edo = th.fx === 'garden' && !inA;
+    const et = edo ? (() => { const z = vn(tx / 6 + 3, ty / 6) * 0.75 + vn(tx / 2.4, ty / 2.4 + 5) * 0.25; return z < 0.48 ? 0 : z < 0.72 ? 1 : 2; })() : 0;
+    const ebase = edo ? [[120, 112, 100], [128, 94, 78], [122, 88, 58]][et] : null;
+    const fb = ebase || base;
+    g.fillStyle = `rgb(${fb[0] + k + r * 6 | 0},${fb[1] + k + r * 6 | 0},${fb[2] + k + r * 8 | 0})`;
     g.fillRect(x, y, TS, TS);
     g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x, y + TS - 1, TS, 1); g.fillRect(x + TS - 1, y, 1, TS);
     g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(x, y, TS, 1); g.fillRect(x, y, 1, TS);
@@ -561,13 +558,25 @@ export function bakeFloor(world) {
       g.fillStyle = 'rgba(255,225,170,.06)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 9, TS, 1);
       if (r > 0.86) { g.fillStyle = 'rgba(210,170,90,.5)'; g.fillRect(x + 3, y + 3, 1, 1); g.fillRect(x + TS - 4, y + 12, 1, 1); }
       if (r < 0.07) { g.strokeStyle = 'rgba(120,200,255,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 4, y + 3); g.lineTo(x + 10, y + 10); g.lineTo(x + 8, y + 13); g.lineTo(x + 17, y + 21); g.stroke(); ge.strokeStyle = '#8fd0ff'; ge.lineWidth = 1; ge.beginPath(); ge.moveTo(x + 4, y + 3); ge.lineTo(x + 10, y + 10); ge.lineTo(x + 8, y + 13); ge.lineTo(x + 17, y + 21); ge.stroke(); }
-    } else if (fx === 'garden') {   // dalles de pierre, mousse, gravier ; l'arène est un lit de gravier ratissé
-      if (!inA) {
-        g.fillStyle = 'rgba(0,0,0,.26)'; g.fillRect(x, y + 12, TS, 1); g.fillRect(x + (((tx + ty) & 1) ? 7 : 16), y, 1, 12); g.fillRect(x + (((tx + ty) & 1) ? 17 : 6), y + 13, 1, 11);
-        g.fillStyle = 'rgba(255,250,235,.07)'; g.fillRect(x, y + 1, TS, 1);
-        if (r < 0.3) { g.fillStyle = 'rgba(86,128,64,.38)'; g.beginPath(); g.ellipse(x + 5 + r * 40 % 14, y + 8 + r * 25 % 10, 5, 3, 0, 0, 7); g.fill(); }
-        if (r > 0.9) { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(x + 4 + r * 30 % 14, y + 5, 3, 2); }
+    } else if (fx === 'garden') {   // l'arène est un lit de gravier ratissé ; ailleurs : dalles, briques ou planches
+      if (!inA && et === 0) {   // grandes dalles de pierre, joints décalés, mousse, fissures
+        g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(x, y + 12, TS, 1); g.fillRect(x + (((tx + ty) & 1) ? 7 : 16), y, 1, 12); g.fillRect(x + (((tx + ty) & 1) ? 17 : 6), y + 13, 1, 11);
+        g.fillStyle = 'rgba(255,250,235,.08)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 13, TS, 1);
+        if (r < 0.22) { g.fillStyle = 'rgba(86,128,64,.4)'; g.beginPath(); g.ellipse(x + 5 + r * 40 % 14, y + 8 + r * 25 % 10, 5, 3, 0, 0, 7); g.fill(); }
+        if (r > 0.86 && r < 0.92) { g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 3, y + 6); g.lineTo(x + 10, y + 11); g.lineTo(x + 14, y + 9); g.lineTo(x + 21, y + 17); g.stroke(); }
+      } else if (!inA && et === 1) {   // briques en appareil décalé
+        const o = ((tx + ty) & 1) ? 0 : 6;
+        g.fillStyle = 'rgba(30,18,12,.42)'; g.fillRect(x, y + 7, TS, 1); g.fillRect(x, y + 15, TS, 1); g.fillRect(x, y + 23, TS, 1);
+        for (const [ry, off] of [[0, o], [8, o + 6], [16, o]]) for (let bx = off - 12; bx < TS; bx += 12) if (bx >= 0) g.fillRect(x + bx, y + ry, 1, 7);
+        g.fillStyle = 'rgba(255,225,190,.09)'; g.fillRect(x, y + 8, TS, 1); g.fillRect(x, y + 16, TS, 1); g.fillRect(x, y, TS, 1);
+        if (r > 0.7) { g.fillStyle = r > 0.85 ? 'rgba(0,0,0,.14)' : 'rgba(255,200,150,.1)'; g.fillRect(x + (r * 91 % 2 | 0) * 12 + 1, y + 8 * (r * 33 % 3 | 0), 11, 7); }
+      } else if (!inA) {   // plancher de bois (engawa) : lattes, nœuds
+        g.fillStyle = 'rgba(0,0,0,.32)'; g.fillRect(x, y + 8, TS, 1); g.fillRect(x, y + 16, TS, 1);
+        g.fillRect(x + 6 + (((tx * 7 + ty * 3) % 3) * 5), y, 1, 8); g.fillRect(x + 14 - (((tx + ty * 5) % 3) * 4), y + 9, 1, 7); g.fillRect(x + 4 + (((tx * 5 + ty) % 4) * 4), y + 17, 1, 7);
+        g.fillStyle = 'rgba(255,225,170,.07)'; g.fillRect(x, y + 1, TS, 1); g.fillRect(x, y + 9, TS, 1); g.fillRect(x, y + 17, TS, 1);
+        if (r > 0.88) { g.fillStyle = 'rgba(40,24,12,.4)'; g.beginPath(); g.ellipse(x + 8 + r * 30 % 10, y + 12, 2.5, 1.6, 0, 0, 7); g.fill(); }
       } else if (r > 0.7) { g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + r * 50 % 20, y + r * 70 % 20, 2, 1); }
+      if (!inA && r > 0.975) { g.fillStyle = 'rgba(232,184,84,.5)'; g.fillRect(x + 11, y + 11, 2, 2); ge.fillStyle = 'rgba(232,184,84,.6)'; ge.fillRect(x + 10.5, y + 10.5, 3, 3); }   // clous dorés qui accrochent la lumière des lanternes
     } else if (fx === 'moss') {
       if (r < 0.3) { g.fillStyle = 'rgba(90,200,120,.25)'; g.fillRect(x + 4 + r * 40 % 10, y + 6, 6, 4); g.fillRect(x + 14, y + 14, 5, 3); }
       if (r > 0.92) { g.fillStyle = ac; g.fillRect(x + 8 + r * 20 % 8, y + 8, 2, 2); ge.fillStyle = ac; ge.fillRect(x + 7.5 + r * 20 % 8, y + 7.5, 3, 3); }
