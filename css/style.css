@@ -674,8 +674,6 @@ body.touch #tut .tt-h b{font-size:17px}body.touch #tut p{font-size:13px}
 #tut .tt-h button{font-size:12px;padding:3px 10px}
 
 /* Johto : en attendant l'illustration dédiée, la carte du monde est teintée */
-.wm-map.johto{filter:hue-rotate(-35deg) saturate(.9)}
-.wm-map.johto .wn,.wm-map.johto .wghost{filter:hue-rotate(35deg)}
 
 /* tutoriel : sous les boutons système tactiles */
 body.touch #tut{top:92px}
