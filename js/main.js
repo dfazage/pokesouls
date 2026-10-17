@@ -13,6 +13,7 @@ import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
 import { initTouch } from './touch.js';
+import { createLeaves } from './leaves.js';
 
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), canvas = $('#game'), ctx = canvas.getContext('2d');
@@ -115,6 +116,7 @@ function openPause() {
 }
 function newFromTitle() { Game.wipe(game && game.chapter); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
 
+const leaves = createLeaves(stage);
 function frame(now) {
   if (r3d) r3d.adapt(now - last);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -135,6 +137,7 @@ function frame(now) {
     else render(game, ctx);
     hud.update(dt);
   }
+  leaves.update(mode === 'play' || mode === 'pause' ? dt : 0, !!(game && game.world && game.world.def.theme === 'bell' && mode !== 'title'));
   touchUi.update(mode);
   directMusic(game, ui, dt);
   Input.endFrame();
