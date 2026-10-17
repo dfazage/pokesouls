@@ -15,7 +15,7 @@ Code : `js/fala.js` (quête, dialogues), `js/reserve.js` (réserve, échange), g
 
 ## Le chapitre
 
-Chaque chapitre correspond à une génération. Les cartes sont des zones ouvertes (cavernes ou cours organiques reliées par de larges passages, boucles, un raccourci qui s'ouvre de l'autre côté, un seul passage de brume), générées avec une graine fixe ; seul le Laboratoire oublié de Kanto est dessiné à la main. Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
+Chaque chapitre correspond à une génération. Les cartes sont des zones ouvertes (cavernes ou cours organiques reliées par de larges passages, boucles, un raccourci qui s'ouvre de l'autre côté, un seul passage de brume), générées avec une graine fixe ;  Chaque chapitre compte quatre cartes et une carte secrète (qui n'apparaît qu'après le boss final), reliées par une carte du monde de téléportation.
 
 | # | Carte | Boss | Gros mob |
 |---|---|---|---|
@@ -116,7 +116,7 @@ Avec `?dev` : F1 invincible, F2 devant la brume du boss, F3 +1000 essence, F4 tu
 `?autostart` saute l'écran titre. `?2d` force le rendu 2D classique (voir « Rendu HD-2D »).
 
 Tous les chiffres (PV, dégâts, coûts) sont des valeurs de départ à équilibrer : voir `js/data.js`.
-Les cartes sont dans `js/maps.js` (cartes 1, 2, 3, 4 et 6 générées avec une graine fixe, carte 5 dessinée à la main).
+Les cartes sont dans `js/maps.js` (toutes générées avec une graine fixe par `generateFree`).
 
 Les sprites sont préparés par `tools/fetch_sprites.py` et `tools/bake_sprites.py` à partir des feuilles de PMDCollab ; ils se chargent par espèce, au besoin.
 
