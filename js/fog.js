@@ -5,7 +5,8 @@ import * as M from './maps.js';
 import * as D from './data.js';
 import { A, drawSprite } from './assets.js';
 
-const TS = 24, RX = 34, RY = 44;          // demi-largeur et demi-hauteur du portail (px de monde)
+const TS = 24, RX = 34, RY0 = 44;
+let RY = RY0;                             // demi-hauteur courante : réduite pendant le combat (voir drawFog)          // demi-largeur et demi-hauteur du portail (px de monde)
 const BURST_T = 0.9;                      // durée de l'éclatement quand la brume s'ouvre (s)
 
 // dark/light : bornes de la palette de nuages ; glow : lueur centrale ; swirl : vitesse de rotation (négatif = sens inverse) ;
@@ -105,7 +106,7 @@ const FX = {
   },
   column(c, t, X, YC) {         // colonne de feu qui jaillit à intervalles (Entei)
     const per = 3.2, n = Math.floor(t / per), f = (t - n * per) / 0.9; if (f > 1) return;
-    const x = X + (hash(n * 5.3) - 0.5) * RX * 1.6, hgt = Math.sin(f * Math.PI) * 64;
+    const x = X + (hash(n * 5.3) - 0.5) * RX * 1.6, hgt = Math.sin(f * Math.PI) * 64 * RY / RY0;
     for (let y = 0; y < hgt; y += 3) { const w = Math.max(2, 10 - y * 0.12); px(c, x - w / 2, YC + RY - y, w, 3, y < hgt * 0.5 ? '#ffb040' : '#ff6a20', 0.9 - y / hgt * 0.4); }
   },
   glitch(c, t, X, YC, o) {      // bandes décalées, comme une image qui saute
@@ -151,10 +152,12 @@ export function fogItem(g, inView) {
 }
 
 function drawFog(c, g, X, Y, boss, st, burst) {
-  const t = g.t, P = build(boss, st), YC = Y - 46, ch = g.chief();
+  const low = !!g.bossActive && burst < 0;   // dans l'arène : mur bas, pour ne pas gêner la vue ni les déplacements
+  RY = low ? 12 : RY0; const ps = low ? 0.55 : 1;
+  const t = g.t, P = build(boss, st), YC = Y - (low ? 12 : 46), ch = g.chief();
   // approche : 0 loin, 1 collé au portail (lissé)
   const f = g._fogK || (g._fogK = { k: 0, t }), dt = Math.min(0.1, Math.max(0, t - f.t)); f.t = t;
-  const target = burst >= 0 ? 1 : clamp((150 - Math.hypot(ch.x - X, ch.y - Y)) / 110, 0, 1);
+  const target = low ? 0 : burst >= 0 ? 1 : clamp((150 - Math.hypot(ch.x - X, ch.y - Y)) / 110, 0, 1);
   f.k += (target - f.k) * Math.min(1, dt * 3); const o = f.k;
   const bk = burst >= 0 ? burst : 0, fade = burst >= 0 ? 1 - bk : 1;
   c.save(); c.imageSmoothingEnabled = false;
@@ -163,20 +166,22 @@ function drawFog(c, g, X, Y, boss, st, burst) {
       const p = P.layers[li][i], a = p.a0 + t * p.sp * st.swirl * (1 / (0.45 + p.u));
       let u = p.u + (1.3 - p.u) * o * 0.7; u *= 1 + bk * 1.7;
       let x = X + Math.cos(a) * u * RX * 1.15, y = YC + Math.sin(a) * u * RY, al = (li === 2 ? 1 - 0.7 * o : li === 1 ? 1 - 0.4 * o : 1) * fade;
-      if (st.rise) { const r = ((t * 0.18 + p.ph) % 1); y += 26 - r * 52; al *= Math.sin(r * Math.PI) * 0.8 + 0.2; }
+      if (st.rise) { const r = ((t * 0.18 + p.ph) % 1); y += (26 - r * 52) * RY / RY0; al *= Math.sin(r * Math.PI) * 0.8 + 0.2; }
       if (st.jit) { const n = Math.floor(t * 12); x += (hash(n + i * 3.7 + li) - 0.5) * 3 * st.jit; y += (hash(n * 1.3 + i + li) - 0.5) * 2 * st.jit; }
-      c.globalAlpha = clamp(al, 0, 1); c.drawImage(p.img, Math.round(x - p.w / 2), Math.round(y - p.h / 2), p.w, p.h);
+      if (low && i % 2) continue;   // combat : moitié moins de nuages, plus petits et plus clairs
+      const w = p.w * ps, h = p.h * ps;
+      c.globalAlpha = clamp(al * (low ? 0.8 : 1), 0, 1); c.drawImage(p.img, Math.round(x - w / 2), Math.round(y - h / 2), w, h);
     }
     c.globalAlpha = 1;
   };
   layer(0);
   // lueur centrale (anneaux pleins, bords francs)
   const gk = (0.45 + 0.9 * o) * fade, gl = st.glow;
-  for (let r = 34; r > 3; r -= 3) { c.fillStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.1 * gk})`; c.beginPath(); c.ellipse(X, YC + 4, r * 1.2, r * 1.35, 0, 0, 7); c.fill(); }
+  for (let r = low ? 0 : 34; r > 3; r -= 3) { c.fillStyle = `rgba(${gl[0]},${gl[1]},${gl[2]},${0.1 * gk})`; c.beginPath(); c.ellipse(X, YC + 4, r * 1.2, r * 1.35, 0, 0, 7); c.fill(); }
   
   // silhouette du boss derrière la brume
   const spr = D.BOSSES[boss] && D.BOSSES[boss].sprite, sp = spr && A.db[spr];
-  if (sp) {
+  if (sp && !low) {
     const sc = Math.min(D.BOSSES[boss].scale || 1.5, 92 / (sp.anchor.h || 60)), al = (0.2 + 0.78 * o) * fade;
     drawSprite(c, spr, 'Idle', t * 8, true, 0, X, YC + 36, { scale: sc, alpha: al, tint: 'brightness(.07) saturate(.5)' });
   }
@@ -185,7 +190,7 @@ function drawFog(c, g, X, Y, boss, st, burst) {
   // brume rasante au pied du portail
   for (let i = 0; i < P.ground.length; i++) {
     const p = P.ground[i], x = X + Math.sin(t * p.sp * 3 + p.ph * 6.283) * RX * 1.5 * (1 + bk * 1.2), y = Y - 4 + Math.sin(t * 0.5 + i) * 2;
-    c.globalAlpha = 0.75 * fade; c.drawImage(p.img, Math.round(x - p.w / 2), Math.round(y - p.h / 2), p.w, p.h);
+    c.globalAlpha = (low ? 0.55 : 0.75) * fade; c.drawImage(p.img, Math.round(x - p.w * ps / 2), Math.round(y - p.h * ps / 2), p.w * ps, p.h * ps);
   }
   c.globalAlpha = 1; c.restore();
 }
