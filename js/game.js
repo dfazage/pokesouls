@@ -741,8 +741,9 @@ export class Game {
   updateLoot(dt) {
     if (!this.loot.length) return; const c = this.chief(); let taken = false;
     for (const l of this.loot) {
-      l.age += dt; l.life -= dt; if (l.age < 0.5) continue;   // petit délai : l'objet retombe avant de pouvoir être ramassé
+      l.age += dt; l.life -= dt; if (l.age < 0.65) continue;   // petit délai : l'objet retombe et rebondit avant de pouvoir être ramassé
       const d = hyp(l.x - c.x, l.y - c.y);
+      l.pull = d < 46 ? Math.min(1, (l.pull || 0) + dt * 6) : Math.max(0, (l.pull || 0) - dt * 6);   // soulèvement visuel pendant l'aimantation
       if (d < 46 && d > 1) { const s = Math.min(d, (70 + (46 - d) * 6) * dt); l.x += (c.x - l.x) / d * s; l.y += (c.y - l.y) / d * s; }   // aimantation
       if (d < 13) {
         const n = this.give(l.key); l.life = 0; taken = true; SFX.pick();
