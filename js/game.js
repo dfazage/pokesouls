@@ -237,7 +237,10 @@ export class Game {
     for (const s of this.world.spawns) {
       const d = D.ENEMIES[s.type]; if (!d) continue;
       if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
-      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS, s.up || 0));
+      const e = this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS, s.up || 0);
+      const hw = Math.min(e.r, 6) * 0.8, p = M.nearestFree(this.world, e.x, e.y, hw, 3);   // jamais coincé dans un mur ou un décor
+      if (p) { e.x = e.hx = p[0]; e.y = e.hy = p[1]; }
+      this.enemies.push(e);
     }
     this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null; this.bossCam = null; this.bossCamK = 0;
     this.closeFog();
