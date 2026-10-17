@@ -19,14 +19,14 @@ export const TRACKS = {
   MAP_J4: { title: 'Îles Tourbillon (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Îles Tourbillon' },
   MAP_J5: { title: 'Forêt d\'Ilex (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Johto · Forêt d\'Ilex (secrète)' },
   BOSS_RAIKOU: { title: 'Raikou, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou' },
-  BOSS_RAIKOU_P2: { title: 'Raikou, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou, sous 50 % de vie' },
+  BOSS_RAIKOU_P2: { title: 'Raikou, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Raikou, dès la phase 2 (60 % de vie)' },
   BOSS_ENTEI: { title: 'Entei, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Entei' },
-  BOSS_ENTEI_P2: { title: 'Entei, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Entei, sous 50 % de vie' },
+  BOSS_ENTEI_P2: { title: 'Entei, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Entei, dès la phase 2 (60 % de vie)' },
   BOSS_SUICUNE: { title: 'Suicune, phase 1 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Suicune' },
-  BOSS_SUICUNE_P2: { title: 'Suicune, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Suicune, sous 50 % de vie' },
-  SUBBOSS_BIRDS_P2: { title: 'Boss des oiseaux, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Oiseaux, sous 50 % de vie' },
-  SUBBOSS_KINGS_P2: { title: 'Boss des rois, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Rois de Kanto, sous 50 % de vie' },
-  BOSS_MEW_P2: { title: 'Mew, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew, sous 50 % de vie' },
+  BOSS_SUICUNE_P2: { title: 'Suicune, phase 2 (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Suicune, dès la phase 2 (60 % de vie)' },
+  SUBBOSS_BIRDS_P2: { title: 'Boss des oiseaux, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Oiseaux, dès la phase 2 (60 % de vie)' },
+  SUBBOSS_KINGS_P2: { title: 'Boss des rois, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Rois de Kanto, dès la phase 2 (60 % de vie)' },
+  BOSS_MEW_P2: { title: 'Mew, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew, dès la phase 2 (60 % de vie)' },
   BOSS_LUGIA_P1: { title: 'Lugia, la tempête (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Lugia, phase 1' },
   BOSS_LUGIA_P2: { title: 'Lugia, le ciel dégagé (Edo)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Lugia, phase 2' },
   SUBBOSS_KINGS: { title: 'Boss des rois, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Rois de Kanto (Dracolosse)' },
@@ -128,7 +128,7 @@ export const Music = {
 // ---------- chef d'orchestre : choisit la piste selon le contexte (BOSS > MINIBOSS > MAP > HUB > MENU) ----------
 let miniOn = false, miniOff = 0, miniAlt = false, miniId = 'MINIBOSS_A', lastMap = -1;
 const BOSS_TRACK = { raikou: 'BOSS_RAIKOU', entei: 'BOSS_ENTEI', suicune: 'BOSS_SUICUNE', lugia: 'BOSS_LUGIA_P1', articuno: 'SUBBOSS_BIRDS', zapdos: 'SUBBOSS_BIRDS', moltres: 'SUBBOSS_BIRDS', dragonite: 'SUBBOSS_KINGS', mewtwo: 'BOSS_MEWTWO_P1', mew: 'BOSS_MEW', celebi: 'BOSS_MEW' };
-// phase 2 : quand le boss passe sous 50 % de vie
+// phase 2 : dès que le boss entre dans sa phase 2 (60 % de vie, cri de phase)
 const BOSS_P2 = { raikou: 'BOSS_RAIKOU_P2', entei: 'BOSS_ENTEI_P2', suicune: 'BOSS_SUICUNE_P2', lugia: 'BOSS_LUGIA_P2', articuno: 'SUBBOSS_BIRDS_P2', zapdos: 'SUBBOSS_BIRDS_P2', moltres: 'SUBBOSS_BIRDS_P2', dragonite: 'SUBBOSS_KINGS_P2', mewtwo: 'BOSS_MEWTWO_P2', mew: 'BOSS_MEW_P2', celebi: 'BOSS_MEW_P2' };
 export function directMusic(g, ui, dt) {
   if (ui.screen === 'starters') return Music.direct('MENU_STARTER');
@@ -137,8 +137,8 @@ export function directMusic(g, ui, dt) {
   if (g.mapIdx !== lastMap) { lastMap = g.mapIdx; Music.prefetch([`MAP_${g.world.def.mus || g.mapIdx + 1}`, BOSS_TRACK[g.world.def.boss], BOSS_P2[g.world.def.boss], 'MINIBOSS_A', 'MINIBOSS_B'].filter(Boolean)); }
   const b = g.bossActive && g.boss && !g.boss.dead ? g.boss : null;
   if (b) {
-    const key = g.world.def.boss, ratio = b.hp / b.maxhp; let id = BOSS_TRACK[key], tempo = 1;
-    if (BOSS_P2[key] && ratio < 0.5) id = BOSS_P2[key];
+    const key = g.world.def.boss; let id = BOSS_TRACK[key], tempo = 1;
+    if (BOSS_P2[key] && b.phase >= 2) id = BOSS_P2[key]; // même seuil que la vraie phase 2 du combat (BOSS_THRESHOLDS)
     miniOn = false; return Music.direct(id, tempo);
   }
   const c = g.chief();
