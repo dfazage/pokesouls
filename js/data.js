@@ -125,6 +125,17 @@ export const VITAMINS = {
   carbos: { name: 'Carbone', desc: 'Vitesse +3 % (5 fois)' },
   zinc: { name: 'Zinc', desc: 'Endurance max +6 (5 fois)' },
 };
+// ---------- drops d'ennemis (fiche drops_et_coffres.md) ----------
+// Valeurs de départ, à équilibrer en prototype. Mini-boss et boss gardent leurs récompenses fixes.
+export const DROP_TABLES = {
+  mini: { common: [{ id: 'berrypack', p: 0.08 }], rare: 0.02 },
+  mid: { common: [{ id: 'berrypack', p: 0.07 }, { id: 'etherpack', p: 0.05 }], rare: 0.03 },
+  big: { common: [], guaranteed: ['berrypack', 'etherpack'], rare: 0.10 },   // gros mob : un consommable garanti + rare 10 % (CT de la carte possible)
+};
+export const DROP_RARE = ['candy', 'candy', 'hpup', 'protein', 'iron', 'calcium', 'carbos', 'zinc'];   // tirage des drops rares (Super Bonbon x2 pour peser plus)
+export const DROP_PITY_STEP = 0.0005;  // pitié : +0,05 % de chance de rare par kill sans rare (premiers kills d'un emplacement seulement)
+export const DROP_PITY_MAX = 0.10;     // plafond de la chance totale de rare
+export const DROP_AGAIN_MULT = 0.4;    // anti-farm : rare x0,4 sur un emplacement déjà vidé (ennemi qui réapparaît)
 export const ITEM_NAMES = { candy: 'Super Bonbon', berrypack: 'Baies ×2', maxberry: 'Baie Oran Plus', etherpack: 'Huile', maxether: 'Huile Max', revive: 'Rappel', ...Object.fromEntries(Object.entries(VITAMINS).map(([k, v]) => [k, v.name])), ...Object.fromEntries(Object.entries(TMS).map(([k, v]) => [k, 'CT : ' + v.name])) };
 
 // ---------- ennemis ----------

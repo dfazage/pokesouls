@@ -54,7 +54,7 @@ export function speciesForMap(idx) {
   return [...set];
 }
 const CAM_YAW = 45, CAM_TILT = 0, CAM_LOW_STEPS = 2;   // pivot latéral ±45° ; inclinaison crantée (stick droit haut / bas) : 0 = vue d'exploration, 2 = vue basse comme en duel (voir render3d.js)
-const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
+const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [], dropped: [] });
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
 export class Game {
@@ -67,7 +67,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.pity = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -108,7 +108,7 @@ export class Game {
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
     for (const m of this.team) m.lvl = D.EVOLVE_AT[1];
-    this.bench = []; this.chiefIdx = 0; this.essence = 0; this.link = 0; this.souvenir = null;
+    this.bench = []; this.chiefIdx = 0; this.essence = 0; this.pity = 0; this.link = 0; this.souvenir = null;
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 };
     this.berries = this.maxBerries = 5; this.ethers = this.maxEthers = 3;
     const lab = M.MAPS.findIndex(d => d.boss === 'mewtwo');   // le Laboratoire oublié : carte 4 de Kanto (index 3)
@@ -122,7 +122,7 @@ export class Game {
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
     return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
-      playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, tips: this.tips, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
+      playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, pity: Math.round(this.pity * 1e4) / 1e4, tips: this.tips, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { if (this.noSave) return; try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
   static exists(ch) { try { return !!localStorage.getItem(saveKey(ch)); } catch (e) { return false; } }
@@ -142,7 +142,7 @@ export class Game {
     };
     this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i] }));
     this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
-    this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
+    this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.pity = s.pity || 0; this.link = s.link || 0;
     this.tips = s.tips || (s.playT > 300 || s.essence > 0 ? { essence: true } : {});   // anciennes sauvegardes déjà bien avancées : pas de conseil de débutant
     if (s.mv !== 2) {   // l'ancienne carte 4 (Route Victoire) n'existe plus : Labo et Île Mystère reculent d'un cran
       const mp = n => (n > 3 ? n - 1 : n);
@@ -706,10 +706,41 @@ export class Game {
       'Chaque ennemi vaincu te donne de l’essence. Au feu de camp, dépense-la pour faire monter tes Pokémon de niveau avec le bouton « Monter » : plus de PV, plus de puissance, et un jour l’évolution.',
       'Attention : si tu meurs, l’essence que tu portes tombe avec toi. Retourne là où tu es mort pour la récupérer.'] });
   }
+  // ---------- drops d'ennemis (fiche drops_et_coffres.md) ----------
+  dropLuck() { return 1; }   // crochet : objet tenu ou trait passif « Chanceux » à venir (actif seulement)
+  rollDrops(e) {
+    const T = D.DROP_TABLES[e.def.tier];
+    if (!T || e.boss || e.clone || e.tutDummy || this.tut || e.def.pseudo) return;   // boss, mini-boss et leurres : récompenses fixes
+    const pr = this.prog[this.mapIdx]; pr.dropped ||= [];
+    const key = Math.round(e.hx) + ',' + Math.round(e.hy), again = pr.dropped.includes(key);   // emplacement déjà vidé : ennemi réapparu
+    if (!again) pr.dropped.push(key);
+    const got = [];
+    for (const c of T.common) {
+      if (c.id === 'berrypack' && this.berries >= this.maxBerries) continue;   // stock plein : pas de drop inutile
+      if (c.id === 'etherpack' && this.ethers >= this.maxEthers) continue;
+      if (Math.random() < c.p) got.push(c.id);
+    }
+    if (T.guaranteed) got.push(T.guaranteed[(Math.random() * T.guaranteed.length) | 0]);
+    // emplacement déjà vidé : chance réduite, et ni pitié ni progression de pitié (sinon le farm au feu reste rentable)
+    const p = again ? T.rare * this.dropLuck() * D.DROP_AGAIN_MULT : Math.min(D.DROP_PITY_MAX, T.rare * this.dropLuck() + this.pity);
+    let rare = false;
+    if (Math.random() < p) {
+      let pool = D.DROP_RARE; if (e.def.tier === 'big') pool = pool.concat((this.world.def.loot || []).filter(k => D.TMS[k]));
+      got.push(pool[(Math.random() * pool.length) | 0]); rare = true; if (!again) this.pity = 0;
+    } else if (!again) this.pity = Math.min(D.DROP_PITY_MAX, this.pity + D.DROP_PITY_STEP);
+    if (!got.length) return;
+    got.forEach((k, i) => {
+      const n = this.give(k), isRare = rare && i === got.length - 1; this.popItem(e.x + (i - (got.length - 1) / 2) * 16, e.y - 8, k, 0.15 + i * 0.2);
+      this.floatText(e.x, e.y - 40 - i * 9, '+ ' + n.split(' (')[0], isRare ? '#ffe27a' : '#9fe8a8');
+      if (isRare) this.emit('toast', 'Drop rare : ' + n, k);
+    });
+    SFX.pick(); this.save();
+  }
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
     if (this.lock === e) this.lock = null;
     if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); if (!this.tips.essence && !this.tut && !e.tutDummy && !(this.tipT > 0)) this.tipT = 1.2; }   // premier gain d'essence : conseil expliqué une fois
+    this.rollDrops(e);
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
     if (e.def.pseudo && !this.prog[this.mapIdx].pseudoDead) {   // mini-boss optionnel : deux Super Bonbons et une vitamine
