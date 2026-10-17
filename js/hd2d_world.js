@@ -569,11 +569,11 @@ function geoEdoHouse() {
   return g;
 }
 // texture pixel art des maisons : filtrage au plus proche, valeurs brutes (comme les murs)
-function houseTex(img) { const t = new THREE.Texture(img); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; t.flipY = false; t.needsUpdate = true; return t; }
+export function houseTex(img) { const t = new THREE.Texture(img); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; t.flipY = false; t.needsUpdate = true; return t; }
 
 // arbres et buissons de la forêt (texturés en pixel art par le shader TREE) : tronc effilé et grosse couronne de blobs ; buisson = trois blobs bas.
 // Attributs : aMat (0 écorce, 1 feuillage), aUV = (u autour du tronc, 0, hauteur depuis le sommet) pour l'écorce.
-function geoForest(bush) {
+export function geoForest(bush) {
   const P = [], N = [], MAT = [], UV = [];
   const add = (g0, m, mx, my, mz, ox, oy, oz, rot = 0) => {
     const g = g0.index ? g0.toNonIndexed() : g0, p = g.getAttribute('position'), n = g.getAttribute('normal'), uv = g.getAttribute('uv');
