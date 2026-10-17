@@ -91,7 +91,9 @@ async function launch(g) {
 }
 // ---------- fins ----------
 // boss final : panneau « Suivre l'appel / Rester » ; boss secret : épilogue puis écran FIN puis menu principal
-const toMenu = () => { location.href = location.pathname + (game && game.dev ? '?dev' : ''); };
+// En dev, revenir au titre passe par ?dev&menu : ?dev seul relance directement l'état de test (voir devStart)
+const titleUrl = () => location.pathname + (game && game.dev ? '?dev&menu' : '');
+const toMenu = () => { location.href = titleUrl(); };
 function stats() { const g = game, lv = Math.round(g.team.reduce((s, m) => s + m.lvl, 0) / g.team.length); return [['Temps de jeu', fmtTime(g.playT)], ['Défaites', String(g.deaths)], ['Niveau moyen', String(lv)]]; }
 function startEnding(end, id) {
   if (!end) { toMenu(); return; }
@@ -123,6 +125,12 @@ async function newGame(choice, chapter = 'kanto') {
   await launch(g);
 }
 async function resume() { const g = new Game(lastChapter()); if (!g.hasSave) return; await launch(g); }
+// ?dev seul : état de test, Laggron / Alakazam / Ectoplasma niv. 36 au feu devant Mewtwo, sans toucher à la sauvegarde
+async function devStart() {
+  const g = new Game('kanto'); g.devPreset();
+  await loadPortraits(g.team.flatMap(m => m.line));
+  await launch(g);
+}
 
 function closeMenu() { Controls_stop(); hideMenu(); mode = 'play'; menuKind = null; ui.menuKind = null; Input.clear(); }
 function Controls_stop() { /* l'écran des commandes arrête lui-même l'écoute */ }
@@ -141,10 +149,10 @@ function openTravel() { openMenu('travel', () => showTravel(game, closeMenu, goT
 function openPause() {
   mode = 'pause'; menuKind = 'pause'; Input.clear();
   const back = () => showPauseMenu(game, h);
-  const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), title: () => { closeMenu(); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }, reset: () => { closeMenu(); newFromTitle(); } };
+  const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), title: () => { closeMenu(); location.href = titleUrl(); }, reset: () => { closeMenu(); newFromTitle(); } };
   back();
 }
-function newFromTitle() { Game.wipe(game && game.chapter); location.href = location.pathname + (game && game.dev ? '?dev' : ''); }
+function newFromTitle() { if (!(game && game.noSave)) Game.wipe(game && game.chapter); location.href = titleUrl(); }   // l'état de test ne doit jamais effacer la vraie sauvegarde
 
 const leaves = createLeaves(stage);
 function frame(now) {
@@ -207,5 +215,6 @@ addEventListener('keydown', e => { if (e.shiftKey && e.code === 'F8') { e.preven
   await initHD2D();
   mode = 'title';
   if (/[?&]autostart/.test(location.search)) { const chq = (location.search.match(/[?&]chapter=(\w+)/) || [])[1]; if (chq) newGame(['charmander', 'squirtle', 'bulbasaur'], chq); else if (has) resume(); else newGame(['charmander', 'squirtle', 'bulbasaur']); }   // ?chapter=johto : nouvelle partie de test dans ce chapitre
+  else if (/[?&]dev\b/.test(location.search) && !/[?&]menu\b/.test(location.search)) devStart();   // ?dev : état de test devant Mewtwo ; ?dev&menu garde l'écran titre
   requestAnimationFrame(t => { last = t; frame(t); });
 })();
