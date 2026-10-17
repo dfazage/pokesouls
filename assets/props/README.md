@@ -34,3 +34,6 @@ Générés par `python3 tools/props_gen/build_floor.py [--preview DIR]` (peintre
 - `floor_d.png` / `floor_de.png` : décors posés au sol (débris, flaques, os, pétales…, `decals`) et tronçons de câbles continus (`runs`), tamponnés par `stampFloorDecals` (graine fixe, jamais sous un décor, un coffre, l'arène ni un pont).
 - `walls.png` / `walls_e.png` : 9 tuiles par thème (4 faces, porte, 4 dessus) lues par `makeWallTextures`.
 Les anciens sprites externes `tree_bell`, `torii_bell`, `pillar_{ice,lava,plant,lab}`, `crystal_ice`, `rock_ice`, `bonfire_*` sont remplacés par des versions `decor.png` à deux inclinaisons (`obs_basalt` et les coffres gardent leurs feuilles d'origine).
+
+## Identité des zones (`js/zones.js`)
+Chaque zone nommée des 10 cartes a un profil : `tint` (voile de couleur fondu entre zones, posé avant les décalques), `t` (poids des variantes de tuile du sol), `d` (poids des décalques), `dens`/`runs` (densité des décalques / câbles) et `decor` (types de décor solide, appliqués à la génération sauf si la zone en fixe déjà). Ajouter une zone = ajouter une entrée dans `ZONES[<id carte>][<nom>]` ; sans entrée, la zone garde le rendu de base.

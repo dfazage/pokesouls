@@ -2,6 +2,7 @@
 // Toutes les cartes : zones libres générées avec une graine fixe (voir generateFree).
 // Dans toutes les cartes, l'arène du boss est au nord de la dernière salle : on y entre par le sud, le boss attend en face (arrivée frontale).
 import { pickProp, drawProp, FLOOR } from './props.js';
+import { zoneStyle, zoneDecor } from './zones.js';
 // PADY : rangées ajoutées en haut de la carte pour que l'arène du boss (rayon ×1,5) s'étende vers le nord sans toucher au reste : son bord sud, l'antichambre et l'entrée de face restent où ils étaient
 export const TS = 24, MW = 124, MH = 73, PADY = 9, ARENA_R = 12.15, FACE = 10;
 export const T = { VOID: 0, FLOOR: 1, DOOR: 2, FOG: 3, SOLID: 4 };
@@ -443,7 +444,7 @@ function generateFree(def) {
 export function buildWorld(idx) {
   const def = MAPS[idx], th = THEMES[def.theme];
   const world = { idx, def, theme: th, name: def.name };
-  const L = generateFree({ ...def, decorKinds: th.decor });
+  const L = generateFree({ ...def, decorKinds: th.decor, free: { ...def.free, zones: def.free.zones.map(z => z.decor ? z : (zoneDecor(def.id, z.name) ? { ...z, decor: zoneDecor(def.id, z.name) } : z)) } });
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) L.grid[(d.ty + j) * MW + d.tx + i] = T.SOLID; }
   for (const c of L.chests) L.grid[c.ty * MW + c.tx] = T.SOLID;
   for (const d of L.decor) { const [w, h] = FOOT[d.kind]; d.w = w; d.h = h; d.seed = (d.tx * 31 + d.ty * 17) % 97; }
@@ -533,13 +534,46 @@ export function lineClear(world, x0, y0, x1, y1) {
 
 // ---------- rendu du sol (mis en cache) ----------
 // Tuile de sol pixel art : clé '<thème>:<rôle>' (arena, lab, floor ; s0 dalles, s1 briques/prairie, s2 planches, br pont pour les jardins).
+// ---------- identité des zones (js/zones.js) ----------
+// profil de la zone d'une case (null hors zone nommée), mis en cache par monde
+function zoneAt2(world, tx, ty) {
+  if (!world._zs) world._zs = world.rooms.map(r => zoneStyle(world.def.id, r.name));
+  const ri = world.roomOf[ty * MW + tx]; return ri >= 0 ? world._zs[ri] : null;
+}
+// tirage d'une variante de tuile avec les facteurs de la zone (st.t), poids cumulés mis en cache par profil et par jeu de tuiles
+function zonePick(m, st, q) {
+  const c = st._pk || (st._pk = {});
+  let e = c[m.i0];
+  if (!e) {
+    const cnt = {}; for (const j of m.pick) cnt[j] = (cnt[j] || 0) + 1;
+    const idx = [], cum = []; let tot = 0;
+    for (const j of Object.keys(cnt)) { const w = cnt[j] * (st.t[m.names[j]] ?? 1); if (w <= 0) continue; tot += w; idx.push(+j); cum.push(tot); }
+    e = c[m.i0] = { idx, cum, tot };
+  }
+  if (!e.idx.length) return m.pick[0];
+  const v = q * e.tot; let k = 0; while (k < e.idx.length - 1 && v > e.cum[k]) k++;
+  return e.idx[k];
+}
+// voile de teinte par zone : une image d'une case par pixel, agrandie en lissé pour fondre les frontières entre zones
+function tintZones(g, world) {
+  let any = false; const c = document.createElement('canvas'); c.width = MW; c.height = MH; const cg = c.getContext('2d'), im = cg.createImageData(MW, MH), a = world.arena;
+  for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+    if (world.grid[ty * MW + tx] === T.VOID) continue;
+    if ((tx + 0.5 - a.cx) ** 2 + (ty + 0.5 - a.cy) ** 2 <= (a.r + 1) ** 2) continue;
+    const st = zoneAt2(world, tx, ty); if (!st || !st.tint) continue;
+    const o = (ty * MW + tx) * 4, t = st.tint; im.data[o] = t[0]; im.data[o + 1] = t[1]; im.data[o + 2] = t[2]; im.data[o + 3] = t[3] * 255; any = true;
+  }
+  if (!any) return;
+  cg.putImageData(im, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(c, 0, 0, MW * TS, MH * TS);
+}
+
 function drawFloorTile(g, ge, world, th, tx, ty, x, y, inA, lab, edo, et, isBr) {
   const db = FLOOR.db; if (!db || !FLOOR.img) return false;
   const key = world.def.theme;
   let role = inA ? 'arena' : edo ? (isBr ? 'br' : 's' + et) : lab ? 'lab' : 'floor';
   let m = db.tiles[key + ':' + role]; if (!m && role === 'br') m = db.tiles[key + ':s2'];
   if (!m) return false;
-  const i = m.i0 + m.pick[Math.floor(rnd(tx, ty, 501) * m.pick.length) % m.pick.length], sx = (i % db.cols) * db.ts, sy = Math.floor(i / db.cols) * db.ts;
+  const st = zoneAt2(world, tx, ty), i = m.i0 + (st && st.t && !inA ? zonePick(m, st, rnd(tx, ty, 501)) : m.pick[Math.floor(rnd(tx, ty, 501) * m.pick.length) % m.pick.length]), sx = (i % db.cols) * db.ts, sy = Math.floor(i / db.cols) * db.ts;
   g.imageSmoothingEnabled = false; g.drawImage(FLOOR.img, sx, sy, db.ts, db.ts, x, y, TS, TS);
   if (FLOOR.eimg) { ge.imageSmoothingEnabled = true; ge.drawImage(FLOOR.eimg, sx, sy, db.ts, db.ts, x, y, TS, TS); }
   return true;
@@ -561,7 +595,7 @@ function stampFloorDecals(g, ge, world, th) {
     const ncol = Math.max(...Object.keys(runs).map(k => +k.split(':')[0])) + 1;
     for (let ty = 2; ty < MH - 2; ty++) for (let tx = 2; tx < MW - 2; tx++) {
       for (const vert of [false, true]) {
-        if (rnd(tx, ty, vert ? 641 : 631) > 0.012) continue;
+        const zs = zoneAt2(world, tx, ty); if (rnd(tx, ty, vert ? 641 : 631) > 0.012 * (zs && zs.runs || 1)) continue;
         const len = 3 + Math.floor(rnd(tx, ty, 651) * 6), col = Math.floor(rnd(tx, ty, 661) * ncol), o = 6 + Math.floor(rnd(tx, ty, 671) * 12), tag = vert ? 'v' : 'h';
         let good = true; for (let i = 0; i < len; i++) { const a = vert ? tx : tx + i, b = vert ? ty + i : ty; if (!ok(a, b)) { good = false; break; } }
         if (!good) continue;
@@ -577,8 +611,9 @@ function stampFloorDecals(g, ge, world, th) {
   for (let ty = 1; ty < MH - 1; ty++) for (let tx = 1; tx < MW - 1; tx++) {
     if (!ok(tx, ty)) continue;
     const nw = nearWall(tx, ty);
-    if (rnd(tx, ty, 601) > (nw ? 0.16 : 0.05)) continue;
-    let tot = 0; const ws = list.map(d => { const w = d.near === 2 ? (nw ? d.w * 2 : 0) : d.near === 1 ? (nw ? d.w * 3 : d.w * 0.4) : d.w; tot += w; return w; });
+    const st = zoneAt2(world, tx, ty);
+    if (rnd(tx, ty, 601) > (nw ? 0.16 : 0.05) * (st && st.dens || 1)) continue;
+    const zd = st && st.d; let tot = 0; const ws = list.map(d => { const f = zd ? (zd[d.n.replace(/\d+$/, '')] ?? 1) : 1, w = f * (d.near === 2 ? (nw ? d.w * 2 : 0) : d.near === 1 ? (nw ? d.w * 3 : d.w * 0.4) : d.w); tot += w; return w; });
     if (tot <= 0) continue;
     let q = rnd(tx, ty, 611) * tot, k = 0; while (k < ws.length - 1 && q > ws[k]) { q -= ws[k]; k++; }
     const r = list[k].r, x = tx * TS + (TS - r[2]) / 2 + (rnd(tx, ty, 621) - 0.5) * Math.max(0, 14 - r[2] / 2), y = ty * TS + (TS - r[3]) / 2 + (rnd(tx, ty, 622) - 0.5) * Math.max(0, 14 - r[3] / 2);
@@ -715,6 +750,7 @@ export function bakeFloor(world) {
     for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; for (const [c, w] of [[g, .5], [ge, .1]]) { c.save(); c.rotate(an); c.strokeStyle = `rgba(90,210,235,${w * 0.6})`; c.lineWidth = 2; c.beginPath(); c.moveTo(A.r * TS * 0.22, 0); c.lineTo(A.r * TS * 0.78, 0); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, -9); c.moveTo(A.r * TS * 0.66, 0); c.lineTo(A.r * TS * 0.7, 9); c.stroke(); c.restore(); } }
   }
   g.restore(); ge.restore();
+  tintZones(g, world);
   stampFloorDecals(g, ge, world, th);
   // ombres au pied des murs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
