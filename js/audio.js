@@ -118,6 +118,14 @@ export const SFX = {
   cry(id) { playCry(id); },
   swing() { band(1800, 0.7, 0.16, 0.07); band(900, 0.6, 0.12, 0.04, 0.03); },
   hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
+  // coup super efficace : impact plus lourd que le coup normal (claquement sec, boum grave, craquement, résonance métallique) ; au plus un toutes les 90 ms quand une zone touche plusieurs cibles
+  superHit() {
+    const now = performance.now(); if (now - (SFX._sup || 0) < 90) return; SFX._sup = now;
+    band(2800, 0.9, 0.09, 0.2); band(5400, 1.2, 0.14, 0.09, 0.008);
+    tone(125, 36, 0.38, 'sine', 0.18); noise(0.34, 0.09, 520, 0.005);
+    band(750, 1.3, 0.24, 0.15, 0.02); band(1900, 2, 0.16, 0.08, 0.03);
+    band(4300, 7, 0.4, 0.04, 0.05); band(3100, 9, 0.5, 0.03, 0.08);
+  },
   crit() { band(2200, 0.8, 0.12, 0.17); tone(90, 40, 0.25, 'sine', 0.14); band(250, 0.6, 0.2, 0.1); band(5000, 1.5, 0.18, 0.05, 0.02); },
   hurt() { tone(80, 38, 0.28, 'sine', 0.13); band(500, 0.7, 0.18, 0.12); band(2500, 1, 0.06, 0.06); },
   dodge() { band(3500, 0.6, 0.18, 0.04); },

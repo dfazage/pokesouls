@@ -152,11 +152,11 @@ export function installElements(G, d) {
 
   // multiplicateur de dégâts infligés à un ennemi (type, trempé vs feu, vulnérabilité, carapace)
   P.elemMult = function (e, o, src) {
-    let m = 1;
+    let m = 1; this.lastTypeMult = 1;   // lastTypeMult : lu par damageEnemy pour le son « super efficace »
     if (e.vuln > 0) m *= e.vulnM || 1.3;
     if (o.noElem) return m;
     const el = o.elem || this.curElem;
-    if (src && src.def && el) m *= typeMult(el, typesOfEnemy(e));
+    if (src && src.def && el) { this.lastTypeMult = typeMult(el, typesOfEnemy(e)); m *= this.lastTypeMult; }
     if (el && src && src.held) m *= this.heldElemMult(src, el);   // objet tenu : Charbon, Eau Mystique, Graine Miracle
     if (el === 'fire' && this.hasMark(e, 'wet')) m *= 0.75;
     if (e.shell && e.shell.hp > 0) m *= 0.6;
