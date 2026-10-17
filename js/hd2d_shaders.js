@@ -322,6 +322,60 @@ void main(){
   gl_FragColor = vec4(outc, 1.);
 }`;
 
+// ---------- maisons d'Edo (modèles 3D texturés en pixel art, assets/props/house.png : voir tools/props_gen/house_tex.py) ----------
+// Attributs de la géométrie (geoEdoHouse) : aMat = matière (0 pierre, 1 façade rez, 2 tuiles, 3 bois, 4 façade étage), aUV = (u le long de l'avant-toit, course horizontale, hauteur)
+// en unités d'objet : le vertex shader applique l'échelle de l'instance, donc 1 pixel de texture = 1/24 de tuile quelle que soit la taille de la maison.
+export const HOUSE_VERT = /* glsl */`
+attribute float aMat; attribute vec3 aUV;
+varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vMat; varying vec2 vUV; varying float vInst;
+uniform float uTime;
+void main(){
+  mat4 im = instanceMatrix;
+  vec4 w = modelMatrix*(im*vec4(position, 1.));
+  vW = w.xyz;
+  vN = normalize(mat3(modelMatrix*im)*normal);
+  vCol = instanceColor;
+  vec3 sc = vec3(length(im[0].xyz), length(im[1].xyz), length(im[2].xyz));
+  vMat = aMat;
+  vUV = vec2(aUV.x*sc.x, length(vec2(aUV.y*sc.x, aUV.z*sc.y)));
+  vInst = fract(sin(dot(im[3].xz, vec2(12.9898, 78.233)))*43758.5453);
+  gl_Position = projectionMatrix*viewMatrix*w;
+}`;
+export const HOUSE_FRAG = /* glsl */`
+uniform float uTime, uWinT, uWorn; uniform vec3 uEmisCol, uLightCol, uRoofA, uRoofB; uniform sampler2D uTex, uEmi;
+varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vMat; varying vec2 vUV; varying float vInst;
+${GLSL_COMMON}
+${FOG_FRAG}
+const float AT = 96.;   // côté de l'atlas en pixels
+// pixel de l'atlas : origine + position dans une zone de taille (w, h) pixels qui se répète tous les (w/24, h/24) tuiles
+vec2 at(vec2 org, vec2 size, vec2 uv){ vec2 f = floor(fract(uv/(size/24.))*size); return (org + f + .5)/AT; }
+void main(){
+  vec3 n = normalize(vN);
+  float dif = max(dot(n, normalize(vec3(-.35, .8, .5))), 0.);
+  vec3 alb; float em = 0.;
+  vec2 uv = vUV; uv.x += vInst*9.;
+  if(vMat < .5){                                       // soubassement de pierre
+    alb = texture2D(uTex, at(vec2(48., 24.), vec2(24.), vec2(uv.x, vUV.y))).rgb;
+  } else if(vMat < 1.5 || vMat > 3.5){                 // façades : rez-de-chaussée (A / porte) ou étage (A / blason)
+    float bay = floor(uv.x*.5);
+    float b = step(.62, hash21(vec2(bay + vMat*3.1, vInst*40.)));
+    vec2 org = vec2(0., (vMat > 3.5 ? 48. : 0.) + b*24.);
+    vec2 t = at(org, vec2(48., 24.), vec2(uv.x, vUV.y));
+    vec3 c = texture2D(uTex, t).rgb, m = texture2D(uEmi, t).rgb;
+    alb = mix(c, vCol*c.r*1.25, m.g);                  // plâtre teinté par instance
+    float lit = step(uWinT - .4, hash21(vec2(bay*1.7 + vInst*57., floor(vUV.y) + vMat*3.)));
+    em = m.r*lit*(.75 + .25*sin(uTime*.9 + bay*3. + vInst*20.));
+  } else if(vMat < 2.5){                               // tuiles : rampe de gris teintée par le thème, certaines toitures abîmées
+    float worn = step(1. - uWorn, fract(vInst*7.3));
+    float g = texture2D(uTex, at(vec2(48. + worn*24., worn*24.), vec2(24.), uv)).r;
+    alb = mix(uRoofA, uRoofB, g)*1.8;
+  } else {                                             // bois sombre : avant-toits, poteaux, faîtage
+    alb = texture2D(uTex, at(vec2(72., 0.), vec2(24.), uv)).rgb*1.1;
+  }
+  vec3 col = alb*(.32 + .75*dif)*uLightCol + uEmisCol*em*.9;
+  gl_FragColor = vec4(applyFog(col, vW), 1.);
+}`;
+
 // ---------- particules d'ambiance ----------
 export const PART_VERT = /* glsl */`
 attribute vec4 aSeed;   // x,y,z : position initiale [0,1], w : taille/phase

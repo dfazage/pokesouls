@@ -504,11 +504,78 @@ function mergeGeos(list) {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx);
   return g;
 }
+
+// maison de ville d'Edo (machiya à étage) : socle de pierre, rez-de-chaussée, auvent (hisashi), étage, grand toit en croupe à rives relevées, faîtage et onigawara.
+// Boîte unité (x, z dans [-.5, .5] au rez, y de 0 à 1), non indexée, normales à plat ; attributs aMat et aUV pour le shader HOUSE (voir hd2d_shaders.js).
+function geoEdoHouse() {
+  const P = [], N = [], MAT = [], UV = [];
+  const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
+  const tri = (a, b, c, ua, ub, uc, m, hint) => {
+    const pa = V(a), pb = V(b), pc = V(c), n = new THREE.Vector3().crossVectors(pb.clone().sub(pa), pc.clone().sub(pa));
+    if (n.lengthSq() < 1e-12) return;
+    n.normalize(); if (n.dot(V(hint)) < 0) { n.negate(); [b, c] = [c, b]; [ub, uc] = [uc, ub]; }
+    for (const [q, u] of [[a, ua], [b, ub], [c, uc]]) { P.push(...q); N.push(n.x, n.y, n.z); MAT.push(m); UV.push(...u); }
+  };
+  // boîte : quatre faces latérales (u le long de la face, hauteur comptée depuis le haut : les linteaux restent entiers), dessus et dessous optionnels
+  const box = (x0, y0, z0, x1, y1, z1, side, top, bot) => {
+    const f = (a, b, c, d, ua, ub, uc, ud, m, h) => { tri(a, b, c, ua, ub, uc, m, h); tri(a, c, d, ua, uc, ud, m, h); };
+    f([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, y1 - y0], [x1 - x0, 0, y1 - y0], [x1 - x0, 0, 0], [0, 0, 0], side, [0, 0, 1]);
+    f([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], [0, 0, y1 - y0], [x1 - x0, 0, y1 - y0], [x1 - x0, 0, 0], [0, 0, 0], side, [0, 0, -1]);
+    f([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [0, 0, y1 - y0], [z1 - z0, 0, y1 - y0], [z1 - z0, 0, 0], [0, 0, 0], side, [1, 0, 0]);
+    f([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [0, 0, y1 - y0], [z1 - z0, 0, y1 - y0], [z1 - z0, 0, 0], [0, 0, 0], side, [-1, 0, 0]);
+    if (top != null) f([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], [x0, 0, 0], [x1, 0, 0], [x1, z1 - z0, 0], [x0, z1 - z0, 0], top, [0, 1, 0]);
+    if (bot != null) f([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [x0, 0, 0], [x1, 0, 0], [x1, z1 - z0, 0], [x0, z1 - z0, 0], bot, [0, -1, 0]);
+  };
+  // pan de toit : grille bilinéaire bl-br (avant-toit) → tl-tr (haut), bord relevé aux coins (k), u le long de l'avant-toit (ax), course horizontale et hauteur depuis l'avant-toit
+  const pan = (bl, br, tr, tl, ax, k, hint, ns = 6, nt = 2) => {
+    const oth = ax === 'x' ? 2 : 0, ai = ax === 'x' ? 0 : 2;
+    const at = (s, t) => {
+      const lo = [0, 1, 2].map(i => bl[i] + (br[i] - bl[i]) * s), hi = [0, 1, 2].map(i => tl[i] + (tr[i] - tl[i]) * s), p = [0, 1, 2].map(i => lo[i] + (hi[i] - lo[i]) * t);
+      const lift = k * Math.pow(Math.abs(2 * s - 1), 3) * (1 - t) * (1 - t);
+      return { p: [p[0], p[1] + lift, p[2]], u: [p[ai], Math.abs(p[oth] - bl[oth]), p[1] - bl[1]] };
+    };
+    for (let i = 0; i < ns; i++) for (let j = 0; j < nt; j++) {
+      const a = at(i / ns, j / nt), b = at((i + 1) / ns, j / nt), c = at((i + 1) / ns, (j + 1) / nt), d = at(i / ns, (j + 1) / nt);
+      tri(a.p, b.p, c.p, a.u, b.u, c.u, 2, hint); tri(a.p, c.p, d.p, a.u, c.u, d.u, 2, hint);
+    }
+  };
+  const MS = 0, MG = 1, MR = 2, MW = 3, MU = 4;
+  box(-.52, 0, -.52, .52, .07, .52, MS, MW, null);                                   // socle
+  box(-.5, .07, -.5, .5, .36, .5, MG, null, null);                                   // rez-de-chaussée
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {                    // poteaux d'angle
+    box(Math.min(sx * .49, sx * .52), .07, Math.min(sz * .49, sz * .52), Math.max(sx * .49, sx * .52), .36, Math.max(sz * .49, sz * .52), MW, MW, null);
+    box(Math.min(sx * .43, sx * .45), .445, Math.min(sz * .43, sz * .45), Math.max(sx * .43, sx * .45), .66, Math.max(sz * .43, sz * .45), MW, MW, null);
+  }
+  // auvent bas
+  { const e = .64, y = .345, t = .445, h = .44, k = .03;
+    box(-e, y - .016, -e, e, y, e, MW, null, MW);
+    pan([-e, y, e], [e, y, e], [h, t, h], [-h, t, h], 'x', k, [0, .5, .86]);
+    pan([e, y, -e], [-e, y, -e], [-h, t, -h], [h, t, -h], 'x', k, [0, .5, -.86]);
+    pan([e, y, e], [e, y, -e], [h, t, -h], [h, t, h], 'z', k, [.86, .5, 0]);
+    pan([-e, y, -e], [-e, y, e], [-h, t, h], [-h, t, -h], 'z', k, [-.86, .5, 0]); }
+  box(-.44, .445, -.44, .44, .66, .44, MU, null, null);                              // étage
+  // grand toit en croupe
+  { const e = .68, y = .655, r = .96, rx = .26, k = .045;
+    box(-e, y - .018, -e, e, y, e, MW, null, MW);
+    pan([-e, y, e], [e, y, e], [rx, r, 0], [-rx, r, 0], 'x', k, [0, .6, .8], 8, 3);
+    pan([e, y, -e], [-e, y, -e], [-rx, r, 0], [rx, r, 0], 'x', k, [0, .6, -.8], 8, 3);
+    pan([e, y, e], [e, y, -e], [rx, r, 0], [rx, r, 0], 'z', k, [.8, .6, 0], 8, 3);
+    pan([-e, y, -e], [-e, y, e], [-rx, r, 0], [-rx, r, 0], 'z', k, [-.8, .6, 0], 8, 3);
+    box(-rx - .02, r - .006, -.03, rx + .02, r + .028, .03, MW, MW, null);          // faîtage
+    for (const sx of [-1, 1]) box(Math.min(sx * (rx - .02), sx * (rx + .05)), r - .006, -.05, Math.max(sx * (rx - .02), sx * (rx + .05)), r + .055, .05, MW, MW, null); }   // onigawara
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+  g.setAttribute('aMat', new THREE.Float32BufferAttribute(MAT, 1)); g.setAttribute('aUV', new THREE.Float32BufferAttribute(UV, 3));
+  return g;
+}
+// texture pixel art des maisons : filtrage au plus proche, valeurs brutes (comme les murs)
+function houseTex(img) { const t = new THREE.Texture(img); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; t.flipY = false; t.needsUpdate = true; return t; }
 function propGeometry(kind) {
   if (kind === 'mono' || kind === 'tower') { const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0); return g; }
   if (kind === 'spire') return geoCone(5);
   if (kind === 'stalag') return geoCone(6);
   if (kind === 'column') { const g = new THREE.CylinderGeometry(0.9, 1, 1, 6); g.translate(0, 0.5, 0); return g; }
+  if (kind === 'edo' && FLOOR.himg) return geoEdoHouse();
   if (kind === 'edo') {   // maison de ville : corps (y 0→.5) + toit en croupe (y .5→1)
     const body = new THREE.BoxGeometry(1, 0.5, 1); body.translate(0, 0.25, 0);
     const roof = new THREE.CylinderGeometry(0.16, 0.8, 0.5, 4, 1); roof.rotateY(Math.PI / 4); roof.translate(0, 0.75, 0);
@@ -636,6 +703,7 @@ export function buildProps(w, key, seed, shared) {
           items.push([tx + px + (kind === 0 ? V(tx, ty, k + 80) * 0.5 - 0.25 : 0), ty + pz, a, b, c, kind, sx, sy, e]); return;
         }
         if (kind === 0) return;   // murets en torchis : tracés le long du bord du sol (muretRuns), plus case par case
+        if (FLOOR.himg && (tx & 1 || ty & 1)) return;   // maisons texturées : plus larges avec leurs avant-toits, une case sur quatre suffit pour qu'elles ne s'interpénètrent pas
         let sx, sy;   // maisons de ville : corps de plâtre et de bois, toit de tuiles
         if (kind === 1) { sx = 1.7 + a * 0.7; sy = low ? 1.7 + b * 0.5 : 2.6 + b * 1.0; }
         else { sx = 2.0 + a * 0.9; sy = low ? 2.6 + b * 0.8 : 3.4 + b * 1.6; }
@@ -655,13 +723,15 @@ export function buildProps(w, key, seed, shared) {
   }
   if (!items.length) items.push([-300, -300, 0, 0, 0, 0, 0.01, 0.01, 0]);   // jamais de maillage vide (pas d'attribut de couleur sinon)
   const geo = propGeometry(cfg.open && !forest ? 'edo' : cfg.prop), n = items.length;
+  const houses = cfg.open && !forest && !!FLOOR.himg;   // maisons 3D texturées (atlas house.png) ; sinon ancien dessin procédural
   const mat = new THREE.ShaderMaterial({
-    vertexShader: S.PROP_VERT, fragmentShader: S.PROP_FRAG,
+    vertexShader: houses ? S.HOUSE_VERT : S.PROP_VERT, fragmentShader: houses ? S.HOUSE_FRAG : S.PROP_FRAG,
     uniforms: {
       uTime: shared.uTime, uFog: shared.uFog, uFogD: shared.uFogD, uMist: shared.uMist, uCam: shared.uCam,
       uRoofA: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[0] : [.1, .12, .16])) }, uRoofB: { value: new THREE.Vector3(...(cfg.roof ? cfg.roof[1] : [.24, .27, .33])) }, uWinT: { value: cfg.win || .7 },
       uType: { value: cfg.open ? (forest ? 8 : 6) : { mono: 0, spire: 1, tower: 2, column: 3, stalag: 4, tree: 5 }[cfg.prop] },
       uEmisCol: { value: new THREE.Vector3(...cfg.emis) }, uLightCol: { value: new THREE.Vector3(...cfg.light) }, uBob: { value: cfg.bob },
+      ...(houses ? { uTex: { value: houseTex(FLOOR.himg) }, uEmi: { value: houseTex(FLOOR.heimg) }, uWorn: { value: key === 'ember' ? 0.55 : 0.12 } } : {}),
     },
   });
   const mesh = new THREE.InstancedMesh(geo, mat, n);
@@ -690,7 +760,7 @@ export function buildProps(w, key, seed, shared) {
   if (cfg.open && wallItems.length) {   // murets de torchis : boîte + chapeau de tuiles (le chapeau déborde sur l'épaisseur, pas sur la longueur : les segments se raccordent)
     const wb = new THREE.BoxGeometry(1, 0.82, 1); wb.translate(0, 0.41, 0);
     const cap = new THREE.BoxGeometry(1, 0.18, 1.16); cap.translate(0, 0.91, 0);
-    const wmat = mat.clone(); wmat.uniforms = { ...mat.uniforms, uType: { value: 7 } };
+    const wmat = houses ? new THREE.ShaderMaterial({ vertexShader: S.PROP_VERT, fragmentShader: S.PROP_FRAG, uniforms: { ...mat.uniforms, uType: { value: 7 } } }) : mat.clone(); if (!houses) wmat.uniforms = { ...mat.uniforms, uType: { value: 7 } };
     const wm = new THREE.InstancedMesh(mergeGeos([wb, cap]), wmat, wallItems.length);
     const qy = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0);
     wallItems.forEach(([x, z, a, b2, c, rot, sx, sy, th], i) => {

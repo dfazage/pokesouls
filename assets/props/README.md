@@ -37,3 +37,7 @@ Les anciens sprites externes `tree_bell`, `torii_bell`, `pillar_{ice,lava,plant,
 
 ## Identité des zones (`js/zones.js`)
 Chaque zone nommée des 10 cartes a un profil : `tint` (voile de couleur fondu entre zones, posé avant les décalques), `t` (poids des variantes de tuile du sol), `d` (poids des décalques), `dens`/`runs` (densité des décalques / câbles) et `decor` (types de décor solide, appliqués à la génération sauf si la zone en fixe déjà). Ajouter une zone = ajouter une entrée dans `ZONES[<id carte>][<nom>]` ; sans entrée, la zone garde le rendu de base.
+
+## Maisons d'Edo en 3D texturé (`house_tex.py`)
+Les maisons du pourtour des cartes ouvertes restent des modèles 3D instanciés (`geoEdoHouse` dans `js/hd2d_world.js` : socle, rez, auvent, étage, grand toit en croupe à rives relevées, faîtage, onigawara). Leur aspect vient d'un atlas pixel art (`assets/props/house.png` albédo + `house_e.png` : R = vitres émissives, G = masque plâtre teinté par instance) lu par `HOUSE_VERT/HOUSE_FRAG` (`js/hd2d_shaders.js`) : UV en unités d'objet × échelle de l'instance, donc 1 pixel = 1/24 de tuile. Sans atlas, repli sur l'ancien shader procédural.
+Régénérer : `python3 tools/props_gen/house_tex.py && python3 tools/props_gen/build_floor.py` (le second écrit les noms de fichiers dans `assets/floor.json`).
