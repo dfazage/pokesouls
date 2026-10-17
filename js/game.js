@@ -634,7 +634,7 @@ export class Game {
   hurtMember(m, dmg, src, o = {}) {
     if (m.exh || m.inv > 0 || this.god) return false;
     let sx = null; const chief = m === this.chief();
-    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6); this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
+    if (chief && m.dodge && m.dodge.t < m.dodge.iframes) { if (this.t - this.lastPD > 0.6) { this.lastPD = this.t + (m.dodge.dur - m.dodge.t); this.addLink(6); this.comboN = Math.max(this.comboN, 2); this.comboAt = this.lastPD; this.floatText(m.x, m.y - 24, 'Esquive', '#9fb3ff'); this.tutEvent('dodge'); } return false; }   // le chrono du relais démarre à la fin de la roulade
     const dx = src.x - m.x, dy = src.y - m.y, dl = hyp(dx, dy) || 1;
     dmg *= Math.max(0.5, 1 - 0.04 * this.team.reduce((s, q) => s + q.vit.iron, 0) / 3);
     dmg *= this.elemDefMult(m, o, src);
