@@ -210,7 +210,7 @@ export class Game {
       d = D.ENEMIES[type]; lv = lv0 + (d.tier === 'mid' ? 1 : d.tier === 'big' ? 3 : 0);
       hp = Math.round(d.hp * D.hpMult(lv)); dmg = d.dmg * D.dmgMult(lv); r = ({ mini: 6.5, mid: 9, big: 11 }[d.tier] || 7) * (d.scale || 1); ess = d.k ? D.essenceOf(lv, d.k) : 0;
     }
-    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5),
+    return { def: d, type, sprite: type === 'boss' ? d.sprite : D.spriteOfEnemy(type), x, y, hx: x, hy: y, hp, maxhp: hp, dmg, r, essence: ess, lv, dir: 0, face: { x: 0, y: 1 }, state: d.dormant ? 'dormant' : 'idle', st: 0, at: rand(0, 2), anim: 'Idle', loop: true, flash: 0, cd: rand(0.5, 1.5), mood: d.tier === 'mini' && !d.clone && d.speed > 0 && Math.random() < 0.3 ? 'sleep' : 'stroll',
       vx: 0, vy: 0, kx: 0, ky: 0, dead: false, deadT: 0, boss: !!d.boss, clone: !!d.clone, big: d.tier === 'big', phase: 1, invuln: 0, tele: false, hitDone: false, bob: rand(0, 6) };
   }
 
@@ -690,7 +690,7 @@ export class Game {
       const sp = def.speed * (e.fx && e.fx.k === 'para' ? 0.5 : 1) * this.markSpeed(e), hw = Math.min(e.r, 6) * 0.8;
       switch (e.state) {
         case 'dormant': setAnim(e, 'Idle'); if (td < def.sight) e.state = 'chase'; break;
-        case 'idle': setAnim(e, 'Idle'); if (see) e.state = 'chase'; break;
+        case 'idle': if (see && (e.mood !== 'sleep' || td < def.sight * 0.5)) { e.state = 'chase'; e.sleeping = false; if (e.mood === 'sleep') e.alertT = 0.7; break; } if (def.tier === 'mini' && !def.clone && !e.tutDummy && def.speed > 0) this.wander(e, dt, def.speed, hw); else setAnim(e, 'Idle'); break;
         case 'return': {
           const hx = e.hx - e.x, hy = e.hy - e.y, hd = hyp(hx, hy);
           if (hd < 4) { e.state = def.dormant ? 'dormant' : 'idle'; e.hp = e.maxhp; } else { move(this, e, hx / hd * sp * dt, hy / hd * sp * dt, hw); setAnim(e, 'Walk'); e.face = unit(hx, hy); e.dir = dirFromVec(hx, hy); }
@@ -735,6 +735,33 @@ export class Game {
       for (const o of this.enemies) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = hyp(ox, oy); if (od > 0 && od < e.r + o.r) move(this, e, ox / od * 30 * dt, oy / od * 30 * dt, 4); }
     }
     this.enemies = this.enemies.filter(e => !(e.dead && e.deadT > 1.0 && !e.boss));
+  }
+  // petits mobs : ils flânent autour de leur point d'ancrage (pas lents, pauses, coups d'œil) au lieu de rester figés
+  wander(e, dt, speed, hw) {
+    const w = e.wd || (e.wd = { t: rand(0.2, 1.5), go: false, tx: e.x, ty: e.y, look: 0 });
+    if (e.mood === 'sleep') { e.sleeping = true; setAnim(e, 'Idle'); return; }   // assoupi : immobile, des « Z » flottent au-dessus de lui
+    w.t -= dt;
+    if (w.emoteT > 0) { w.emoteT -= dt; e.emote = w.emoteT > 0 ? w.emo : null; if (w.emoteT <= 0) { setAnim(e, 'Idle'); w.t = rand(1.5, 4); } return; }
+    if (!w.go) {
+      setAnim(e, 'Idle'); w.look -= dt;
+      if (w.look <= 0) { w.look = rand(1.2, 2.6); if (Math.random() < 0.55) { const a = rand(0, 6.283); e.face = { x: Math.cos(a), y: Math.sin(a) }; e.dir = dirFromVec(e.face.x, e.face.y); } }
+      if (w.t > 0) return;
+      if (Math.random() < 0.4) {   // petite danse / saut / chant avant de repartir
+        const sa = A.db[e.sprite], opts = ['Hop', 'Twirl', 'Appeal', 'Sing'].filter(n => sa && sa.anims[n]);
+        if (opts.length) { const n = opts[Math.floor(Math.random() * opts.length)]; setAnim(e, n, false); w.emo = n === 'Hop' ? 'hop' : 'note'; w.emoteT = Math.max(0.6, animTotal(sa.anims[n]) * TICK) + 0.2; e.emote = w.emo; return; }
+      }
+      for (let i = 0; i < 6; i++) {
+        const a = rand(0, 6.283), r = rand(16, 56), tx = e.hx + Math.cos(a) * r, ty = e.hy + Math.sin(a) * r;
+        if (M.lineClear(this.world, e.x, e.y, tx, ty) && M.boxFree(this.world, tx, ty, hw, 3)) { w.tx = tx; w.ty = ty; w.go = true; w.t = 5; return; }
+      }
+      w.t = rand(0.8, 1.8); return;
+    }
+    const dx = w.tx - e.x, dy = w.ty - e.y, d = hyp(dx, dy);
+    if (d < 3 || w.t <= 0) { w.go = false; w.t = rand(1.5, 4.5); w.look = 0.6; setAnim(e, 'Idle'); return; }
+    const px = e.x, py = e.y, st = speed * 0.34 * dt, u = unit(dx, dy);
+    move(this, e, u.x * st, u.y * st, hw);
+    if (hyp(e.x - px, e.y - py) < st * 0.3) { w.go = false; w.t = rand(0.6, 1.5); setAnim(e, 'Idle'); return; }   // bloqué : on repart plus tard
+    setAnim(e, 'Walk'); e.face = u; e.dir = dirFromVec(u.x, u.y);
   }
   enemyStrike(e, u, tg) {
     const def = e.def;
