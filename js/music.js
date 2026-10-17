@@ -35,8 +35,8 @@ export const TRACKS = {
   BOSS_MEWTWO_P2: { title: 'Mewtwo, phase 2', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mewtwo, phase 2' },
   BOSS_MEW: { title: 'Mew, phase 1', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mew' },
   JINGLE_CAMPFIRE: { title: 'Cunning plan (provisoire)', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/cunning-plan-short-seamless-loop', use: 'Feu allumé', jingle: true },
-  JINGLE_DEATH: { title: 'Better luck next time', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/node/143357', use: 'Mort', jingle: true },
-  JINGLE_VICTORY: { title: 'Victory sting', author: 'congusbongus', license: 'CC0', url: 'https://opengameart.org/content/victory-sting', use: 'Boss vaincu', jingle: true },
+  JINGLE_DEATH: { title: 'Mort (sobre)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Mort', jingle: true },
+  JINGLE_VICTORY: { title: 'Victoire (Hard-Won Triumph)', author: 'Suno (généré pour le projet)', license: 'généré, usage non commercial', url: '', use: 'Boss vaincu', jingle: true },
 };
 const STORE = 'pokesouls.options.v1';
 // Couche perso (reprises, usage privé) : active en local, coupée sur le site publié ; ?perso=0 ou ?perso=1 force le choix.
