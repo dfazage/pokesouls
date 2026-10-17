@@ -7,7 +7,7 @@ import { LINKC } from './extras.js';
 export const FXS = { man: {}, img: {}, ready: false };
 export const SWAP_T = 0.45, SWAP_OPEN = 0.17; // durée de la relève, instant où la balle s'ouvre
 // Les planches PMD ont des frames de 16 à 160 px (Dämmerlicht : 192) : on les agrandit par pas entiers pour garder une taille à l'écran comparable.
-const pxScale = m => m.sc || Math.min(4, Math.max(1, Math.round(64 / Math.max(m.fw, m.fh))));
+export const pxScale = m => m.sc || Math.min(4, Math.max(1, Math.round(64 / Math.max(m.fw, m.fh))));
 
 export async function loadFx() {
   try { FXS.man = await (await fetch('assets/fx.json')).json(); } catch (e) { FXS.man = {}; return; }
