@@ -430,7 +430,7 @@ for (const k in STYLES) Object.assign(BOSSES[k], STYLES[k]);
 export const BOSS_STYLES = STYLES;
 
 export const BOSS_THRESHOLDS = [0.6, 0.25];
-export const BOSS_HP_MULT = 1.15;   // léger surplus de PV : parades, liens et combos abattaient les boss trop vite
+export const BOSS_HP_MULT = 2.3;   // PV de tous les boss ×2 (avant 1,15) : à niv. 36, deux combos enlevaient ~12 % de la barre de Lugia (mesure du 17 oct.), soit un combat de ~8 combos. Réglage global, proportionnel pour tous les boss.
 // Les dégâts du joueur montent de 6 % par niveau (et ×1,7 au stade final) alors que les PV d'un boss étaient fixes : Mewtwo tombait en moins d'une minute en phase 1 à 36.
 // Au-delà du niveau 22 (Suicune), les PV des boss suivent donc le niveau de leur carte : +6 % par niveau (Mewtwo ×1,96, Lugia ×1,84, Mew ×2,4). Avant : inchangé.
 export const BOSS_HP_FROM = 22, BOSS_HP_PER_LV = 0.06;
