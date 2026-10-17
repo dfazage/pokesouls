@@ -34,6 +34,9 @@ function bindVol() {
 // ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
 // ---------- choix du chapitre (région) ----------
+// silhouettes animées des chapitres verrouillés : Idle PMDCollab (rangée du bas), aplatie en violet sombre (assets/ui/sil-*-idle.png)
+const SIL = { 'sil-rayquaza': { fw: 80, fh: 120, n: 4, k: 2, t: 0.22 }, 'sil-giratina': { fw: 56, fh: 80, n: 2, k: 3, t: 0.7 }, 'sil-kyurem': { fw: 80, fh: 80, n: 2, k: 3, t: 0.6 } };
+const silHtml = id => { const a = SIL[id]; return a ? `<i class="wsil wanim" style="--fw:${a.fw * a.k}px;--fh:${a.fh * a.k}px;--n:${a.n};--t:${a.t}s;background-image:url(assets/ui/${id}-idle.png)"></i>` : `<img class="wsil" src="assets/ui/${id}.png" alt="" aria-hidden="true">`; };
 const CHAPTERS = [
   { id: 'kanto', n: 'I', name: 'Kanto', sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', spr: 'mewtwo' },
   { id: 'johto', n: 'II', name: 'Johto', sub: 'Trois bêtes, un sanctuaire marin, un temple hors du temps', spr: 'lugia', sil: 'sil-lugia' }, { n: 'III', name: 'Hoenn', sil: 'sil-rayquaza' },
@@ -48,7 +51,7 @@ export function showWorlds(onPick, onBack) {
     <p class="wtag">▾ EN DÉVELOPPEMENT</p>
     <div class="wgrid">${CHAPTERS.map(c => isOpen(c)
       ? `<button class="wcard open ${c.id}" id="w-${c.id}"><span class="wbg"></span>${idleOf(c.spr) ? (a => { const k = Math.max(2, Math.round(230 / a.fh)); return `<i class="wspr" style="--fw:${a.fw * k}px;--fh:${a.fh * k}px;--n:${a.frames};background-image:url(assets/${a.file})"></i>`; })(A.db[c.spr].anims.Idle) : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
-      : `<div class="wcard locked">${lock}<img class="wsil" src="assets/ui/${c.sil}.png" alt="" aria-hidden="true"><span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
+      : `<div class="wcard locked">${lock}${silHtml(c.sil)}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
     <div class="act"><button id="w-back">← Retour</button></div>`;
   const back = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onBack(); };
   const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); back(); } };
