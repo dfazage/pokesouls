@@ -246,10 +246,11 @@ export class HD2D {
       top: WD.terrainMaterial(sh, tT, [tx.top.width, tx.top.height], tE, [tx.topE.width, tx.topE.height], 1, { emisK: cfg.emisK, tint, pulse }),
       mist: WD.mistMaterial(sh, [.78, .5, 1.]),
     };
-    grp.add(new THREE.Mesh(WD.buildGround(w), this.mats.ground));
-    const wl = WD.buildWalls(w);
+    const cv = WD.curveOf(key);   // coins arrondis (murs de Kanto, berges de Johto), voir hd2d_world.js
+    grp.add(new THREE.Mesh(WD.buildGround(w, cv), this.mats.ground));
+    const wl = WD.buildWalls(w, cv);
     if (!cfg.open) grp.add(new THREE.Mesh(wl.top, this.mats.top), new THREE.Mesh(wl.side, this.mats.side));
-    if (cfg.water || cfg.banks) grp.add(new THREE.Mesh(WD.buildBanks(w, WD.WATER_DEPTH), this.mats.side));
+    if (cfg.water || cfg.banks) grp.add(new THREE.Mesh(WD.buildBanks(w, WD.WATER_DEPTH, cv), this.mats.side));
     this.doorMeshes = [null, null]; this.mistMesh = null; this.sig = '';
     this.abyss = WD.buildAbyss(key, sh); grp.add(this.abyss);
     this.props = WD.buildProps(w, key, w.idx * 7 + 3, sh); grp.add(this.props);
