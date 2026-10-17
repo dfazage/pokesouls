@@ -22,8 +22,8 @@ export const HD = {
     part: { n: 200, size: 30, color: [1., .9, .35], vel: [0, .15, 0], sway: 1.8, box: [44, 10, 40] }, emisTint: [1., .95, .55], emisK: 1.25,
     grade: { ts: [.97, .97, 1.02], th: [1.04, 1.03, .98], sat: 1.06, con: 1.07, bloom: .5, vig: .4 } },
   lava: { curve: { walls: 1 }, type: 3, fog: [.17, .045, .025], fogD: .02, mist: .65, abyss: [[.1, .015, .01], [.45, .08, .02], [1., .55, .12]], prop: 'column', propCol: [.16, .1, .1], emis: [1., .45, .1], light: [1.1, .98, .9], bob: 0,
-    part: { n: 340, size: 36, color: [1., .55, .15], vel: [.15, .95, 0], sway: 1.3, box: [44, 14, 40] }, emisTint: [1.2, .8, .5], emisK: 1.6,
-    grade: { ts: [1.02, .94, .9], th: [1.08, 1.02, .94], sat: 1.12, con: 1.08, bloom: .65, vig: .44 } },
+    part: { n: 340, size: 36, color: [1., .55, .15], vel: [.15, .95, 0], sway: 1.3, box: [44, 14, 40] }, emisTint: [1.0, .68, .44], emisK: .7,   // Mont Braise : lueur de lave adoucie pour que les ennemis restent lisibles
+    grade: { ts: [1.02, .94, .9], th: [1.08, 1.02, .94], sat: 1.06, con: 1.08, bloom: .28, vig: .46 } },
   rock: { curve: { walls: 1 }, type: 4, fog: [.1, .08, .06], fogD: .021, mist: .5, abyss: [[.05, .04, .03], [.16, .12, .08], [.9, .65, .35]], prop: 'stalag', propCol: [.3, .24, .19], emis: [1., .7, .35], light: [1.05, 1., .94], bob: 0,
     part: { n: 260, size: 28, color: [.95, .8, .6], vel: [.35, .05, .1], sway: 1.2, box: [46, 10, 42] }, emisTint: [1.1, .85, .5], emisK: 1.2,
     grade: { ts: [.98, .96, .93], th: [1.06, 1.02, .96], sat: 1.06, con: 1.07, bloom: .45, vig: .42 } },

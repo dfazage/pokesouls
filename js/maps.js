@@ -132,7 +132,7 @@ const JOHTO = [
         { cell: [3, 0], name: 'Pavillon des offrandes' }, { cell: [0, 0], name: 'Jardin caché' }, { cell: [2, 0], name: 'Belvédère des cloches' },
       ].map((z, i) => i === 7 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
       // pas de raccourci direct 2→5 : il faut faire tout le détour par l'esplanade et l'allée ; trois culs-de-sac (8, 9, 10) à explorer avant l'antichambre
-      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [0, 7], [4, 8], [7, 9], [5, 10]],
+      links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [0, 7], [4, 8], [7, 9], [5, 10]], zs: 0.82,
       door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, pseudo: 9, chests: [2, 3, 8, 7, 9, 10, 5],
     },
     areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
@@ -146,7 +146,7 @@ const JOHTO = [
         { cell: [3, 2], name: 'Remparts effondrés' }, { cell: [2, 1], name: 'Cour du temple effondré' }, { cell: [3, 1], name: 'Escalier de la tour' },
         { cell: [2, 0], name: 'Étage effondré' }, { cell: [2, 2], name: 'Cour des tuiles' }, { cell: [0, 1], name: 'Chapelle des cloches' }, { cell: [1, 0], name: 'Belvédère calciné' },
       ].map((z, i) => ({ ...z, rx: 14, ry: 9, ...(i === 0 || i === 1 ? { zone: 'Lisière' } : i > 7 ? { zone: 'Cœur' } : {}) })),
-      links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9], [7, 4], [8, 2], [9, 4]],
+      links: [[0, 1], [0, 2], [0, 7], [7, 3], [2, 4], [4, 5], [5, 6], [1, 8], [2, 9], [7, 4], [8, 2], [9, 4]], zs: 0.72,
       canyons: [{ z: 1, off: 4 }, { z: 2, ax: 'h', off: -3 }, { z: 4, off: -3, w: 4, gap: -2 }, { z: 7, off: 3 }, { z: 3, ax: 'h', off: 2 }, { z: 8, off: -2 }],
       door: [3, 5], arena: { cell: [3, 0], from: 5 }, bonfires: [0, 4, 6], big: 5, pseudo: 8, chests: [1, 2, 3, 4, 8, 9, 7, 5],
     },
@@ -190,7 +190,7 @@ const JOHTO = [
         { cell: [2, 2], name: 'Souche millénaire' }, { cell: [2, 1], name: 'Sentier de lierre' }, { cell: [3, 2], name: 'Source du temps' },
         { cell: [0, 1], name: 'Verger perdu' }, { cell: [3, 1], name: 'Antichambre du printemps' }, { cell: [1, 0], name: 'Tronc creux' },
       ].map((z, i) => i < 2 || i === 6 ? { ...z, zone: 'Lisière' } : i > 7 ? { ...z, zone: 'Cœur' } : z),
-      links: [[0, 1], [1, 3], [3, 4], [3, 5], [2, 4], [2, 8], [4, 7], [0, 6]],
+      links: [[0, 1], [1, 3], [3, 4], [3, 5], [2, 4], [2, 8], [4, 7], [0, 6]], zs: 0.8,
       door: [1, 2], arena: { cell: [3, 0], from: 7 }, bonfires: [0, 4, 7], big: 5, pseudo: 8, chests: [1, 2, 3, 5, 6, 8, 4, 7],
     },
     areas: ["Entrée du sanctuaire", 'Bosquet doré', 'Sentier de lierre', 'Antichambre du printemps'], sanctuary: 'Cœur de la forêt',
@@ -545,6 +545,12 @@ export function solidAt(world, px, py) {
   return false;
 }
 export function boxFree(world, x, y, hw, hh) { return !(solidAt(world, x - hw, y - hh) || solidAt(world, x + hw, y - hh) || solidAt(world, x - hw, y + hh) || solidAt(world, x + hw, y + hh)); }
+// Position libre la plus proche de (x, y) pour une boîte hw × hh : sert au spawn des mobs, dont le centre de case peut mordre sur un mur (pied de falaise) ou un décor.
+export function nearestFree(world, x, y, hw, hh) {
+  if (boxFree(world, x, y, hw, hh)) return [x, y];
+  for (let r = 2; r <= 48; r += 2) for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; if (boxFree(world, px, py, hw, hh)) return [px, py]; }
+  return null;
+}
 export function lineClear(world, x0, y0, x1, y1) {
   const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 8);
   for (let i = 1; i < n; i++) { const t = i / n; if (solidAt(world, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return false; }

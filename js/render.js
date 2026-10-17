@@ -11,6 +11,7 @@ import * as D from './data.js';
 import { drawFxs, fxLights, SWAP_T, SWAP_OPEN } from './fx.js';
 import { bossAshState } from './bosscine.js';
 import { dodgeVisual } from './dodge.js';
+import { drawZoneGround, zoneLight, zoneLives, bossTele } from './zonefx.js';
 
 const { TS } = M;
 let lightC = null;
@@ -213,10 +214,11 @@ export function groundFx(ctx, g, hook) {
   if (g.fxRings) for (const r of g.fxRings) { const k = r.t / 0.45; ctx.globalAlpha = 1 - k; ctx.strokeStyle = r.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(r.x, r.y, r.r * (0.3 + 0.7 * k), 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   drawFxs(g, ctx, true, hook);
   drawObsGround(ctx, g);
-  for (const z of g.zones) { const k = Math.min(1, z.t / z.delay), f = 0.5 + 0.5 * Math.sin(g.t * 24); ctx.fillStyle = `rgba(255,70,70,${0.12 + 0.18 * f})`; ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 4, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,100,.9)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = 'rgba(255,200,150,.5)'; ctx.beginPath(); ctx.arc(z.x, z.y, (z.r + 4) * k, 0, 7); ctx.fill(); }
+  for (const z of g.zones) { if (drawZoneGround(ctx, g, z)) continue; const k = Math.min(1, z.t / z.delay), f = 0.5 + 0.5 * Math.sin(g.t * 24); ctx.fillStyle = `rgba(255,70,70,${0.12 + 0.18 * f})`; ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 4, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,100,.9)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = 'rgba(255,200,150,.5)'; ctx.beginPath(); ctx.arc(z.x, z.y, (z.r + 4) * k, 0, 7); ctx.fill(); }
   for (const e of g.enemies) {
     if (!e.tele || e.dead) continue; const k = e.held ? 1 : 0.5 + 0.5 * Math.sin(g.t * 24);   // coup retardé : lueur fixe, le coup va tomber
     const def = e.def;
+    if (e.boss && bossTele(ctx, g, e, k)) continue;
     if (def.kind === 'slam' && e.slamAt) { ctx.fillStyle = `rgba(255,90,40,${0.15 + 0.15 * k})`; ctx.beginPath(); ctx.arc(e.slamAt.x, e.slamAt.y, def.blast, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,120,60,.8)'; ctx.lineWidth = 1; ctx.stroke(); continue; }
     if (e.boss && (e.atkType === 'dash' || e.atkType === 'beam') && e.lockDir) { const L = e.atkType === 'beam' ? 260 : 150; ctx.strokeStyle = `rgba(255,70,70,${0.35 + 0.35 * k})`; ctx.lineWidth = e.atkType === 'beam' ? 8 : 12; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.lockDir.x * L, e.y + e.lockDir.y * L); ctx.stroke(); continue; }
     if (e.boss && e.atkType === 'nova') { ctx.strokeStyle = `rgba(255,255,255,${0.3 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, 14 + 22 * (1 - e.st), 0, 7); ctx.stroke(); continue; }
@@ -431,7 +433,7 @@ export function buildLights(g) {
   for (const b of g.world.bonfires) if (g.lit.has(b.id)) lights.push({ x: (b.tx + 0.5) * TS, y: (b.ty + 0.2) * TS, r: 120 + Math.sin(g.t * 9 + b.tx) * 6, c: [255, 160, 70], a: 0.95 });
   for (const d of g.world.decor) { const l = M.decorLight(g.world, d); if (l) lights.push({ ...l, a: 0.6 }); }
   for (const d of g.chestObjs) { const l = M.decorLight(g.world, d, pr.chests.includes(d.id)); if (l) lights.push({ ...l, a: 0.6 }); }
-  for (const z of g.zones) lights.push({ x: z.x, y: z.y, r: 34, c: [255, 90, 70], a: 0.5 });
+  for (const z of g.zones) if (z.t < z.delay + 0.15) lights.push({ x: z.x, y: z.y, r: 34, c: zoneLight(z), a: 0.5 });
   for (const b of g.beams) lights.push({ x: b.x + Math.cos(b.ang) * b.len / 2, y: b.y + Math.sin(b.ang) * b.len / 2, r: b.len / 2, c: hexToRgb(b.color), a: 0.5 * (1 - b.t / b.max) });
   lights.push({ x: c.x, y: c.y - 8, r: 90, c: [140, 150, 200], a: 0.55 });
   for (const q of g.allies) lights.push({ x: q.x, y: q.y - 8, r: 60, c: hexToRgb(q.def.color), a: 0.7 });

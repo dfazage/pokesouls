@@ -8,6 +8,7 @@ import * as D from './data.js';
 import { poolEntry, archOf, startTm } from './pool.js';
 import { installExtras } from './extras.js';
 import { installFx } from './fx.js';
+import { zoneImpactFx, zoneLives } from './zonefx.js';
 import { installElements, BOSS_LORE } from './elements.js';
 import { installTutorial } from './tutorial.js';
 import { ASH, bossAshState, installBossCine, bossCamOf } from './bosscine.js';
@@ -223,7 +224,7 @@ export class Game {
   buildItems() {
     const pr = this.prog[this.mapIdx], a = this.world.arena; this.items = [];
     if (pr.bossDead) {
-      if (!pr.rewardTaken) this.items.push({ kind: 'reward', x: a.cx * TS, y: a.cy * TS });
+      if (!pr.rewardTaken) this.grantReward(a.cx * TS, a.cy * TS);   // ancienne sauvegarde : boss déjà vaincu, récompense jamais ramassée
       this.items.push({ kind: 'portal', x: (a.cx + 3) * TS, y: a.cy * TS });
     }
   }
@@ -237,7 +238,10 @@ export class Game {
     for (const s of this.world.spawns) {
       const d = D.ENEMIES[s.type]; if (!d) continue;
       if (d.tier === 'big' && (d.pseudo ? pr.pseudoDead : pr.bigDead)) continue;
-      this.enemies.push(this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS, s.up || 0));
+      const e = this.makeEnemy(s.type, (s.tx + 0.5) * TS, (s.ty + 0.5) * TS, s.up || 0);
+      const hw = Math.min(e.r, 6) * 0.8, p = M.nearestFree(this.world, e.x, e.y, hw, 3);   // jamais coincé dans un mur ou un décor
+      if (p) { e.x = e.hx = p[0]; e.y = e.hy = p[1]; }
+      this.enemies.push(e);
     }
     this.respawnQ = []; this.projs = []; this.rings = []; this.zones = []; this.beams = []; this.boss = null; this.bossActive = false; this.lock = null; this.cine = null; this.camFx = null; this.bossCam = null; this.bossCamK = 0;
     this.closeFog();
@@ -1210,7 +1214,7 @@ export class Game {
     this.bossActive = false; pr.bossDead = true; this.clearObstacles(); this.unlocked = Math.min(M.MAPS.length - 1, Math.max(this.unlocked, this.mapIdx + 1));
     this.enemies.forEach(e => { if (e.clone) { e.dead = true; e.deadT = 0.2; } });
     this.projs = this.projs.filter(p => p.team !== 'e'); this.rings = []; this.zones = []; setAnim(b, hasAnim(b.sprite, 'Faint') ? 'Faint' : 'Hurt', false); this.hitstop = 0.25; this.shake = 9;
-    this.openFog();
+    this.openFog(); this.grantReward(b.x, b.y);
     const end = ENDINGS[b.sprite];
     if (end) { this.save(); this.startOutro(b, end); return; }   // boss final / secret : chute, dialogue, cendres, écran de fin (outro.js)
     this.buildItems(); this.emit('jingle', 'JINGLE_VICTORY'); this.save();
@@ -1267,11 +1271,11 @@ export class Game {
     for (const z of this.zones) {
       z.t += dt;
       if (!z.done && z.t >= z.delay) {
-        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
+        z.done = true; if (z.pyl && !z.pyl.dead) this.damageObs(z.pyl, 22, 'electric'); this.ringFx(z.x, z.y, z.r + 6, z.color); if (!zoneImpactFx(this, z)) this.burst(z.x, z.y - 4, z.color, 8); if (z.owner && z.owner.boss) SFX.bossImpact(z.owner.sprite); else SFX.boom();
         for (const m of this.actors()) if (!m.exh && hyp(m.x - z.x, m.y - z.y) < z.r + 6) this.hurtMember(m, z.dmg, z, { parry: false, heavy: true, owner: z.owner });
       }
     }
-    this.zones = this.zones.filter(z => z.t < z.delay + 0.15);
+    this.zones = this.zones.filter(z => z.t < z.delay + zoneLives(z));
   }
   spark(x, y, c, n = 1) { for (let i = 0; i < n; i++) this.parts.push({ x, y, z: 4, vx: rand(-30, 30), vy: rand(-20, 20), vz: rand(10, 40), life: 0.35, max: 0.35, c, size: 2 }); }
   burst(x, y, c, n) { for (let i = 0; i < n; i++) { const a = rand(0, 6.28), s = rand(20, 80); this.parts.push({ x, y, z: 6, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: rand(10, 60), life: rand(0.25, 0.5), max: 0.5, c, size: 2, g: 160 }); } }
@@ -1322,8 +1326,7 @@ export class Game {
     for (const ch of this.world.chests) if (!pr.chests.includes(ch.id) && hyp((ch.tx + 0.5) * TS - c.x, (ch.ty + 0.5) * TS - c.y) < 34) this.prompt = { text: 'Ouvrir le coffre', act: () => this.openChest(ch) };
     // objets du sanctuaire
     for (const it of this.items) if (hyp(it.x - c.x, it.y - c.y) < 30) {
-      if (it.kind === 'reward') this.prompt = { text: 'Ouvrir le coffre du boss', act: () => this.takeReward() };
-      else this.prompt = { text: (this.world.def.final || this.world.def.secret) ? (M.MAPS[this.mapIdx + 1] && M.MAPS[this.mapIdx + 1].secret ? 'Franchir le portail vers l’Île Mystère' : 'Franchir le portail final') : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
+      if (it.kind === 'portal') this.prompt = { text: (this.world.def.final || this.world.def.secret) ? (M.MAPS[this.mapIdx + 1] && M.MAPS[this.mapIdx + 1].secret ? 'Franchir le portail vers l’Île Mystère' : 'Franchir le portail final') : 'Franchir le portail vers la carte suivante', act: () => this.usePortal() };
     }
     // porte-raccourci
     const dr = this.world.door;
@@ -1380,11 +1383,12 @@ export class Game {
     const cx = (ch.tx + 0.5) * TS, cy = (ch.ty + 0.55) * TS; this.spawnLoot(cx, cy - 4, ch.item, false, 0, 1, true); this.ringFx(cx, cy, 16, '#fff2a0');
     this.emit('banner', n.toUpperCase().split(' (')[0], 'item', ch.item); this.emit('toast', 'Coffre : ' + n, ch.item);
   }
-  takeReward() {
+  // récompense de boss : plus de Poké Ball à ouvrir, les objets tombent là où le boss est tombé (déjà donnés, seulement lancés puis aimantés)
+  grantReward(x, y) {
     const pr = this.prog[this.mapIdx]; if (pr.rewardTaken) return; pr.rewardTaken = true;
-    const got = this.world.def.reward.map(i => this.give(i)); const rw = this.items.find(i => i.kind === 'reward'); this.items = this.items.filter(i => i.kind !== 'reward'); SFX.victory(); this.save();
-    if (rw) this.world.def.reward.forEach((k, i, a) => this.spawnLoot(rw.x, rw.y - 4, k, i === 0, i, a.length, true));
-    this.emit('banner', 'RÉCOMPENSE', 'item', this.world.def.reward[0]); this.emit('toast', got.join(' · '), this.world.def.reward[0]);
+    const rew = this.world.def.reward, got = rew.map(i => this.give(i));
+    rew.forEach((k, i, a) => this.spawnLoot(x, y - 4, k, i === 0, i, a.length, true));
+    this.emit('toast', got.join(' · '), rew[0]); this.save();
   }
   usePortal() {
     const nx = M.MAPS[this.mapIdx + 1];
