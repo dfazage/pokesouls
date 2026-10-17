@@ -56,10 +56,10 @@ const JOHTO = [
         { cell: [1, 1], name: 'Antichambre du tonnerre' }, { cell: [0, 1], name: 'Terrasse des ex-voto' },
       ].map((z, i) => i === 7 ? { ...z, zone: 'Lisière' } : z),
       links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [2, 5], [5, 6], [0, 7]],
-      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, chests: [1, 2, 3, 4, 5, 7, 3],
+      door: [1, 6], arena: { cell: [1, 0], from: 6 }, bonfires: [0, 2, 6], big: 4, pseudo: 7, chests: [1, 2, 3, 4, 5, 7, 3],
     },
     areas: ['Escalier des lanternes', 'Cour des cloches', 'Jardin des ex-voto', 'Esplanade des tatamis', 'Allée de laque', 'Parvis du carillon', 'Antichambre du tonnerre'], sanctuary: 'Sanctuaire de Raikou',
-    mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos' },
+    mobs: { mini: ['pichu', 'mareep', 'chinchou'], mid: ['flaaffy', 'lanturn', 'togetic'], big: 'ampharos', pseudo: 'metagrossK' },
     loot: ['candy', 'berrypack', 'hpup', 'ct_swift', 'protein', 'etherpack', 'ct_earthquake'], reward: ['ct_thunder', 'candy'] },
 ];
 export const CHAPTER_MAPS = { kanto: KANTO, johto: JOHTO };
@@ -421,8 +421,10 @@ function generateFree(def) {
     const nm = k === last ? 2 : 2 + (k % 3); for (let i = 0; i < nm; i++) place(k, pick(tiers.mini));
     if (k >= 2) { const nd = k === last ? 2 : 1 + (k % 2); for (let i = 0; i < nd; i++) place(k, pick(tiers.mid)); }
     if (k === bigZ) place(k, tiers.big);
+    if (tiers.pseudo && k === (F.pseudo ?? 7)) place(k, tiers.pseudo);
   });
   if (!spawns.some(sp => sp.type === tiers.big)) for (const k of [bigZ, 5, 3, 2, 1]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.big, tx: p[0], ty: p[1], room: k }); break; } }
+  if (tiers.pseudo && !spawns.some(sp => sp.type === tiers.pseudo)) for (const k of [F.pseudo ?? 7, 3, 5, 1, 2]) { if (!zones[k]) continue; const p = spot(k, 400); if (p) { spawns.push({ type: tiers.pseudo, tx: p[0], ty: p[1], room: k }); break; } }
   const rooms = zones.map(z => ({ id: 'G' + z.k, x: z.cx - z.rx, y: z.cy - z.ry, w: 2 * z.rx, h: 2 * z.ry, zone: z.zone, name: z.name }));
   return { rooms, decor, spawns, chests, arena, door, fog, bonfires, start, grid, roomOf, secret: null, modules: [] };
 }
