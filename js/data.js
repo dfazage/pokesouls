@@ -1,7 +1,7 @@
 // Données de jeu du Chapitre Génération 1 : starters, CT, objets, ennemis, boss, formules.
 // Tous les chiffres sont des valeurs de départ à équilibrer.
 export const START_LEVEL = 5, MAX_LEVEL = 50;
-export const EVOLVE_AT = [15, 30]; // niveaux d'évolution (stade 2, stade 3)
+export const EVOLVE_AT = [15, 36]; // niveaux d'évolution (stade 2, stade 3)
 export const hpMult = lvl => 1 + 0.10 * (lvl - START_LEVEL);
 export const dmgMult = lvl => 1 + 0.06 * (lvl - START_LEVEL);
 export const levelCost = n => Math.round(60 * Math.pow(1.115, n - START_LEVEL));

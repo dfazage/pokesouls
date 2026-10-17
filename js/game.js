@@ -110,7 +110,7 @@ export class Game {
     this.picks = psy ? ['mudkip', 'abra', 'gastly'] : ['charmander', 'bulbasaur', 'squirtle'];   // clés de lignée du pool : Laggron, Alakazam, Ectoplasma (?dev=psy) ; Dracaufeu, Florizarre, Tortank (défaut)
     this.tutState = 'done';
     this.team = this.picks.map((k, i) => this.makeMember(k, i));
-    for (const m of this.team) m.lvl = 36;
+    for (const m of this.team) m.lvl = D.EVOLVE_AT[1];
     this.bench = []; this.helds = []; this.chiefIdx = 0; this.essence = 0; this.pity = 0; this.link = 0; this.souvenir = null;
     this.tms = this.team.map(m => m.tm); this.bag = { candy: 2 };
     this.berries = this.maxBerries = 5; this.ethers = this.maxEthers = 3;
