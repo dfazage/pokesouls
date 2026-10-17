@@ -19,7 +19,7 @@ export const DODGE_STYLES = {
 // Surcharges par forme (id de sprite). Tout ce qui n'est pas listé roule.
 const BY_FORM = {};
 const set = (style, ids) => ids.forEach(id => { BY_FORM[id] = style; });
-set('burrow', ['onix', 'steelix', 'hippopotas', 'hippowdon', 'serperior']);
+set('burrow', ['hippopotas', 'hippowdon', 'serperior']);
 set('heavy', ['snorlax', 'blastoise', 'grotle', 'torterra', 'swampert', 'feraligatr', 'metagross', 'emboar']);
 set('blink', ['gastly', 'haunter', 'gengar', 'abra', 'kadabra', 'alakazam', 'ralts', 'kirlia', 'gardevoir', 'litwick', 'lampent', 'chandelure', 'beldum', 'metang', 'magnemite', 'magneton', 'magnezone']);
 set('flutter', ['starly', 'staravia', 'staraptor', 'togetic', 'togekiss', 'charizard', 'salamence', 'beedrill', 'scyther', 'scizor']);
