@@ -114,13 +114,30 @@ function playCry(id) {
   };
   go();
 }
+// effets en fichier : assets/audio/sfx/<nom>.ogg (ou .mp3 / .wav) ; absent = on retombe sur la version synthétisée, sans erreur
+const sfxFiles = {};
+function playSfxFile(name, vol = 0.55) {
+  let f = sfxFiles[name];
+  if (f === undefined) {
+    f = sfxFiles[name] = null; const exts = ['ogg', 'mp3', 'wav']; let i = 0;
+    const tryNext = () => { if (i >= exts.length) return; const a = new Audio('assets/audio/sfx/' + name + '.' + exts[i++]); a.preload = 'auto'; a.oncanplaythrough = () => { sfxFiles[name] = a; }; a.onerror = tryNext; a.load(); };
+    tryNext();
+  }
+  if (!f) return false;
+  try { const c = f.cloneNode(); c.volume = vol; const p = c.play(); if (p && p.catch) p.catch(() => {}); return true; } catch (e) { return false; }
+}
 export const SFX = {
+  // son de CT (assets/audio/sfx/<id>.ogg) ; renvoie true s'il existe, sinon la version synthétisée reste active
+  ct(id) { return playSfxFile(id, 0.5); },
+  silent: new Proxy({}, { get: () => () => {} }),
+  resisted() { const t = performance.now(); if (t - (SFX._res ?? -1e9) < 90) return true; SFX._res = t; return playSfxFile('resisted', 0.5); },
   cry(id) { playCry(id); },
   swing() { band(1800, 0.7, 0.16, 0.07); band(900, 0.6, 0.12, 0.04, 0.03); },
   hit() { band(1400, 0.8, 0.09, 0.14); tone(110, 50, 0.14, 'sine', 0.1); band(300, 0.6, 0.12, 0.08); },
   // coup super efficace : impact plus lourd que le coup normal (claquement sec, boum grave, craquement, résonance métallique) ; au plus un toutes les 90 ms quand une zone touche plusieurs cibles
   superHit() {
-    const now = performance.now(); if (now - (SFX._sup || 0) < 90) return; SFX._sup = now;
+    const now = performance.now(); if (now - (SFX._sup ?? -1e9) < 90) return; SFX._sup = now;
+    if (playSfxFile('super_effective')) return;   // fichier déposé dans assets/audio/sfx/ : il remplace la version synthétisée
     band(2800, 0.9, 0.09, 0.2); band(5400, 1.2, 0.14, 0.09, 0.008);
     tone(125, 36, 0.38, 'sine', 0.18); noise(0.34, 0.09, 520, 0.005);
     band(750, 1.3, 0.24, 0.15, 0.02); band(1900, 2, 0.16, 0.08, 0.03);
