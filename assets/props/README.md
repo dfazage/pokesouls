@@ -17,3 +17,12 @@ Champs : `file`, `fw`, `fh`, `frames` (indices), `fps`, `scale` (entier, pixels 
 Les crédits sont à ajouter dans `showCredits` (js/ui.js) pour chaque pack utilisé.
 
 Les feuilles `pokeball.png`, `campfire.png` et `ice.png` sont produites par `python3 tools/prepare_props.py`; les `edo_*.png` par `python3 tools/edo/build_edo.py SRC OUT assets/props` (sources : les planches de tilesets, hors dépôt) à partir de `tools/props_src/`.
+
+## Props dessinés au code (`decor.png`)
+
+34 sprites pixel-art générés par `python3 tools/props_gen/build.py` (moteur maison dans `tools/props_gen/engine.py`, recettes `recipes_*.py`). Le script réécrit `decor.png` et fusionne les entrées dans `props.json`.
+
+Clés : `lantern_{bell,ember,mirror,ilex}`, `bell_{bell,ember}`, `torii_{ember,mirror,ilex}`, `tree_{ember,mirror,ilex,mystic}`, `statue_{ilex,mystic,storm}`, `brazier_{lava,stone,ember}`, `rock_{lava,stone,mirror,storm}`, `crystal_{lava,storm,mystic}`, `pillar_{stone,storm}`, `tank`, `tankbroken`, `console_{lab,plant}`, `mirror`, `generator`.
+
+Champs supplémentaires : `x0`/`y0` (origine dans l'atlas), `per` (images d'animation par variante ; avec `vary` la variante vient de la graine, l'animation du temps), `lo` (`{x0,y0}` : même mise en page dessinée pour la caméra basse ~22°). `drawProp` fond hi (40°) → lo selon `PROPS.pitch` (écrit par `render3d`), `k = clamp((40-pitch)/16, 0, 1)`.
+`--preview DIR` produit des planches de contrôle.
