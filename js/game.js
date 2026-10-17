@@ -497,7 +497,7 @@ export class Game {
     const S = D.STATUS[k];
     if (m.fx && m.fx.k === k) { m.fx.t = S.dur; return; }
     if (k === 'freeze' && m.frzImm > 0) return;
-    m.fx = { k, t: S.dur, tick: 1 };
+    m.fx = { k, t: S.dur, tick: 1 }; SFX.status(k);
     if (k === 'freeze') { m.atk = null; m.dodge = null; m.dash = null; this.guarding = false; }
     this.floatText(m.x, m.y - 32, S.name, S.color); this.burst(m.x, m.y - 8, S.color, 6); this.fxStatus(m, k);
   }
@@ -525,7 +525,7 @@ export class Game {
     if (e.dead) return; const S = D.STATUS[k];
     if ((k === 'freeze' || k === 'confuse') && (e.boss || e.def.armor)) return;
     if (e.fx && e.fx.k === k) { e.fx.t = S.dur; return; }
-    e.fx = { k, t: S.dur, tick: 1 };
+    e.fx = { k, t: S.dur, tick: 1 }; SFX.status(k);
     if (k === 'poison') this.addMark(e, 'toxin');
     this.floatText(e.x, e.y - 30, S.name, S.color); this.burst(e.x, e.y - 8, S.color, 6); this.fxStatus(e, k);
     if (k === 'freeze') { e.state = 'stagger'; e.st = S.dur; e.tele = false; setAnim(e, 'Hurt', false); }
