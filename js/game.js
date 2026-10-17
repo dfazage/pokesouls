@@ -53,7 +53,7 @@ export function speciesForMap(idx) {
   if (idx === 0) set.add(D.spriteOfEnemy('dummy'));   // mannequin du tutoriel : il vit sur la première carte de chaque chapitre (Johto n'a pas d'Otaria dans ses ennemis)
   return [...set];
 }
-const CAM_YAW = 45, CAM_TILT = 0;   // pivot latéral seulement : l'inclinaison haut/bas a été testée et écartée (inconfortable)
+const CAM_YAW = 45, CAM_TILT = 0, CAM_LOW_STEPS = 2;   // pivot latéral ±45° ; inclinaison crantée (stick droit haut / bas) : 0 = vue d'exploration, 2 = vue basse comme en duel (voir render3d.js)
 const newProg = () => ({ lit: [], doorOpen: false, bigDead: false, pseudoDead: false, bossDead: false, rewardTaken: false, introSeen: false, chests: [] });
 const stageOf = lvl => (lvl >= D.EVOLVE_AT[1] ? 2 : lvl >= D.EVOLVE_AT[0] ? 1 : 0);
 
@@ -67,7 +67,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true; this.camLowStep = 0; this.camLow = 0; this.camArmV = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -361,9 +361,13 @@ export class Game {
   // Trois positions (-45°, 0°, +45°) ; l'angle reste en place quand on relâche. Pendant un verrouillage, le stick droit change de cible (le cran reste).
   // Cinématique ou sans rendu HD-2D : retour à 0° sans perdre le cran choisi.
   updateCamPivot(dt) {
-    const [sx] = Input.camStick(), free = !this.camFx && !this.cine && !!window.hd2d;
+    const [sx, sy] = Input.camStick(), free = !this.camFx && !this.cine && !!window.hd2d, horiz = Math.abs(sx) >= Math.abs(sy);
     if (Math.abs(sx) < 0.6) this.camArm = true;
-    else if (this.camArm) { this.camArm = false; if (free && !this.lock) this.camStep = Math.max(-1, Math.min(1, this.camStep + (sx > 0 ? 1 : -1))); }
+    else if (this.camArm && horiz) { this.camArm = false; if (free && !this.lock) this.camStep = Math.max(-1, Math.min(1, this.camStep + (sx > 0 ? 1 : -1))); }
+    // inclinaison crantée : stick vers le haut = caméra plus basse (vue de duel), vers le bas = retour vers la vue d'exploration
+    if (Math.abs(sy) < 0.6) this.camArmV = true;
+    else if (this.camArmV && !horiz) { this.camArmV = false; if (free) this.camLowStep = Math.max(0, Math.min(CAM_LOW_STEPS, this.camLowStep + (sy < 0 ? 1 : -1))); }
+    { const tl = free ? this.camLowStep / CAM_LOW_STEPS : 0, kl = 1 - Math.exp(-dt * 7); this.camLow += (tl - this.camLow) * kl; if (Math.abs(this.camLow - tl) < 0.002) this.camLow = tl; }
     const ty = free ? this.camStep * CAM_YAW : 0, k = 1 - Math.exp(-dt * 9);
     this.camYaw += (ty - this.camYaw) * k; this.camTilt = 0;
     if (Math.abs(this.camYaw - ty) < 0.05) this.camYaw = ty;

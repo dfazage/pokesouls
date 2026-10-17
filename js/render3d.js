@@ -13,7 +13,7 @@ import { drawFxs } from './fx.js';
 import * as S from './hd2d_shaders.js';
 import * as WD from './hd2d_world.js';
 import { itemImage } from './items.js';
-import { BOSS_CAM_MIN_PITCH } from './bosscine.js';
+import { BOSS_CAM_MIN_PITCH, BOSS_CAM_DEFAULT } from './bosscine.js';
 import { WORLD_SCALE, CHAR_K, BOSS_K } from './worldscale.js';
 
 const { TS } = M;
@@ -307,9 +307,11 @@ export class HD2D {
       // pivot du joueur (stick droit) : inclinaison bornée, ignoré pendant une cinématique
       // caméra de duel : fondu entre le réglage d'exploration et celui du boss (g.bossCam / g.bossCamK), hors cinématique
       const bc = !fx && g.bossCam ? g.bossCam : null, bk = bc ? g.bossCamK : 0, mx = (a, b) => a + (b - a) * bk;
-      const basePitch = Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0)));
+      // inclinaison crantée du joueur (g.camLow, 0 à 1) : de la vue d'exploration vers la vue basse du duel par défaut (BOSS_CAM_DEFAULT)
+      const lo = Math.max(0, Math.min(1, g.camLow || 0)), lp = (a, b) => a + (b - a) * lo;
+      const basePitch = lp(Math.max(CFG.camPitchMin, Math.min(CFG.camPitchMax, CFG.pitch + (g.camTilt || 0))), BOSS_CAM_DEFAULT.pitch), baseDist = lp(CFG.dist, BOSS_CAM_DEFAULT.dist);
       this.curPitch = (fx ? fx.pitch : mx(basePitch, bc ? bc.pitch : basePitch)) * Math.PI / 180; this.curYaw = fx ? 0 : (g.camYaw || 0) * Math.PI / 180;
-      this.curDist = (fx ? fx.dist : mx(CFG.dist, bc ? bc.dist : CFG.dist)) / WORLD_SCALE;   // monde plus grand : caméra plus proche this.curLook = fx ? fx.look : mx(CFG.look, bc ? bc.look : CFG.look);
+      this.curDist = (fx ? fx.dist : mx(baseDist, bc ? bc.dist : baseDist)) / WORLD_SCALE;   // monde plus grand : caméra plus proche this.curLook = fx ? fx.look : mx(CFG.look, bc ? bc.look : CFG.look);
       const fov = fx ? fx.fov : mx(CFG.fov, bc ? bc.fov : CFG.fov);
       if (Math.abs(fov - this.curFov) > 1e-3) { this.curFov = fov; this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
       if (this.pointK) this.sh.uPointScale.value = this.pointK / (2 * Math.tan(this.curFov * Math.PI / 360));
