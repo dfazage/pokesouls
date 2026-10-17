@@ -34,6 +34,9 @@ function bindVol() {
 // ---------- choix des compagnons (pool de 39 lignées, 3 libres) ----------
 const GAB_COL = { A: '#ff8a50', R: '#5ab8ff', D: '#c98aff', S: '#7be07a' };
 // ---------- choix du chapitre (région) ----------
+// silhouettes animées des chapitres verrouillés : Idle PMDCollab (rangée du bas), aplatie en violet sombre (assets/ui/sil-*-idle.png)
+const SIL = { 'sil-rayquaza': { fw: 80, fh: 120, n: 4, k: 2, t: 0.22 }, 'sil-giratina': { fw: 56, fh: 80, n: 2, k: 3, t: 0.7 }, 'sil-kyurem': { fw: 80, fh: 80, n: 2, k: 3, t: 0.6 } };
+const silHtml = id => { const a = SIL[id]; return a ? `<i class="wsil wanim" style="--fw:${a.fw * a.k}px;--fh:${a.fh * a.k}px;--n:${a.n};--t:${a.t}s;background-image:url(assets/ui/${id}-idle.png)"></i>` : `<img class="wsil" src="assets/ui/${id}.png" alt="" aria-hidden="true">`; };
 const CHAPTERS = [
   { id: 'kanto', n: 'I', name: 'Kanto', sub: 'Quatre cartes et un secret, jusqu’à Mewtwo', spr: 'mewtwo' },
   { id: 'johto', n: 'II', name: 'Johto', sub: 'Trois bêtes, un sanctuaire marin, un temple hors du temps', spr: 'lugia', sil: 'sil-lugia' }, { n: 'III', name: 'Hoenn', sil: 'sil-rayquaza' },
@@ -48,7 +51,7 @@ export function showWorlds(onPick, onBack) {
     <p class="wtag">▾ EN DÉVELOPPEMENT</p>
     <div class="wgrid">${CHAPTERS.map(c => isOpen(c)
       ? `<button class="wcard open ${c.id}" id="w-${c.id}"><span class="wbg"></span>${idleOf(c.spr) ? (a => { const k = Math.max(2, Math.round(230 / a.fh)); return `<i class="wspr" style="--fw:${a.fw * k}px;--fh:${a.fh * k}px;--n:${a.frames};background-image:url(assets/${a.file})"></i>`; })(A.db[c.spr].anims.Idle) : ''}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><em>${c.sub}</em><i class="wdias">◇◇◇◇◇</i><u>Jouer</u></span></button>`
-      : `<div class="wcard locked">${lock}<img class="wsil" src="assets/ui/${c.sil}.png" alt="" aria-hidden="true"><span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
+      : `<div class="wcard locked">${lock}${silHtml(c.sil)}<span class="wbody"><small>Chapitre ${c.n}</small><b>${c.name}</b><u>Verrouillé</u></span></div>`).join('')}</div>
     <div class="act"><button id="w-back">← Retour</button></div>`;
   const back = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); onBack(); };
   const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); back(); } };
@@ -63,25 +66,29 @@ export function showStarters(onDone, onBack) {
   const draw = () => {
     const f = poolEntry(focus), ri = relayInfo(f.line), ar = archOf(f), tm = D.TMS[ar.tm];
     const types = D.typesOf(f.type, f.key);
-    el.innerHTML = `<h2>Choisissez vos trois compagnons</h2>
-      <p class="sub">Trois Pokémon au choix parmi 39 lignées, rangées par style de combat. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais. Deux Pokémon du même type en résonance frappent plus fort.</p>
+    const step = picks.length, done = step === 3;
+    el.innerHTML = `<h2>${done ? 'Votre équipe est prête' : `Compagnon ${step + 1} sur 3`}</h2>
+      <p class="sub">${done ? 'Vérifiez vos trois compagnons, puis lancez l’aventure. « Précédent » retire le dernier choisi.' : 'Touchez un Pokémon pour voir sa fiche, puis validez-le. Changer de Pokémon juste après une esquive ou une parade parfaite déclenche son attaque de relais ; deux Pokémon du même type en résonance frappent plus fort.'}</p>
       <div class="pcols">${Object.values(GABS).map(g => `<div class="pcol" style="--c:${GAB_COL[g.id]}"><h3>${g.name} <em>${POOL.filter(p => p.gab === g.id).length}</em></h3><small>${esc(g.desc)}</small>
-        <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on' : ''} ${p.key === focus ? 'foc' : ''}" data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
+        <div class="pgrid">${POOL.filter(p => p.gab === g.id).map(p => `<button class="pth ${picks.includes(p.key) ? 'on taken' : ''} ${p.key === focus ? 'foc' : ''}" data-k="${p.key}" title="${esc(D.NAMES_FR[p.key])}"><img src="${portrait(p.key)}" alt="">${picks.includes(p.key) ? `<i>${picks.indexOf(p.key) + 1}</i>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
       <div class="pbot"><div class="pdetail" style="--c:${GAB_COL[f.gab]}"><img src="${portrait(f.key)}" alt=""><div><b>${esc(D.NAMES_FR[f.key])}</b> <span>Gén. ${f.gen}</span>
         <small>${f.line.filter((x, i) => i === 0 || x !== f.line[i - 1]).map(x => esc(D.NAMES_FR[x])).join(' → ')}</small>
         <small>${types.map(t => `<u class="ty-${t}">${D.TYPE_FR[t] || t}</u>`).join('')} ${ar.cls} · ${ar.mode === 'ranged' ? 'À distance' : 'Corps à corps'} · CT de départ : ${esc(tm.name)}</small>
         <small class="srel"><b>Relais · ${esc(ri.name)}</b> : ${esc(ri.text)}</small></div></div>
         <div class="ptray">${[0, 1, 2].map(i => { const k = picks[i]; return k ? `<button class="pslot full" data-r="${k}"><img src="${portrait(k)}" alt=""><span>${esc(D.NAMES_FR[k])}</span></button>` : `<div class="pslot"><span>Compagnon ${i + 1}</span></div>`; }).join('')}</div>
-        <div class="act">${onBack ? '<button id="st-back">← Retour</button>' : ''}<button id="st-go" ${picks.length === 3 ? '' : 'disabled'}>${picks.length === 3 ? 'Commencer l’aventure' : `Encore ${3 - picks.length} à choisir`}</button></div></div>`;
-    el.querySelectorAll('.pth').forEach(b => b.onclick = () => {
-      const k = b.dataset.k; focus = k;
-      const i = picks.indexOf(k); if (i >= 0) picks.splice(i, 1); else { if (picks.length === 3) picks.shift(); picks.push(k); }
-      draw();
-    });
+        <div class="act"><button id="st-back">${step > 0 ? '← Précédent' : '← Retour'}</button>${done ? '<button id="st-go" class="pri">Commencer l’aventure</button>' : `<button id="st-ok" class="pri" ${picks.includes(focus) ? 'disabled' : ''}>${picks.includes(focus) ? 'Déjà choisi' : `Choisir ${esc(D.NAMES_FR[focus])} · compagnon ${step + 1}`}</button>`}</div></div>`;
+    const confirm = () => { if (picks.length >= 3 || picks.includes(focus)) return; picks.push(focus); if (picks.length < 3 && picks.includes(focus)) focus = (POOL.find(q => !picks.includes(q.key)) || POOL[0]).key; draw(); };
+    el.querySelectorAll('.pth').forEach(b => { b.onclick = () => { focus = b.dataset.k; draw(); }; b.ondblclick = () => { focus = b.dataset.k; confirm(); }; });
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { picks.splice(picks.indexOf(b.dataset.r), 1); draw(); });
-    const sb = $('#st-back'); if (sb) sb.onclick = () => { el.classList.remove('show'); onBack(); };
-    const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { el.classList.remove('show'); onDone([...picks]); } };
+    const ok = $('#st-ok'); if (ok) ok.onclick = confirm;
+    $('#st-back').onclick = goBack;
+    const go = $('#st-go'); if (go) go.onclick = () => { if (picks.length === 3) { leave(); onDone([...picks]); } };
   };
+  // Précédent : retire le dernier compagnon ; ne quitte vers le menu qu'au premier choix
+  const leave = () => { el.classList.remove('show'); window.removeEventListener('keydown', onKey, true); };
+  const goBack = () => { if (picks.length) { focus = picks.pop(); draw(); } else if (onBack) { leave(); onBack(); } };
+  const onKey = e => { if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); goBack(); } };
+  window.addEventListener('keydown', onKey, true);
   draw();
 }
 
