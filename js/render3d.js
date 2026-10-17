@@ -99,7 +99,7 @@ export class HD2D {
     this.computeRegion();
     this.initOverlays();
     this.initBatches();
-    this.initAir();
+    this.initAir(); this.initTides();
     this.initPost();
     this.world = null; this.group = null; this.sig = '';
     this.setScale(1);
@@ -159,6 +159,63 @@ export class HD2D {
     this.batchL = new Batch(256, 4, 4, 200, 6, this.sh, 0.0015);
     this.batchX = new Batch(640, 2, 2, 520, 6, this.sh, 0.0015);   // boss géants (×2,3) : cellule haute pour les envols, les ailes et l'ombre
     this.scene.add(this.batchS.mesh, this.batchL.mesh, this.batchX.mesh);
+  }
+  // ----- Marée de Lugia : crête d'eau en relief (maillage recalculé chaque image, un par vague active) -----
+  initTides() {
+    const S_ = 40, P = 7, VS = (S_ + 1) * P, idx = [];
+    for (let i = 0; i < S_; i++) for (let j = 0; j < P - 1; j++) { const a = i * P + j, b = a + P; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+    this.tideSeg = S_; this.tideP = P; this.tides = [];
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: `attribute float aS, aH; varying vec2 vUv; varying float vS, vH; void main(){ vUv = uv; vS = aS; vH = aH; gl_Position = projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.); }`,
+      fragmentShader: `uniform float uTime, uA; varying vec2 vUv; varying float vS, vH;
+float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7)))*43758.5453); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1.,0.)), f.x), mix(h21(i+vec2(0.,1.)), h21(i+vec2(1.,1.)), f.x), f.y); }
+void main(){
+  float v = vUv.y;
+  vec2 q = vec2(vUv.x*16., v*3. - uTime*1.8);
+  float n = vn(q)*.6 + vn(q*2.3 + 7. + uTime*.4)*.4;
+  float hh = clamp(vH, 0., 1.);
+  vec3 c = mix(vec3(.03,.16,.5), vec3(.12,.58,.92), clamp(hh + (n-.5)*.4, 0., 1.));
+  c += vec3(.12,.22,.28)*smoothstep(.45,.9,n)*hh;                       // stries de courant
+  float f = smoothstep(.86, 1.02, hh + (n-.5)*.42);                      // écume au sommet et sur le front
+  c = mix(c, vec3(.95,.99,1.), f);
+  c *= .7 + .55*vS;                                                    // face avant éclairée, dos dans l'ombre
+  float edge = smoothstep(0., .1, vUv.x)*smoothstep(0., .1, 1.-vUv.x)*smoothstep(0., .08, v)*smoothstep(0., .08, 1.-v);
+  float a = max(.6 + .35*hh, f)*uA*edge;
+  gl_FragColor = vec4(c, a);
+}`,
+      uniforms: { uTime: this.sh.uTime, uA: { value: 1 } }, transparent: true, depthWrite: false, depthTest: true, side: THREE.DoubleSide,
+    });
+    const uv = new Float32Array(VS * 2), aH = new Float32Array(VS), aS = new Float32Array(VS);
+    const D = [-1.15, -.8, -.45, -.12, .1, .26, .36], H = [0, .22, .6, 1.05, .95, .5, 0];
+    this.tideProf = { D, H };
+    for (let i = 0; i <= S_; i++) for (let j = 0; j < P; j++) {
+      const k = i * P + j; uv[k * 2] = i / S_; uv[k * 2 + 1] = j / (P - 1); aH[k] = H[j] / 1.05;
+      const dj = Math.max(0, j - 1), dk = Math.min(P - 1, j + 1); aS[k] = 0.5 + 0.5 * Math.max(-1, Math.min(1, (H[dj] - H[dk]) / ((D[dk] - D[dj]) || 1) * .7));   // pente : face avant claire
+    }
+    for (let n = 0; n < 3; n++) {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(VS * 3), 3).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setAttribute('aH', new THREE.BufferAttribute(aH, 1)); geo.setAttribute('aS', new THREE.BufferAttribute(aS, 1));
+      geo.setIndex(idx);
+      const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = 9; m.visible = false; this.scene.add(m); this.tides.push(m);
+    }
+  }
+  updateTides(g) {
+    const S_ = this.tideSeg, P = this.tideP, { D, H } = this.tideProf, rs = g.rings.filter(r => r.arc && !(r.delay > 0) && r.r > 0);
+    this.tides.forEach((m, n) => {
+      const r = rs[n]; m.visible = !!r; if (!r) return;
+      const pos = m.geometry.attributes.position, life = Math.min(1, (r.r - 40) / 28) * Math.min(1, (r.max - r.r) / 45 + 0.15), hmax = 1.2 * Math.max(0.05, life);
+      for (let i = 0; i <= S_; i++) {
+        const u = i / S_, env = Math.pow(Math.sin(Math.PI * u), 0.55), a = r.arc.ang + (u * 2 - 1) * r.arc.aw, ca = Math.cos(a), sa = Math.sin(a), kk = 0.6 + 0.4 * env;
+        const wob = 1 + 0.06 * Math.sin(u * 17 + r.r * 0.05);   // houle irrégulière le long de la crête
+        for (let j = 0; j < P; j++) {
+          const R = (r.r + D[j] * kk * 24) / 24, k = (i * P + j) * 3;
+          pos.array[k] = r.x / 24 + ca * R; pos.array[k + 1] = H[j] * hmax * env * wob; pos.array[k + 2] = r.y / 24 + sa * R;
+        }
+      }
+      pos.needsUpdate = true;
+    });
   }
   initAir() {
     const mk = () => { const c = document.createElement('canvas'); c.width = SW; c.height = SH; return c; };
@@ -377,7 +434,7 @@ export class HD2D {
     N.setTransform(1, 0, 0, 1, 0, 0); Ad.setTransform(1, 0, 0, 1, 0, 0);
 
     tp = tk('sol', tp);
-    this.drawAir(g);
+    this.drawAir(g); this.updateTides(g);
     tp = tk('air', tp);
     for (const tex of [sh.uLight.value, sh.uOvN.value, sh.uOvA.value]) tex.needsUpdate = true;
 

@@ -200,6 +200,9 @@ export function groundFx(ctx, g, hook) {
   drawSurfs(ctx, g);
   for (const r of g.rings) {
     if (r.r <= 0 || r.delay > 0) continue;
+    if (r.arc && hook) {   // rendu 3D : la crête est un vrai maillage, on ne dessine ici que la bande mouillée au sol
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(20,70,140,.35)'; ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(r.x, r.y, r.r - 10, r.arc.ang - r.arc.aw, r.arc.ang + r.arc.aw); ctx.stroke(); ctx.lineCap = 'butt'; continue;
+    }
     if (r.arc) {   // crête de marée : bande épaisse, écume claire sur le bord avant
       const a0 = r.arc.ang - r.arc.aw, a1 = r.arc.ang + r.arc.aw;
       ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(70,150,230,.55)'; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(r.x, r.y, r.r - 4, a0, a1); ctx.stroke();
