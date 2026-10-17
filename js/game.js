@@ -67,7 +67,7 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.team = []; this.bench = []; this.picks = null;
     this.chiefIdx = 0; this.berries = 5; this.maxBerries = 5; this.stam = 100; this.maxStam = 100; this.stamPause = 0;
-    this.essence = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
+    this.essence = 0; this.tips = {}; this.tipT = 0; this.ethers = 3; this.maxEthers = 3; this.respawnQ = []; this.guardT = 9; this.guarding = false; this.wasGuard = false; this.buffT = 0; this.camYaw = 0; this.camTilt = 0; this.bossCam = null; this.bossCamK = 0; this.camStep = 0; this.camArm = true;   // pivot de caméra (degrés, lissés)
     this.buf = null; this.lock = null; this.switchT = 0; this.swapCd = 0;
     this.enemies = []; this.projs = []; this.parts = []; this.texts = []; this.rings = []; this.items = []; this.zones = []; this.beams = []; this.fxRings = []; this.fxs = [];
     this.boss = null; this.bossActive = false; this.prompt = null; this.lastArea = null; this.deadT = 0;
@@ -122,7 +122,7 @@ export class Game {
   saveData() {
     this.prog[this.mapIdx].lit = [...this.lit];
     return { v: 2, mv: 2, tut: this.tutState, picks: this.picks, lvls: this.team.map(m => m.lvl), vit: this.team.map(m => m.vit), tm: this.team.map(m => m.tm), mods: this.team.map(m => m.mod || null), bench: this.bench.map(m => ({ key: m.key, lvl: m.lvl, vit: m.vit, tm: m.tm, mod: m.mod || null })), tms: this.tms, bag: this.bag, berries: this.berries, maxBerries: this.maxBerries, ethers: this.ethers, maxEthers: this.maxEthers, link: Math.floor(this.link),
-      playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
+      playT: Math.floor(this.playT), deaths: this.deaths, essence: this.essence, tips: this.tips, souvenir: this.souvenir, map: this.mapIdx, last: this.last, prog: this.prog, unlocked: this.unlocked, chiefIdx: this.chiefIdx };
   }
   save() { if (this.noSave) return; try { localStorage.setItem(saveKey(this.chapter), JSON.stringify(this.saveData())); localStorage.setItem(LAST_KEY, this.chapter); } catch (e) { /* stockage indisponible */ } }
   static exists(ch) { try { return !!localStorage.getItem(saveKey(ch)); } catch (e) { return false; } }
@@ -143,6 +143,7 @@ export class Game {
     this.team = this.picks.map((key, i) => restore(key, i, { lvl: (s.lvls || [])[i], vit: (s.vit || [])[i], tm: (s.tm || [])[i], mod: (s.mods || [])[i] }));
     this.bench = (s.bench || []).filter(b => poolEntry(b.key)).map(b => restore(b.key, -1, b));
     this.tms = s.tms || this.team.map(m => m.tm); this.bag = s.bag || {}; this.berries = s.berries ?? 5; this.maxBerries = s.maxBerries || 5; this.maxEthers = s.maxEthers || 3; this.ethers = s.ethers ?? this.maxEthers; this.essence = s.essence || 0; this.link = s.link || 0;
+    this.tips = s.tips || (s.playT > 300 || s.essence > 0 ? { essence: true } : {});   // anciennes sauvegardes déjà bien avancées : pas de conseil de débutant
     if (s.mv !== 2) {   // l'ancienne carte 4 (Route Victoire) n'existe plus : Labo et Île Mystère reculent d'un cran
       const mp = n => (n > 3 ? n - 1 : n);
       s.unlocked = mp(s.unlocked || 0);
@@ -264,6 +265,7 @@ export class Game {
     const cineLock = this.cine ? this.updateCine(dt) : this.outro ? this.updateOutro(dt) : false;
     if (!cineLock) this.updateChief(dt);
     this.updateRespawn(dt);
+    if (this.tipT > 0 && (this.tipT -= dt) <= 0) this.showTip('essence');
     this.updateEnemies(dt);
     this.updateProjs(dt);
     this.updateRings(dt);
@@ -691,10 +693,19 @@ export class Game {
     (window.__bossReports = window.__bossReports || []).push(r); console.table([r]);
     this.emit('toast', r.boss + ' : ' + r.secondes + ' s, Lien ' + r.pctLien + ' %');
   }
+  // conseils uniques : s'affichent une fois, quand le joueur n'est ni en cinématique ni mort (sinon on réessaie une seconde plus tard)
+  showTip(k) {
+    if (this.tips[k]) return;
+    if (this.state !== 'play' || this.cine || this.outro || this.bossActive) { this.tipT = 1; return; }
+    this.tips[k] = true; this.save();
+    this.emit('info', { title: 'L’essence', paras: [
+      'Chaque ennemi vaincu te donne de l’essence. Au feu de camp, dépense-la pour faire monter tes Pokémon de niveau avec le bouton « Monter » : plus de PV, plus de puissance, et un jour l’évolution.',
+      'Attention : si tu meurs, l’essence que tu portes tombe avec toi. Retourne là où tu es mort pour la récupérer.'] });
+  }
   killEnemy(e) {
     e.dead = true; e.deadT = 0; e.hp = 0; e.tele = false; this.queueRespawn(e);
     if (this.lock === e) this.lock = null;
-    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); }
+    if (e.essence) { this.essence += e.essence; this.floatText(e.x, e.y - 28, '+' + e.essence, '#ffd37a'); if (!this.tips.essence && !this.tut && !e.tutDummy && !(this.tipT > 0)) this.tipT = 1.2; }   // premier gain d'essence : conseil expliqué une fois
     this.burst(e.x, e.y - 6, e.boss ? '#e0a0ff' : '#ffd37a', e.boss ? 40 : 12); SFX.hit();
     if (e.boss) this.fx('selfdestruct', e.x, e.y, { scale: 1.8, z: 20, add: true, dur: 0.8, glow: '#e0a0ff' }); else this.fx('mist', e.x, e.y, { scale: 0.7, z: 10, dur: 0.6, alpha: 0.8 });
     if (e.def.pseudo && !this.prog[this.mapIdx].pseudoDead) {   // mini-boss optionnel : deux Super Bonbons et une vitamine

@@ -193,7 +193,10 @@ export class HD2D {
     this.rt = {};
   }
   // intensité du tilt-shift en % (0 à 150), appelée par le curseur « Flou » des réglages
-  setTilt(pct) { this.mFinal.uniforms.uBlur.value = TILT_BASE * Math.max(0, Math.min(150, pct)) / 100; }
+  setTilt(pct) { this.tiltP = Math.max(0, Math.min(150, pct)); this.applyTilt(); }
+  // menu pause ouvert : pas de tilt-shift (image nette derrière le menu) ; le réglage du joueur est rétabli à la reprise
+  setPaused(on) { this.paused = !!on; this.applyTilt(); }
+  applyTilt() { this.mFinal.uniforms.uBlur.value = this.paused ? 0 : TILT_BASE * (this.tiltP ?? tiltPct()) / 100; }
   buildTargets() {
     const w = Math.round(SW * this.scale), h = Math.round(SH * this.scale);
     for (const k of Object.keys(this.rt)) this.rt[k].dispose();

@@ -9,7 +9,7 @@ import { render } from './render.js';
 import { createHud } from './hud.js';
 import { createTutorialUi } from './tutorial.js';
 import { ENDINGS, endingsSeen, markEnding, fmtTime } from './endings.js';
-import { showWorlds, showStarters, showDialogue, showReserve, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
+import { showWorlds, showStarters, showDialogue, showInfo, showReserve, showBonfireMenu, showBag, showTravel, showControls, showCredits, showPauseMenu, hideMenu } from './ui.js';
 import { POOL } from './pool.js';
 import { Music, directMusic } from './music.js';
 import { loadFx } from './fx.js';
@@ -78,6 +78,7 @@ async function launch(g) {
     else if (type === 'fade') hud.fade();
     else if (type === 'menu') openBonfire(a);
     else if (type === 'dialogue') openMenu('dialogue', () => showDialogue(a.lines, res => { closeMenu(); if (a.done) a.done(res); }));
+    else if (type === 'info') openMenu('info', () => showInfo(a, closeMenu));
     else if (type === 'jingle') Music.playJingle(a);
     else if (type === 'bossStart') hud.bossIntro(a);
     else if (type === 'bossPhase') hud.phaseScreen(a, b);
@@ -132,7 +133,7 @@ async function devStart() {
   await launch(g);
 }
 
-function closeMenu() { Controls_stop(); hideMenu(); mode = 'play'; menuKind = null; ui.menuKind = null; Input.clear(); }
+function closeMenu() { Controls_stop(); hideMenu(); if (r3d) r3d.setPaused(false); document.body.classList.remove('paused'); mode = 'play'; menuKind = null; ui.menuKind = null; Input.clear(); }
 function Controls_stop() { /* l'écran des commandes arrête lui-même l'écoute */ }
 function openMenu(kind, fn) { mode = 'menu'; menuKind = kind; ui.menuKind = kind; Input.clear(); fn(); }
 function openBonfire(b) {
@@ -147,7 +148,7 @@ function goTravel(i, id) { if (game.travel(i, id)) closeMenu(); else hud.toast('
 function openBag() { openMenu('bag', () => showBag(game, closeMenu)); }
 function openTravel() { openMenu('travel', () => showTravel(game, closeMenu, goTravel)); }
 function openPause() {
-  mode = 'pause'; menuKind = 'pause'; Input.clear();
+  mode = 'pause'; menuKind = 'pause'; Input.clear(); if (r3d) r3d.setPaused(true); document.body.classList.add('paused');
   const back = () => showPauseMenu(game, h);
   const h = { resume: closeMenu, bag: () => showBag(game, back), travel: () => showTravel(game, back, goTravel), keys: () => openControls(back), credits: () => showCredits(back), title: () => { closeMenu(); location.href = titleUrl(); }, reset: () => { closeMenu(); newFromTitle(); } };
   back();

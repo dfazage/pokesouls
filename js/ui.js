@@ -163,13 +163,15 @@ export function showBag(game, onClose) {
 // Carte du monde : îles reliées par une route, liste des chapitres à gauche, fiche de la carte choisie à droite.
 const ROMAN = ['I', 'II', 'III', 'IV', '✦'];
 // position des cartes sur l'illustration : M.CHAPTER_INFO[chapitre].nodes (en % de la largeur et de la hauteur ; ratio 2576:1438)
-let travelSel = -1, travelSpot = 'start';
+// Flux : clic sur le cercle d'un lieu -> bulle avec la liste de ses foyers -> clic sur un foyer -> bouton Voyager.
+let travelSel = -1, travelPop = -1, travelSpot = null;
 export function showTravel(game, onClose, onGo) {
   const opts = game.travelOptions(), info = M.CHAPTER_INFO[game.chapter], NODES = info.nodes;
-  if (travelSel < 0 || travelSel >= opts.length) { travelSel = game.mapIdx; travelSpot = 'start'; }
+  if (travelSel < 0 || travelSel >= opts.length) travelSel = game.mapIdx;
+  travelPop = -1; travelSpot = null;   // à l'ouverture : rien de choisi, le joueur clique d'abord sur un lieu
   const render = () => {
     const o = opts[travelSel], d = M.MAPS[o.idx], bs = D.BOSSES[d.boss], col = bs.color;
-    if (!o.spots.some(x => x.id === travelSpot)) travelSpot = 'start';
+    if (travelSpot !== null && !o.spots.some(x => x.id === travelSpot)) travelSpot = null;
     const here = o.idx === game.mapIdx;
     const hid = k => M.MAPS[k].secret && !opts[k].open;   // la carte secrète reste cachée tant qu'elle n'est pas ouverte
     const roads = NODES.slice(1, opts.length).map((n, k) => hid(k + 1) ? '' : `<line x1="${NODES[k][0]}" y1="${NODES[k][1] * 0.558}" x2="${n[0]}" y2="${n[1] * 0.558}" class="${opts[k + 1].open ? 'road' : 'road locked'}"/>`).join('');
@@ -177,24 +179,26 @@ export function showTravel(game, onClose, onGo) {
     const list = opts.map((x, k) => hid(k) ? `<div class="wr locked ghost"><span class="rn">?</span><b>???</b><em></em></div>` : `<div class="wr ${k === travelSel ? 'on' : ''} ${x.open ? '' : 'locked'}" data-n="${k}"><span class="rn" style="--c:${D.BOSSES[M.MAPS[k].boss].color}">${ROMAN[k]}</span><b>${esc(x.name)}</b><em>${!x.open ? 'Scellée' : x.done ? '✔' : k === game.mapIdx ? '◆' : ''}</em></div>`).join('');
     const prev = opts[o.idx - 1];
     const body = o.open
-      ? `<div class="wsp"><h4>Destination</h4>${o.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</div>`
+      ? `<p class="sub whint">${travelPop === o.idx ? 'Choisis un foyer dans la bulle, puis Voyager.' : 'Clique sur le cercle de ce lieu pour choisir où aller.'}</p>`
       : `<p class="sub">Cette carte est scellée. Elle s’ouvre quand le boss de <b>${esc(prev ? prev.name : '')}</b> tombe.</p>`;
+    const po = travelPop >= 0 && opts[travelPop].open ? opts[travelPop] : null;
+    const pop = po ? `<div class="wpop ${NODES[po.idx][1] > 52 ? 'up' : ''}" style="left:clamp(104px,${NODES[po.idx][0]}%,calc(100% - 104px));top:${NODES[po.idx][1]}%"><h4>${esc(po.name)}</h4>${po.spots.map(x => `<button class="wspot ${x.id === travelSpot ? 'on' : ''}" data-spot="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${travelSpot !== null ? '<button class="pri wgo" id="t-go">Voyager</button>' : ''}</div>` : '';
     const m = open(`<div class="panel worldmap"><div class="bhead"><h2>Carte du chapitre · Génération ${info.gen}</h2></div>
       <div class="wm-cols">
         <div class="wm-list"><h4>Chapitres</h4>${list}</div>
         <div class="wm-map ${game.chapter}" style="background-image:linear-gradient(rgba(6,8,14,.12),rgba(6,8,14,.28)),url(${info.world})"><svg viewBox="0 0 100 55.8" preserveAspectRatio="none" aria-hidden="true">
-          <g>${roads}</g></svg>${nodes}</div>
+          <g>${roads}</g></svg>${nodes}${pop}</div>
         <div class="wm-det" style="--c:${col}">
           <div class="wd-art ${o.open ? '' : 'sealed'}"><img src="assets/sprites/${bs.sprite}/portrait.png" alt="" onerror="this.style.display='none'"></div>
           <h3>${ROMAN[o.idx]} · ${esc(o.name)}</h3><p class="sub">${esc(o.sub)}${here ? ' · vous êtes ici' : ''}</p>
           <dl><dt>Boss</dt><dd>${o.open ? esc(bs.name) : '???'}</dd><dt>Niveau conseillé</dt><dd>${d.lv}</dd><dt>Feux allumés</dt><dd>${o.open ? o.spots.length - 1 : 0}</dd><dt>État</dt><dd>${!o.open ? 'Scellée' : o.done ? 'Boss vaincu ✔' : 'Boss en vie'}</dd></dl>
-          ${body}
-          <button class="pri wgo" id="t-go" ${o.open ? '' : 'disabled'}>Voyager</button></div>
+          ${body}</div>
       </div>
       <div class="act"><button id="m-close">Retour</button></div></div>`);
-    m.querySelectorAll('[data-n]').forEach(x => x.onclick = () => { travelSel = +x.dataset.n; travelSpot = 'start'; render(); });
-    m.querySelectorAll('[data-spot]').forEach(x => x.onclick = () => { travelSpot = x.dataset.spot; render(); });
-    const go = $('#t-go'); if (go) go.onclick = () => onGo(o.idx, travelSpot);
+    m.querySelectorAll('[data-n]').forEach(x => x.onclick = () => { travelSel = +x.dataset.n; travelPop = opts[travelSel].open ? travelSel : -1; travelSpot = null; render(); });
+    m.querySelectorAll('[data-spot]').forEach(x => x.onclick = e => { e.stopPropagation(); travelSpot = x.dataset.spot; render(); const g = $('#t-go'); if (g) g.focus(); });
+    const go = $('#t-go'); if (go) go.onclick = e => { e.stopPropagation(); const i = o.idx, s = travelSpot; travelSel = -1; onGo(travelPop >= 0 ? travelPop : i, s); };
+    const wm = m.querySelector('.wm-map'); if (wm) wm.onclick = e => { if (travelPop >= 0 && !e.target.closest('.wn,.wpop')) { travelPop = -1; travelSpot = null; render(); } };
     $('#m-close').onclick = () => { travelSel = -1; onClose(); };
   };
   render();
@@ -295,6 +299,12 @@ export function showCredits(onClose) {
     <h4>Mentions</h4><p class="sub">Pokémon est une marque de Nintendo / Creatures Inc. / GAME FREAK inc. Ce fan game non commercial n'est ni affilié ni approuvé par eux. Code et effets sonores : ce dépôt.</p>
     <div class="act"><button id="m-close">Fermer</button></div></div>`);
   $('#m-close').onclick = onClose; void m;
+}
+
+// ---------- boîte d'information centrée (conseils au fil du jeu) ----------
+export function showInfo(info, onClose) {
+  open(`<div class="panel info"><div class="ihead"><span class="idot"></span><h2>${esc(info.title)}</h2></div>${info.paras.map(p => `<p>${esc(p)}</p>`).join('')}<div class="act"><button class="pri" id="i-ok">Compris</button></div></div>`);
+  const ok = $('#i-ok'); ok.onclick = onClose; ok.focus();
 }
 
 // ---------- dialogues (quête de Fala) ----------
